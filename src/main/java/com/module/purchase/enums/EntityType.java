@@ -1,0 +1,17 @@
+package com.module.purchase.enums;
+
+public enum EntityType {
+    
+    EMPLOYEE,
+    DEPARTMENT,
+    ROLE,
+    ITEM,
+    VENDOR,
+    PURCHASE_REQUEST,
+    PURCHASE_ORDER,
+    USER,
+    ASSIGNING_CONFIG,
+    ASSIGNING_APPROVAL,
+    DEPARTMENT_BUDGET,
+    AUDIT_LOGS
+}
