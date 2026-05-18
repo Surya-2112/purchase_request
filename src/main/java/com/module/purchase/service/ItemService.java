@@ -15,7 +15,7 @@ import com.module.purchase.entity.Item;
 import com.module.purchase.repository.ItemRepository;
 import com.module.purchase.specification.ItemSpecification;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional

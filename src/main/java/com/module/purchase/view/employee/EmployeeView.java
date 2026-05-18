@@ -50,8 +50,7 @@ public class EmployeeView extends VerticalLayout {
                 setPadding(true);
                 setSpacing(true);
 
-                departmentField.setItems(
-                                departmentService.getDepartments());
+                departmentField.setItems(departmentService.getDepartments());
 
                 roleField.setItems(
                                 roleService.getRoles());

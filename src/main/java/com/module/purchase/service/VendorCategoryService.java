@@ -15,7 +15,7 @@ import com.module.purchase.entity.VendorCategory;
 import com.module.purchase.repository.VendorCategoryRepository;
 import com.module.purchase.specification.VendorCategorySpecification;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service

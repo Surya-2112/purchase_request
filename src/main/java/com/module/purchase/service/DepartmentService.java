@@ -23,7 +23,7 @@ import com.module.purchase.customException.ResourceMissingFieldException;
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.mapper.DepartmentMapper;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional

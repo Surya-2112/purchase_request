@@ -18,7 +18,7 @@ import com.module.purchase.mapper.VendorMapper;
 import com.module.purchase.repository.VendorRepository;
 import com.module.purchase.specification.VendorSpecification;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional

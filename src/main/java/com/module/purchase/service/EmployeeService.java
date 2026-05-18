@@ -21,7 +21,7 @@ import com.module.purchase.mapper.EmployeeMapper;
 import com.module.purchase.repository.EmployeeRepository;
 import com.module.purchase.specification.EmployeeSpecification;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional

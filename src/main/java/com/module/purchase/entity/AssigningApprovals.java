@@ -16,8 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-
-
 @Entity
 public class AssigningApprovals {
 
@@ -27,12 +25,12 @@ public class AssigningApprovals {
 
     @ManyToOne
     @JoinColumn(name = "approverId")
-    @JsonIgnoreProperties("forApprovals")
+   @JsonIgnoreProperties({ "department","role","user"})
     private Employee approver;
 
     @ManyToOne
     @JoinColumn(name = "assignedById")
-    @JsonIgnoreProperties({"assignedApprovals"})
+   @JsonIgnoreProperties({ "department","role","user"})
     private Employee assignedBy;
 
     private Integer level;

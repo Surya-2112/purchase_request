@@ -2,6 +2,9 @@ package com.module.purchase.service;
 
 import com.module.purchase.repository.AssigningConfigRepository;
 import com.module.purchase.specification.AssigningConfigSpecification;
+
+import org.springframework.transaction.annotation.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +20,7 @@ import java.util.Optional;
 import java.util.List;
 
 @Service
+@Transactional
 public class AssigningConfigService {
     
     @Autowired

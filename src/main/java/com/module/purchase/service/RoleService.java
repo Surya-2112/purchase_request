@@ -18,7 +18,7 @@ import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.specification.RoleSpecification;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service

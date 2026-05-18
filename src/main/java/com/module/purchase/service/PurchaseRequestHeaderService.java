@@ -6,7 +6,7 @@ import org.springframework.data.jpa.domain.Specification;
 import com.module.purchase.repository.PurchaseRequestHeaderRepository;
 import com.module.purchase.specification.PurchaseRequestSpecification;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,7 +46,7 @@ public class PurchaseRequestHeaderService {
     }
 
     public Optional<PurchaseRequestHeader> getPurchaseRequestHeaderById(Long id) {
-        Optional<PurchaseRequestHeader> existingPurchaseRequestHeader = purchaseRequestHeaderRepository.findById(id);
+        Optional<PurchaseRequestHeader> existingPurchaseRequestHeader = purchaseRequestHeaderRepository.findDetailsById(id);
         if (!existingPurchaseRequestHeader.isPresent()) {
             throw new RuntimeException("Purchase request header not found with id: " + id);
         }
@@ -81,5 +81,10 @@ public class PurchaseRequestHeaderService {
         Pageable pageable = PageRequest.of(page, size);
         Page<PurchaseRequestHeader> prpage = purchaseRequestHeaderRepository.findAll(spec, pageable);
         return prpage.map(purchaseRequestMapper::toPurchaseRequestDTO);
+    }
+
+    public void deletePurchaseRequestHeaderById(Long Id)
+    {
+       purchaseRequestHeaderRepository.deleteById(Id);
     }
 }

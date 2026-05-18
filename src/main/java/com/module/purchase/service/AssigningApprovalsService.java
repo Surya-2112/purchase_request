@@ -13,7 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import com.module.purchase.repository.AssigningApprovalsRepository;
 import com.module.purchase.specification.AssigningApprovalsSpecification;
 import com.module.purchase.enums.ApprovalType;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;

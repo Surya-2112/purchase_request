@@ -15,6 +15,8 @@ public class PurchaseRequestDTO {
 
     private Department forDepartment;
 
+    private Double totalAmount;
+
     public Long getPurchaseRequestId() {
         return purchaseRequestId;
     }
@@ -46,5 +48,13 @@ public class PurchaseRequestDTO {
     public void setForDepartment(Department forDepartment) {
         this.forDepartment = forDepartment;
     } 
+
+    public Double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(Double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
 
 }

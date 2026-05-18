@@ -20,7 +20,7 @@ import com.module.purchase.customException.ResourceIsNotActiveException;
 import com.module.purchase.mapper.UsersMapper;
 import com.module.purchase.specification.UsersSpecification;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional

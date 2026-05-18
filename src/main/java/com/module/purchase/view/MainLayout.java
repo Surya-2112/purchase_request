@@ -1,6 +1,7 @@
 package com.module.purchase.view;
 
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.vaadin.flow.component.Component;
 
 import com.module.purchase.entity.Users;
 import com.module.purchase.service.SecurityService;
@@ -19,6 +20,7 @@ import com.module.purchase.view.vendorCategory.VendorCategoryView;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -32,150 +34,237 @@ import jakarta.annotation.security.PermitAll;
 @PermitAll
 public class MainLayout extends AppLayout {
 
-        private final SecurityService securityService;
+    private final SecurityService securityService;
 
-        public MainLayout(SecurityService securityService) {
+    public MainLayout(SecurityService securityService) {
 
-                this.securityService = securityService;
+        this.securityService = securityService;
 
-                // ================= CURRENT USER =================
+        setPrimarySection(
+                Section.DRAWER);
 
-                Users loggedInUser = securityService.getLoggedInUser();
+        // ================= CURRENT USER =================
 
-                String employeeName = loggedInUser.getEmployee() == null
-                                ? loggedInUser.getUserName()
-                                : loggedInUser.getEmployee()
-                                                .getEmployeeName();
+        Users loggedInUser =
+                securityService.getLoggedInUser();
 
-                // ================= PROFILE SECTION =================
+        String employeeName =
+                loggedInUser.getEmployee() == null
+                        ? loggedInUser.getUserName()
+                        : loggedInUser.getEmployee()
+                                .getEmployeeName();
 
-                Avatar avatar = new Avatar(employeeName);
+        // ================= HEADER =================
 
-                H3 userName = new H3(employeeName);
+        H2 title =
+                new H2("Purchase Management");
 
-                VerticalLayout profileText = new VerticalLayout(userName);
+        title.getStyle()
+                .set("margin", "0");
 
-                profileText.setPadding(false);
-                profileText.setSpacing(false);
+        HorizontalLayout header =
+                new HorizontalLayout(title);
 
-                HorizontalLayout profileSection = new HorizontalLayout(
-                                avatar,
-                                profileText);
+        header.setWidthFull();
 
-                profileSection.setAlignItems(
-                                FlexComponent.Alignment.CENTER);
+        header.setPadding(true);
 
-                profileSection.setWidthFull();
+        header.setAlignItems(
+                FlexComponent.Alignment.CENTER);
 
-                profileSection.getStyle()
-                                .set("cursor", "pointer");
+        addToNavbar(header);
 
-                // Navigate to current user details
-                profileSection.addClickListener(event -> {
+        // ================= PROFILE SECTION =================
 
-                        getUI().ifPresent(ui ->
+        Avatar avatar =
+                new Avatar(employeeName);
 
-                        ui.navigate(
-                                        "user-details/"
-                                                        + loggedInUser.getUserId()));
-                });
+        avatar.setWidth("45px");
 
-                // ================= MENU LINKS =================
+        avatar.setHeight("45px");
 
-                VerticalLayout menuLinks = new VerticalLayout(
+        H3 userName =
+                new H3(employeeName);
 
-                                new RouterLink(
-                                                "Dashboard",
-                                                DashboardView.class),
+        userName.getStyle()
+                .set("margin", "0")
+                .set("font-size", "18px");
 
-                                new RouterLink(
-                                                "Item",
-                                                ItemView.class),
+        VerticalLayout profileText =
+                new VerticalLayout(userName);
 
-                                new RouterLink("PurchaseRequest",PurchaseRequestView.class),
+        profileText.setPadding(false);
 
-                                new RouterLink(
-                                                "PurchaseOrder",
-                                                PurchaseOrderView.class),
+        profileText.setSpacing(false);
 
-                                new RouterLink(
-                                                "Vendor",
-                                                VendorView.class),
+        HorizontalLayout profileSection =
+                new HorizontalLayout(
+                        avatar,
+                        profileText);
 
-                                new RouterLink(
-                                                "VendorCategory",
-                                                VendorCategoryView.class),
+        profileSection.setAlignItems(
+                FlexComponent.Alignment.CENTER);
 
-                                new RouterLink(
-                                                "Employee",
-                                                EmployeeView.class),
+        profileSection.setWidthFull();
 
-                                new RouterLink(
-                                                "Department",
-                                                DepartmentView.class),
+        profileSection.setPadding(true);
 
-                                new RouterLink(
-                                                "DepartmentBudget",
-                                                DepartmentBudgetView.class),
+        profileSection.getStyle()
+                .set("cursor", "pointer")
+                .set("border-bottom",
+                        "1px solid #e5e5e5");
 
-                                new RouterLink(
-                                                "Role",
-                                                RoleView.class),
+        // ================= PROFILE CLICK =================
 
-                                new RouterLink(
-                                                "User",
-                                                UsersView.class),
+        profileSection.addClickListener(event -> {
 
-                                new RouterLink(
-                                                "AssigningConfig",
-                                                AssigningConfigView.class),
+            getUI().ifPresent(ui ->
 
-                                new RouterLink(
-                                                "AuditLogs",
-                                                AuditLogsView.class));
+                    ui.navigate(
+                            "user-details/"
+                                    + loggedInUser.getUserId()));
+        });
 
-                menuLinks.setPadding(false);
-                menuLinks.setSpacing(true);
+        // ================= MENU LINKS =================
 
-                // ================= MENU SCROLLER =================
+        VerticalLayout menuLinks =
+                new VerticalLayout();
 
-                Scroller scroller = new Scroller(menuLinks);
+        menuLinks.setPadding(false);
 
-                scroller.setSizeFull();
+        menuLinks.setSpacing(true);
 
-                // ================= LOGOUT BUTTON =================
+        menuLinks.setWidthFull();
 
-                Button logoutButton = new Button(
-                                "Logout",
-                                VaadinIcon.SIGN_OUT.create());
+        menuLinks.add(
 
-                logoutButton.setWidthFull();
+                createLink(
+                        "Dashboard",
+                        DashboardView.class),
 
-                logoutButton.addClickListener(event -> {
-                        SecurityContextHolder.clearContext();
-                        getUI().ifPresent(ui ->{
-                        ui.getSession().close();
-                        ui.getPage().setLocation("/login");
-                 });
-                });
+                createLink(
+                        "Item",
+                        ItemView.class),
 
-                // ================= DRAWER LAYOUT =================
+                createLink(
+                        "Purchase Request",
+                        PurchaseRequestView.class),
 
-                VerticalLayout drawerLayout = new VerticalLayout(
-                                profileSection,
-                                scroller,
-                                logoutButton);
+                createLink(
+                        "Purchase Order",
+                        PurchaseOrderView.class),
 
-                drawerLayout.setSizeFull();
+                createLink(
+                        "Vendor",
+                        VendorView.class),
 
-                drawerLayout.expand(scroller);
+                createLink(
+                        "Vendor Category",
+                        VendorCategoryView.class),
 
-                addToDrawer(drawerLayout);
+                createLink(
+                        "Employee",
+                        EmployeeView.class),
 
-                // ================= DRAWER WIDTH =================
+                createLink(
+                        "Department",
+                        DepartmentView.class),
 
-                getStyle().set(
-                                "--vaadin-app-layout-drawer-width",
-                                "200px");
-        }
+                createLink(
+                        "Department Budget",
+                        DepartmentBudgetView.class),
+
+                createLink(
+                        "Role",
+                        RoleView.class),
+
+                createLink(
+                        "User",
+                        UsersView.class),
+
+                createLink(
+                        "Assigning Config",
+                        AssigningConfigView.class),
+
+                createLink(
+                        "Audit Logs",
+                        AuditLogsView.class));
+
+        // ================= SCROLLER =================
+
+        Scroller scroller =
+                new Scroller(menuLinks);
+
+        scroller.setSizeFull();
+
+        // ================= LOGOUT BUTTON =================
+
+        Button logoutButton =
+                new Button(
+                        "Logout",
+                        VaadinIcon.SIGN_OUT.create());
+
+        logoutButton.setWidthFull();
+
+        logoutButton.getStyle()
+                .set("margin-top", "10px");
+
+        logoutButton.addClickListener(event -> {
+
+            SecurityContextHolder.clearContext();
+
+            getUI().ifPresent(ui -> {
+
+                ui.getSession().close();
+
+                ui.getPage().setLocation("/login");
+            });
+        });
+
+        // ================= DRAWER LAYOUT =================
+
+        VerticalLayout drawerLayout =
+                new VerticalLayout(
+                        profileSection,
+                        scroller,
+                        logoutButton);
+
+        drawerLayout.setSizeFull();
+
+        drawerLayout.setPadding(false);
+
+        drawerLayout.setSpacing(false);
+
+        drawerLayout.expand(scroller);
+
+        drawerLayout.getStyle()
+                .set("overflow", "hidden");
+
+        addToDrawer(drawerLayout);
+
+        // ================= DRAWER WIDTH =================
+
+        getStyle().set(
+                "--vaadin-app-layout-drawer-width",
+                "260px");
+    }
+
+    // ================= CREATE MENU LINK =================
+
+   private RouterLink createLink(
+        String text,
+        Class<? extends Component> navigationTarget) {
+
+        RouterLink link = new RouterLink(text, navigationTarget);
+
+      //  link.setWidthFull();
+
+        link.getStyle()
+                .set("padding", "10px 15px")
+                .set("border-radius", "8px")
+                .set("text-decoration", "none")
+                .set("font-size", "15px");
+
+        return link;
+    }
 }
