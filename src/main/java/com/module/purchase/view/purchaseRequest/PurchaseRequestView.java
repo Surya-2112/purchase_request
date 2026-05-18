@@ -1,12 +1,20 @@
 package com.module.purchase.view.purchaseRequest;
 
-import com.module.purchase.entity.Users;
-import com.module.purchase.entity.Employee;
+import org.springframework.data.domain.Page;
+
 import com.module.purchase.entity.Department;
-import com.module.purchase.entityDTO.PurchaseRequestDTO;
+import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Users;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;
+import com.module.purchase.entityDTO.PurchaseRequestDTO;
 import com.module.purchase.enums.Status;
-import com.module.purchase.service.*;
+import com.module.purchase.service.AssigningApprovalsService;
+import com.module.purchase.service.AssigningConfigService;
+import com.module.purchase.service.DepartmentService;
+import com.module.purchase.service.EmployeeService;
+import com.module.purchase.service.ItemService;
+import com.module.purchase.service.PurchaseRequestHeaderService;
+import com.module.purchase.service.SecurityService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -17,247 +25,624 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
-import jakarta.annotation.security.PermitAll;
-import org.springframework.data.domain.Page;
 
+import jakarta.annotation.security.PermitAll;
 
 @Route(value = "purchase-request", layout = MainLayout.class)
 @PermitAll
 public class PurchaseRequestView extends VerticalLayout {
 
-    private final PurchaseRequestHeaderService prService;
-    private final AssigningApprovalsService assigningApprovalsService;
-    private final SecurityService securityService;
-    private final DepartmentService departmentService;
-    private final EmployeeService employeeService;
+        private final PurchaseRequestHeaderService prService;
 
-    private final Grid<PurchaseRequestDTO> prGrid = new Grid<>(PurchaseRequestDTO.class, false);
-    private final Grid<AssigningApprovalsDTO> assignGrid = new Grid<>(AssigningApprovalsDTO.class, false);
+        private final AssigningApprovalsService assigningApprovalsService;
 
-    private int currentPage = 0;
-    private int pageSize = 25;
+        private final SecurityService securityService;
 
-    private String viewMode = "ALL";
+        private final DepartmentService departmentService;
 
-    private PurchaseRequestDTO prFilter = new PurchaseRequestDTO();
-    private AssigningApprovalsDTO assignFilter = new AssigningApprovalsDTO();
+        private final EmployeeService employeeService;
 
-    private final Span pageInfo = new Span();
+        private final ItemService itemService;
 
-    private final TextField prIdField = new TextField("PR ID");
-    private final ComboBox<Employee> createdByField = new ComboBox<>("Created By");
-    private final ComboBox<Department> departmentField = new ComboBox<>("Department");
-    private final ComboBox<Status> statusField = new ComboBox<>("Status");
+        private final AssigningConfigService assigningConfigService;
 
-    private final TextField assignIdField = new TextField("Assign ID");
-    private final TextField referenceIdField = new TextField("Reference ID");
+        // ================= GRIDS =================
 
-    public PurchaseRequestView(
-            PurchaseRequestHeaderService prService,
-            SecurityService securityService,
-            DepartmentService departmentService,
-            EmployeeService employeeService,
-            AssigningApprovalsService assigningApprovalsService) {
+        private final Grid<PurchaseRequestDTO> prGrid = new Grid<>(PurchaseRequestDTO.class, false);
 
-        this.prService = prService;
-        this.securityService = securityService;
-        this.departmentService = departmentService;
-        this.employeeService = employeeService;
-        this.assigningApprovalsService = assigningApprovalsService;
+        private final Grid<AssigningApprovalsDTO> assignGrid = new Grid<>(AssigningApprovalsDTO.class, false);
 
-        setSizeFull();
-        setPadding(true);
-        setSpacing(true);
+        // ================= PAGINATION =================
 
-        buildUI();
-        loadData();
-    }
+        private int currentPage = 0;
 
-    private void buildUI() {
+        private int pageSize = 25;
 
-        H2 title = new H2("Purchase Requests");
+        private final Span pageInfo = new Span();
 
-        Button allBtn = new Button("Purchase Requests");
-        Button assignedBtn = new Button("Assigned to You");
-        Button createdBtn = new Button("Created by You");
+        // ================= VIEW MODE =================
 
-        HorizontalLayout tabs = new HorizontalLayout(allBtn, assignedBtn, createdBtn);
+        private String viewMode = "ALL";
 
-        allBtn.addClickListener(e -> {
-            viewMode = "ALL";
-            currentPage = 0;
-            loadData();
-        });
-        assignedBtn.addClickListener(e -> {
-            viewMode = "ASSIGNED";
-            currentPage = 0;
-            loadData();
-        });
-        createdBtn.addClickListener(e -> {
-            viewMode = "CREATED";
-            currentPage = 0;
-            loadData();
-        });
+        // ================= FILTER DTO =================
 
-        createdByField.setItems(employeeService.getEmployees());
-        departmentField.setItems(departmentService.getDepartments());
-        statusField.setItems(Status.values());
+        private PurchaseRequestDTO prFilter = new PurchaseRequestDTO();
 
-        Button search = new Button("Search", e -> applyFilter());
-        Button clear = new Button("Clear", e -> clearFilter());
+        private AssigningApprovalsDTO assignFilter = new AssigningApprovalsDTO();
 
-        HorizontalLayout prFilters = new HorizontalLayout(
-                prIdField, createdByField, departmentField, statusField, search, clear);
+        // ================= PR FILTERS =================
 
-        Button assignSearch = new Button("Search", e -> applyAssignFilter());
-        Button assignClear = new Button("Clear", e -> clearAssignFilter());
+        private final TextField prIdField = new TextField("PR ID");
 
-        HorizontalLayout assignFilters = new HorizontalLayout(
-                assignIdField, referenceIdField, assignSearch, assignClear);
+        private final ComboBox<Employee> createdByField = new ComboBox<>("Created By");
 
-        // ===== PR GRID =====
-        prGrid.addComponentColumn(pr -> {
-            Button id = new Button(String.valueOf(pr.getPurchaseRequestId()));
-            id.addClickListener(
-                    e -> getUI().ifPresent(ui -> ui.navigate("purchase-request-details/" + pr.getPurchaseRequestId())));
-            return id;
-        }).setHeader("PR ID");
+        private final ComboBox<Department> departmentField = new ComboBox<>("Department");
 
-        prGrid.addColumn(PurchaseRequestDTO::getStatus).setHeader("Status");
+        private final ComboBox<Status> statusField = new ComboBox<>("Status");
 
-        prGrid.addColumn(pr -> pr.getForDepartment() == null ? "" : pr.getForDepartment().getDepartmentName())
-                .setHeader("Department");
+        // ================= ASSIGN FILTERS =================
 
-        prGrid.addColumn(pr -> pr.getCreatedBy() == null ? "" : pr.getCreatedBy().getEmployeeName())
-                .setHeader("Created By");
+        private final TextField assignIdField = new TextField("Assign ID");
 
-        prGrid.setSizeFull();
+        private final TextField referenceIdField = new TextField("Reference ID");
 
-        // ===== ASSIGN GRID =====
-        assignGrid.addComponentColumn(a -> {
-            Button id = new Button(String.valueOf(a.getAssigningApprovalsId()));
-            id.addClickListener(e -> getUI()
-                    .ifPresent(ui -> ui.navigate("assigning-approvals-details/" + a.getAssigningApprovalsId())));
-            return id;
-        }).setHeader("Assign ID");
+        private final ComboBox<Status> assignStatusField = new ComboBox<>("Status");
 
-        assignGrid.addColumn(AssigningApprovalsDTO::getReferenceId).setHeader("Reference ID");
+        // ================= FILTER LAYOUTS =================
 
-        assignGrid.addColumn(a -> a.getApprover() == null ? "" : a.getApprover().getEmployeeName())
-                .setHeader("Approver");
+        private HorizontalLayout prFilters;
 
-        assignGrid.setSizeFull();
+        private HorizontalLayout assignFilters;
 
-        // ===== PAGINATION =====
-        Button prev = new Button("Prev", e -> {
-            if (currentPage > 0) {
-                currentPage--;
+        public PurchaseRequestView(
+
+                        PurchaseRequestHeaderService prService,
+
+                        SecurityService securityService,
+
+                        DepartmentService departmentService,
+
+                        EmployeeService employeeService,
+
+                        ItemService itemService,
+
+                        AssigningApprovalsService assigningApprovalsService,
+
+                        AssigningConfigService assigningConfigService) {
+
+                this.prService = prService;
+
+                this.securityService = securityService;
+
+                this.departmentService = departmentService;
+
+                this.employeeService = employeeService;
+
+                this.itemService = itemService;
+
+                this.assigningApprovalsService = assigningApprovalsService;
+
+                this.assigningConfigService = assigningConfigService;
+
+                setSizeFull();
+
+                setPadding(true);
+
+                setSpacing(true);
+
+                buildUI();
+
                 loadData();
-            }
-        });
-
-        Button next = new Button("Next", e -> {
-            currentPage++;
-            loadData();
-        });
-
-        HorizontalLayout pagination = new HorizontalLayout(prev, pageInfo, next);
-        pagination.setWidthFull();
-        pagination.setJustifyContentMode(JustifyContentMode.CENTER);
-
-        add(title, tabs, prFilters, assignFilters, prGrid, assignGrid, pagination);
-
-        expand(prGrid);
-        expand(assignGrid);
-    }
-
-    // ================= LOAD DATA =================
-    private void loadData() {
-
-        Users user = securityService.getLoggedInUser();
-
-        prGrid.setVisible(false);
-        assignGrid.setVisible(false);
-
-        if ("ASSIGNED".equals(viewMode)) {
-
-            assignGrid.setVisible(true);
-
-            Page<AssigningApprovalsDTO> page = assigningApprovalsService.getPurchaseRequestApprovalsForMe(
-                    assignFilter,
-                    user.getUserId(),
-                    currentPage,
-                    pageSize);
-
-            assignGrid.setItems(page.getContent());
-
-        } else if ("CREATED".equals(viewMode)) {
-            prGrid.setVisible(true);
-            Page<PurchaseRequestDTO> page = prService.getCreatedByUser(
-                    prFilter,
-                    user.getUserId(),
-                    currentPage,
-                    pageSize);
-            prGrid.setItems(page.getContent());
-
-        } else {
-
-            prGrid.setVisible(true);
-
-            Page<PurchaseRequestDTO> page = prService.getAllPurchaseRequest(prFilter, currentPage, pageSize);
-
-            prGrid.setItems(page.getContent());
         }
 
-        pageInfo.setText("Page " + (currentPage + 1));
-    }
+        // =========================================================
+        // BUILD UI
+        // =========================================================
 
-    // ================= FILTERS =================
-    private void applyFilter() {
+        private void buildUI() {
 
-        prFilter = new PurchaseRequestDTO();
+                // ================= HEADER =================
 
-        if (!prIdField.isEmpty()) {
-            prFilter.setPurchaseRequestId(Long.valueOf(prIdField.getValue()));
+                H2 title = new H2("Purchase Requests");
+                Button addButton = new Button("Add Purchase Request");
+
+                addButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("purchase-request-form")));
+
+                HorizontalLayout headerLayout = new HorizontalLayout(
+                                title,
+                                addButton);
+
+                headerLayout.setWidthFull();
+
+                headerLayout.setJustifyContentMode(
+                                JustifyContentMode.BETWEEN);
+
+                headerLayout.setAlignItems(
+                                Alignment.CENTER);
+
+                // ================= TABS =================
+
+                Button allBtn = new Button("Purchase Requests");
+
+                Button assignedBtn = new Button("Assigned to You");
+
+                Button createdBtn = new Button("Created by You");
+
+                assignFilter.setStatus(Status.WAITING_APPROVAL);
+
+                allBtn.addClickListener(event -> {
+
+                        viewMode = "ALL";
+
+                        currentPage = 0;
+
+                        loadData();
+                });
+
+                assignedBtn.addClickListener(event -> {
+
+                        viewMode = "ASSIGNED";
+
+                        currentPage = 0;
+
+                        loadData();
+                });
+
+                createdBtn.addClickListener(event -> {
+
+                        viewMode = "CREATED";
+
+                        currentPage = 0;
+
+                        loadData();
+                });
+
+                HorizontalLayout tabs = new HorizontalLayout(allBtn, assignedBtn, createdBtn);
+
+                // =====================================================
+                // FILTERS
+                // =====================================================
+
+                createdByField.setItems(employeeService.getEmployees());
+
+                createdByField.setItemLabelGenerator(Employee::getEmployeeName);
+
+                departmentField.setItems(departmentService.getDepartments());
+
+                departmentField.setItemLabelGenerator(Department::getDepartmentName);
+
+                statusField.setItems(Status.values());
+
+                // ================= PR FILTERS =================
+
+                Button search = new Button("Search", e -> applyFilter());
+
+                Button clear = new Button("Clear", e -> clearFilter());
+
+                prFilters = new HorizontalLayout(prIdField, createdByField, departmentField, statusField, search,
+                                clear);
+
+                prFilters.setAlignItems(Alignment.END);
+
+                // ================= ASSIGN FILTERS =================
+
+                assignStatusField.setItems(
+                                Status.WAITING_APPROVAL,
+                                Status.APPROVED,
+                                Status.REJECTED);
+
+                // DEFAULT VALUE
+                assignStatusField.setValue(Status.WAITING_APPROVAL);
+
+                Button assignSearch = new Button("Search", e -> applyAssignFilter());
+
+                Button assignClear = new Button("Clear", e -> clearAssignFilter());
+
+                assignFilters = new HorizontalLayout(
+
+                                assignIdField,
+
+                                referenceIdField,
+
+                                assignStatusField,
+
+                                assignSearch,
+
+                                assignClear);
+
+                assignFilters.setAlignItems(Alignment.END);
+                // =====================================================
+                // PR GRID
+                // =====================================================
+
+                prGrid.removeAllColumns();
+
+                prGrid.addComponentColumn(pr -> {
+
+                        Button button = new Button(
+                                        String.valueOf(
+                                                        pr.getPurchaseRequestId()));
+
+                        button.addClickListener(e -> getUI().ifPresent(
+                                        ui -> ui.navigate("purchase-request-details/" + pr.getPurchaseRequestId())));
+
+                        return button;
+
+                }).setHeader("PR ID");
+
+                prGrid.addColumn(PurchaseRequestDTO::getStatus).setHeader("Status");
+
+                prGrid.addColumn(pr ->
+
+                pr.getForDepartment() == null
+                                ? ""
+                                : pr.getForDepartment()
+                                                .getDepartmentName()
+
+                )
+                                .setHeader("Department");
+
+                prGrid.addColumn(pr ->
+
+                pr.getCreatedBy() == null
+                                ? ""
+                                : pr.getCreatedBy()
+                                                .getEmployeeName()
+
+                )
+                                .setHeader("Created By");
+
+                prGrid.addColumn(
+                                PurchaseRequestDTO::getTotalAmount)
+                                .setHeader("Total Amount");
+
+                prGrid.setWidthFull();
+
+                prGrid.setHeightFull();
+
+                // =====================================================
+                // ASSIGN GRID
+                // =====================================================
+
+                assignGrid.removeAllColumns();
+
+                assignGrid.addComponentColumn(a -> {
+
+                        Button button = new Button(String.valueOf(
+                                        a.getAssigningApprovalsId()));
+
+                        button.addClickListener(event ->
+
+                        getUI().ifPresent(ui ->
+
+                        ui.navigate(
+                                        "assigning-approvals-details/"
+                                                        + a.getAssigningApprovalsId())));
+
+                        return button;
+
+                }).setHeader("Assign ID");
+
+                assignGrid.addColumn(
+                                AssigningApprovalsDTO::getReferenceId)
+                                .setHeader("Reference ID");
+
+                assignGrid.addColumn(a ->
+
+                a.getApprover() == null
+                                ? ""
+                                : a.getApprover()
+                                                .getEmployeeName()
+
+                )
+                                .setHeader("Approver");
+
+                assignGrid.addColumn(
+                                AssigningApprovalsDTO::getLevel)
+                                .setHeader("Level");
+
+                assignGrid.addColumn(
+                                AssigningApprovalsDTO::getApprovalType)
+                                .setHeader("Approval Type");
+
+                assignGrid.addColumn(
+                                AssigningApprovalsDTO::getStatus)
+                                .setHeader("Status");
+
+                assignGrid.setWidthFull();
+
+                assignGrid.setHeightFull();
+
+                // =====================================================
+                // PAGINATION
+                // =====================================================
+
+                Button prev = new Button("Prev");
+
+                Button next = new Button("Next");
+
+                prev.addClickListener(event -> {
+
+                        if (currentPage > 0) {
+
+                                currentPage--;
+
+                                loadData();
+                        }
+                });
+
+                next.addClickListener(event -> {
+
+                        currentPage++;
+
+                        loadData();
+                });
+
+                ComboBox<Integer> pageSizeField = new ComboBox<>();
+
+                pageSizeField.setItems(
+                                10,
+                                25,
+                                50,
+                                100);
+
+                pageSizeField.setValue(25);
+
+                pageSizeField.addValueChangeListener(event -> {
+
+                        pageSize = event.getValue();
+
+                        currentPage = 0;
+
+                        loadData();
+                });
+
+                HorizontalLayout pagination = new HorizontalLayout(
+
+                                prev,
+
+                                pageInfo,
+
+                                next,
+
+                                new Span("Page Size"),
+
+                                pageSizeField);
+
+                pagination.setWidthFull();
+
+                pagination.setJustifyContentMode(
+                                JustifyContentMode.CENTER);
+
+                pagination.setAlignItems(
+                                Alignment.CENTER);
+
+                // =====================================================
+                // ADD COMPONENTS
+                // =====================================================
+
+                add(
+
+                                headerLayout,
+
+                                tabs,
+
+                                prFilters,
+
+                                assignFilters,
+
+                                prGrid,
+
+                                assignGrid,
+
+                                pagination);
+
+                expand(prGrid);
+
+                expand(assignGrid);
         }
 
-        prFilter.setCreatedBy(createdByField.getValue());
-        prFilter.setForDepartment(departmentField.getValue());
-        prFilter.setStatus(statusField.getValue());
+        // =========================================================
+        // LOAD DATA
+        // =========================================================
 
-        currentPage = 0;
-        loadData();
-    }
+        private void loadData() {
 
-    private void clearFilter() {
-        prIdField.clear();
-        createdByField.clear();
-        departmentField.clear();
-        statusField.clear();
-        prFilter = new PurchaseRequestDTO();
-        loadData();
-    }
+                Users user = securityService.getLoggedInUser();
 
-    private void applyAssignFilter() {
+                prGrid.setVisible(false);
 
-        assignFilter = new AssigningApprovalsDTO();
+                assignGrid.setVisible(false);
 
-        if (!assignIdField.isEmpty()) {
-            assignFilter.setAssigningApprovalsId(Long.valueOf(assignIdField.getValue()));
+                prFilters.setVisible(false);
+
+                assignFilters.setVisible(false);
+
+                // ================= ASSIGNED =================
+
+                if ("ASSIGNED".equals(viewMode)) {
+
+                        assignGrid.setVisible(true);
+
+                        assignFilters.setVisible(true);
+
+                        Page<AssigningApprovalsDTO> page =
+
+                                        assigningApprovalsService
+                                                        .getPurchaseRequestApprovalsForMe(
+
+                                                                        assignFilter,
+
+                                                                        user.getUserId(),
+
+                                                                        currentPage,
+
+                                                                        pageSize);
+
+                        assignGrid.setItems(
+                                        page.getContent());
+
+                        pageInfo.setText(
+                                        "Page "
+                                                        + (currentPage + 1)
+                                                        + " of "
+                                                        + page.getTotalPages());
+                }
+
+                // ================= CREATED =================
+
+                else if ("CREATED".equals(viewMode)) {
+
+                        prGrid.setVisible(true);
+
+                        prFilters.setVisible(true);
+
+                        Page<PurchaseRequestDTO> page =
+
+                                        prService.getCreatedByUser(
+
+                                                        prFilter,
+
+                                                        user.getUserId(),
+
+                                                        currentPage,
+
+                                                        pageSize);
+
+                        prGrid.setItems(
+                                        page.getContent());
+
+                        pageInfo.setText(
+                                        "Page "
+                                                        + (currentPage + 1)
+                                                        + " of "
+                                                        + page.getTotalPages());
+                }
+
+                // ================= ALL =================
+
+                else {
+
+                        prGrid.setVisible(true);
+
+                        prFilters.setVisible(true);
+
+                        Page<PurchaseRequestDTO> page =
+
+                                        prService.getAllPurchaseRequest(
+
+                                                        prFilter,
+
+                                                        currentPage,
+
+                                                        pageSize);
+
+                        prGrid.setItems(
+                                        page.getContent());
+
+                        pageInfo.setText(
+                                        "Page "
+                                                        + (currentPage + 1)
+                                                        + " of "
+                                                        + page.getTotalPages());
+                }
         }
 
-        if (!referenceIdField.isEmpty()) {
-            assignFilter.setReferenceId(Long.valueOf(referenceIdField.getValue()));
+        // =========================================================
+        // PR FILTER
+        // =========================================================
+
+        private void applyFilter() {
+
+                prFilter = new PurchaseRequestDTO();
+
+                if (!prIdField.isEmpty()) {
+
+                        prFilter.setPurchaseRequestId(
+
+                                        Long.valueOf(
+                                                        prIdField.getValue()));
+                }
+
+                prFilter.setCreatedBy(
+                                createdByField.getValue());
+
+                prFilter.setForDepartment(
+                                departmentField.getValue());
+
+                prFilter.setStatus(
+                                statusField.getValue());
+
+                currentPage = 0;
+
+                loadData();
         }
 
-        currentPage = 0;
-        loadData();
-    }
+        private void clearFilter() {
 
-    private void clearAssignFilter() {
-        assignIdField.clear();
-        referenceIdField.clear();
-        assignFilter = new AssigningApprovalsDTO();
-        loadData();
-    }
+                prIdField.clear();
+
+                createdByField.clear();
+
+                departmentField.clear();
+
+                statusField.clear();
+
+                prFilter = new PurchaseRequestDTO();
+
+                currentPage = 0;
+
+                loadData();
+        }
+
+        // =========================================================
+        // ASSIGN FILTER
+        // =========================================================
+
+        private void applyAssignFilter() {
+
+                assignFilter = new AssigningApprovalsDTO();
+
+                if (!assignIdField.isEmpty()) {
+
+                        assignFilter.setAssigningApprovalsId(
+
+                                        Long.valueOf(
+                                                        assignIdField.getValue()));
+                }
+
+                if (!referenceIdField.isEmpty()) {
+
+                        assignFilter.setReferenceId(
+
+                                        Long.valueOf(
+                                                        referenceIdField.getValue()));
+                }
+
+                // SET FILTER STATUS
+                assignFilter.setStatus(assignStatusField.getValue());
+
+                currentPage = 0;
+
+                loadData();
+        }
+
+        private void clearAssignFilter() {
+
+                assignIdField.clear();
+
+                referenceIdField.clear();
+
+                // RESET DEFAULT STATUS
+                assignStatusField.setValue(Status.WAITING_APPROVAL);
+
+                assignFilter = new AssigningApprovalsDTO();
+
+                // IMPORTANT
+                assignFilter.setStatus(Status.WAITING_APPROVAL);
+
+                currentPage = 0;
+
+                loadData();
+        }
 }

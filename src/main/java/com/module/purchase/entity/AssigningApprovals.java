@@ -1,11 +1,12 @@
 package com.module.purchase.entity;
 
-import java.sql.Date;
+//import java.sql.Date;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.module.purchase.enums.ApprovalSource;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.Status;
-
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,8 +16,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
-
 
 @Entity
 public class AssigningApprovals {
@@ -32,7 +31,7 @@ public class AssigningApprovals {
 
     @ManyToOne
     @JoinColumn(name = "assignedById")
-    @JsonIgnoreProperties({"assignedApprovals"})
+    @JsonIgnoreProperties({ "assignedApprovals" })
     private Employee assignedBy;
 
     private Integer level;
@@ -42,14 +41,25 @@ public class AssigningApprovals {
 
     private Long referenceId;
 
-    private Date assignedDate;
+    private LocalDate assignedDate;
 
-    private Date ApprovedDate;
+    private LocalDate ApprovedDate;
 
     private String comments;
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @Enumerated(EnumType.STRING)
+    private ApprovalSource source;
+
+    public ApprovalSource getSource() {
+        return source;
+    }
+
+    public void setSource(ApprovalSource source) {
+        this.source = source;
+    }
 
     public Long getAssigningApprovalsId() {
         return assigningApprovalsId;
@@ -99,19 +109,19 @@ public class AssigningApprovals {
         this.referenceId = referenceId;
     }
 
-    public Date getAssignedDate() {
+    public LocalDate getAssignedDate() {
         return assignedDate;
     }
 
-    public void setAssignedDate(Date assignedDate) {
+    public void setAssignedDate(LocalDate assignedDate) {
         this.assignedDate = assignedDate;
     }
 
-    public Date getApprovedDate() {
+    public LocalDate getApprovedDate() {
         return ApprovedDate;
     }
 
-    public void setApprovedDate(Date approvedDate) {
+    public void setApprovedDate(LocalDate approvedDate) {
         ApprovedDate = approvedDate;
     }
 
@@ -130,5 +140,4 @@ public class AssigningApprovals {
     public void setStatus(Status status) {
         this.status = status;
     }
-
 }

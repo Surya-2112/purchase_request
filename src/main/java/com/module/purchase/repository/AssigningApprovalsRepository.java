@@ -10,4 +10,6 @@ import com.module.purchase.enums.ApprovalType;
 public interface AssigningApprovalsRepository extends JpaRepository<AssigningApprovals, Long>,JpaSpecificationExecutor<AssigningApprovals> {
 
     List<AssigningApprovals> findByApproverAndApprovalType(Employee approver,ApprovalType approvalType);
+    
+    List<AssigningApprovals> findByApprovalTypeAndReferenceId(ApprovalType approvalType,Long referenceId);
 }

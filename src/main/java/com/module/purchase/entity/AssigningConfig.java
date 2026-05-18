@@ -25,9 +25,10 @@ public class AssigningConfig {
     @Enumerated(EnumType.STRING)
     private EmployeeGroup employeeGroup;
 
-    private Double MinAmount;
+    private Double minAmount;
 
-    private Double MaxAmount;
+    private Double maxAmount;
+    
 
     public Long getId() {
         return id;
@@ -62,19 +63,19 @@ public class AssigningConfig {
     }
 
     public Double getMinAmount() {
-        return MinAmount;
+        return minAmount;
     }
 
-    public void setMinAmount(Double MinAmount) {
-        this.MinAmount = MinAmount;
+    public void setMinAmount(Double minAmount) {
+        this.minAmount = minAmount;
     }
 
     public Double getMaxAmount() {
-        return MaxAmount;
+        return maxAmount;
     }
 
-    public void setMaxAmount(Double MaxAmount) {
-        this.MaxAmount = MaxAmount;
+    public void setMaxAmount(Double maxAmount) {
+        this.maxAmount = maxAmount;
     }
 
 

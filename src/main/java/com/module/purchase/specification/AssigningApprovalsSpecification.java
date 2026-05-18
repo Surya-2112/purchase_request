@@ -5,6 +5,7 @@ import org.springframework.data.jpa.domain.Specification;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.enums.ApprovalType;
+import com.module.purchase.enums.Status;
 
 public class AssigningApprovalsSpecification {
 
@@ -34,5 +35,13 @@ public class AssigningApprovalsSpecification {
                 referenceId == null
                         ? null
                         : cb.equal(root.get("referenceId"), referenceId);
+    }
+
+    public static Specification<AssigningApprovals> hasStatus(Status status)
+    {
+        return (root,query,cb) ->
+         status == null
+         ?null
+         : cb.equal(root.get("status"),status);
     }
 }

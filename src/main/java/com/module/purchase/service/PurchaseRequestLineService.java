@@ -2,6 +2,7 @@ package com.module.purchase.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import com.module.purchase.repository.PurchaseRequestLineRepository;
+import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import java.util.Optional;
 import java.util.List;
@@ -23,6 +24,11 @@ public class PurchaseRequestLineService {
             throw new RuntimeException("Purchase request line not found with id: " + id);
         }
         return existingPurchaseRequestLine;
+    }
+
+    public List<PurchaseRequestLine> getPurchaseRequestLineByHeader(PurchaseRequestHeader header)
+    {
+        return purchaseRequestLineRepository.findByPurchaseRequestHeader(header);
     }
 
     public PurchaseRequestLine addPurchaseRequestLine(PurchaseRequestLine purchaseRequestLine) {

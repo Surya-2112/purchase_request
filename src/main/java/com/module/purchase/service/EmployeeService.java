@@ -3,7 +3,6 @@ package com.module.purchase.service;
 import java.util.List;
 import java.util.Optional;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -17,6 +16,7 @@ import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entityDTO.EmployeeDTO;
+import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.mapper.EmployeeMapper;
 import com.module.purchase.repository.EmployeeRepository;
 import com.module.purchase.specification.EmployeeSpecification;
@@ -51,6 +51,13 @@ public class EmployeeService {
         return saveEmployee(employee);
     }
 
+    public List<Employee> getEmployeesByEmployeeGroup(
+            EmployeeGroup employeeGroup) {
+        return employeeRepository
+                .findByRoleEmployeeGroup(
+                        employeeGroup);
+    }
+
     public Optional<Employee> getEmployeeById(Long id) {
 
         Optional<Employee> existingEmployee = employeeRepository.findById(id);
@@ -68,14 +75,13 @@ public class EmployeeService {
                 .and(EmployeeSpecification.hasDepartment(employeeDTO.getDepartment()))
                 .and(EmployeeSpecification.hasRole(employeeDTO.getRole()))
                 .and(EmployeeSpecification.hasActive(employeeDTO.getActive()));
-        
+
         Pageable pageable = PageRequest.of(page, size);
         Page<Employee> employeePage = employeeRepository.findAll(spec, pageable);
         return employeePage.map(employeeMapper::toEmployee);
     }
 
-    public List<Employee> getEmployees()
-    {
+    public List<Employee> getEmployees() {
         return employeeRepository.findAll();
     }
 
@@ -84,11 +90,10 @@ public class EmployeeService {
         if (!existingEmployee.getEmployeeEmail().equals(employee.getEmployeeEmail())) {
             throw new ModificationNotAllowedException("cannot update employee email");
         }
-         if( existingEmployee.getDepartment()!=null && employee.getDepartment()!=existingEmployee.getDepartment())
-        {
-            Department department=departmentService.getDepartmentById(existingEmployee.getDepartment().getDepartmentId()).get();
-            if(department.getHeadEmployee()==existingEmployee)
-            {
+        if (existingEmployee.getDepartment() != null && employee.getDepartment() != existingEmployee.getDepartment()) {
+            Department department = departmentService
+                    .getDepartmentById(existingEmployee.getDepartment().getDepartmentId()).get();
+            if (department.getHeadEmployee() == existingEmployee) {
                 throw new RuntimeException("This employee is  head of department");
             }
         }
