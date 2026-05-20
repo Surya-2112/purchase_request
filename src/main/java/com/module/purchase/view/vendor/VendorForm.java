@@ -1,5 +1,6 @@
 package com.module.purchase.view.vendor;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Address;
 import com.module.purchase.entity.Vendor;
 import com.module.purchase.entity.VendorCategory;
@@ -18,6 +19,8 @@ public class VendorForm extends Dialog {
 
     private final VendorService vendorService;
 
+    private final SecurityService securityService;
+
     // BASIC DETAILS
     private final TextField vendorNameField = new TextField("Vendor Name");
     private final EmailField vendorEmailField = new EmailField("Vendor Email");
@@ -35,11 +38,11 @@ public class VendorForm extends Dialog {
     private final TextField countryField = new TextField("Country");
     private final TextField postalCodeField = new TextField("Pincode");
 
-    public VendorForm(
-            VendorService vendorService,
-            VendorCategoryService vendorCategoryService) {
+    public VendorForm( VendorService vendorService,
+            VendorCategoryService vendorCategoryService, SecurityService securityService) {
 
         this.vendorService = vendorService;
+        this.securityService=securityService;
 
         setHeaderTitle("Add Vendor");
         setWidth("700px");
@@ -123,7 +126,7 @@ public class VendorForm extends Dialog {
             vendor.setVendorAddress(address);
 
             // SAVE
-            vendorService.addVendor(vendor);
+            vendorService.addVendor(vendor,securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "Vendor Saved Successfully",

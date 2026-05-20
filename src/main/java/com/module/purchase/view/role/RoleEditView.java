@@ -3,6 +3,7 @@ package com.module.purchase.view.role;
 import java.util.List;
 import java.util.Set;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Role;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.RoleService;
@@ -28,6 +29,8 @@ public class RoleEditView extends VerticalLayout
 
     private final RoleService roleService;
 
+    private final SecurityService securityService;
+
     // FIELDS
     private final TextField roleNameField =
             new TextField("Role Name");
@@ -37,11 +40,10 @@ public class RoleEditView extends VerticalLayout
 
     private Role role;
 
-    public RoleEditView(
-            RoleService roleService) {
+    public RoleEditView(RoleService roleService, SecurityService securityService) {
 
-        this.roleService =
-                roleService;
+        this.roleService = roleService;
+        this.securityService=securityService;
 
         setSizeFull();
 
@@ -128,7 +130,7 @@ public class RoleEditView extends VerticalLayout
                                 employeeGroupField.getValue()));
 
                 // UPDATE
-                roleService.updateRole(role);
+                roleService.updateRole(role,securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Role Updated Successfully",

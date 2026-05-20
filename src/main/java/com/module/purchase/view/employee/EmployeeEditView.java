@@ -1,5 +1,6 @@
 package com.module.purchase.view.employee;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Address;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
@@ -29,6 +30,8 @@ public class EmployeeEditView extends VerticalLayout
                 implements HasUrlParameter<Long> {
 
         private final EmployeeService employeeService;
+
+        private final SecurityService securityService;
 
         // BASIC DETAILS
         private final TextField employeeNameField = new TextField("Employee Name");
@@ -60,12 +63,13 @@ public class EmployeeEditView extends VerticalLayout
 
         private Employee employee;
 
-        public EmployeeEditView(
-                        EmployeeService employeeService,
+        public EmployeeEditView(EmployeeService employeeService,
                         DepartmentService departmentService,
-                        RoleService roleService) {
+                        RoleService roleService,
+                        SecurityService securityService) {
 
                 this.employeeService = employeeService;
+                this.securityService = securityService;
 
                 setSizeFull();
                 setPadding(true);
@@ -239,7 +243,8 @@ public class EmployeeEditView extends VerticalLayout
 
                                 employee.setAddress(updatedAddress);
 
-                                employeeService.updateEmployee(employee);
+                                employeeService.updateEmployee(employee,
+                                                securityService.getLoggedInUser().getEmployee());
 
                                 Notification.show(
                                                 "Employee Updated Successfully",

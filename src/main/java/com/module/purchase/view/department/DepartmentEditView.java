@@ -1,5 +1,6 @@
 package com.module.purchase.view.department;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.service.DepartmentService;
@@ -28,6 +29,8 @@ public class DepartmentEditView extends VerticalLayout
 
     private final EmployeeService employeeService;
 
+    private final SecurityService securityService;
+
     // FIELDS
     private final TextField departmentNameField =
             new TextField("Department Name");
@@ -43,22 +46,20 @@ public class DepartmentEditView extends VerticalLayout
 
     private Department department;
 
-    public DepartmentEditView(
-            DepartmentService departmentService,
-            EmployeeService employeeService) {
+    public DepartmentEditView( DepartmentService departmentService, EmployeeService employeeService,SecurityService securityService) {
 
         this.departmentService = departmentService;
         this.employeeService = employeeService;
+        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
 
         // LOAD EMPLOYEES
-        departmentHeadField.setItems(
-                employeeService.getEmployees());
+        departmentHeadField.setItems(employeeService.getEmployees());
 
         departmentHeadField.setItemLabelGenerator(
-                employee -> String.valueOf(employee.getEmployeeId()));
+                employee -> String.valueOf(employee.getEmployeeName()));
 
         // STATUS
         activeField.setItems(
@@ -97,8 +98,7 @@ public class DepartmentEditView extends VerticalLayout
                         ? ""
                         : department.getDepartmentCode());
 
-        departmentHeadField.setValue(
-                department.getHeadEmployee());
+        departmentHeadField.setValue(department.getHeadEmployee());
 
         activeField.setValue(
                 department.getActive() != null
@@ -115,8 +115,7 @@ public class DepartmentEditView extends VerticalLayout
                 departmentHeadField,
                 activeField);
 
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2));
+        formLayout.setResponsiveSteps( new FormLayout.ResponsiveStep("0", 2));
 
         // SAVE BUTTON
         Button saveButton = new Button("Save");
@@ -144,16 +143,14 @@ public class DepartmentEditView extends VerticalLayout
                 department.setDepartmentCode(
                         departmentCodeField.getValue());
 
-                department.setHeadEmployee(
-                        departmentHeadField.getValue());
+                department.setHeadEmployee(departmentHeadField.getValue());
 
                 department.setActive(
                         activeField.getValue()
                                 .equals("Active"));
 
                 // SAVE
-                departmentService.updateDepartment(
-                        department);
+                departmentService.updateDepartment(department,securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Department Updated Successfully",

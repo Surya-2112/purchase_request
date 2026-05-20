@@ -2,6 +2,8 @@ package com.module.purchase.service;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Year;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +12,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import com.module.purchase.entity.AuditLogs;
+import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.entityDTO.DepartmentBudgetDTO;
 import com.module.purchase.mapper.DepartmentBudgetMapper;
 import com.module.purchase.repository.DepartmentBudgetRepository;
 import com.module.purchase.specification.DepartmentBudgetSpecification;
+import java.util.List;
+import com.module.purchase.enums.EntityType;
+import com.module.purchase.enums.Action;
 
 @Service
 public class DepartmentBudgetService {
@@ -25,46 +33,91 @@ public class DepartmentBudgetService {
     @Autowired
     private DepartmentBudgetMapper departmentBudgetMapper;
 
+    @Autowired
+    private AuditLogsService auditLogsService;
+
     public DepartmentBudget saveDepartmentBudget(DepartmentBudget departmentBudget) {
         return departmentBudgetRepository.save(departmentBudget);
     }
 
-    public DepartmentBudget addDepartmentBudget(DepartmentBudget departmentBudget) {
-        Optional<DepartmentBudget> existingDepartmentBudget = departmentBudgetRepository.findByDepartmentAndYear(departmentBudget.getDepartment(), departmentBudget.getYear());
+    public DepartmentBudget addDepartmentBudget(DepartmentBudget departmentBudget,Employee employee) {
+        Optional<DepartmentBudget> existingDepartmentBudget = departmentBudgetRepository
+                .findByDepartmentAndYear(departmentBudget.getDepartment(), departmentBudget.getYear());
         if (existingDepartmentBudget.isPresent()) {
             throw new RuntimeException("Department budget for the given department and year already exists.");
         }
-        return saveDepartmentBudget(departmentBudget);
+        departmentBudget=saveDepartmentBudget(departmentBudget);
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.DEPARTMENT_BUDGET);
+        log.setEntityId(departmentBudget.getDepartmentBudgetId());
+        log.setAction(Action.CREATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
+        return departmentBudget;
     }
 
     public Optional<DepartmentBudget> getDepartmentBudgetById(Long id) {
-       Optional<DepartmentBudget> existingDepartmentBudget = departmentBudgetRepository.findById(id); 
+        Optional<DepartmentBudget> existingDepartmentBudget = departmentBudgetRepository.findById(id);
         if (!existingDepartmentBudget.isPresent()) {
-                throw new RuntimeException("Department budget not found with id: " + id);
+            throw new RuntimeException("Department budget not found with id: " + id);
         }
-       return existingDepartmentBudget;
+        return existingDepartmentBudget;
     }
 
-    public Page<DepartmentBudgetDTO> getAllDepartmentBudgets(DepartmentBudgetDTO departmentDTO,int page,int size) {
+    public Page<DepartmentBudgetDTO> getAllDepartmentBudgets(DepartmentBudgetDTO departmentDTO, int page, int size) {
 
-        Specification<DepartmentBudget> spec= Specification
-        .where(DepartmentBudgetSpecification.hasDeparmentBudgetId(departmentDTO.getDepartmentBudgetId()))
-        .and(DepartmentBudgetSpecification.hasDeparment(departmentDTO.getDepartment()))
-        .and(DepartmentBudgetSpecification.hasDeparmentBudgetYear(departmentDTO.getYear()));
+        Specification<DepartmentBudget> spec = Specification
+                .where(DepartmentBudgetSpecification.hasDeparmentBudgetId(departmentDTO.getDepartmentBudgetId()))
+                .and(DepartmentBudgetSpecification.hasDeparment(departmentDTO.getDepartment()))
+                .and(DepartmentBudgetSpecification.hasDeparmentBudgetYear(departmentDTO.getYear()));
 
-        Pageable pageable= PageRequest.of(page, size);
-        Page<DepartmentBudget> depatmentBudgetPage= departmentBudgetRepository.findAll(spec,pageable);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<DepartmentBudget> depatmentBudgetPage = departmentBudgetRepository.findAll(spec, pageable);
         return depatmentBudgetPage.map(departmentBudgetMapper::toDepartmentBudgetDTO);
     }
 
-    public DepartmentBudget updateDepartmentBudget(DepartmentBudget departmentBudget)
-    {   //TODO : need add 
-         return saveDepartmentBudget(departmentBudget);
+    public DepartmentBudget getByDepartmentAndYear(Department department, Year year) {
+        DepartmentBudget exist = departmentBudgetRepository.findByDepartmentAndYear(department, year).get();
+        return exist;
     }
 
-    public void deleteDepartmentBudgetById(Long departmentBudgetId)
-    {   getDepartmentBudgetById(departmentBudgetId);
-       // if(existingDepartmentBudget.getP)   //TODO : need to write 
+    public DepartmentBudget updateDepartmentBudget(DepartmentBudget departmentBudget,Employee employee) {
+         // TODO : need add
+        departmentBudget=saveDepartmentBudget(departmentBudget);
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.DEPARTMENT_BUDGET);
+        log.setEntityId(departmentBudget.getDepartmentBudgetId());
+        log.setAction(Action.UPDATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
+        return departmentBudget;
+    }
+
+    public void deleteDepartmentBudgetById(Long departmentBudgetId,Employee employee) {
+
+
+        getDepartmentBudgetById(departmentBudgetId);
+
+        
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.DEPARTMENT_BUDGET);
+        log.setEntityId(departmentBudgetId);
+        log.setAction(Action.UPDATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
+        // if(existingDepartmentBudget.getP) //TODO : need to write
         departmentBudgetRepository.deleteById(departmentBudgetId);
+    }
+
+    public List<DepartmentBudget> getDepartmentSpendingData(Year year) {
+        return departmentBudgetRepository.findByYear(year);
     }
 }

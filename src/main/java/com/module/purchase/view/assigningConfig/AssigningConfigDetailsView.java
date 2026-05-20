@@ -1,5 +1,6 @@
 package com.module.purchase.view.assigningConfig;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningConfig;
 import com.module.purchase.service.AssigningConfigService;
 import com.module.purchase.view.MainLayout;
@@ -24,11 +25,12 @@ public class AssigningConfigDetailsView extends VerticalLayout
 
     private final AssigningConfigService assigningConfigService;
 
-    public AssigningConfigDetailsView(
-            AssigningConfigService assigningConfigService) {
+    private final SecurityService securityService;
 
-        this.assigningConfigService =
-                assigningConfigService;
+    public AssigningConfigDetailsView(AssigningConfigService assigningConfigService,SecurityService securityService) {
+
+        this.assigningConfigService = assigningConfigService;
+        this.securityService=securityService;
 
         setSizeFull();
 
@@ -104,7 +106,6 @@ public class AssigningConfigDetailsView extends VerticalLayout
                                 assigningConfig.getMinAmount())),
                 "Min Amount");
 
-        // MAX AMOUNT
         formLayout.addFormItem(
                 new Span(
                         String.valueOf(
@@ -150,8 +151,7 @@ public class AssigningConfigDetailsView extends VerticalLayout
                 try {
 
                     assigningConfigService
-                            .deleteAssigningConfigById(
-                                    assigningConfig.getId());
+                            .deleteAssigningConfigById(assigningConfig.getId(),securityService.getLoggedInUser().getEmployee());
 
                     Notification.show(
                             "Assigning Config Deleted Successfully");

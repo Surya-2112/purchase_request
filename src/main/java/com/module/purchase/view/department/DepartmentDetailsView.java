@@ -2,6 +2,7 @@ package com.module.purchase.view.department;
 
 import java.util.Optional;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.view.MainLayout;
@@ -26,10 +27,12 @@ public class DepartmentDetailsView extends VerticalLayout
 
     private final DepartmentService departmentService;
 
-    public DepartmentDetailsView(
-            DepartmentService departmentService) {
+    private final SecurityService securityService;
+
+    public DepartmentDetailsView(DepartmentService departmentService,SecurityService securityService) {
 
         this.departmentService = departmentService;
+        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
@@ -128,8 +131,8 @@ public class DepartmentDetailsView extends VerticalLayout
 
                 try {
 
-                    departmentService.deleteDepartmentById(
-                            department.getDepartmentId());
+                    departmentService.deleteDepartmentById(department.getDepartmentId(),securityService.getLoggedInUser().getEmployee()
+);
 
                     Notification.show(
                             "Department Deleted Successfully");

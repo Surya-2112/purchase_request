@@ -1,5 +1,6 @@
 package com.module.purchase.view.item;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Item;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.view.MainLayout;
@@ -22,11 +23,13 @@ import jakarta.annotation.security.PermitAll;
 public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final ItemService itemService;
+    private final SecurityService securityService;
 
-    public ItemDetailsView(ItemService itemService) {
+    public ItemDetailsView(ItemService itemService, SecurityService securityService) {
 
         this.itemService = itemService;
-
+        this.securityService = securityService;
+        
         setSizeFull();
         setPadding(true);
         setSpacing(true);
@@ -93,7 +96,7 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
 
                 try {
 
-                    itemService.deleteItemById(item.getItemId());
+                    itemService.deleteItemById(item.getItemId(),securityService.getLoggedInUser().getEmployee());
 
                     Notification.show(
                             "Item Deleted Successfully",

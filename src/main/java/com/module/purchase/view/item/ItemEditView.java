@@ -1,5 +1,6 @@
 package com.module.purchase.view.item;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Item;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.view.MainLayout;
@@ -22,15 +23,18 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
 
     private final ItemService itemService;
 
+    private final SecurityService securityService;
+
     // FIELDS
     private final TextField itemNameField = new TextField("Item Name");
     private final TextField itemCodeField = new TextField("Item Code");
 
     private Item item;
 
-    public ItemEditView(ItemService itemService) {
+    public ItemEditView(ItemService itemService, SecurityService securityService) {
 
         this.itemService = itemService;
+        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
@@ -98,7 +102,7 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
                 item.setItemCode(itemCodeField.getValue());
 
                 // UPDATE
-                itemService.updateItem(item);
+                itemService.updateItem(item,securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Item Updated Successfully",

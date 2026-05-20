@@ -2,6 +2,7 @@ package com.module.purchase.view.item;
 
 import org.springframework.data.domain.Page;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Item;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.view.MainLayout;
@@ -25,6 +26,8 @@ public class ItemView extends VerticalLayout {
 
     private final ItemService itemService;
 
+    private final SecurityService securityService;
+
     private final Grid<Item> itemGrid = new Grid<>(Item.class, false);
 
     private final TextField itemIdField = new TextField("Item ID");
@@ -38,9 +41,10 @@ public class ItemView extends VerticalLayout {
 
     private Item currentFilter = new Item();
 
-    public ItemView(ItemService itemService) {
+    public ItemView(ItemService itemService, SecurityService securityService) {
 
         this.itemService = itemService;
+        this.securityService=securityService;
 
         setSizeFull();
         setPadding(true);
@@ -51,7 +55,7 @@ public class ItemView extends VerticalLayout {
 
         Button addButton = new Button("Add Item");
         addButton.addClickListener(e -> {
-            ItemForm form = new ItemForm(itemService);
+            ItemForm form = new ItemForm(itemService,securityService);
             form.open();
         });
 

@@ -1,5 +1,6 @@
 package com.module.purchase.view.employee;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.view.MainLayout;
@@ -24,9 +25,12 @@ public class EmployeeDetailsView extends VerticalLayout
 
     private final EmployeeService employeeService;
 
-    public EmployeeDetailsView(EmployeeService employeeService) {
+    private final SecurityService securityService;
+
+    public EmployeeDetailsView(EmployeeService employeeService,SecurityService securityService) {
 
         this.employeeService = employeeService;
+        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
@@ -136,7 +140,7 @@ public class EmployeeDetailsView extends VerticalLayout
 
                 try {
 
-                    employeeService.deleteEmployeeById(employee.getEmployeeId());
+                    employeeService.deleteEmployeeById(employee.getEmployeeId(),securityService.getLoggedInUser().getEmployee());
 
                     Notification.show(
                             "Employee Deleted Successfully");

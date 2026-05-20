@@ -4,6 +4,7 @@ import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.service.DepartmentBudgetService;
@@ -29,10 +30,10 @@ public class DepartmentBudgetEditView extends VerticalLayout
         implements HasUrlParameter<Long> {
 
     private final DepartmentBudgetService departmentBudgetService;
+    private final SecurityService securityService;
 
     // FIELDS
-    private final ComboBox<Department> departmentField =
-            new ComboBox<>("Department");
+    private final ComboBox<Department> departmentField =new ComboBox<>("Department");
 
     private final NumberField totalBudgetAmountField =
             new NumberField("Total Budget Amount");
@@ -45,12 +46,12 @@ public class DepartmentBudgetEditView extends VerticalLayout
 
     private DepartmentBudget departmentBudget;
 
-    public DepartmentBudgetEditView(
+    public DepartmentBudgetEditView(SecurityService securityService,
             DepartmentBudgetService departmentBudgetService,
             DepartmentService departmentService) {
 
-        this.departmentBudgetService =
-                departmentBudgetService;
+        this.departmentBudgetService = departmentBudgetService;
+        this.securityService=securityService;
 
         setSizeFull();
 
@@ -160,11 +161,10 @@ public class DepartmentBudgetEditView extends VerticalLayout
                 departmentBudget.setRemainingBudgetAmount(
                         remainingBudgetAmountField.getValue());
 
-                departmentBudget.setYear(
-                        yearField.getValue());
+                departmentBudget.setYear( yearField.getValue());
 
                 // UPDATE
-                departmentBudgetService.updateDepartmentBudget(departmentBudget);
+                departmentBudgetService.updateDepartmentBudget(departmentBudget,securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Department Budget Updated Successfully",

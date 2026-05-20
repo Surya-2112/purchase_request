@@ -2,6 +2,7 @@ package com.module.purchase.view.vendorCategory;
 
 import org.springframework.data.domain.Page;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.VendorCategory;
 import com.module.purchase.service.VendorCategoryService;
 import com.module.purchase.view.MainLayout;
@@ -25,8 +26,10 @@ public class VendorCategoryView extends VerticalLayout {
 
     private final VendorCategoryService categoryService;
 
-    private final Grid<VendorCategory> categoryGrid =
-            new Grid<>(VendorCategory.class, false);
+    private final SecurityService securityService;
+
+
+    private final Grid<VendorCategory> categoryGrid = new Grid<>(VendorCategory.class, false);
 
     private final TextField categoryIdField = new TextField("Category ID");
 
@@ -39,10 +42,10 @@ public class VendorCategoryView extends VerticalLayout {
 
     private VendorCategory currentFilter = new VendorCategory();
 
-    public VendorCategoryView(VendorCategoryService categoryService) {
+    public VendorCategoryView(VendorCategoryService categoryService , SecurityService securityService) {
 
         this.categoryService = categoryService;
-
+        this.securityService =securityService;
         setSizeFull();
         setPadding(true);
         setSpacing(true);
@@ -52,7 +55,8 @@ public class VendorCategoryView extends VerticalLayout {
 
         Button addButton = new Button("Add Category");
         addButton.addClickListener(event -> {
-           VendorCategoryForm form = new VendorCategoryForm(categoryService);
+            // TODO ::
+           VendorCategoryForm form = new VendorCategoryForm(categoryService,securityService);
            form.open();
         });
 

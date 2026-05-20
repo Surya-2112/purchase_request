@@ -2,6 +2,7 @@ package com.module.purchase.view.employee;
 
 import org.springframework.data.domain.Page;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Role;
 import com.module.purchase.entityDTO.EmployeeDTO;
@@ -28,6 +29,7 @@ import jakarta.annotation.security.PermitAll;
 public class EmployeeView extends VerticalLayout {
 
         private EmployeeService employeeService;
+         private final SecurityService securityService;
         private final Grid<EmployeeDTO> employeeGrid = new Grid<>(EmployeeDTO.class, false);
 
         private final TextField employeeIdField = new TextField("Employee ID");
@@ -44,14 +46,14 @@ public class EmployeeView extends VerticalLayout {
         private EmployeeDTO currentFilter = new EmployeeDTO();
 
         public EmployeeView(EmployeeService employeeService, RoleService roleService,
-                        DepartmentService departmentService) {
+                        DepartmentService departmentService, SecurityService securityService) {
                 this.employeeService = employeeService;
+                this.securityService =securityService;
                 setSizeFull();
                 setPadding(true);
                 setSpacing(true);
 
-                departmentField.setItems(
-                                departmentService.getDepartments());
+                departmentField.setItems(departmentService.getDepartments());
 
                 roleField.setItems(
                                 roleService.getRoles());
@@ -122,9 +124,8 @@ public class EmployeeView extends VerticalLayout {
 
                 addButton.addClickListener(event -> {
                         EmployeeForm form = new EmployeeForm(
-                                        employeeService,
-                                        departmentService,
-                                        roleService);
+                                        employeeService,departmentService,
+                                        roleService,securityService);
 
                         form.open();
                 });

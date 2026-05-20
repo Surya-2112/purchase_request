@@ -2,6 +2,7 @@ package com.module.purchase.view.role;
 
 import org.springframework.data.domain.Page;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Role;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.RoleService;
@@ -26,6 +27,9 @@ public class RoleView extends VerticalLayout {
 
     private final RoleService roleService;
 
+    private final SecurityService securityService;
+
+
     private final Grid<Role> roleGrid = new Grid<>(Role.class, false);
 
     // FILTERS
@@ -44,9 +48,10 @@ public class RoleView extends VerticalLayout {
 
     private Role currentFilter = new Role();
 
-    public RoleView(RoleService roleService) {
+    public RoleView(RoleService roleService,SecurityService securityService) {
 
         this.roleService = roleService;
+        this.securityService = securityService;
 
         setSizeFull();
 
@@ -132,7 +137,7 @@ public class RoleView extends VerticalLayout {
         addButton.addClickListener(event -> {
 
             RoleForm form =
-                    new RoleForm(roleService);
+                    new RoleForm(roleService,securityService);
 
             form.open();
         });

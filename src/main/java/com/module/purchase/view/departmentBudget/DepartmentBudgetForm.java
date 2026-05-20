@@ -4,6 +4,7 @@ import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.service.DepartmentBudgetService;
@@ -22,6 +23,8 @@ public class DepartmentBudgetForm extends Dialog {
 
     private final DepartmentService departmentService;
 
+    private final SecurityService securityService;
+
     // FIELDS
     private final ComboBox<Department> departmentField = new ComboBox<>("Department");
 
@@ -31,11 +34,13 @@ public class DepartmentBudgetForm extends Dialog {
 
     private final ComboBox<Year> yearField = new ComboBox<>("Year");
 
-    public DepartmentBudgetForm(DepartmentBudgetService departmentBudgetService, DepartmentService departmentServices) {
+    public DepartmentBudgetForm(DepartmentBudgetService departmentBudgetService, DepartmentService departmentServices,SecurityService securityService) {
 
         this.departmentBudgetService = departmentBudgetService;
 
         this.departmentService =  departmentServices;
+
+        this.securityService=securityService;
 
         setHeaderTitle("Add Department Budget");
 
@@ -138,8 +143,7 @@ public class DepartmentBudgetForm extends Dialog {
                     yearField.getValue());
 
             // SAVE
-            departmentBudgetService.addDepartmentBudget(
-                    departmentBudget);
+            departmentBudgetService.addDepartmentBudget(departmentBudget,securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "Department Budget Saved Successfully",

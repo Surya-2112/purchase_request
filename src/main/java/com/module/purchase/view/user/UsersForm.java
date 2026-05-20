@@ -1,5 +1,6 @@
 package com.module.purchase.view.user;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Users;
 import com.module.purchase.service.EmployeeService;
@@ -18,6 +19,8 @@ public class UsersForm extends Dialog {
 
     private final UsersService usersService;
 
+    private final SecurityService securityService;
+
     // BASIC INFO
     private final TextField userNameField = new TextField("User Name");
     private final EmailField userEmailField = new EmailField("User Email");
@@ -30,9 +33,10 @@ public class UsersForm extends Dialog {
     private final ComboBox<Employee> employeeField = new ComboBox<>("Employee");
 
 
-    public UsersForm(UsersService usersService, EmployeeService employeeService) {
+    public UsersForm(UsersService usersService, EmployeeService employeeService,SecurityService securityService ) {
 
         this.usersService = usersService;
+        this.securityService = securityService;
 
         setHeaderTitle("Add User");
         setWidth("600px");
@@ -102,7 +106,7 @@ public class UsersForm extends Dialog {
             //  IMPORTANT: In real app, NEVER store raw password in DTO/entity
             user.setPassword(passwordField.getValue());
 
-            usersService.addUsers(user);
+            usersService.addUsers(user,securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "User Created Successfully",

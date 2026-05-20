@@ -1,5 +1,6 @@
 package com.module.purchase.view.user;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Users;
 import com.module.purchase.service.UsersService;
 import com.module.purchase.view.MainLayout;
@@ -18,13 +19,15 @@ import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
 
 @Route(value = "user-details", layout = MainLayout.class)
-@PermitAll 
+@PermitAll
 public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final UsersService usersService;
+    private final SecurityService securityService;
 
-    public UsersDetailsView(UsersService usersService) {
+    public UsersDetailsView(UsersService usersService,SecurityService securityService) {
         this.usersService = usersService;
+        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
@@ -98,7 +101,7 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
             dialog.addConfirmListener(confirmEvent -> {
                 try {
 
-                    usersService.deleteUsersById(user.getUserId());
+                    usersService.deleteUsersById(user.getUserId(),securityService.getLoggedInUser().getEmployee());
 
                     Notification.show("User deleted successfully");
 

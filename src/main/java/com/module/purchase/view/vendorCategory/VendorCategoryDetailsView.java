@@ -1,5 +1,6 @@
 package com.module.purchase.view.vendorCategory;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.VendorCategory;
 import com.module.purchase.service.VendorCategoryService;
 import com.module.purchase.view.MainLayout;
@@ -24,8 +25,11 @@ public class VendorCategoryDetailsView extends VerticalLayout
 
         private final VendorCategoryService vendorCategoryService;
 
-        public VendorCategoryDetailsView(VendorCategoryService vendorCategoryService) {
+        private final SecurityService securityService;
+
+        public VendorCategoryDetailsView(VendorCategoryService vendorCategoryService,SecurityService securityService) {
                 this.vendorCategoryService = vendorCategoryService;
+                this.securityService=securityService;
 
                 setSizeFull();
                 setPadding(true);
@@ -79,7 +83,7 @@ public class VendorCategoryDetailsView extends VerticalLayout
                         dialog.addConfirmListener(confirmEvent -> {
 
                                 try {
-                                        vendorCategoryService.deleteVendorCategoryById(category.getCategoryId());
+                                        vendorCategoryService.deleteVendorCategoryById(category.getCategoryId(),securityService.getLoggedInUser().getEmployee());
 
                                         Notification.show(
                                                         "Vendor Category Deleted Successfully",

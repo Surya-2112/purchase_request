@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entityDTO.DepartmentBudgetDTO;
 import com.module.purchase.service.DepartmentBudgetService;
@@ -33,6 +34,8 @@ public class DepartmentBudgetView extends VerticalLayout {
 
         private final DepartmentService departmentService;
 
+        private final SecurityService securityService;
+
         private final Grid<DepartmentBudgetDTO> departmentBudgetGrid = new Grid<>(DepartmentBudgetDTO.class, false);
 
         private final TextField departmentBudgetIdField = new TextField("Department Budget ID");
@@ -50,13 +53,15 @@ public class DepartmentBudgetView extends VerticalLayout {
 
         private DepartmentBudgetDTO currentFilter = new DepartmentBudgetDTO();
 
-        public DepartmentBudgetView(
+        public DepartmentBudgetView(SecurityService securityService,
                         DepartmentBudgetService departmentBudgetService,
                         DepartmentService departmentServices) {
 
                 this.departmentBudgetService = departmentBudgetService;
 
                 this.departmentService = departmentServices;
+
+                this.securityService=securityService;
 
                 setSizeFull();
 
@@ -95,7 +100,7 @@ public class DepartmentBudgetView extends VerticalLayout {
 
                         DepartmentBudgetForm form = new DepartmentBudgetForm(
                                         departmentBudgetService,
-                                        departmentService);
+                                        departmentService, securityService);
 
                         form.open();
                 });

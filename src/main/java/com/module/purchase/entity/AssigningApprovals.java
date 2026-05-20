@@ -26,12 +26,12 @@ public class AssigningApprovals {
 
     @ManyToOne
     @JoinColumn(name = "approverId")
-    @JsonIgnoreProperties("forApprovals")
+    @JsonIgnoreProperties({ "department","role","user"})
     private Employee approver;
 
     @ManyToOne
     @JoinColumn(name = "assignedById")
-    @JsonIgnoreProperties({ "assignedApprovals" })
+    @JsonIgnoreProperties({ "department","role","user"})
     private Employee assignedBy;
 
     private Integer level;

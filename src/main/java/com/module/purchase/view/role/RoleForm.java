@@ -2,6 +2,7 @@ package com.module.purchase.view.role;
 
 import java.util.List;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Role;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.RoleService;
@@ -17,6 +18,9 @@ public class RoleForm extends Dialog {
 
     private final RoleService roleService;
 
+    private final SecurityService securityService;
+
+
     // FIELDS
     private final TextField roleNameField =
             new TextField("Role Name");
@@ -24,9 +28,10 @@ public class RoleForm extends Dialog {
     private final CheckboxGroup<EmployeeGroup> employeeGroupField =
             new CheckboxGroup<>();
 
-    public RoleForm(RoleService roleService) {
+    public RoleForm(RoleService roleService,SecurityService securityService) {
 
         this.roleService = roleService;
+        this.securityService = securityService;
 
         setHeaderTitle("Add Role");
 
@@ -103,7 +108,7 @@ public class RoleForm extends Dialog {
                             employeeGroupField.getValue()));
 
             // SAVE
-            roleService.addRole(role);
+            roleService.addRole(role,securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "Role Saved Successfully",

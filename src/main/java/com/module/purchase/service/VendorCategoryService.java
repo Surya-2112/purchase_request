@@ -1,7 +1,10 @@
 package com.module.purchase.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import com.module.purchase.enums.EntityType;
+import com.module.purchase.enums.Action;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,11 +14,13 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.module.purchase.customException.ResourceAlreadyUsedException;
+import com.module.purchase.entity.AuditLogs;
+import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.VendorCategory;
 import com.module.purchase.repository.VendorCategoryRepository;
 import com.module.purchase.specification.VendorCategorySpecification;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -25,17 +30,31 @@ public class VendorCategoryService {
     @Autowired
     private VendorCategoryRepository vendorCategoryRepository;
 
+    @Autowired
+ private AuditLogsService auditLogsService;
+
+
     public VendorCategory saveVendorCategory(VendorCategory vendorCategory) {
         return vendorCategoryRepository.save(vendorCategory);
     }
 
-    public VendorCategory addVendorCategory(VendorCategory vendorCategory) {
+    public VendorCategory addVendorCategory(VendorCategory vendorCategory,Employee employee) {
         
         Optional<VendorCategory> existingVendorCategory = vendorCategoryRepository.findByCategoryName(vendorCategory.getCategoryName());
         if (existingVendorCategory.isPresent()) {
             throw new RuntimeException("Vendor category already exists with name: " + vendorCategory.getCategoryName());
         }
-        return saveVendorCategory(vendorCategory);
+        vendorCategory = saveVendorCategory(vendorCategory);
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.VENDOR_CATEGORY);
+        log.setEntityId(vendorCategory.getCategoryId());
+        log.setAction(Action.CREATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
+        return vendorCategory;
     }
 
     public Optional<VendorCategory> getVendorCategoryById(Long id) {
@@ -61,17 +80,37 @@ public class VendorCategoryService {
         return vendorCategoryPage;
     }
 
-    public VendorCategory updateVendorCategory(VendorCategory vendorCategory)
+    public VendorCategory updateVendorCategory(VendorCategory vendorCategory,Employee employee)
     {    getVendorCategoryById(vendorCategory.getCategoryId()).get();
-        return saveVendorCategory(vendorCategory);
+
+        vendorCategory=saveVendorCategory(vendorCategory);
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.VENDOR_CATEGORY);
+        log.setEntityId(vendorCategory.getCategoryId());
+        log.setAction(Action.UPDATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
+        return vendorCategory;
     }
 
-    public void deleteVendorCategoryById(Long categoryId)
+    public void deleteVendorCategoryById(Long categoryId,Employee employee)
     {  VendorCategory  existingCategory =  getVendorCategoryById(categoryId).get();
         if(existingCategory.getVendors()!=null && !existingCategory.getVendors().isEmpty())
         {
              throw new ResourceAlreadyUsedException("Cannot delete vendor category with associated vendors");
         }
+        
         vendorCategoryRepository.deleteById(categoryId);
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.VENDOR_CATEGORY);
+        log.setEntityId(categoryId);
+        log.setAction(Action.DELETE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
     }
 }

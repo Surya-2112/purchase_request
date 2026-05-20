@@ -1,5 +1,6 @@
 package com.module.purchase.view.item;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Item;
 import com.module.purchase.service.ItemService;
 import com.vaadin.flow.component.button.Button;
@@ -13,16 +14,17 @@ public class ItemForm extends Dialog {
 
     private final ItemService itemService;
 
+    private final SecurityService securityService;
+
     // FIELDS
-    private final TextField itemNameField =
-            new TextField("Item Name");
+    private final TextField itemNameField = new TextField("Item Name");
 
-    private final TextField itemCodeField =
-            new TextField("Item Code");
+    private final TextField itemCodeField = new TextField("Item Code");
 
-    public ItemForm(ItemService itemService) {
+    public ItemForm(ItemService itemService,SecurityService securityService) {
 
         this.itemService = itemService;
+        this.securityService=securityService;
 
         setHeaderTitle("Add Item");
         setWidth("600px");
@@ -79,7 +81,7 @@ public class ItemForm extends Dialog {
             item.setItemName(itemNameField.getValue());
             item.setItemCode(itemCodeField.getValue());
 
-            itemService.addItem(item);
+            itemService.addItem(item,securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "Item Saved Successfully",

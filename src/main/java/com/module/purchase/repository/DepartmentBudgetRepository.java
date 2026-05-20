@@ -8,8 +8,10 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
+import java.util.List;
 
 public interface DepartmentBudgetRepository extends JpaRepository<DepartmentBudget, Long> ,JpaSpecificationExecutor<DepartmentBudget> {
     
     Optional<DepartmentBudget> findByDepartmentAndYear(Department department, Year year);
+    List<DepartmentBudget> findByYear(Year year);
 }

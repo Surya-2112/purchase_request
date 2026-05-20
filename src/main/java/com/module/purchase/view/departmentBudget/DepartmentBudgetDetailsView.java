@@ -1,5 +1,6 @@
 package com.module.purchase.view.departmentBudget;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.view.MainLayout;
@@ -24,11 +25,12 @@ public class DepartmentBudgetDetailsView extends VerticalLayout
 
     private final DepartmentBudgetService departmentBudgetService;
 
-    public DepartmentBudgetDetailsView(
-            DepartmentBudgetService departmentBudgetService) {
+    private final SecurityService securityService;
 
-        this.departmentBudgetService =
-                departmentBudgetService;
+    public DepartmentBudgetDetailsView(DepartmentBudgetService departmentBudgetService, SecurityService securityService) {
+
+        this.departmentBudgetService = departmentBudgetService;
+        this.securityService=securityService;
 
         setSizeFull();
 
@@ -145,9 +147,7 @@ public class DepartmentBudgetDetailsView extends VerticalLayout
                 try {
 
                     departmentBudgetService
-                            .deleteDepartmentBudgetById(
-                                    departmentBudget
-                                            .getDepartmentBudgetId());
+                            .deleteDepartmentBudgetById(departmentBudget.getDepartmentBudgetId(),securityService.getLoggedInUser().getEmployee());
 
                     Notification.show(
                             "Department Budget Deleted Successfully");

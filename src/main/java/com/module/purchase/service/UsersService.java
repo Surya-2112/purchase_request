@@ -6,11 +6,13 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.module.purchase.repository.UserRepository;
+import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Users;
 import com.module.purchase.entityDTO.UsersDTO;
 
 import java.util.Optional;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
@@ -19,8 +21,10 @@ import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceIsNotActiveException;
 import com.module.purchase.mapper.UsersMapper;
 import com.module.purchase.specification.UsersSpecification;
+import com.module.purchase.enums.EntityType;
+import com.module.purchase.enums.Action;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -38,12 +42,15 @@ public class UsersService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private AuditLogsService auditLogsService;
+
     public Users saveUsers(Users users) {
 
         return userRepository.save(users);
     }
 
-    public Users addUsers(Users user) {
+    public Users addUsers(Users user, Employee created) {
         Optional<Users> existingUser = userRepository.findByUserEmail(user.getUserEmail());
         if (existingUser.isPresent()) {
             throw new RuntimeException("User already exists with email: " + user.getUserEmail());
@@ -52,13 +59,21 @@ public class UsersService {
         if (employee.getUser() != null) {
             throw new RuntimeException("This Employee as another user");
         }
-        employeeService.updateEmployee(employee);
-         if (user.getUserId() == null) {
+        employeeService.updateEmployee(employee, created);
+        if (user.getUserId() == null) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         user = saveUsers(user);
         employee.setUser(user);
-        
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.USER);
+        log.setEntityId(user.getUserId());
+        log.setAction(Action.CREATE);
+        log.setPerformedBy(created);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
         return user;
     }
 
@@ -89,7 +104,7 @@ public class UsersService {
         return pageUsers.map(usersMapper::toUserDTO);
     }
 
-    public Users updateUser(Users user) {
+    public Users updateUser(Users user,Employee employee) {
         Users existingUser = getUserById(user.getUserId()).get();
 
         if (!existingUser.getEmployee().getActive()) {
@@ -105,18 +120,35 @@ public class UsersService {
                             user.getPassword()));
         } else {
 
-            // Keep old password
             user.setPassword(
                     existingUser.getPassword());
         }
-        return saveUsers(user);
+        user=saveUsers(user);
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.USER);
+        log.setEntityId(user.getUserId());
+        log.setAction(Action.UPDATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
+        return user;
     }
 
-    public void deleteUsersById(Long usersId) {
+    public void deleteUsersById(Long usersId,Employee employee) {
         Users existingUser = getUserById(usersId).get();
         if (existingUser.getEmployee().getActive()) {
             throw new RuntimeException("cannot delete user because employee is active");
         }
         userRepository.deleteById(usersId);
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.USER);
+        log.setEntityId(usersId);
+        log.setAction(Action.DELETE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
     }
 }

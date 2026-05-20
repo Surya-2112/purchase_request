@@ -2,6 +2,7 @@ package com.module.purchase.view.vendor;
 
 import org.springframework.data.domain.Page;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.VendorCategory;
 import com.module.purchase.entityDTO.VendorDTO;
 import com.module.purchase.service.VendorCategoryService;
@@ -27,6 +28,8 @@ public class VendorView extends VerticalLayout {
 
     private final VendorService vendorService;
 
+    private final SecurityService securityService;
+
     private final Grid<VendorDTO> vendorGrid = new Grid<>(VendorDTO.class, false);
 
     private final TextField vendorIdField = new TextField("Vendor ID");
@@ -45,10 +48,10 @@ public class VendorView extends VerticalLayout {
 
     private VendorDTO currentFilter = new VendorDTO();
 
-    public VendorView(VendorService vendorService,
-                      VendorCategoryService vendorCategoryService) {
+    public VendorView(VendorService vendorService,VendorCategoryService vendorCategoryService,SecurityService securityService) {
 
         this.vendorService = vendorService;
+        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
@@ -67,7 +70,7 @@ public class VendorView extends VerticalLayout {
 
         Button addButton = new Button("Add Vendor");
         addButton.addClickListener(e -> {
-            VendorForm form = new VendorForm(vendorService, vendorCategoryService);
+            VendorForm form = new VendorForm(vendorService, vendorCategoryService,securityService);
             form.open();
         });
 

@@ -13,24 +13,8 @@ public class SecurityConfig extends VaadinWebSecurity {
     protected void configure(HttpSecurity http)
             throws Exception {
 
-        // Configure logout FIRST
-        // http.logout(logout -> logout
-
-        //         .logoutUrl("/logout")
-
-        //         .logoutSuccessUrl("/login")
-
-        //         .invalidateHttpSession(true)
-
-        //         .clearAuthentication(true)
-
-        //         .deleteCookies("JSESSIONID")
-        // );
-
-        // Vaadin login page
         setLoginView(http, LoginView.class);
 
-        // MUST BE LAST
         super.configure(http);
     }
 }

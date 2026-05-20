@@ -56,5 +56,4 @@ public class PurchaseRequestDTO {
     public void setTotalAmount(Double totalAmount) {
         this.totalAmount = totalAmount;
     }
-
 }

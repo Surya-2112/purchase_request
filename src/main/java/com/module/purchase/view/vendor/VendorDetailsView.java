@@ -1,5 +1,6 @@
 package com.module.purchase.view.vendor;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Vendor;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
@@ -23,9 +24,13 @@ public class VendorDetailsView extends VerticalLayout implements HasUrlParameter
 
     private final VendorService vendorService;
 
-    public VendorDetailsView(VendorService vendorService) {
+    private final SecurityService securityService;
+
+
+    public VendorDetailsView(VendorService vendorService,SecurityService securityService) {
 
         this.vendorService = vendorService;
+        this.securityService=securityService;
 
         setSizeFull();
         setPadding(true);
@@ -148,7 +153,7 @@ public class VendorDetailsView extends VerticalLayout implements HasUrlParameter
 
                 try {
 
-                    vendorService.deleteVendorById(vendor.getVendorId());
+                    vendorService.deleteVendorById(vendor.getVendorId(),securityService.getLoggedInUser().getEmployee());
 
                     Notification.show(
                             "Vendor Deleted Successfully",

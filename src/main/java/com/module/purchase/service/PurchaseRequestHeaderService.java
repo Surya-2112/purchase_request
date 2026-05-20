@@ -1,33 +1,27 @@
 package com.module.purchase.service;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.Specification;
-
-import com.module.purchase.repository.PurchaseRequestHeaderRepository;
-import com.module.purchase.specification.PurchaseRequestSpecification;
-
-import org.springframework.transaction.annotation.Transactional;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.module.purchase.entity.AssigningApprovals;
-import com.module.purchase.entity.AssigningConfig;
+import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseRequestHeader;
-
-import java.util.Optional;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.module.purchase.entityDTO.PurchaseRequestDTO;
-import com.module.purchase.enums.ApprovalType;
-import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.EntityType;
+import com.module.purchase.enums.Action;
 import com.module.purchase.mapper.PurchaseRequestMapper;
+import com.module.purchase.repository.PurchaseRequestHeaderRepository;
+import com.module.purchase.specification.PurchaseRequestSpecification;
 
 @Service
 @Transactional
@@ -42,12 +36,36 @@ public class PurchaseRequestHeaderService {
     @Autowired
     private UsersService userservice;
 
+    @Autowired
+    private AuditLogsService auditLogsService;
+
     public PurchaseRequestHeader savePurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader) {
         return purchaseRequestHeaderRepository.save(purchaseRequestHeader);
     }
 
-    public PurchaseRequestHeader addPurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader) {
-        return savePurchaseRequestHeader(purchaseRequestHeader);
+    public PurchaseRequestHeader addPurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader,Employee employee) {
+
+        purchaseRequestHeader = savePurchaseRequestHeader(purchaseRequestHeader);
+
+        AuditLogs log= new AuditLogs();
+        log.setEntityType(EntityType.PURCHASE_REQUEST);
+        log.setEntityId(purchaseRequestHeader.getPurchaseRequestId());
+        log.setAction(Action.CREATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
+        return purchaseRequestHeader;
+    }
+
+     public Long countAll()
+    {
+        return purchaseRequestHeaderRepository.count();
+    }
+
+    public Long countByStatus(Status status)
+    {
+        return purchaseRequestHeaderRepository.countByStatus(status);
     }
 
     public Optional<PurchaseRequestHeader> getPurchaseRequestHeaderById(Long id) {
@@ -57,10 +75,6 @@ public class PurchaseRequestHeaderService {
         }
        // System.out.println(existingPurchaseRequestHeader);
         return existingPurchaseRequestHeader;
-    }
-
-    public List<PurchaseRequestHeader> getPurchaseRequestHeaders() {
-        return purchaseRequestHeaderRepository.findAll();
     }
 
     public Page<PurchaseRequestDTO> getAllPurchaseRequest(PurchaseRequestDTO purchaseRequestDTO, int page, int size) {
@@ -90,12 +104,29 @@ public class PurchaseRequestHeaderService {
         return prpage.map(purchaseRequestMapper::toPurchaseRequestDTO);
     }
 
+public List<PurchaseRequestDTO> getRecentPurchaseRequests(
+        PageRequest pageRequest) {
+
+    return purchaseRequestMapper.toPurchaseRequestDTO(purchaseRequestHeaderRepository
+            .findAllByOrderByPurchaseRequestIdDesc(pageRequest));
+}
+
     public void deletePurchaseRequestHeaderById(Long Id) {
         purchaseRequestHeaderRepository.deleteById(Id);
     }
 
-    public PurchaseRequestHeader updatePurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader) {
-        return savePurchaseRequestHeader(purchaseRequestHeader);
+    public PurchaseRequestHeader updatePurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader,Employee employee) {
+         purchaseRequestHeader = savePurchaseRequestHeader(purchaseRequestHeader);
+
+        AuditLogs log= new AuditLogs();
+        log.setEntityType(EntityType.PURCHASE_REQUEST);
+        log.setEntityId(purchaseRequestHeader.getPurchaseRequestId());
+        log.setAction(Action.UPDATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
+        return purchaseRequestHeader;
     }
 
 }

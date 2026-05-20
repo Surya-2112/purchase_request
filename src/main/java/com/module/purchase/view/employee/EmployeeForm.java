@@ -1,5 +1,6 @@
 package com.module.purchase.view.employee;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Address;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
@@ -22,6 +23,8 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 public class EmployeeForm extends Dialog {
 
         private final EmployeeService employeeService;
+
+        private final SecurityService securityService;
 
         // BASIC DETAILS
         private final TextField employeeNameField = new TextField("Employee Name");
@@ -48,12 +51,13 @@ public class EmployeeForm extends Dialog {
 
         private final TextField postalCodeField = new TextField("Pincode");
 
-        public EmployeeForm(
-                        EmployeeService employeeService,
+        public EmployeeForm( EmployeeService employeeService,
                         DepartmentService departmentService,
-                        RoleService roleService) {
+                        RoleService roleService,
+                        SecurityService securityService ) {
 
                 this.employeeService = employeeService;
+                this.securityService=securityService;
 
                 setHeaderTitle("Add Employee");
 
@@ -79,7 +83,7 @@ public class EmployeeForm extends Dialog {
                 Button addRoleButton = new Button("+");
 
                 addDepartmentButton.addClickListener(event -> {
-                        DepartmentForm form = new DepartmentForm(departmentService, employeeService);
+                        DepartmentForm form = new DepartmentForm(departmentService, employeeService,securityService);
                         form.open();
                 });
 
@@ -210,7 +214,10 @@ public class EmployeeForm extends Dialog {
 
                         employee.setAddress(address);
 
-                        employeeService.addEmployee(employee);
+                        Employee create=securityService
+                            .getLoggedInUser()
+                            .getEmployee();
+                        employeeService.addEmployee(employee,create);
 
                         Notification.show(
                                         "Employee Saved Successfully",

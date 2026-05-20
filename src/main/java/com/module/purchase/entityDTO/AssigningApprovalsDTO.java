@@ -65,5 +65,5 @@ public class AssigningApprovalsDTO {
     public void setStatus(Status status) {
         this.status = status;
     }
-
 }
+

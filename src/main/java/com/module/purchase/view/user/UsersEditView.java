@@ -1,5 +1,6 @@
 package com.module.purchase.view.user;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Users;
 import com.module.purchase.service.EmployeeService;
@@ -27,6 +28,8 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
     private final UsersService usersService;
     private final EmployeeService employeeService;
+    private final SecurityService securityService;
+
 
     private Users user;
 
@@ -40,10 +43,11 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
     private final ComboBox<String> activeField = new ComboBox<>("Status");
 
-    public UsersEditView(UsersService usersService, EmployeeService employeeServices) {
+    public UsersEditView(UsersService usersService, EmployeeService employeeServices, SecurityService securityService) {
 
         this.usersService = usersService;
         this.employeeService = employeeServices;
+        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
@@ -110,12 +114,11 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
                                 && activeField.getValue().equals("Active")
                 );
 
-                // 🔥 ONLY UPDATE PASSWORD IF USER ENTERS NEW ONE
                 if (!passwordField.isEmpty()) {
                     user.setPassword(passwordField.getValue());
                 }
 
-                usersService.updateUser(user);
+                usersService.updateUser(user,securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "User Updated Successfully",

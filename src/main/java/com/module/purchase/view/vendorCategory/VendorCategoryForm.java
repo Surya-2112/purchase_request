@@ -1,5 +1,6 @@
 package com.module.purchase.view.vendorCategory;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.VendorCategory;
 import com.module.purchase.service.VendorCategoryService;
 import com.vaadin.flow.component.button.Button;
@@ -9,17 +10,21 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 
+
 public class VendorCategoryForm extends Dialog {
 
     private final VendorCategoryService vendorCategoryService;
+
+    private final SecurityService securityService;
 
     private final TextField categoryNameField = new TextField("Category Name");
 
     private VendorCategory category;
 
-    public VendorCategoryForm(VendorCategoryService vendorCategoryService) {
+    public VendorCategoryForm(VendorCategoryService vendorCategoryService,SecurityService securityService) {
 
         this.vendorCategoryService = vendorCategoryService;
+        this.securityService = securityService; 
 
         setHeaderTitle("Add Vendor Category");
         setWidth("500px");
@@ -75,7 +80,7 @@ public class VendorCategoryForm extends Dialog {
 
             category.setCategoryName(categoryNameField.getValue());
 
-            vendorCategoryService.addVendorCategory(category);
+            vendorCategoryService.addVendorCategory(category,securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "Vendor Category Saved Successfully",

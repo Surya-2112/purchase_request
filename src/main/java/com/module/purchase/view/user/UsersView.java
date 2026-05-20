@@ -2,6 +2,7 @@ package com.module.purchase.view.user;
 
 import org.springframework.data.domain.Page;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entityDTO.UsersDTO;
 import com.module.purchase.service.EmployeeService;
@@ -20,12 +21,14 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
-
 @Route(value = "user", layout = MainLayout.class)
 @PermitAll
 public class UsersView extends VerticalLayout {
 
     private final UsersService usersService;
+
+    private final SecurityService securityService;
+
 
     private final Grid<UsersDTO> userGrid = new Grid<>(UsersDTO.class, false);
 
@@ -43,9 +46,10 @@ public class UsersView extends VerticalLayout {
 
     private UsersDTO currentFilter = new UsersDTO();
 
-    public UsersView(UsersService usersService, EmployeeService employeeService) {
+    public UsersView(UsersService usersService, EmployeeService employeeService,SecurityService securityService) {
 
         this.usersService = usersService;
+        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
@@ -95,7 +99,7 @@ public class UsersView extends VerticalLayout {
         H2 title = new H2("Users List");
 
         Button addButton = new Button("Add User", e -> {
-            UsersForm form = new UsersForm(usersService, employeeService);
+            UsersForm form = new UsersForm(usersService, employeeService,securityService);
             form.open();
         });
 

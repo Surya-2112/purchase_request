@@ -1,5 +1,6 @@
 package com.module.purchase.view.assigningConfig;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningConfig;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
@@ -26,8 +27,9 @@ public class AssigningConfigEditView extends VerticalLayout
         implements HasUrlParameter<Long> {
 
     private final AssigningConfigService assigningConfigService;
+    
+    private final SecurityService securityService;
 
-    // FIELDS
     private final ComboBox<ApprovalType> approvalTypeField =
             new ComboBox<>("Approval Type");
 
@@ -45,11 +47,10 @@ public class AssigningConfigEditView extends VerticalLayout
 
     private AssigningConfig assigningConfig;
 
-    public AssigningConfigEditView(
-            AssigningConfigService assigningConfigService) {
+    public AssigningConfigEditView(AssigningConfigService assigningConfigService ,SecurityService securityService) {
 
-        this.assigningConfigService =
-                assigningConfigService;
+        this.assigningConfigService = assigningConfigService;
+        this.securityService=securityService;
 
         setSizeFull();
 
@@ -157,8 +158,7 @@ public class AssigningConfigEditView extends VerticalLayout
                         maxAmountField.getValue());
 
                 // UPDATE
-                assigningConfigService.updateAssigningConfig(
-                        assigningConfig);
+                assigningConfigService.updateAssigningConfig(assigningConfig,securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Assigning Config Updated Successfully",

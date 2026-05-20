@@ -4,10 +4,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.textfield.TextField;
 
-import java.util.List;
-
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
-import com.module.purchase.entity.Employee;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.EmployeeService;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -17,17 +15,19 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 public class DepartmentForm extends Dialog {
 
     private DepartmentService departmentService;
-    private EmployeeService employeeService;
+    private final SecurityService securityService;
+    //private EmployeeService employeeService;
 
     private final TextField departmentNameField = new TextField("Department Name");
     private final TextField departmentCodeField = new TextField("Department Code");
-   // private final ComboBox<Employee> departmentHeadCombo = new ComboBox<>("Department Head");
+  //  private final ComboBox<Employee> departmentHeadCombo = new ComboBox<>("Department Head");
 
-    public DepartmentForm(DepartmentService departmentService, EmployeeService employeeService) {
+    public DepartmentForm(DepartmentService departmentService, EmployeeService employeeServices, SecurityService securityService) {
         this.departmentService = departmentService;
-        this.employeeService = employeeService;
+      //  this.employeeService = employeeServices;
+        this.securityService = securityService;
 
-        List<Employee> employees = employeeService.getEmployees();
+     //   List<Employee> employees = employeeService.getEmployees();
 
         setHeaderTitle("Add Department");
 
@@ -77,7 +77,7 @@ public class DepartmentForm extends Dialog {
             department.setDepartmentName(departmentNameField.getValue());
             department.setDepartmentCode(departmentCodeField.getValue());
             department.setActive(true);
-            departmentService.addDepartment(department);
+            departmentService.addDepartment(department,securityService.getLoggedInUser().getEmployee());
             Notification.show(
                     "Department Saved Successfully",
                     3000,

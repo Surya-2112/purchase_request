@@ -41,6 +41,7 @@ public class PurchaseRequestHeader {
 
     @ManyToOne
     @JoinColumn(name = "department")
+    @JsonIgnoreProperties("purchaseRequestHeaders")
     private Department forDepartment;
 
     @OneToMany(mappedBy = "purchaseRequestHeader")

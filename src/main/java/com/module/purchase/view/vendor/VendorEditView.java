@@ -1,5 +1,6 @@
 package com.module.purchase.view.vendor;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Address;
 import com.module.purchase.entity.Vendor;
 import com.module.purchase.entity.VendorCategory;
@@ -26,6 +27,7 @@ import jakarta.annotation.security.PermitAll;
 public class VendorEditView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final VendorService vendorService;
+    private final SecurityService securityService;
 
     // BASIC DETAILS
     private final TextField vendorNameField = new TextField("Vendor Name");
@@ -50,11 +52,10 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
 
     private Vendor vendor;
 
-    public VendorEditView(
-            VendorService vendorService,
-            VendorCategoryService vendorCategoryService) {
+    public VendorEditView(VendorService vendorService, VendorCategoryService vendorCategoryService, SecurityService securityService) {
 
         this.vendorService = vendorService;
+        this.securityService=securityService;
 
         setSizeFull();
         setPadding(true);
@@ -181,7 +182,7 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
 
                 vendor.setVendorAddress(updatedAddress);
 
-                vendorService.updateVendor(vendor);
+                vendorService.updateVendor(vendor,securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Vendor Updated Successfully",

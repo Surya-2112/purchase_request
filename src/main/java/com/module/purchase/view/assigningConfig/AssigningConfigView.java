@@ -2,6 +2,7 @@ package com.module.purchase.view.assigningConfig;
 
 import org.springframework.data.domain.Page;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entityDTO.AssigningConfigDTO;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
@@ -28,8 +29,9 @@ public class AssigningConfigView extends VerticalLayout {
 
     private final AssigningConfigService assigningConfigService;
 
-    private final Grid<AssigningConfigDTO> assigningConfigGrid =
-            new Grid<>(AssigningConfigDTO.class, false);
+    private final SecurityService securityService;
+
+    private final Grid<AssigningConfigDTO> assigningConfigGrid =  new Grid<>(AssigningConfigDTO.class, false);
 
     // FILTERS
     private final TextField idField =
@@ -53,10 +55,10 @@ public class AssigningConfigView extends VerticalLayout {
 
     private AssigningConfigDTO currentFilter = new AssigningConfigDTO();
 
-    public AssigningConfigView(
-            AssigningConfigService assigningConfigService) {
+    public AssigningConfigView(AssigningConfigService assigningConfigService, SecurityService securityService) {
 
         this.assigningConfigService = assigningConfigService;
+        this.securityService =securityService;
 
         setSizeFull();
 
@@ -78,7 +80,7 @@ public class AssigningConfigView extends VerticalLayout {
 
         addButton.addClickListener(event -> {
 
-            AssigningConfigForm form =new AssigningConfigForm(assigningConfigService);
+            AssigningConfigForm form =new AssigningConfigForm(assigningConfigService,securityService);
 
             form.open();
         });

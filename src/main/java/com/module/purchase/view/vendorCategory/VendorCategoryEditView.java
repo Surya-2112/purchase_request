@@ -1,5 +1,6 @@
 package com.module.purchase.view.vendorCategory;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.VendorCategory;
 import com.module.purchase.service.VendorCategoryService;
 import com.module.purchase.view.MainLayout;
@@ -19,104 +20,98 @@ import jakarta.annotation.security.PermitAll;
 @Route(value = "vendor-category-edit", layout = MainLayout.class)
 @PermitAll
 public class VendorCategoryEditView extends VerticalLayout
-        implements HasUrlParameter<Long> {
+                implements HasUrlParameter<Long> {
 
-    private final VendorCategoryService vendorCategoryService;
+        private final VendorCategoryService vendorCategoryService;
 
-    private final TextField categoryNameField =
-            new TextField("Category Name");
+        private final SecurityService securityService;
 
-    private VendorCategory category;
+        private final TextField categoryNameField = new TextField("Category Name");
 
-    public VendorCategoryEditView(VendorCategoryService vendorCategoryService) {
+        private VendorCategory category;
 
-        this.vendorCategoryService = vendorCategoryService;
+        public VendorCategoryEditView(VendorCategoryService vendorCategoryService,SecurityService securityService) {
 
-        setSizeFull();
-        setPadding(true);
+                this.vendorCategoryService = vendorCategoryService;
+                this.securityService = securityService;
 
-        categoryNameField.setRequired(true);
-        categoryNameField.setRequiredIndicatorVisible(true);
-    }
+                setSizeFull();
+                setPadding(true);
 
-    @Override
-    public void setParameter(BeforeEvent event, Long categoryId) {
-
-        removeAll();
-
-        category = vendorCategoryService.getVendorCategoryById(categoryId).orElse(null);
-
-        if (category == null) {
-            add(new H2("Vendor Category Not Found"));
-            return;
+                categoryNameField.setRequired(true);
+                categoryNameField.setRequiredIndicatorVisible(true);
         }
 
-        H2 title = new H2("Update Vendor Category");
+        @Override
+        public void setParameter(BeforeEvent event, Long categoryId) {
 
-        // SET VALUES
-        categoryNameField.setValue(
-                category.getCategoryName() == null
-                        ? ""
-                        : category.getCategoryName()
-        );
+                removeAll();
 
-        FormLayout formLayout = new FormLayout();
-        formLayout.add(categoryNameField);
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 1)
-        );
+                category = vendorCategoryService.getVendorCategoryById(categoryId).orElse(null);
 
-        // SAVE BUTTON
-        Button saveButton = new Button("Save");
-
-        saveButton.addClickListener(e -> {
-
-            try {
-
-                if (categoryNameField.isEmpty()) {
-                    Notification.show(
-                            "Category Name is required",
-                            3000,
-                            Notification.Position.TOP_CENTER
-                    );
-                    return;
+                if (category == null) {
+                        add(new H2("Vendor Category Not Found"));
+                        return;
                 }
 
-                category.setCategoryName(categoryNameField.getValue());
+                H2 title = new H2("Update Vendor Category");
 
-                vendorCategoryService.updateVendorCategory(category);
+                // SET VALUES
+                categoryNameField.setValue(
+                                category.getCategoryName() == null
+                                                ? ""
+                                                : category.getCategoryName());
 
-                Notification.show(
-                        "Vendor Category Updated Successfully",
-                        3000,
-                        Notification.Position.TOP_CENTER
-                );
+                FormLayout formLayout = new FormLayout();
+                formLayout.add(categoryNameField);
+                formLayout.setResponsiveSteps(
+                                new FormLayout.ResponsiveStep("0", 1));
 
-                getUI().ifPresent(ui ->
-                        ui.navigate("vendor-category-details/" + category.getCategoryId())
-                );
+                // SAVE BUTTON
+                Button saveButton = new Button("Save");
 
-            } catch (Exception exception) {
+                saveButton.addClickListener(e -> {
 
-                Notification.show(
-                        exception.getMessage(),
-                        5000,
-                        Notification.Position.TOP_CENTER
-                );
-            }
-        });
+                        try {
 
-        // CANCEL BUTTON
-        Button cancelButton = new Button("Cancel");
+                                if (categoryNameField.isEmpty()) {
+                                        Notification.show(
+                                                        "Category Name is required",
+                                                        3000,
+                                                        Notification.Position.TOP_CENTER);
+                                        return;
+                                }
 
-        cancelButton.addClickListener(e ->
-                getUI().ifPresent(ui ->
-                        ui.navigate("vendor-category-details/" + category.getCategoryId())
-                )
-        );
+                                category.setCategoryName(categoryNameField.getValue());
 
-        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
+                                vendorCategoryService.updateVendorCategory(category,
+                                                securityService.getLoggedInUser().getEmployee());
 
-        add(title, formLayout, buttons);
-    }
+                                Notification.show(
+                                                "Vendor Category Updated Successfully",
+                                                3000,
+                                                Notification.Position.TOP_CENTER);
+
+                                getUI().ifPresent(ui -> ui
+                                                .navigate("vendor-category-details/" + category.getCategoryId()));
+
+                        } catch (Exception exception) {
+
+                                Notification.show(
+                                                exception.getMessage(),
+                                                5000,
+                                                Notification.Position.TOP_CENTER);
+                        }
+                });
+
+                // CANCEL BUTTON
+                Button cancelButton = new Button("Cancel");
+
+                cancelButton.addClickListener(e -> getUI()
+                                .ifPresent(ui -> ui.navigate("vendor-category-details/" + category.getCategoryId())));
+
+                HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
+
+                add(title, formLayout, buttons);
+        }
 }

@@ -5,9 +5,17 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.module.purchase.entity.*;
+import com.module.purchase.config.SecurityService;
+import com.module.purchase.entity.Department;
+import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Item;
+import com.module.purchase.entity.PurchaseRequestHeader;
+import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.enums.Status;
-import com.module.purchase.service.*;
+import com.module.purchase.service.DepartmentService;
+import com.module.purchase.service.ItemService;
+import com.module.purchase.service.PurchaseRequestHeaderService;
+import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -16,8 +24,10 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.*;
-import com.vaadin.flow.component.textfield.*;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
@@ -157,7 +167,7 @@ public class PurchaseRequestFormView extends VerticalLayout {
 
     header.setPurchaseRequestLines(lines);
 
-    PurchaseRequestHeader saved = headerService.addPurchaseRequestHeader(header);
+    PurchaseRequestHeader saved = headerService.addPurchaseRequestHeader(header,securityService.getLoggedInUser().getEmployee());
 
      for (PurchaseRequestLine l : lines) {
         l.setPurchaseRequestHeader(saved);

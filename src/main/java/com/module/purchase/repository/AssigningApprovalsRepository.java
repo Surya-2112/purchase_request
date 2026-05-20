@@ -1,6 +1,8 @@
 package com.module.purchase.repository;
 
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import com.module.purchase.entity.AssigningApprovals;
@@ -12,4 +14,6 @@ public interface AssigningApprovalsRepository extends JpaRepository<AssigningApp
     List<AssigningApprovals> findByApproverAndApprovalType(Employee approver,ApprovalType approvalType);
     
     List<AssigningApprovals> findByApprovalTypeAndReferenceId(ApprovalType approvalType,Long referenceId);
+
+    Optional<AssigningApprovals> findByApprovalTypeAndReferenceIdAndLevel(ApprovalType approvalType,Long referenceId,Integer level);
 }

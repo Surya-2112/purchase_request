@@ -1,6 +1,7 @@
 package com.module.purchase.view.assigningConfig;
 
 import com.module.purchase.entity.AssigningConfig;
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.AssigningConfigService;
@@ -16,6 +17,8 @@ import com.vaadin.flow.component.textfield.NumberField;
 public class AssigningConfigForm extends Dialog {
 
     private final AssigningConfigService assigningConfigService;
+
+    private final SecurityService securityService;
 
     // FIELDS
     private final ComboBox<ApprovalType> approvalTypeField =
@@ -33,9 +36,10 @@ public class AssigningConfigForm extends Dialog {
     private final NumberField maxAmountField =
             new NumberField("Max Amount");
 
-    public AssigningConfigForm(AssigningConfigService assigningConfigService) {
+    public AssigningConfigForm(AssigningConfigService assigningConfigService, SecurityService securityService) {
 
         this.assigningConfigService = assigningConfigService;
+        this.securityService=securityService;
 
         setHeaderTitle("Add Assigning Config");
 
@@ -57,11 +61,9 @@ public class AssigningConfigForm extends Dialog {
         maxAmountField.setRequiredIndicatorVisible(true);
 
         // LOAD ENUMS
-        approvalTypeField.setItems(
-                ApprovalType.values());
+        approvalTypeField.setItems(ApprovalType.values());
 
-        employeeGroupField.setItems(
-                EmployeeGroup.values());
+        employeeGroupField.setItems(EmployeeGroup.values());
 
         // FORM
         FormLayout formLayout =
@@ -121,24 +123,18 @@ public class AssigningConfigForm extends Dialog {
                     new AssigningConfig();
 
             // SET VALUES
-            assigningConfig.setApprovalType(
-                    approvalTypeField.getValue());
+            assigningConfig.setApprovalType( approvalTypeField.getValue());
 
-            assigningConfig.setLevel(
-                    levelField.getValue());
+            assigningConfig.setLevel(levelField.getValue());
 
-            assigningConfig.setEmployeeGroup(
-                    employeeGroupField.getValue());
+            assigningConfig.setEmployeeGroup( employeeGroupField.getValue());
 
-            assigningConfig.setMinAmount(
-                    minAmountField.getValue());
+            assigningConfig.setMinAmount(minAmountField.getValue());
 
-            assigningConfig.setMaxAmount(
-                    maxAmountField.getValue());
+            assigningConfig.setMaxAmount(maxAmountField.getValue());
 
             // SAVE
-            assigningConfigService.addAssigningConfig(
-                    assigningConfig);
+            assigningConfigService.addAssigningConfig(assigningConfig,securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "Assigning Config Saved Successfully",

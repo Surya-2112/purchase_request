@@ -1,11 +1,11 @@
 package com.module.purchase.entity;
 
-import java.sql.Date;
+import java.time.LocalDate;
+
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.module.purchase.enums.Status;
-
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -39,9 +39,9 @@ public class PurchaseOrderHeader {
     @JoinColumn(name = "vendorId")
     private Vendor vendor;
 
-    private Date createdDate;
+    private LocalDate createdDate;
 
-    private Date expectedDeliveryDate;
+    private LocalDate expectedDeliveryDate;
 
     private Integer level;
 
@@ -92,19 +92,19 @@ public class PurchaseOrderHeader {
         this.vendor = vendor;
     }
 
-    public Date getCreatedDate() {
+    public LocalDate getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Date createdDate) {
+    public void setCreatedDate(LocalDate createdDate) {
         this.createdDate = createdDate;
     }
 
-    public Date getExpectedDeliveryDate() {
+    public LocalDate getExpectedDeliveryDate() {
         return expectedDeliveryDate;
     }
 
-    public void setExpectedDeliveryDate(Date expectedDeliveryDate) {
+    public void setExpectedDeliveryDate(LocalDate expectedDeliveryDate) {
         this.expectedDeliveryDate = expectedDeliveryDate;
     }
 

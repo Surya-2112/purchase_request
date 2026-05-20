@@ -2,6 +2,7 @@ package com.module.purchase.view.role;
 
 import java.util.stream.Collectors;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Role;
 import com.module.purchase.service.RoleService;
 import com.module.purchase.view.MainLayout;
@@ -21,15 +22,16 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "role-details", layout = MainLayout.class)
 @PermitAll
-public class RoleDetailsView extends VerticalLayout
-                implements HasUrlParameter<Long> {
+public class RoleDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
 
         private final RoleService roleService;
 
-        public RoleDetailsView(
-                        RoleService roleService) {
+        private final SecurityService securityService;
+
+        public RoleDetailsView( RoleService roleService,SecurityService securityService) {
 
                 this.roleService = roleService;
+                this.securityService=securityService;
 
                 setSizeFull();
 
@@ -117,7 +119,7 @@ public class RoleDetailsView extends VerticalLayout
                         dialog.addConfirmListener(confirmEvent -> {
 
                                 try { // CALL SERVICE
-                                        roleService.deleteRoleById(role.getRoleId());
+                                        roleService.deleteRoleById(role.getRoleId(),securityService.getLoggedInUser().getEmployee());
 
                                         Notification.show("Role Deleted Successfully",
                                                         3000,

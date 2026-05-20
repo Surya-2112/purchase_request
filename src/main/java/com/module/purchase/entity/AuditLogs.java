@@ -1,6 +1,6 @@
 package com.module.purchase.entity;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EntityType;
@@ -34,7 +34,7 @@ public class AuditLogs {
     @JoinColumn(name = "performed_by_id")
     private Employee performedBy;
 
-    private Date timestamp;
+    private LocalDate timestamp;
 
     public Long getAuditLogId() {
         return auditLogId;
@@ -76,11 +76,11 @@ public class AuditLogs {
         this.performedBy = performedBy;
     }
 
-    public Date getTimestamp() {
+    public LocalDate getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(LocalDate timestamp) {
         this.timestamp = timestamp;
     }
 }

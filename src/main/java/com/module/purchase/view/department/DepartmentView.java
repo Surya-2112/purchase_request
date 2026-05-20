@@ -2,6 +2,7 @@ package com.module.purchase.view.department;
 
 import org.springframework.data.domain.Page;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entityDTO.DepartmentDTO;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.EmployeeService;
@@ -25,6 +26,7 @@ import jakarta.annotation.security.PermitAll;
 public class DepartmentView extends VerticalLayout {
 
     private EmployeeService employeeService;
+    private SecurityService securityService;
     private DepartmentService departmentService;
 
     private final Grid<DepartmentDTO> departmentGrid = new Grid<>(DepartmentDTO.class, false);
@@ -40,7 +42,7 @@ public class DepartmentView extends VerticalLayout {
 
     private DepartmentDTO currentFilter = new DepartmentDTO();
 
-    public DepartmentView(DepartmentService departmentService, EmployeeService employeeService) {
+    public DepartmentView(DepartmentService departmentService, EmployeeService employeeService,SecurityService securityService) {
         this.departmentService = departmentService;
         this.employeeService = employeeService;
 
@@ -107,7 +109,7 @@ public class DepartmentView extends VerticalLayout {
         Button addButton = new Button("Add Department");
 
         addButton.addClickListener(event -> {
-            DepartmentForm form = new DepartmentForm(departmentService, employeeService);
+            DepartmentForm form = new DepartmentForm(departmentService, employeeService,securityService);
             form.open();
         });
 

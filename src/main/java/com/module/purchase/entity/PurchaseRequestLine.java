@@ -20,7 +20,7 @@ public class PurchaseRequestLine {
 
     @ManyToOne
     @JoinColumn(name = "purchaseRequestId")
-    @JsonIgnoreProperties({"purchaseRequestLines"})
+    @JsonIgnoreProperties({ "purchaseRequestLines","assigningApprovals"})
     private PurchaseRequestHeader purchaseRequestHeader;
 
     @ManyToOne

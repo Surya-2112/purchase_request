@@ -8,9 +8,15 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.module.purchase.repository.DepartmentRepository;
 import com.module.purchase.specification.DepartmentSpecification;
+import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Department;
+import com.module.purchase.entity.Employee;
 import com.module.purchase.entityDTO.DepartmentDTO;
 
+import com.module.purchase.enums.EntityType;
+import com.module.purchase.enums.Action;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +29,7 @@ import com.module.purchase.customException.ResourceMissingFieldException;
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.mapper.DepartmentMapper;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -39,17 +45,30 @@ public class DepartmentService {
     @Lazy
     private EmployeeService employeeSerivce;
 
+    @Autowired
+    private AuditLogsService auditLogsService;
+
     public Department saveDepartment(Department department) {
         return departmentRepository.save(department);
     }
 
-    public Department addDepartment(Department department) {
+    public Department addDepartment(Department department,Employee employee) {
        
         Optional<Department> existingDepartment = departmentRepository.findByDepartmentCode(department.getDepartmentCode());
         if (existingDepartment.isPresent()) {
             throw new ResourceAlreadyUsedException("Department with code " + department.getDepartmentCode() + " already exists.");
         }
-        return saveDepartment(department);
+        saveDepartment(department);
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.DEPARTMENT);
+        log.setEntityId(department.getDepartmentId());
+        log.setAction(Action.CREATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
+        return department;
     }
 
     public Optional<Department> getDepartmentById(Long id) {
@@ -82,7 +101,7 @@ public class DepartmentService {
         return departmentRepository.findAll();
     }
 
-    public Department updateDepartment(Department department)
+    public Department updateDepartment(Department department,Employee employee)
     {
         Department existingDepartment=getDepartmentById(department.getDepartmentId()).get();
         if(!existingDepartment.getDepartmentCode().equals(department.getDepartmentCode()))
@@ -96,10 +115,21 @@ public class DepartmentService {
                 throw new RuntimeException("Employee is not in this department");
             }
         }
-        return saveDepartment(department);
+
+        saveDepartment(department);
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.DEPARTMENT);
+        log.setEntityId(department.getDepartmentId());
+        log.setAction(Action.UPDATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+        
+        return department;
     }
 
-    public void deleteDepartmentById(Long departmentId)
+    public void deleteDepartmentById(Long departmentId,Employee employee)
     {
         Department existingDepartment=getDepartmentById(departmentId).get();
 
@@ -115,6 +145,15 @@ public class DepartmentService {
         {
             throw new ResourceAlreadyUsedException("Cannot delete department with associated purchase request headers");
         }
+
+        AuditLogs log = new AuditLogs();
+        log.setEntityType(EntityType.DEPARTMENT);
+        log.setEntityId(departmentId);
+        log.setAction(Action.DELETE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
         departmentRepository.deleteById(departmentId);
     }
 }
