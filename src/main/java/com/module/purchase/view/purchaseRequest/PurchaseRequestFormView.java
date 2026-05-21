@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
@@ -28,156 +29,595 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
 
-@Route(value = "purchase-request-form", layout = MainLayout.class)
+@Route(value = "purchase-request-form/:id?", layout = MainLayout.class)
 @PermitAll
-public class PurchaseRequestFormView extends VerticalLayout {
+public class PurchaseRequestFormView extends VerticalLayout
+        implements BeforeEnterObserver {
 
     private final PurchaseRequestHeaderService headerService;
+
     private final DepartmentService departmentService;
+
     private final ItemService itemService;
+
     private final PurchaseRequestLineService lineService;
 
     private final SecurityService securityService;
 
-    private final DatePicker createdDateField = new DatePicker("Created Date");
-    private final ComboBox<Department> departmentField = new ComboBox<>("Department");
+    // ================= FORM =================
 
-    private final ComboBox<Item> itemField = new ComboBox<>("Item");
-    private final IntegerField quantityField = new IntegerField("Quantity");
-    private final NumberField unitPriceField = new NumberField("Unit Price");
-    private final NumberField discountField = new NumberField("Discount");
+    private final DatePicker createdDateField =
+            new DatePicker("Created Date");
 
-    private final List<PurchaseRequestLine> lines = new ArrayList<>();
-    private final Grid<PurchaseRequestLine> lineGrid = new Grid<>(PurchaseRequestLine.class, false);
+    private final ComboBox<Department> departmentField =
+            new ComboBox<>("Department");
 
-    private final Button saveButton = new Button("Save & Go To Approval");
+    private final ComboBox<Item> itemField =
+            new ComboBox<>("Item");
+
+    private final IntegerField quantityField =
+            new IntegerField("Quantity");
+
+    private final NumberField unitPriceField =
+            new NumberField("Unit Price");
+
+    private final NumberField discountField =
+            new NumberField("Discount");
+
+    // ================= DATA =================
+
+    private final List<PurchaseRequestLine> lines =
+            new ArrayList<>();
+
+    private PurchaseRequestHeader editingHeader = null;
+
+    private PurchaseRequestLine editingLine = null;
+
+    // ================= GRID =================
+
+    private final Grid<PurchaseRequestLine> lineGrid =
+            new Grid<>(PurchaseRequestLine.class, false);
+
+    // ================= BUTTON =================
+
+    private final Button saveButton =
+            new Button("Save & Go To Approval");
+
+    // ================= CONSTRUCTOR =================
 
     public PurchaseRequestFormView(
+
             PurchaseRequestHeaderService headerService,
+
             DepartmentService departmentService,
+
             ItemService itemService,
-            SecurityService securityService, PurchaseRequestLineService lineService) {
+
+            SecurityService securityService,
+
+            PurchaseRequestLineService lineService) {
 
         this.headerService = headerService;
+
         this.departmentService = departmentService;
+
         this.itemService = itemService;
+
         this.securityService = securityService;
-        this.lineService=lineService;
+
+        this.lineService = lineService;
 
         setSizeFull();
 
-        departmentField.setItems(departmentService.getDepartments());
-        departmentField.setItemLabelGenerator(Department::getDepartmentName);
+        setPadding(true);
 
-        itemField.setItems(itemService.getItems());
-        itemField.setItemLabelGenerator(Item::getItemName);
+        setSpacing(true);
 
-        createdDateField.setValue(LocalDate.now());
+        // ================= LOAD DEPARTMENTS =================
+
+        departmentField.setItems(
+                departmentService.getDepartments()
+        );
+
+        departmentField.setItemLabelGenerator(
+                Department::getDepartmentName
+        );
+
+        // ================= LOAD ITEMS =================
+
+        itemField.setItems(
+                itemService.getItems()
+        );
+
+        itemField.setItemLabelGenerator(
+                Item::getItemName
+        );
+
+        // ================= DEFAULT VALUES =================
+
+        createdDateField.setValue(
+                LocalDate.now()
+        );
+
+        quantityField.setValue(1);
+
+        unitPriceField.setValue(0.0);
+
+        discountField.setValue(0.0);
 
         configureGrid();
 
-        Button addLine = new Button("Add Line", e -> addLine());
+        // ================= BUTTONS =================
 
-        HorizontalLayout lineInput = new HorizontalLayout(
-                itemField, quantityField, unitPriceField, discountField, addLine);
+        Button addLineButton =
+                new Button(
+                        "Add / Update Line",
+                        e -> addLine()
+                );
 
-        saveButton.addClickListener(e -> saveAndGoApproval());
+        saveButton.addClickListener(
+                e -> saveAndGoApproval()
+        );
+
+        // ================= INPUT LAYOUT =================
+
+        HorizontalLayout lineInput =
+                new HorizontalLayout(
+
+                        itemField,
+
+                        quantityField,
+
+                        unitPriceField,
+
+                        discountField,
+
+                        addLineButton
+                );
+
+        lineInput.setAlignItems(
+                Alignment.END
+        );
+
+        // ================= UI =================
 
         add(
+
                 new H2("Purchase Request Form"),
+
                 createdDateField,
+
                 departmentField,
-                new H3("Lines"),
+
+                new H3("Purchase Request Lines"),
+
                 lineInput,
+
                 lineGrid,
+
                 saveButton
         );
     }
 
+    // ================= ROUTE =================
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+
+        Optional<String> parameter =
+
+                event.getRouteParameters()
+                        .get("id");
+
+        if (parameter.isPresent()) {
+
+            Long id =
+                    Long.parseLong(
+                            parameter.get()
+                    );
+
+            editingHeader =
+                    headerService
+                            .getPurchaseRequestHeaderById(id)
+                            .orElse(null);
+
+            if (editingHeader == null) {
+
+                Notification.show(
+                        "Purchase Request Not Found"
+                );
+
+                return;
+            }
+
+            loadEditData();
+        }
+    }
+
+    // ================= LOAD EDIT =================
+
+    private void loadEditData() {
+
+        createdDateField.setValue(
+
+                editingHeader
+                        .getCreatedDate()
+                        .toLocalDate()
+        );
+
+        departmentField.setValue(
+                editingHeader.getForDepartment()
+        );
+
+        lines.clear();
+
+        lines.addAll(
+
+                lineService
+                        .getPurchaseRequestLineByHeader(
+                                editingHeader
+                        )
+        );
+
+        lineGrid.getDataProvider()
+                .refreshAll();
+
+        saveButton.setText(
+                "Update & Go To Approval"
+        );
+    }
+
+    // ================= GRID =================
+
     private void configureGrid() {
 
-        lineGrid.addColumn(l -> l.getItem() == null ? "" : l.getItem().getItemName())
-                .setHeader("Item");
+        lineGrid.removeAllColumns();
 
-        lineGrid.addColumn(PurchaseRequestLine::getQuantity).setHeader("Qty");
-        lineGrid.addColumn(PurchaseRequestLine::getUnitPrice).setHeader("Price");
-        lineGrid.addColumn(PurchaseRequestLine::getTotalPrice).setHeader("Total");
+        lineGrid.addColumn(line ->
+
+                        line.getItem() != null
+
+                                ? line.getItem()
+                                .getItemName()
+
+                                : ""
+                )
+
+                .setHeader("Item")
+
+                .setAutoWidth(true);
+
+        lineGrid.addColumn(
+                        PurchaseRequestLine::getQuantity
+                )
+                .setHeader("Quantity");
+
+        lineGrid.addColumn(
+                        PurchaseRequestLine::getUnitPrice
+                )
+                .setHeader("Unit Price");
+
+        lineGrid.addColumn(
+                        PurchaseRequestLine::getDiscount
+                )
+                .setHeader("Discount");
+
+        lineGrid.addColumn(
+                        PurchaseRequestLine::getTotalPrice
+                )
+                .setHeader("Total");
+
+        // ================= ACTIONS =================
+
+        lineGrid.addComponentColumn(line -> {
+
+            Button editButton =
+                    new Button("Edit");
+
+            editButton.addClickListener(
+                    e -> editLine(line)
+            );
+
+            Button deleteButton =
+                    new Button("Delete");
+
+            deleteButton.addClickListener(e -> {
+
+                lines.remove(line);
+
+                lineGrid.getDataProvider()
+                        .refreshAll();
+
+                Notification.show(
+                        "Line deleted"
+                );
+            });
+
+            return new HorizontalLayout(
+                    editButton,
+                    deleteButton
+            );
+
+        }).setHeader("Actions");
 
         lineGrid.setItems(lines);
+
+        lineGrid.setWidthFull();
+
+        lineGrid.setAllRowsVisible(true);
     }
+
+    // ================= ADD / UPDATE LINE =================
 
     private void addLine() {
 
         if (itemField.isEmpty()) {
-            Notification.show("Select item");
+
+            Notification.show(
+                    "Please select item"
+            );
+
             return;
         }
 
-        PurchaseRequestLine line = new PurchaseRequestLine();
-        line.setItem(itemField.getValue());
-        line.setQuantity(quantityField.getValue());
-        line.setUnitPrice(unitPriceField.getValue());
-        line.setDiscount(discountField.getValue());
+        Integer qtyValue =
+                quantityField.getValue();
 
-        double qty = quantityField.getValue() == null ? 0 : quantityField.getValue();
-        double price = unitPriceField.getValue() == null ? 0 : unitPriceField.getValue();
-        double discount = discountField.getValue() == null ? 0 : discountField.getValue();
+        Double priceValue =
+                unitPriceField.getValue();
 
-        line.setTotalPrice((qty * price) - discount);
+        Double discountValue =
+                discountField.getValue();
 
-        lines.add(line);
-        lineGrid.getDataProvider().refreshAll();
+        int qty =
+                qtyValue == null ? 0 : qtyValue;
+
+        double price =
+                priceValue == null ? 0 : priceValue;
+
+        double discount =
+                discountValue == null
+                        ? 0
+                        : discountValue;
+
+        double total =
+                (qty * price) - discount;
+
+        // ================= UPDATE =================
+
+        if (editingLine != null) {
+
+            editingLine.setItem(
+                    itemField.getValue()
+            );
+
+            editingLine.setQuantity(qty);
+
+            editingLine.setUnitPrice(price);
+
+            editingLine.setDiscount(discount);
+
+            editingLine.setTotalPrice(total);
+
+            Notification.show(
+                    "Line updated"
+            );
+
+            editingLine = null;
+
+        } else {
+
+            // ================= ADD =================
+
+            PurchaseRequestLine line =
+                    new PurchaseRequestLine();
+
+            line.setItem(
+                    itemField.getValue()
+            );
+
+            line.setQuantity(qty);
+
+            line.setUnitPrice(price);
+
+            line.setDiscount(discount);
+
+            line.setTotalPrice(total);
+
+            lines.add(line);
+
+            Notification.show(
+                    "Line added"
+            );
+        }
+
+        lineGrid.getDataProvider()
+                .refreshAll();
 
         clearLine();
     }
 
+    // ================= EDIT LINE =================
+
+    private void editLine(
+            PurchaseRequestLine line) {
+
+        editingLine = line;
+
+        itemField.setValue(
+                line.getItem()
+        );
+
+        quantityField.setValue(
+                line.getQuantity()
+        );
+
+        unitPriceField.setValue(
+                line.getUnitPrice()
+        );
+
+        discountField.setValue(
+                line.getDiscount()
+        );
+
+        Notification.show(
+                "Edit mode enabled"
+        );
+    }
+
+    // ================= CLEAR =================
+
     private void clearLine() {
+
         itemField.clear();
+
         quantityField.setValue(1);
+
         unitPriceField.setValue(0.0);
+
         discountField.setValue(0.0);
+
+        editingLine = null;
     }
 
-   private void saveAndGoApproval() {
+    // ================= SAVE =================
 
-    if (departmentField.isEmpty() || lines.isEmpty()) {
-        Notification.show("Department and lines required");
-        return;
+    private void saveAndGoApproval() {
+
+        if (departmentField.isEmpty()
+                || lines.isEmpty()) {
+
+            Notification.show(
+                    "Department and lines required"
+            );
+
+            return;
+        }
+
+        Employee currentUser =
+
+                securityService
+                        .getLoggedInUser()
+                        .getEmployee();
+
+        double total = lines.stream()
+
+                .mapToDouble(
+                        PurchaseRequestLine::getTotalPrice
+                )
+
+                .sum();
+
+        PurchaseRequestHeader saved;
+
+        // ================= UPDATE =================
+
+        if (editingHeader != null) {
+
+            editingHeader.setCreatedDate(
+
+                    Date.valueOf(
+                            createdDateField.getValue()
+                    )
+            );
+
+            editingHeader.setForDepartment(
+                    departmentField.getValue()
+            );
+
+            editingHeader.setTotalAmount(total);
+
+            editingHeader.setPurchaseRequestLines(
+                    lines
+            );
+
+            saved =headerService.updatePurchaseRequestHeader(
+                                    editingHeader,
+                                    currentUser
+                            );
+
+            // DELETE OLD LINES
+            lineService.deleteAllLine(saved);
+
+            // SAVE NEW LINES
+            for (PurchaseRequestLine line : lines) {
+
+                line.setPurchaseRequestHeader(
+                        saved
+                );
+
+                lineService.addPurchaseRequestLine(
+                        line
+                );
+            }
+
+            Notification.show(
+                    "Purchase Request Updated"
+            );
+
+        } else {
+
+            // ================= NEW SAVE =================
+
+            PurchaseRequestHeader header =
+                    new PurchaseRequestHeader();
+
+            header.setCreatedDate(
+
+                    Date.valueOf(
+                            createdDateField.getValue()
+                    )
+            );
+
+            header.setForDepartment(
+                    departmentField.getValue()
+            );
+
+            header.setStatus(Status.DRAFT);
+
+            header.setCreatedBy(currentUser);
+
+            header.setTotalAmount(total);
+
+            header.setPurchaseRequestLines(lines);
+
+            saved =
+                    headerService
+                            .addPurchaseRequestHeader(
+                                    header,
+                                    currentUser
+                            );
+
+            for (PurchaseRequestLine line : lines) {
+
+                line.setPurchaseRequestHeader(
+                        saved
+                );
+
+                lineService.addPurchaseRequestLine(
+                        line
+                );
+            }
+
+            Notification.show(
+                    "Purchase Request Saved"
+            );
+        }
+
+        getUI().ifPresent(ui ->
+
+                ui.navigate(
+
+                        "purchase-request-approval/"
+                                + saved
+                                .getPurchaseRequestId()
+                )
+        );
     }
-
-    PurchaseRequestHeader header = new PurchaseRequestHeader();
-
-    header.setCreatedDate(Date.valueOf(createdDateField.getValue()));
-    header.setForDepartment(departmentField.getValue());
-    header.setStatus(Status.DRAFT);
-
-
-    Employee currentUser = securityService.getLoggedInUser().getEmployee();
-    header.setCreatedBy(currentUser);
-
-    double total = lines.stream()
-            .mapToDouble(PurchaseRequestLine::getTotalPrice)
-            .sum();
-
-    header.setTotalAmount(total);
-
-    header.setPurchaseRequestLines(lines);
-
-    PurchaseRequestHeader saved = headerService.addPurchaseRequestHeader(header,securityService.getLoggedInUser().getEmployee());
-
-     for (PurchaseRequestLine l : lines) {
-        l.setPurchaseRequestHeader(saved);
-        lineService.addPurchaseRequestLine(l);
-    }
-
-
-    Notification.show("Saved. Go to Approval screen.");
-
-    getUI().ifPresent(ui ->
-            ui.navigate("purchase-request-approval/" + saved.getPurchaseRequestId()));
-}
 }

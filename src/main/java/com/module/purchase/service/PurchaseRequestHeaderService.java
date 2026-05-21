@@ -37,6 +37,9 @@ public class PurchaseRequestHeaderService {
     private UsersService userservice;
 
     @Autowired
+    private PurchaseRequestLineService purchaseRequestLineSerivce;
+
+    @Autowired
     private AuditLogsService auditLogsService;
 
     public PurchaseRequestHeader savePurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader) {
@@ -111,12 +114,16 @@ public List<PurchaseRequestDTO> getRecentPurchaseRequests(
             .findAllByOrderByPurchaseRequestIdDesc(pageRequest));
 }
 
-    public void deletePurchaseRequestHeaderById(Long Id) {
-        purchaseRequestHeaderRepository.deleteById(Id);
+    public void deletePurchaseRequestHeaderById(Long id) {
+        
+        purchaseRequestLineSerivce.deleteAllLine(getPurchaseRequestHeaderById(id).get());
+        purchaseRequestHeaderRepository.deleteById(id);
     }
 
     public PurchaseRequestHeader updatePurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader,Employee employee) {
-         purchaseRequestHeader = savePurchaseRequestHeader(purchaseRequestHeader);
+
+
+        purchaseRequestHeader = savePurchaseRequestHeader(purchaseRequestHeader); //TODO : handle the if cancelled
 
         AuditLogs log= new AuditLogs();
         log.setEntityType(EntityType.PURCHASE_REQUEST);

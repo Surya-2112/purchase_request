@@ -41,4 +41,18 @@ public class PurchaseRequestLineService {
     public List<PurchaseRequestLine> getAllPurchaseRequestLines() {
         return purchaseRequestLineRepository.findAll();
     }
+
+    public void deletePurchaseRequestLineById(Long id)
+    {
+        purchaseRequestLineRepository.deleteById(id);
+    }
+
+    public void deleteAllLine(PurchaseRequestHeader header)
+    {
+        List<PurchaseRequestLine> lines=getPurchaseRequestLineByHeader(header);
+        for(PurchaseRequestLine line:lines)
+        {
+            deletePurchaseRequestLineById(line.getPurchaseRequestLineId());
+        }
+    }
 }

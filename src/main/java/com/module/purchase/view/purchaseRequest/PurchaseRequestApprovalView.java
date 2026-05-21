@@ -2,12 +2,27 @@ package com.module.purchase.view.purchaseRequest;
 
 import java.time.LocalDate;
 import java.time.Year;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.*;
-import com.module.purchase.enums.*;
-import com.module.purchase.service.*;
+import com.module.purchase.entity.AssigningApprovals;
+import com.module.purchase.entity.AssigningConfig;
+import com.module.purchase.entity.Department;
+import com.module.purchase.entity.DepartmentBudget;
+import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.PurchaseRequestHeader;
+import com.module.purchase.enums.ApprovalSource;
+import com.module.purchase.enums.ApprovalType;
+import com.module.purchase.enums.Status;
+import com.module.purchase.service.AssigningApprovalsService;
+import com.module.purchase.service.AssigningConfigService;
+import com.module.purchase.service.DepartmentBudgetService;
+import com.module.purchase.service.EmployeeService;
+import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -15,31 +30,39 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.*;
-import com.vaadin.flow.router.*;
+import com.vaadin.flow.component.notification.Notification.Position;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
 
 @Route(value = "purchase-request-approval/:id", layout = MainLayout.class)
 @PermitAll
-public class PurchaseRequestApprovalView extends VerticalLayout implements BeforeEnterObserver {
+public class PurchaseRequestApprovalView extends VerticalLayout
+        implements BeforeEnterObserver {
 
     private final PurchaseRequestHeaderService headerService;
+
     private final AssigningConfigService configService;
+
     private final EmployeeService employeeService;
+
     private final AssigningApprovalsService assigningApprovalsService;
+
     private final SecurityService securityService;
+
     private final DepartmentBudgetService departmentBudgetService;
 
     private PurchaseRequestHeader header;
 
-    private final List<AssigningApprovals> approvals = new ArrayList<>();
+    private final List<AssigningApprovals> approvals =
+            new ArrayList<>();
 
     private final Grid<AssigningApprovals> grid =
             new Grid<>(AssigningApprovals.class, false);
-
-    private final ComboBox<Employee> approverBox =
-            new ComboBox<>("Approver");
 
     // ================= BUDGET UI =================
 
@@ -62,90 +85,166 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
             DepartmentBudgetService departmentBudgetService) {
 
         this.headerService = headerService;
+
         this.configService = configService;
+
         this.employeeService = employeeService;
-        this.assigningApprovalsService = assigningApprovalsService;
+
         this.securityService = securityService;
-        this.departmentBudgetService = departmentBudgetService;
+
+        this.assigningApprovalsService =
+                assigningApprovalsService;
+
+        this.departmentBudgetService =
+                departmentBudgetService;
 
         setSizeFull();
 
-        approverBox.setItemLabelGenerator(Employee::getEmployeeName);
+        setPadding(true);
+
+        setSpacing(true);
 
         configureGrid();
 
-        Button addBtn = new Button("Add Line", e -> addLine());
+        Button addBtn =
+                new Button("Add Line", e -> addLine());
 
-        Button saveBtn = new Button("Save", e -> saveAll());
+        Button saveBtn =
+                new Button("Save", e -> saveAll());
 
         // ================= BUDGET LAYOUT =================
 
-        VerticalLayout budgetLayout = new VerticalLayout(
-                budgetTitle,
-                yearSpan,
-                totalBudgetSpan,
-                remainingBudgetSpan
-        );
+        VerticalLayout budgetLayout =
+                new VerticalLayout(
+
+                        budgetTitle,
+
+                        yearSpan,
+
+                        totalBudgetSpan,
+
+                        remainingBudgetSpan
+                );
 
         budgetLayout.setPadding(true);
+
         budgetLayout.setSpacing(false);
 
+        budgetLayout.getStyle()
+                .set("border", "1px solid #ddd")
+                .set("border-radius", "8px")
+                .set("background", "#f9f9f9");
+
         add(
+
                 new H2("Purchase Request Approval Setup"),
+
                 budgetLayout,
+
                 new HorizontalLayout(addBtn, saveBtn),
+
                 grid
         );
     }
 
-    // ================= LOAD =================
+    // ================= BEFORE ENTER =================
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
 
-        Long id = Long.parseLong(
-                event.getRouteParameters().get("id").get()
-        );
+        try {
 
-        header = headerService.getPurchaseRequestHeaderById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Request not found"));
+            Long id = Long.parseLong(
 
-        loadDepartmentBudget();
+                    event.getRouteParameters()
+                            .get("id")
+                            .get()
+            );
 
-        loadAutoApprovals();
+            header = headerService
+
+                    .getPurchaseRequestHeaderById(id)
+
+                    .orElseThrow(() ->
+
+                            new RuntimeException(
+                                    "Request not found"
+                            )
+                    );
+
+            // ================= CHECK DEPARTMENT =================
+
+            if (header.getForDepartment() == null) {
+
+                Notification.show(
+                        "Department not found",
+                        3000,
+                        Position.TOP_CENTER
+                );
+
+                event.rerouteTo("purchase-request");
+
+                return;
+            }
+
+            // ================= CHECK BUDGET =================
+
+            DepartmentBudget budget =
+                    departmentBudgetService
+                            .getByDepartmentAndYear(
+
+                                    header.getForDepartment(),
+
+                                    Year.now()
+                            );
+
+            // ================= NO BUDGET =================
+
+            if (budget == null) {
+
+                Notification.show(
+                        "Department Budget Not Configured",
+                        3000,
+                        Position.TOP_CENTER
+                );
+
+                event.rerouteTo("purchase-request");
+
+                return;
+            }
+
+            // ================= SHOW BUDGET =================
+
+            loadDepartmentBudget(budget);
+
+            // ================= LOAD APPROVALS =================
+
+            loadAutoApprovals();
+
+        } catch (Exception e) {
+
+            Notification.show(
+                    "Department Budget Not Configured",
+                    3000,
+                    Position.TOP_CENTER
+            );
+
+            event.rerouteTo("purchase-request");
+        }
     }
 
     // ================= LOAD BUDGET =================
 
-    private void loadDepartmentBudget() {
-        if (header.getForDepartment() == null) {
-            return;
-        }
+    private void loadDepartmentBudget(
+            DepartmentBudget budget) {
 
-        Department department = header.getForDepartment();
-      
-        DepartmentBudget budget =
-                departmentBudgetService.getByDepartmentAndYear(
-                        department,
-                        Year.now()
-                );
-
-        if (budget == null) {
-
-            budgetTitle.setText("Department Budget Not Configured");
-
-            yearSpan.setText("");
-            totalBudgetSpan.setText("");
-            remainingBudgetSpan.setText("");
-
-            return;
-        }
-
-        budgetTitle.setText("Department Budget");
+        budgetTitle.setText(
+                "Department Budget"
+        );
 
         yearSpan.setText(
-                "Year : " + budget.getYear()
+                "Year : "
+                        + budget.getYear()
         );
 
         totalBudgetSpan.setText(
@@ -163,40 +262,63 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
 
     private void configureGrid() {
 
-        grid.addColumn(AssigningApprovals::getLevel)
-                .setHeader("Level");
+        // ================= LEVEL =================
 
-        // ================= APPROVER COLUMN =================
+        grid.addColumn(AssigningApprovals::getLevel)
+                .setHeader("Level")
+                .setAutoWidth(true);
+
+        // ================= APPROVER =================
 
         grid.addComponentColumn(item -> {
 
-            ComboBox<Employee> combo = new ComboBox<>();
-
-            combo.setItemLabelGenerator(Employee::getEmployeeName);
+            ComboBox<Employee> combo =
+                    new ComboBox<>();
 
             combo.setWidthFull();
 
-            // AUTO approvals -> filtered by config employee group
-            if (item.getSource() == ApprovalSource.AUTO) {
+            combo.setItemLabelGenerator(
+                    Employee::getEmployeeName
+            );
+
+            // ================= AUTO =================
+
+            if (item.getSource()
+                    == ApprovalSource.AUTO) {
 
                 List<AssigningConfig> configs =
+
                         configService.getConfigs(
-                                ApprovalType.PURCHASE_REQUEST_APPROVAL,
+
+                                ApprovalType
+                                        .PURCHASE_REQUEST_APPROVAL,
+
                                 header.getTotalAmount()
                         );
 
-                AssigningConfig config = configs.stream()
-                        .filter(c ->
-                                c.getLevel().equals(item.getLevel()))
-                        .findFirst()
-                        .orElse(null);
+                AssigningConfig config =
+                        configs.stream()
+
+                                .filter(c ->
+                                        c.getLevel()
+                                                .equals(
+                                                        item.getLevel()
+                                                )
+                                )
+
+                                .findFirst()
+
+                                .orElse(null);
 
                 if (config != null) {
 
                     combo.setItems(
+
                             employeeService
                                     .getEmployeesByEmployeeGroup(
-                                            config.getEmployeeGroup()
+
+                                            config
+                                                    .getEmployeeGroup()
                                     )
                     );
 
@@ -207,14 +329,20 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
 
             } else {
 
-                // MANUAL approvals -> all employees
-                combo.setItems(employeeService.getEmployees());
+                // ================= MANUAL =================
+
+                combo.setItems(
+                        employeeService.getEmployees()
+                );
             }
 
             combo.setValue(item.getApprover());
 
-            combo.addValueChangeListener(
-                    e -> item.setApprover(e.getValue())
+            combo.addValueChangeListener(e ->
+
+                    item.setApprover(
+                            e.getValue()
+                    )
             );
 
             return combo;
@@ -224,18 +352,27 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
         // ================= SOURCE =================
 
         grid.addColumn(a ->
+
                         a.getSource() != null
+
                                 ? a.getSource().name()
-                                : "")
+
+                                : ""
+                )
+
                 .setHeader("Source");
 
         // ================= DELETE =================
 
         grid.addComponentColumn(item -> {
 
-            Button delete = new Button("Delete", e -> {
+            Button delete =
+                    new Button("Delete");
 
-                if (item.getSource() == ApprovalSource.AUTO) {
+            delete.addClickListener(e -> {
+
+                if (item.getSource()
+                        == ApprovalSource.AUTO) {
 
                     Notification.show(
                             "Cannot delete AUTO approvals"
@@ -247,10 +384,16 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
                 approvals.remove(item);
 
                 grid.setItems(approvals);
+
+                Notification.show(
+                        "Approval line deleted"
+                );
             });
 
             delete.setEnabled(
-                    item.getSource() != ApprovalSource.AUTO
+
+                    item.getSource()
+                            != ApprovalSource.AUTO
             );
 
             return delete;
@@ -258,36 +401,52 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
         }).setHeader("Action");
 
         grid.setItems(approvals);
+
+        grid.setWidthFull();
+
+        grid.setAllRowsVisible(true);
     }
 
-    // ================= AUTO LOAD =================
+    // ================= AUTO APPROVAL =================
 
     private void loadAutoApprovals() {
 
         approvals.clear();
 
         List<AssigningConfig> configs =
+
                 configService.getConfigs(
-                        ApprovalType.PURCHASE_REQUEST_APPROVAL,
+
+                        ApprovalType
+                                .PURCHASE_REQUEST_APPROVAL,
+
                         header.getTotalAmount()
                 );
 
         for (AssigningConfig c : configs) {
 
-            AssigningApprovals a =
+            AssigningApprovals approval =
                     new AssigningApprovals();
 
-            a.setLevel(c.getLevel());
-
-            a.setStatus(Status.DRAFT);
-
-            a.setApprovalType(
-                    ApprovalType.PURCHASE_REQUEST_APPROVAL
+            approval.setLevel(
+                    c.getLevel()
             );
 
-            a.setSource(ApprovalSource.AUTO);
+            approval.setStatus(
+                    Status.DRAFT
+            );
 
-            approvals.add(a);
+            approval.setApprovalType(
+
+                    ApprovalType
+                            .PURCHASE_REQUEST_APPROVAL
+            );
+
+            approval.setSource(
+                    ApprovalSource.AUTO
+            );
+
+            approvals.add(approval);
         }
 
         grid.setItems(approvals);
@@ -298,93 +457,174 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
     private void addLine() {
 
         int nextLevel = approvals.stream()
+
                 .map(AssigningApprovals::getLevel)
+
                 .filter(Objects::nonNull)
+
                 .max(Integer::compareTo)
+
                 .orElse(0) + 1;
 
-        AssigningApprovals a =
+        AssigningApprovals approval =
                 new AssigningApprovals();
 
-        a.setLevel(nextLevel);
+        approval.setLevel(nextLevel);
 
-        a.setStatus(Status.DRAFT);
+        approval.setStatus(Status.DRAFT);
 
-        a.setApprovalType(
-                ApprovalType.PURCHASE_REQUEST_APPROVAL
+        approval.setApprovalType(
+
+                ApprovalType
+                        .PURCHASE_REQUEST_APPROVAL
         );
 
-        a.setSource(ApprovalSource.MANUAL);
+        approval.setSource(
+                ApprovalSource.MANUAL
+        );
 
-        approvals.add(a);
+        approvals.add(approval);
 
         grid.setItems(approvals);
 
-        Notification.show(
-                "Added level " + nextLevel
-        );
+        Notification.show("Added level " + nextLevel);
     }
 
     // ================= SAVE =================
 
     private void saveAll() {
 
+        // ================= EMPTY VALIDATION =================
+
+        if (approvals.isEmpty()) {
+
+            Notification.show(
+                    "At least one approval line is required"
+            );
+
+            return;
+        }
+
         Set<Integer> levels = new HashSet<>();
 
-        for (AssigningApprovals a : approvals) {
+        Set<Long> approverIds = new HashSet<>();
 
-            if (a.getApprover() == null) {
+        // ================= VALIDATION =================
+
+        for (AssigningApprovals approval : approvals) {
+
+            // APPROVER REQUIRED
+            if (approval.getApprover() == null) {
 
                 Notification.show(
+
                         "Approver missing for level "
-                                + a.getLevel()
+                                + approval.getLevel()
                 );
 
                 return;
             }
 
-            if (!levels.add(a.getLevel())) {
+            // DUPLICATE LEVEL
+            if (!levels.add(
+                    approval.getLevel()
+            )) {
 
                 Notification.show(
-                        "Duplicate level: "
-                                + a.getLevel()
+
+                        "Duplicate level found : "
+                                + approval.getLevel()
                 );
 
                 return;
+            }
+
+            // DUPLICATE APPROVER
+            if (approval.getApprover()
+                    .getEmployeeId() != null) {
+
+                boolean added = approverIds.add(
+
+                        approval.getApprover()
+                                .getEmployeeId()
+                );
+
+                if (!added) {
+
+                    Notification.show(
+
+                            "Duplicate approver : "
+                                    + approval
+                                    .getApprover()
+                                    .getEmployeeName()
+                    );
+
+                    return;
+                }
             }
         }
 
-        for (AssigningApprovals a : approvals) {
+        // ================= SAVE APPROVALS =================
 
-            a.setReferenceId(
+        for (AssigningApprovals approval : approvals) {
+
+            approval.setReferenceId(
+
                     header.getPurchaseRequestId()
             );
 
-            a.setStatus(Status.DRAFT);
+            approval.setStatus(
+                    Status.WAITING_APPROVAL
+            );
 
-            a.setAssignedDate(LocalDate.now());
+            approval.setAssignedDate(
+                    LocalDate.now()
+            );
 
-            a.setAssignedBy(
+            approval.setAssignedBy(
+
                     securityService
                             .getLoggedInUser()
                             .getEmployee()
             );
 
-            assigningApprovalsService.addApprovals(a,a.getAssignedBy());
+            assigningApprovalsService.addApprovals(
+
+                    approval,
+
+                    approval.getAssignedBy()
+            );
         }
 
-        header.setLevel(approvals.size());
+        // ================= UPDATE HEADER =================
 
-        header.setAssigningApprovals(approvals);
+        header.setLevel(
+                approvals.size()
+        );
 
-        header.setStatus(Status.WAITING_APPROVAL);
+        header.setAssigningApprovals(
+                approvals
+        );
 
-        headerService.updatePurchaseRequestHeader(header,securityService.getLoggedInUser().getEmployee());
+        header.setStatus(
+                Status.WAITING_APPROVAL
+        );
 
-        Notification.show("Saved successfully");
+        headerService.updatePurchaseRequestHeader(
 
-        getUI().ifPresent(
-                ui -> ui.navigate("purchase-request")
+                header,
+
+                securityService
+                        .getLoggedInUser()
+                        .getEmployee()
+        );
+
+        Notification.show(
+                "Approval setup saved successfully"
+        );
+
+        getUI().ifPresent(ui ->
+                ui.navigate("purchase-request")
         );
     }
 }

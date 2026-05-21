@@ -1,114 +1,194 @@
 package com.module.purchase.view.purchaseRequest;
 
-import com.module.purchase.entity.*;
+import com.module.purchase.entity.AssigningApprovals;
+import com.module.purchase.entity.PurchaseRequestHeader;
+import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.enums.ApprovalType;
-import com.module.purchase.service.*;
+import com.module.purchase.enums.Status;
+import com.module.purchase.service.AssigningApprovalsService;
+import com.module.purchase.service.PurchaseRequestHeaderService;
+import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.view.MainLayout;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.*;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
 
 @Route(value = "purchase-request-details/:id", layout = MainLayout.class)
 @PermitAll
-public class PurchaseRequestDetailsView extends VerticalLayout implements BeforeEnterObserver {
+public class PurchaseRequestDetailsView extends VerticalLayout
+        implements BeforeEnterObserver {
 
     private final PurchaseRequestHeaderService headerService;
+
     private final AssigningApprovalsService assigningApprovalsService;
+
     private final PurchaseRequestLineService purchaseRequestLineService;
 
     private PurchaseRequestHeader header;
 
-    // HEADER UI
+    // ================= HEADER UI =================
+
     private final Span requestId = new Span();
+
     private final Span createdBy = new Span();
+
     private final Span department = new Span();
+
     private final Span totalAmount = new Span();
+
     private final Span createdDate = new Span();
+
     private final Span status = new Span();
 
-    // GRIDS
+    // ================= ACTIONS =================
+
+    private final HorizontalLayout actionLayout =
+            new HorizontalLayout();
+
+    // ================= GRIDS =================
+
     private final Grid<PurchaseRequestLine> lineGrid =
             new Grid<>(PurchaseRequestLine.class, false);
 
     private final Grid<AssigningApprovals> approvalGrid =
             new Grid<>(AssigningApprovals.class, false);
 
+    // ================= CONSTRUCTOR =================
+
     public PurchaseRequestDetailsView(
+
             PurchaseRequestHeaderService headerService,
+
             AssigningApprovalsService assigningApprovalsService,
+
             PurchaseRequestLineService purchaseRequestLineService) {
 
         this.headerService = headerService;
-        this.assigningApprovalsService = assigningApprovalsService;
-        this.purchaseRequestLineService = purchaseRequestLineService;
+
+        this.assigningApprovalsService =
+                assigningApprovalsService;
+
+        this.purchaseRequestLineService =
+                purchaseRequestLineService;
 
         setSizeFull();
+
         setPadding(false);
+
         setSpacing(false);
 
         configureGrids();
 
-        // HEADER SECTION
-        VerticalLayout headerSection = buildHeaderSection();
+        VerticalLayout headerSection =
+                buildHeaderSection();
+
         headerSection.setWidthFull();
 
-        // MAIN CONTENT LAYOUT
-        VerticalLayout content = new VerticalLayout(
-                new H2("Purchase Request Details"),
-                headerSection,
-                new H3("Line Items"),
-                lineGrid,
-                new H3("Approval Flow"),
-                approvalGrid
-        );
+        VerticalLayout content =
+                new VerticalLayout(
+
+                        new H2("Purchase Request Details"),
+
+                        headerSection,
+
+                        actionLayout,
+
+                        new H3("Line Items"),
+
+                        lineGrid,
+
+                        new H3("Approval Flow"),
+
+                        approvalGrid
+                );
 
         content.setWidthFull();
+
         content.setPadding(true);
+
         content.setSpacing(true);
 
-        Scroller scroller = new Scroller(content);
+        Scroller scroller =
+                new Scroller(content);
+
         scroller.setSizeFull();
 
         add(scroller);
     }
 
-    // ================= ROUTE LOAD =================
+    // ================= ROUTE =================
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
 
-        Long id = Long.parseLong(event.getRouteParameters().get("id").get());
+        Long id = Long.parseLong(
 
-        header = headerService.getPurchaseRequestHeaderById(id)
-                .orElseThrow(() -> new RuntimeException("Request not found"));
+                event.getRouteParameters()
+                        .get("id")
+                        .get()
+        );
+
+        header = headerService
+
+                .getPurchaseRequestHeaderById(id)
+
+                .orElseThrow(() ->
+
+                        new RuntimeException(
+                                "Request not found"
+                        )
+                );
 
         bindHeader();
+
         loadGrids();
+
+        configureActions();
     }
 
     // ================= HEADER =================
 
     private VerticalLayout buildHeaderSection() {
 
-        VerticalLayout layout = new VerticalLayout(
-                requestId,
-                createdBy,
-                department,
-                totalAmount,
-                createdDate,
-                status
-        );
+        VerticalLayout layout =
+                new VerticalLayout(
+
+                        requestId,
+
+                        createdBy,
+
+                        department,
+
+                        totalAmount,
+
+                        createdDate,
+
+                        status
+                );
 
         layout.setPadding(true);
+
         layout.setSpacing(false);
+
         layout.setWidthFull();
+
         layout.getStyle()
+
                 .set("background", "#f9f9f9")
+
                 .set("border", "1px solid #ddd")
+
                 .set("border-radius", "8px");
 
         return layout;
@@ -116,68 +196,217 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
     private void bindHeader() {
 
-        requestId.setText("Request ID: " + header.getPurchaseRequestId());
+        requestId.setText(
+                "Request ID : "
+                        + header.getPurchaseRequestId()
+        );
 
-        createdBy.setText("Created By: " +
-                (header.getCreatedBy() != null
-                        ? header.getCreatedBy().getEmployeeName()
-                        : "-"));
+        createdBy.setText(
+                "Created By : "
+                        + (
 
-        department.setText("Department: " +
-                (header.getForDepartment() != null
-                        ? header.getForDepartment().getDepartmentName()
-                        : "-"));
+                        header.getCreatedBy() != null
 
-        totalAmount.setText("Total Amount: " + header.getTotalAmount());
+                                ? header.getCreatedBy()
+                                .getEmployeeName()
 
-        createdDate.setText("Created Date: " + header.getCreatedDate());
+                                : "-"
+                )
+        );
 
-        status.setText("Status: " + header.getStatus());
+        department.setText(
+                "Department : "
+                        + (
+
+                        header.getForDepartment() != null
+
+                                ? header.getForDepartment()
+                                .getDepartmentName()
+
+                                : "-"
+                )
+        );
+
+        totalAmount.setText(
+                "Total Amount : "
+                        + header.getTotalAmount()
+        );
+
+        createdDate.setText(
+                "Created Date : "
+                        + header.getCreatedDate()
+        );
+
+        status.setText(
+                "Status : "
+                        + header.getStatus()
+        );
+    }
+
+    private void configureActions() {
+
+        actionLayout.removeAll();
+
+        if (header.getStatus() == Status.DRAFT) {
+
+            Button editButton =
+                    new Button("Edit Request");
+
+            editButton.addClickListener(e -> {
+
+                getUI().ifPresent(ui ->
+
+                        ui.navigate(
+
+                                "purchase-request-form/"
+                                        + header
+                                        .getPurchaseRequestId()
+                        )
+                );
+            });
+
+            Button deleteButton =  new Button("Delete Request");
+
+            deleteButton.addClickListener(e -> {
+
+ 
+                headerService.deletePurchaseRequestHeaderById( header.getPurchaseRequestId());
+
+                Notification.show(
+                        "Purchase Request Deleted"
+                );
+
+                getUI().ifPresent(ui ->
+
+                        ui.navigate("purchase-request")
+                );
+            });
+
+            actionLayout.add(
+
+                    editButton,
+
+                    deleteButton
+            );
+        }
+
+        // ================= WAITING APPROVAL =================
+
+        if (header.getStatus()
+                == Status.WAITING_APPROVAL) {
+
+            Button cancelButton =
+                    new Button("Cancel Request");
+
+            cancelButton.addClickListener(e -> {
+
+                header.setStatus(
+                        Status.CANCELLED
+                );
+
+                headerService.updatePurchaseRequestHeader(
+                                header,
+                                null
+                        );
+
+                Notification.show(
+                        "Purchase Request Cancelled"
+                );
+
+                bindHeader();
+
+                configureActions();
+            });
+
+            actionLayout.add(cancelButton);
+        }
     }
 
     // ================= GRID CONFIG =================
 
     private void configureGrids() {
 
-        // LINE GRID
-        lineGrid.addColumn(PurchaseRequestLine::getPurchaseRequestLineId)
+        // ================= LINE GRID =================
+
+        lineGrid.addColumn(
+                        PurchaseRequestLine::
+                                getPurchaseRequestLineId
+                )
                 .setHeader("Line ID");
 
-        lineGrid.addColumn(l ->
-                l.getItem() != null ? l.getItem().getItemName() : "")
+        lineGrid.addColumn(line ->
+
+                        line.getItem() != null
+
+                                ? line.getItem()
+                                .getItemName()
+
+                                : ""
+                )
+
                 .setHeader("Item Name");
 
-        lineGrid.addColumn(PurchaseRequestLine::getQuantity)
+        lineGrid.addColumn(
+                        PurchaseRequestLine::getQuantity
+                )
                 .setHeader("Quantity");
 
-        lineGrid.addColumn(PurchaseRequestLine::getUnitPrice)
+        lineGrid.addColumn(
+                        PurchaseRequestLine::getUnitPrice
+                )
                 .setHeader("Unit Price");
 
-        lineGrid.addColumn(PurchaseRequestLine::getDiscount)
+        lineGrid.addColumn(
+                        PurchaseRequestLine::getDiscount
+                )
                 .setHeader("Discount");
 
-        lineGrid.addColumn(PurchaseRequestLine::getTotalPrice)
+        lineGrid.addColumn(
+                        PurchaseRequestLine::getTotalPrice
+                )
                 .setHeader("Total Price");
 
         lineGrid.setWidthFull();
+
         lineGrid.setAllRowsVisible(true);
 
-        // APPROVAL GRID
-        approvalGrid.addColumn(AssigningApprovals::getLevel)
+        // ================= APPROVAL GRID =================
+
+        approvalGrid.addColumn(
+                        AssigningApprovals::getLevel
+                )
                 .setHeader("Level");
 
         approvalGrid.addColumn(a ->
-                a.getApprover() != null ? a.getApprover().getEmployeeName() : "")
+
+                        a.getApprover() != null
+
+                                ? a.getApprover()
+                                .getEmployeeName()
+
+                                : ""
+                )
+
                 .setHeader("Approver");
 
-        approvalGrid.addColumn(AssigningApprovals::getAssignedDate)
-                .setHeader("Approved Date");
+        approvalGrid.addColumn(
+                        AssigningApprovals::getAssignedDate
+                )
+                .setHeader("Assigned Date");
 
         approvalGrid.addColumn(a ->
-                a.getStatus() != null ? a.getStatus().name() : "")
+
+                        a.getStatus() != null
+
+                                ? a.getStatus().name()
+
+                                : ""
+                )
+
                 .setHeader("Status");
 
         approvalGrid.setWidthFull();
+
         approvalGrid.setAllRowsVisible(true);
     }
 
@@ -186,15 +415,24 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
     private void loadGrids() {
 
         lineGrid.setItems(
+
                 purchaseRequestLineService
-                        .getPurchaseRequestLineByHeader(header)
+                        .getPurchaseRequestLineByHeader(
+                                header
+                        )
         );
 
         approvalGrid.setItems(
-                assigningApprovalsService.getAssigningApprovalByTypeAndReferId(
-                        ApprovalType.PURCHASE_REQUEST_APPROVAL,
-                        header.getPurchaseRequestId()
-                )
+
+                assigningApprovalsService
+                        .getAssigningApprovalByTypeAndReferId(
+
+                                ApprovalType
+                                        .PURCHASE_REQUEST_APPROVAL,
+
+                                header
+                                        .getPurchaseRequestId()
+                        )
         );
     }
 }
