@@ -2,6 +2,7 @@ package com.module.purchase.view.user;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Users;
+import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.UsersService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -120,6 +121,12 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
             dialog.open();
         });
 
+        deleteButton.setVisible(false);
+
+         if (securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.SUPER_ADMIN)
+                || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.MANAGER) ) {
+                        deleteButton.setVisible(true);
+                }
         HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 
         add(title, formLayout, buttons);

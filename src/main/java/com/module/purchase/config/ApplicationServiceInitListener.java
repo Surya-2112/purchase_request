@@ -17,7 +17,7 @@ public class ApplicationServiceInitListener implements VaadinServiceInitListener
 
         event.getSource()
                 .addUIInitListener(uiEvent -> {
-                    uiEvent.getUI() .addBeforeEnterListener(  globalViewSecurityGuard);
+                    uiEvent.getUI() .addBeforeEnterListener(globalViewSecurityGuard);
                 });
     }
 }

@@ -1,20 +1,16 @@
 package com.module.purchase.view;
 
-import java.util.List;
 import java.time.Year;
 
 import org.springframework.data.domain.PageRequest;
 
 import com.module.purchase.entity.DepartmentBudget;
-import com.module.purchase.entity.PurchaseOrderHeader;
-import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entityDTO.PurchaseOrderDTO;
 import com.module.purchase.entityDTO.PurchaseRequestDTO;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.PurchaseOrderHeaderService;
 import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
-import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
@@ -148,7 +144,9 @@ public class DashboardView extends VerticalLayout {
         row1.setWidthFull();
         row2.setWidthFull();
 
-        VerticalLayout layout = new VerticalLayout(row1, row2);
+        VerticalLayout layout = new VerticalLayout(row1
+                // ,row2
+                );
 
         return layout;
     }
@@ -178,7 +176,7 @@ public class DashboardView extends VerticalLayout {
                 .set("background", "white")
                 .set("box-shadow", "0 2px 8px rgba(0,0,0,0.1)")
                 .set("cursor", "pointer")
-                .set("min-width", "220px");
+                .set("min-width", "200px");
 
         card.addClickListener(event -> {
             UI.getCurrent().navigate(navigationUrl);
@@ -239,7 +237,7 @@ public class DashboardView extends VerticalLayout {
         grid.addColumn(PurchaseRequestDTO::getPurchaseRequestId)
                 .setHeader("PR No");
 
-        grid.addColumn(PurchaseRequestDTO::getCreatedBy)
+        grid.addColumn(pr -> pr.getCreatedBy().getEmployeeName())
                 .setHeader("CreatedBy");
 
         grid.addColumn(pr -> pr.getForDepartment().getDepartmentName())
@@ -283,7 +281,7 @@ public class DashboardView extends VerticalLayout {
         grid.addColumn(PurchaseOrderDTO::getPurchaseOrderId)
                 .setHeader("PO No");
 
-        grid.addColumn(po -> po.getVendor().getVendorName())
+        grid.addColumn(po -> (po.getVendor()!=null) ? po.getVendor().getVendorName(): "-")
                 .setHeader("Vendor");
 
         grid.addColumn(po -> po.getPurchaseRequestHeader().getPurchaseRequestId())

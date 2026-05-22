@@ -12,11 +12,13 @@ import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Item;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
+import com.module.purchase.entity.Vendor;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.service.PurchaseRequestLineService;
+import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -42,9 +44,9 @@ public class PurchaseRequestFormView extends VerticalLayout
 
     private final PurchaseRequestHeaderService headerService;
 
-    private final DepartmentService departmentService;
+//     private final DepartmentService departmentService;
 
-    private final ItemService itemService;
+//     private final ItemService itemService;
 
     private final PurchaseRequestLineService lineService;
 
@@ -58,6 +60,8 @@ public class PurchaseRequestFormView extends VerticalLayout
     private final ComboBox<Department> departmentField =
             new ComboBox<>("Department");
 
+    private final ComboBox<Vendor> vendorField= new ComboBox<>("Vendor");
+
     private final ComboBox<Item> itemField =
             new ComboBox<>("Item");
 
@@ -70,8 +74,6 @@ public class PurchaseRequestFormView extends VerticalLayout
     private final NumberField discountField =
             new NumberField("Discount");
 
-    // ================= DATA =================
-
     private final List<PurchaseRequestLine> lines =
             new ArrayList<>();
 
@@ -79,35 +81,27 @@ public class PurchaseRequestFormView extends VerticalLayout
 
     private PurchaseRequestLine editingLine = null;
 
-    // ================= GRID =================
-
     private final Grid<PurchaseRequestLine> lineGrid =
             new Grid<>(PurchaseRequestLine.class, false);
-
-    // ================= BUTTON =================
 
     private final Button saveButton =
             new Button("Save & Go To Approval");
 
-    // ================= CONSTRUCTOR =================
-
     public PurchaseRequestFormView(
 
             PurchaseRequestHeaderService headerService,
-
             DepartmentService departmentService,
-
             ItemService itemService,
-
             SecurityService securityService,
-
-            PurchaseRequestLineService lineService) {
+            PurchaseRequestLineService lineService,
+            VendorService vendorService
+        ) {
 
         this.headerService = headerService;
 
-        this.departmentService = departmentService;
+        // this.departmentService = departmentService;
 
-        this.itemService = itemService;
+        // this.itemService = itemService;
 
         this.securityService = securityService;
 
@@ -119,8 +113,6 @@ public class PurchaseRequestFormView extends VerticalLayout
 
         setSpacing(true);
 
-        // ================= LOAD DEPARTMENTS =================
-
         departmentField.setItems(
                 departmentService.getDepartments()
         );
@@ -129,17 +121,16 @@ public class PurchaseRequestFormView extends VerticalLayout
                 Department::getDepartmentName
         );
 
-        // ================= LOAD ITEMS =================
+        vendorField.setItems(vendorService.getVendors());
+
+        vendorField.setItemLabelGenerator(Vendor::getVendorName);
 
         itemField.setItems(
                 itemService.getItems()
         );
 
         itemField.setItemLabelGenerator(
-                Item::getItemName
-        );
-
-        // ================= DEFAULT VALUES =================
+                Item::getItemName);
 
         createdDateField.setValue(
                 LocalDate.now()
@@ -152,8 +143,6 @@ public class PurchaseRequestFormView extends VerticalLayout
         discountField.setValue(0.0);
 
         configureGrid();
-
-        // ================= BUTTONS =================
 
         Button addLineButton =
                 new Button(
@@ -184,16 +173,13 @@ public class PurchaseRequestFormView extends VerticalLayout
         lineInput.setAlignItems(
                 Alignment.END
         );
-
-        // ================= UI =================
-
         add(
 
                 new H2("Purchase Request Form"),
 
                 createdDateField,
 
-                departmentField,
+                new HorizontalLayout(departmentField, vendorField),
 
                 new H3("Purchase Request Lines"),
 
@@ -217,10 +203,7 @@ public class PurchaseRequestFormView extends VerticalLayout
 
         if (parameter.isPresent()) {
 
-            Long id =
-                    Long.parseLong(
-                            parameter.get()
-                    );
+            Long id =Long.parseLong( parameter.get());
 
             editingHeader =
                     headerService
@@ -254,6 +237,8 @@ public class PurchaseRequestFormView extends VerticalLayout
         departmentField.setValue(
                 editingHeader.getForDepartment()
         );
+
+        vendorField.setValue(editingHeader.getVendor());
 
         lines.clear();
 
@@ -497,6 +482,10 @@ public class PurchaseRequestFormView extends VerticalLayout
                     "Department and lines required"
             );
 
+        if(vendorField.isEmpty())
+        {
+                Notification.show("Vendor required" ); 
+        }
             return;
         }
 
@@ -522,51 +511,42 @@ public class PurchaseRequestFormView extends VerticalLayout
 
             editingHeader.setCreatedDate(
 
-                    Date.valueOf(
-                            createdDateField.getValue()
-                    )
+                    Date.valueOf( createdDateField.getValue() )
             );
 
             editingHeader.setForDepartment(
                     departmentField.getValue()
             );
 
+            editingHeader.setVendor(vendorField.getValue());
+
             editingHeader.setTotalAmount(total);
 
-            editingHeader.setPurchaseRequestLines(
-                    lines
-            );
+            editingHeader.setPurchaseRequestLines( lines );
 
             saved =headerService.updatePurchaseRequestHeader(
                                     editingHeader,
                                     currentUser
                             );
 
-            // DELETE OLD LINES
             lineService.deleteAllLine(saved);
 
-            // SAVE NEW LINES
             for (PurchaseRequestLine line : lines) {
 
-                line.setPurchaseRequestHeader(
-                        saved
-                );
+                line.setPurchaseRequestHeader(saved);
 
                 lineService.addPurchaseRequestLine(
                         line
                 );
             }
 
-            Notification.show(
-                    "Purchase Request Updated"
-            );
+            Notification.show( "Purchase Request Updated");
 
         } else {
 
             // ================= NEW SAVE =================
 
-            PurchaseRequestHeader header =
-                    new PurchaseRequestHeader();
+            PurchaseRequestHeader header = new PurchaseRequestHeader();
 
             header.setCreatedDate(
 
@@ -575,9 +555,9 @@ public class PurchaseRequestFormView extends VerticalLayout
                     )
             );
 
-            header.setForDepartment(
-                    departmentField.getValue()
-            );
+            header.setForDepartment( departmentField.getValue() );
+
+            header.setVendor(vendorField.getValue());
 
             header.setStatus(Status.DRAFT);
 
@@ -587,9 +567,7 @@ public class PurchaseRequestFormView extends VerticalLayout
 
             header.setPurchaseRequestLines(lines);
 
-            saved =
-                    headerService
-                            .addPurchaseRequestHeader(
+            saved =headerService.addPurchaseRequestHeader(
                                     header,
                                     currentUser
                             );

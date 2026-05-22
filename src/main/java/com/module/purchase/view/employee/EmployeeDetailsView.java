@@ -2,6 +2,7 @@ package com.module.purchase.view.employee;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -10,6 +11,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEvent;
@@ -124,6 +126,9 @@ public class EmployeeDetailsView extends VerticalLayout
 
         deleteButton.addClickListener(clickEvent -> {
 
+        if(securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.SUPER_ADMIN)
+                   || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.MANAGER)){
+
             ConfirmDialog dialog = new ConfirmDialog();
 
             dialog.setHeader("Delete Employee");
@@ -142,8 +147,7 @@ public class EmployeeDetailsView extends VerticalLayout
 
                     employeeService.deleteEmployeeById(employee.getEmployeeId(),securityService.getLoggedInUser().getEmployee());
 
-                    Notification.show(
-                            "Employee Deleted Successfully");
+                    Notification.show( "Employee Deleted Successfully");
 
                     getUI().ifPresent(ui -> ui.navigate("employee"));
 
@@ -158,6 +162,9 @@ public class EmployeeDetailsView extends VerticalLayout
             });
 
             dialog.open();
+         }else{
+                        Notification.show("Not Have a permission to delete", 3000, Position.TOP_CENTER);
+                   }
         });
 
         HorizontalLayout buttonLayout = new HorizontalLayout(updateButton, deleteButton);

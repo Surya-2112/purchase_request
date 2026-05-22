@@ -26,7 +26,7 @@ public class ItemView extends VerticalLayout {
 
     private final ItemService itemService;
 
-    private final SecurityService securityService;
+  //  private final SecurityService securityService;
 
     private final Grid<Item> itemGrid = new Grid<>(Item.class, false);
 
@@ -44,7 +44,7 @@ public class ItemView extends VerticalLayout {
     public ItemView(ItemService itemService, SecurityService securityService) {
 
         this.itemService = itemService;
-        this.securityService=securityService;
+  //      this.securityService=securityService;
 
         setSizeFull();
         setPadding(true);

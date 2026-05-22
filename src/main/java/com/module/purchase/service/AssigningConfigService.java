@@ -60,7 +60,7 @@ public class AssigningConfigService {
             ApprovalType approvalType,
             Double totalAmount) {
 
-        return assigningConfigRepository.findByApprovalTypeAndMaxAmountLessThanEqual(approvalType,totalAmount);
+        return assigningConfigRepository.findByApprovalTypeAndMinAmountLessThanEqual(approvalType,totalAmount);
     }
 
     public Optional<AssigningConfig> getAssigningConfigById(Long id) {

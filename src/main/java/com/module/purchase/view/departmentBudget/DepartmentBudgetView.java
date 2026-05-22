@@ -34,7 +34,7 @@ public class DepartmentBudgetView extends VerticalLayout {
 
         private final DepartmentService departmentService;
 
-        private final SecurityService securityService;
+      //  private final SecurityService securityService;
 
         private final Grid<DepartmentBudgetDTO> departmentBudgetGrid = new Grid<>(DepartmentBudgetDTO.class, false);
 
@@ -61,7 +61,7 @@ public class DepartmentBudgetView extends VerticalLayout {
 
                 this.departmentService = departmentServices;
 
-                this.securityService=securityService;
+             //   this.securityService=securityService;
 
                 setSizeFull();
 

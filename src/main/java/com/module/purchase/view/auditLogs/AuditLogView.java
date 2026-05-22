@@ -3,8 +3,6 @@ package com.module.purchase.view.auditLogs;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EntityType;
@@ -82,8 +80,7 @@ public class AuditLogView extends VerticalLayout {
 
         // ================= HEADER =================
 
-        H2 title =
-                new H2("Audit Logs Details");
+        H2 title = new H2("Audit Logs Details");
 
         // ================= FILTER VALUES =================
 
@@ -93,17 +90,17 @@ public class AuditLogView extends VerticalLayout {
         actionFilter.setItems(
                 Action.values());
 
-        auditIdFilter.setWidth("150px");
+        auditIdFilter.setWidth("80px");
 
-        entityTypeFilter.setWidth("220px");
+        entityTypeFilter.setWidth("200px");
 
-        entityIdFilter.setWidth("150px");
+        entityIdFilter.setWidth("80px");
 
-        actionFilter.setWidth("180px");
+        actionFilter.setWidth("120px");
 
-        performedByFilter.setWidth("220px");
+        performedByFilter.setWidth("180px");
 
-        dateFilter.setWidth("180px");
+        dateFilter.setWidth("150px");
 
         auditIdFilter.setValueChangeMode(
                 ValueChangeMode.EAGER);

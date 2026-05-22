@@ -32,11 +32,7 @@ import jakarta.annotation.security.PermitAll;
 @PermitAll
 public class MainLayout extends AppLayout {
 
-    private final SecurityService securityService;
-
     public MainLayout(SecurityService securityService) {
-
-        this.securityService = securityService;
 
         setPrimarySection(
                 Section.DRAWER);
@@ -51,8 +47,6 @@ public class MainLayout extends AppLayout {
                         ? loggedInUser.getUserName()
                         : loggedInUser.getEmployee()
                                 .getEmployeeName();
-
-        // ================= HEADER =================
 
         H2 title =
                 new H2("Purchase Management");
@@ -71,8 +65,6 @@ public class MainLayout extends AppLayout {
                 FlexComponent.Alignment.CENTER);
 
         addToNavbar(header);
-
-        // ================= PROFILE SECTION =================
 
         Avatar avatar =
                 new Avatar(employeeName);
@@ -111,8 +103,6 @@ public class MainLayout extends AppLayout {
                 .set("cursor", "pointer")
                 .set("border-bottom",
                         "1px solid #e5e5e5");
-
-        // ================= PROFILE CLICK =================
 
         profileSection.addClickListener(event -> {
 
@@ -190,8 +180,7 @@ public class MainLayout extends AppLayout {
 
 
 
-        Scroller scroller =
-                new Scroller(menuLinks);
+        Scroller scroller = new Scroller(menuLinks);
 
         scroller.setSizeFull();
 
@@ -218,8 +207,6 @@ public class MainLayout extends AppLayout {
                 ui.getPage().setLocation("/login");
             });
         });
-
-        // ================= DRAWER LAYOUT =================
 
         VerticalLayout drawerLayout =
                 new VerticalLayout(
@@ -254,8 +241,6 @@ public class MainLayout extends AppLayout {
         Class<? extends Component> navigationTarget) {
 
         RouterLink link = new RouterLink(text, navigationTarget);
-
-      //  link.setWidthFull();
 
         link.getStyle()
                 .set("padding", "10px 15px")

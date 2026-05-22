@@ -29,11 +29,8 @@ public class AssigningConfigView extends VerticalLayout {
 
     private final AssigningConfigService assigningConfigService;
 
-    private final SecurityService securityService;
-
     private final Grid<AssigningConfigDTO> assigningConfigGrid =  new Grid<>(AssigningConfigDTO.class, false);
 
-    // FILTERS
     private final TextField idField =
             new TextField("Config ID");
 
@@ -58,7 +55,6 @@ public class AssigningConfigView extends VerticalLayout {
     public AssigningConfigView(AssigningConfigService assigningConfigService, SecurityService securityService) {
 
         this.assigningConfigService = assigningConfigService;
-        this.securityService =securityService;
 
         setSizeFull();
 
@@ -80,7 +76,7 @@ public class AssigningConfigView extends VerticalLayout {
 
         addButton.addClickListener(event -> {
 
-            AssigningConfigForm form =new AssigningConfigForm(assigningConfigService,securityService);
+            AssigningConfigForm form = new AssigningConfigForm(assigningConfigService,securityService);
 
             form.open();
         });

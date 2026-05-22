@@ -33,20 +33,15 @@ public class DefaultAdminConfig {
 
             if (userRepository.count() == 0) {
 
-                // ================= ROLE =================
-
                 Role role = new Role();
 
                 role.setRoleName("SUPER_ADMIN");
 
-                // GIVE ALL EMPLOYEE GROUPS
                 role.setEmployeeGroups(
                         Arrays.asList(EmployeeGroup.values())
                 );
 
                 role = roleRepository.save(role);
-
-                // ================= USER =================
 
                 Users user = new Users();
 
@@ -61,8 +56,6 @@ public class DefaultAdminConfig {
                 user.setActive(true);
 
                 user = userRepository.save(user);
-
-                // ================= EMPLOYEE =================
 
                 Employee employee = new Employee();
 

@@ -27,16 +27,9 @@ public class PurchaseOrderDraftView extends VerticalLayout {
 
     private final DepartmentService departmentService;
 
-    // =========================================================
-    // GRID
-    // =========================================================
-
     private final Grid<PurchaseOrderDTO> grid =
             new Grid<>(PurchaseOrderDTO.class, false);
 
-    // =========================================================
-    // FILTERS
-    // =========================================================
 
     private final TextField poIdField =
             new TextField("PO ID");
@@ -99,10 +92,6 @@ public class PurchaseOrderDraftView extends VerticalLayout {
         expand(grid);
     }
 
-    // =========================================================
-    // FILTER LAYOUT
-    // =========================================================
-
     private HorizontalLayout buildFilterLayout() {
 
         Button searchBtn =
@@ -138,10 +127,6 @@ public class PurchaseOrderDraftView extends VerticalLayout {
         return layout;
     }
 
-    // =========================================================
-    // FILTER CONFIG
-    // =========================================================
-
     private void configureFilters() {
 
         departmentField.setItems(
@@ -161,15 +146,10 @@ public class PurchaseOrderDraftView extends VerticalLayout {
         );
     }
 
-    // =========================================================
-    // GRID
-    // =========================================================
-
     private void configureGrid() {
 
         grid.removeAllColumns();
 
-        // ================= PO ID =================
 
         grid.addComponentColumn(po -> {
 
@@ -212,10 +192,9 @@ public class PurchaseOrderDraftView extends VerticalLayout {
 
         grid.addColumn(po ->
 
-                po.getForDepartment() != null
+                po.getPurchaseRequestHeader().getForDepartment() != null
 
-                        ? po.getPurchaseRequestHeader().getForDepartment()
-                        .getDepartmentName()
+                        ? po.getPurchaseRequestHeader().getForDepartment() .getDepartmentName()
 
                         : ""
 

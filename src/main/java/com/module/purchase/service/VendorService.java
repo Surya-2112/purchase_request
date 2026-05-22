@@ -53,7 +53,7 @@ public class VendorService {
         AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.VENDOR);
         log.setEntityId(vendor.getVendorId());
-        log.setAction(Action.UPDATE);
+        log.setAction(Action.CREATE);
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
         auditLogsService.addAuditLog(log);
@@ -95,7 +95,7 @@ public class VendorService {
         AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.VENDOR);
         log.setEntityId(vendor.getVendorId());
-        log.setAction(Action.CREATE);
+        log.setAction(Action.UPDATE);
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
         auditLogsService.addAuditLog(log);

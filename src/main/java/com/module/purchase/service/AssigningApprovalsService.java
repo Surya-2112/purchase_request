@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.context.annotation.Lazy;
 
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.Status;
@@ -46,6 +47,7 @@ public class AssigningApprovalsService {
     private UsersService userService;
 
     @Autowired
+    @Lazy
     private PurchaseRequestHeaderService purchaseRequestHeaderService;
 
     @Autowired
@@ -185,6 +187,10 @@ public class AssigningApprovalsService {
 
             purchaseOrderHeaderService.updatePurchaseOrderHeader(purchaseOrderHeader,null);
         }
+        } 
+        if(assigningApprovals.getStatus()==Status.CANCELLED)
+        {
+            log.setAction(Action.CANCEL);
         }
 
         log.setEntityType(EntityType.ASSIGNING_APPROVAL);

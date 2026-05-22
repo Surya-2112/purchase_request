@@ -27,7 +27,7 @@ public class RoleView extends VerticalLayout {
 
     private final RoleService roleService;
 
-    private final SecurityService securityService;
+  //  private final SecurityService securityService;
 
 
     private final Grid<Role> roleGrid = new Grid<>(Role.class, false);
@@ -51,7 +51,7 @@ public class RoleView extends VerticalLayout {
     public RoleView(RoleService roleService,SecurityService securityService) {
 
         this.roleService = roleService;
-        this.securityService = securityService;
+  //      this.securityService = securityService;
 
         setSizeFull();
 

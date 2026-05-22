@@ -27,13 +27,12 @@ public class DepartmentEditView extends VerticalLayout
 
     private final DepartmentService departmentService;
 
-    private final EmployeeService employeeService;
+   // private final EmployeeService employeeService;
 
     private final SecurityService securityService;
 
     // FIELDS
-    private final TextField departmentNameField =
-            new TextField("Department Name");
+    private final TextField departmentNameField = new TextField("Department Name");
 
     private final TextField departmentCodeField =
             new TextField("Department Code");
@@ -49,7 +48,7 @@ public class DepartmentEditView extends VerticalLayout
     public DepartmentEditView( DepartmentService departmentService, EmployeeService employeeService,SecurityService securityService) {
 
         this.departmentService = departmentService;
-        this.employeeService = employeeService;
+      //  this.employeeService = employeeService;
         this.securityService = securityService;
 
         setSizeFull();

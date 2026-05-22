@@ -1,237 +1,216 @@
 package com.module.purchase.view.employee;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.Address;
-import com.module.purchase.entity.Department;
-import com.module.purchase.entity.Employee;
-import com.module.purchase.entity.Role;
-import com.module.purchase.service.DepartmentService;
-import com.module.purchase.service.EmployeeService;
-import com.module.purchase.service.RoleService;
-import com.module.purchase.view.department.DepartmentForm;
+import com.module.purchase.entity.*;
+import com.module.purchase.service.*;
+import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.*;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-// import com.vaadin.ui.Alignment;
+import com.vaadin.flow.router.Route;
 
-public class EmployeeForm extends Dialog {
+import jakarta.annotation.security.PermitAll;
 
-        private final EmployeeService employeeService;
+@Route(value = "employee-form", layout = MainLayout.class)
+@PermitAll
+public class EmployeeForm extends VerticalLayout {
+   
+    private final EmployeeService employeeService;
+    private final SecurityService securityService;
 
-        private final SecurityService securityService;
+    private final TextField employeeNameField =
+            new TextField("Employee Name");
 
-        // BASIC DETAILS
-        private final TextField employeeNameField = new TextField("Employee Name");
+    private final EmailField employeeEmailField =
+            new EmailField("Employee Email");
 
-        private final EmailField employeeEmailField = new EmailField("Employee Email");
+    private final TextField phoneNumberField =
+            new TextField("Phone Number");
 
-        private final TextField phoneNumberField = new TextField("Phone Number");
+    private final ComboBox<Department> departmentField =
+            new ComboBox<>("Department");
 
-        // DEPARTMENT & ROLE
-        private final ComboBox<Department> departmentField = new ComboBox<>("Department");
+    private final ComboBox<Role> roleField =
+            new ComboBox<>("Role");
 
-        private final ComboBox<Role> roleField = new ComboBox<>("Role");
+    private final TextField addressLineField =
+            new TextField("Address Line");
 
-        // ADDRESS
-        private final TextField addressLineField = new TextField("Address Line");
+    private final TextField streetField =
+            new TextField("Street");
 
-        private final TextField streetField = new TextField("Street");
+    private final TextField cityField =
+            new TextField("City");
 
-        private final TextField cityField = new TextField("City");
+    private final TextField stateField =
+            new TextField("State");
 
-        private final TextField stateField = new TextField("State");
+    private final TextField countryField =
+            new TextField("Country");
 
-        private final TextField countryField = new TextField("Country");
+    private final TextField postalCodeField =
+            new TextField("Pincode");
 
-        private final TextField postalCodeField = new TextField("Pincode");
+    public EmployeeForm(
+            EmployeeService employeeService,
+            DepartmentService departmentService,
+            RoleService roleService,
+            SecurityService securityService) {
 
-        public EmployeeForm( EmployeeService employeeService,
-                        DepartmentService departmentService,
-                        RoleService roleService,
-                        SecurityService securityService ) {
+        this.employeeService = employeeService;
+        this.securityService = securityService;
 
-                this.employeeService = employeeService;
-                this.securityService=securityService;
+        setSizeFull();
+        setPadding(true);
+        setSpacing(true);
 
-                setHeaderTitle("Add Employee");
+        H2 title = new H2("Add Employee");
 
-                setWidth("700px");
+        // LOAD DATA
+        departmentField.setItems(
+                departmentService.getDepartments());
 
-                // LOAD DEPARTMENTS
-                departmentField.setItems(
-                                departmentService.getDepartments());
+        departmentField.setItemLabelGenerator(
+                Department::getDepartmentName);
 
-                departmentField.setItemLabelGenerator(
-                                Department::getDepartmentName);
+        roleField.setItems(
+                roleService.getRoles());
 
-                // LOAD ROLES
-                roleField.setItems(
-                                roleService.getRoles());
+        roleField.setItemLabelGenerator(
+                Role::getRoleName);
 
-                roleField.setItemLabelGenerator(
-                                Role::getRoleName);
+        // REQUIRED
+        employeeNameField.setRequired(true);
+        employeeEmailField.setRequired(true);
+        departmentField.setRequired(true);
+        roleField.setRequired(true);
 
-                // ADD MASTER BUTTONS
-                Button addDepartmentButton = new Button("+");
+        // FORM
+        FormLayout formLayout = new FormLayout();
 
-                Button addRoleButton = new Button("+");
+        formLayout.add(
+                employeeNameField,
+                employeeEmailField,
+                phoneNumberField,
+                departmentField,
+                roleField,
+                addressLineField,
+                streetField,
+                cityField,
+                stateField,
+                countryField,
+                postalCodeField
+        );
 
-                addDepartmentButton.addClickListener(event -> {
-                        DepartmentForm form = new DepartmentForm(departmentService, employeeService,securityService);
-                        form.open();
-                });
+        formLayout.setResponsiveSteps(
+                new FormLayout.ResponsiveStep("0", 2)
+        );
 
-                addRoleButton.addClickListener(event -> {
-                        getUI().ifPresent(ui -> ui.navigate("role"));
-                });
+        // BUTTONS
+        Button saveButton = new Button("Save");
+        Button cancelButton = new Button("Cancel");
 
-                // REQUIRED FIELDS
-                employeeNameField.setRequired(true);
-                employeeNameField.setRequiredIndicatorVisible(true);
+        saveButton.addClickListener(e -> saveEmployee());
 
-                employeeEmailField.setRequired(true);
-                employeeEmailField.setRequiredIndicatorVisible(true);
+        cancelButton.addClickListener(e ->
+                getUI().ifPresent(ui ->
+                        ui.navigate("employee"))
+        );
 
-                departmentField.setRequired(true);
-                departmentField.setRequiredIndicatorVisible(true);
+        HorizontalLayout buttons =
+                new HorizontalLayout(saveButton, cancelButton);
 
-                roleField.setRequired(true);
-                roleField.setRequiredIndicatorVisible(true);
+        add(title, formLayout, buttons);
+    }
 
-                HorizontalLayout departmentLayout = new HorizontalLayout();
-                departmentLayout.setWidthFull();
-                departmentLayout.setAlignItems(FlexComponent.Alignment.END);
-                departmentField.setWidthFull();
+    private void saveEmployee() {
 
-                departmentLayout.add(
-                                departmentField,
-                                addDepartmentButton);
-                departmentLayout.expand(departmentField);
+        try {
 
-                HorizontalLayout roleLayout = new HorizontalLayout();
+            if (employeeNameField.isEmpty()
+                    || employeeEmailField.isEmpty()
+                    || departmentField.isEmpty()
+                    || roleField.isEmpty()) {
 
-                roleLayout.setWidthFull();
-                roleLayout.setAlignItems(FlexComponent.Alignment.END);
-                roleField.setWidthFull();
-                roleLayout.add(
-                                roleField,
-                                addRoleButton);
-                roleLayout.expand(roleField);
+                Notification.show(
+                        "Please fill all required fields"
+                );
 
-                // FORM LAYOUT
-                FormLayout formLayout = new FormLayout();
+                return;
+            }
 
-                formLayout.add(
-                                employeeNameField,
-                                employeeEmailField,
-                                phoneNumberField,
-                                departmentLayout,
-                                roleLayout,
-                                addressLineField,
-                                streetField,
-                                cityField,
-                                stateField,
-                                countryField,
-                                postalCodeField);
+            Employee employee = new Employee();
 
-                formLayout.setResponsiveSteps(
-                                new FormLayout.ResponsiveStep("0", 2));
+            employee.setEmployeeName(
+                    employeeNameField.getValue());
 
-                // BUTTONS
-                Button saveButton = new Button("Save");
+            employee.setEmployeeEmail(
+                    employeeEmailField.getValue());
 
-                Button cancelButton = new Button("Cancel");
+            employee.setEmployeePhoneNumber(
+                    phoneNumberField.getValue());
 
-                saveButton.addClickListener(event -> saveEmployee());
+            employee.setDepartment(
+                    departmentField.getValue());
 
-                cancelButton.addClickListener(event -> close());
+            employee.setRole(
+                    roleField.getValue());
 
-                HorizontalLayout buttonLayout = new HorizontalLayout(
-                                saveButton,
-                                cancelButton);
+            employee.setActive(true);
 
-                add(formLayout, buttonLayout);
-        }
+            Address address = new Address();
 
-        private void saveEmployee() {
+            address.setAddressLine(
+                    addressLineField.getValue());
 
-                try {
+            address.setStreet(
+                    streetField.getValue());
 
-                        Employee employee = new Employee();
+            address.setCity(
+                    cityField.getValue());
 
-                        employee.setEmployeeName(
-                                        employeeNameField.getValue());
+            address.setState(
+                    stateField.getValue());
 
-                        employee.setEmployeeEmail(
-                                        employeeEmailField.getValue());
+            address.setCountry(
+                    countryField.getValue());
 
-                        employee.setEmployeePhoneNumber(
-                                        phoneNumberField.getValue());
+            address.setPostalCode(
+                    postalCodeField.getValue());
 
-                        employee.setDepartment(
-                                        departmentField.getValue());
+            employee.setAddress(address);
 
-                        employee.setRole(
-                                        roleField.getValue());
-
-                        employee.setActive(true);
-
-                        // ADDRESS
-                        Address address = new Address();
-
-                        address.setAddressLine(
-                                        addressLineField.getValue());
-                        address.setStreet(
-                                        streetField.getValue());
-
-                        address.setCity(
-                                        cityField.getValue());
-
-                        address.setState(
-                                        stateField.getValue());
-
-                        address.setCountry(
-                                        countryField.getValue());
-
-                        address.setPostalCode(
-                                        postalCodeField.getValue());
-                        if (employeeNameField.isEmpty()
-                                        || employeeEmailField.isEmpty()
-                                        || departmentField.isEmpty()
-                                        || roleField.isEmpty()) {
-
-                                Notification.show(
-                                                "Please fill all required fields");
-
-                                return;
-                        }
-
-                        employee.setAddress(address);
-
-                        Employee create=securityService
+            Employee createdBy =
+                    securityService
                             .getLoggedInUser()
                             .getEmployee();
-                        employeeService.addEmployee(employee,create);
 
-                        Notification.show(
-                                        "Employee Saved Successfully",
-                                        3000,
-                                        Notification.Position.TOP_CENTER);
+            employeeService.addEmployee(
+                    employee,
+                    createdBy
+            );
 
-                        close();
+            Notification.show(
+                    "Employee Saved Successfully",
+                    3000,
+                    Notification.Position.TOP_CENTER
+            );
 
-                } catch (Exception exception) {
+            getUI().ifPresent(ui ->
+                    ui.navigate("employee"));
 
-                        Notification.show(
-                                        "Error : " + exception.getMessage(),
-                                        5000,
-                                        Notification.Position.TOP_CENTER);
-                }
+        } catch (Exception e) {
+
+            Notification.show(
+                    "Error : " + e.getMessage(),
+                    5000,
+                    Notification.Position.TOP_CENTER
+            );
         }
+    }
 }

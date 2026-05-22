@@ -85,9 +85,8 @@ public class DepartmentBudgetService {
     }
 
     public DepartmentBudget updateDepartmentBudget(DepartmentBudget departmentBudget,Employee employee) {
-         // TODO : need add
+       
         departmentBudget=saveDepartmentBudget(departmentBudget);
-
         AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.DEPARTMENT_BUDGET);
         log.setEntityId(departmentBudget.getDepartmentBudgetId());
@@ -112,8 +111,6 @@ public class DepartmentBudgetService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
         auditLogsService.addAuditLog(log);
-
-        // if(existingDepartmentBudget.getP) //TODO : need to write
         departmentBudgetRepository.deleteById(departmentBudgetId);
     }
 

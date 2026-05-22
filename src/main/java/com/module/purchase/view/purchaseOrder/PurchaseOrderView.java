@@ -104,7 +104,9 @@ public class PurchaseOrderView extends VerticalLayout {
                 )
         );
 
-        HorizontalLayout headerLayout = new HorizontalLayout(title,makeOrderBtn);
+        HorizontalLayout headerLayout = new HorizontalLayout(title
+                //,makeOrderBtn
+        );
 
         headerLayout.setWidthFull();
 
@@ -134,7 +136,7 @@ public class PurchaseOrderView extends VerticalLayout {
             loadData();
         });
 
-        HorizontalLayout tabs = new HorizontalLayout(allBtn,assignedBtn, createdBtn);
+       // HorizontalLayout tabs = new HorizontalLayout(allBtn,assignedBtn, createdBtn);
 
         poStatusField.setItems( Status.values());
 
@@ -148,7 +150,9 @@ public class PurchaseOrderView extends VerticalLayout {
 
         poFilters = new HorizontalLayout();
         poFilters.setAlignItems(Alignment.END);
-        poFilters.add(poIdField, poStatusField, vendorField,poSearch,poClear);
+        poFilters.add(poIdField, 
+                // poStatusField, 
+                vendorField,poSearch,poClear);
 
         approvalStatusField.setItems( Status.WAITING_APPROVAL, Status.APPROVED,Status.REJECTED);
 
@@ -160,7 +164,7 @@ public class PurchaseOrderView extends VerticalLayout {
         Button assignClear =new Button("Clear",
                         e -> clearAssignFilter());
 
-        assignFilters = new HorizontalLayout( approvalIdField, referenceIdField, approvalStatusField,assignSearch,assignClear);
+        assignFilters = new HorizontalLayout(approvalIdField, referenceIdField, approvalStatusField,assignSearch,assignClear);
         assignFilters.setAlignItems(Alignment.END);
         
         configurePOGrid();
@@ -212,7 +216,13 @@ public class PurchaseOrderView extends VerticalLayout {
         pagination.setJustifyContentMode( JustifyContentMode.CENTER);
         pagination.setAlignItems( Alignment.CENTER);
 
-        add(headerLayout, tabs, poFilters, assignFilters, poGrid, assignGrid, pagination);
+        add(headerLayout,
+              //   tabs, 
+                 poFilters,
+                  assignFilters,
+                   poGrid, 
+                 //  assignGrid, 
+                   pagination);
 
         expand(poGrid);
 

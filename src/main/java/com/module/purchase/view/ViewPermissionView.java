@@ -7,7 +7,6 @@ import com.module.purchase.entity.ViewPermission;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.ViewPermissionService;
-import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -27,11 +26,8 @@ import jakarta.annotation.security.PermitAll;
 public class ViewPermissionView extends VerticalLayout {
 
     private final ViewPermissionService viewPermissionService;
-
     
-private final SecurityService securityService;
-
-    private final Grid<ViewPermission> grid = new Grid<>(ViewPermission.class, false);
+     private final Grid<ViewPermission> grid = new Grid<>(ViewPermission.class, false);
 
     private final ComboBox<ViewName> viewField = new ComboBox<>("View");
 
@@ -46,7 +42,6 @@ private final SecurityService securityService;
     public ViewPermissionView( ViewPermissionService viewPermissionService, SecurityService securityService) {
 
         this.viewPermissionService = viewPermissionService;
-        this.securityService = securityService;
 
         setSizeFull();
 
@@ -152,7 +147,6 @@ private final SecurityService securityService;
                 .setHeader("ID")
                 .setAutoWidth(true);
 
-        // VIEW
         grid.addColumn(permission ->
                 permission.getViewName() == null
                         ? ""
@@ -160,7 +154,6 @@ private final SecurityService securityService;
                 .setHeader("View")
                 .setAutoWidth(true);
 
-        // EMPLOYEE GROUP
         grid.addColumn(permission ->
                 permission.getEmployeeGroup() == null
                         ? ""
@@ -283,14 +276,9 @@ private final SecurityService securityService;
         paginationLayout.setJustifyContentMode(
                 JustifyContentMode.CENTER);
 
-        paginationLayout.setAlignItems(
-                Alignment.CENTER);
-
-        // ================= LOAD DATA =================
+        paginationLayout.setAlignItems(Alignment.CENTER);
 
         loadPermissions();
-
-        // ================= ADD COMPONENTS =================
 
         add(
                 headerLayout,
@@ -319,5 +307,9 @@ private final SecurityService securityService;
                         + (currentPage + 1)
                         + " of "
                         + permissionPage.getTotalPages());
+    }
+
+    public ComboBox<ViewName> getViewField() {
+        return viewField;
     }
 }

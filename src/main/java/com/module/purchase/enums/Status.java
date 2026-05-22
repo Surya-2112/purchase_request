@@ -7,4 +7,5 @@ public enum Status {
     APPROVED,
     REJECTED,
     CANCELLED,
+    ORDER
 }

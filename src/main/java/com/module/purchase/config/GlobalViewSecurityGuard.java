@@ -12,8 +12,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterListener;
 
 @Component
-public class GlobalViewSecurityGuard
-        implements BeforeEnterListener {
+public class GlobalViewSecurityGuard implements BeforeEnterListener {
 
     private final SecurityService securityService;
 
@@ -32,83 +31,51 @@ public class GlobalViewSecurityGuard
 
         try {
 
-            // ================= CURRENT VIEW =================
+            String viewName = event.getLocation().getFirstSegment();
 
-            String viewName = event.getLocation()
-                    .getFirstSegment();
+            System.out.println("Checking View Permission : "+ viewName);
 
-            System.out.println(
-                    "Checking View Permission : "
-                            + viewName);
-
-            // ================= COMMON VIEWS =================
-
-            if (viewName.isEmpty()
-                    || viewName.equals("login")) {
-
+            if (viewName.isEmpty() || viewName.equals("login")) {
                 return;
             }
 
-            // ================= USER =================
-
             Users user = securityService.getLoggedInUser();
 
-            if (user == null
-                    || user.getEmployee() == null
-                    || user.getEmployee().getRole() == null) {
+            if (user == null|| user.getEmployee() == null || user.getEmployee().getRole() == null) {
 
                 event.forwardTo("login");
 
                 return;
             }
-
-            // ================= ROLE =================
-
             String roleName = user.getEmployee()
                     .getRole()
                     .getRoleName();
 
-            System.out.println(
-                    "Role : "
-                            + roleName);
-
-            // ================= SUPER ADMIN =================
+            System.out.println( "Role : " + roleName);
 
             if ("SUPER_ADMIN".equals(roleName)) {
 
                 return;
             }
 
-            // ================= USER GROUPS =================
-
             List<EmployeeGroup> userGroups = user.getEmployee()
                     .getRole()
                     .getEmployeeGroups();
 
-            System.out.println(
-                    "User Groups : "
-                            + userGroups);
+            System.out.println("User Groups : "+ userGroups);
 
-            // ================= VIEW GROUPS =================
+            List<EmployeeGroup> allowedGroups = viewPermissionService.getGroupsByView(viewName);
 
-            List<EmployeeGroup> allowedGroups = viewPermissionService
-                    .getGroupsByView(viewName);
+            System.out.println( "Allowed Groups : "+ allowedGroups);
 
-            System.out.println(
-                    "Allowed Groups : "
-                            + allowedGroups);
-
-            // ================= NO CONFIG =================
-
-            if (allowedGroups == null
-                    || allowedGroups.isEmpty()) {
+            if (allowedGroups == null || allowedGroups.isEmpty()) {
 
                 event.forwardTo("");
 
                 event.getUI().access(() -> {
 
                     Notification.show(
-                            "No permission configured for this view",
+                            "Access Denied",
                             3000,
                             Notification.Position.MIDDLE);
                 });
@@ -116,12 +83,8 @@ public class GlobalViewSecurityGuard
                 return;
             }
 
-            // ================= CHECK ACCESS =================
-
             boolean allowed = userGroups.stream()
                     .anyMatch(allowedGroups::contains);
-
-            // ================= ACCESS DENIED =================
 
             if (!allowed) {
 
@@ -135,7 +98,7 @@ public class GlobalViewSecurityGuard
                             Notification.Position.MIDDLE);
                 });
 
-                return;
+                return ;
             }
 
         } catch (Exception exception) {

@@ -71,14 +71,11 @@ public class AssigningApprovalsOrdersDetailsView
     private final Span vendor =
             new Span();
 
-    private final Span totalAmount =
-            new Span();
+    private final Span totalAmount = new Span();
 
-    private final Span createdDate =
-            new Span();
+    private final Span createdDate = new Span();
 
-    private final Span level =
-            new Span();
+    private final Span level = new Span();
 
     private final Span status =
             new Span();

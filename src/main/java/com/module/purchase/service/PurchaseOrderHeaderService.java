@@ -2,6 +2,8 @@ package com.module.purchase.service;
 
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,19 +20,12 @@ import com.module.purchase.entity.PurchaseOrderLine;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entityDTO.PurchaseOrderDTO;
-import com.module.purchase.entityDTO.PurchaseRequestDTO;
+import com.module.purchase.enums.Action;
+import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.Status;
 import com.module.purchase.mapper.PurchaseOrderMapper;
-import com.module.purchase.enums.EntityType;
-import com.module.purchase.enums.Action;
-
-import java.util.Optional;
-
 import com.module.purchase.repository.PurchaseOrderHeaderRepository;
 import com.module.purchase.specification.PurchaseOrderSpecification;
-import com.module.purchase.specification.PurchaseRequestSpecification;
-
-import java.util.List;
 
 @Service
 public class PurchaseOrderHeaderService {
@@ -137,12 +132,17 @@ public class PurchaseOrderHeaderService {
 
     public PurchaseOrderHeader updatePurchaseOrderHeader(PurchaseOrderHeader purchaseOrderHeader,Employee employee)
     {
-       purchaseOrderHeader=savePurchaseOrderHeader(purchaseOrderHeader);
+       if(purchaseOrderHeader.getStatus()==Status.CANCELLED)
+       {  DepartmentBudget departmentBudget=departmentBudgetService.getByDepartmentAndYear(purchaseOrderHeader.getPurchaseRequestHeader().getForDepartment(), Year.now());
+        departmentBudget.setRemainingBudgetAmount(departmentBudget.getRemainingBudgetAmount()+purchaseOrderHeader.getPurchaseRequestHeader().getTotalAmount());
+        departmentBudgetService.updateDepartmentBudget(departmentBudget,employee);
+       }
 
+       purchaseOrderHeader=savePurchaseOrderHeader(purchaseOrderHeader);
         AuditLogs log= new AuditLogs();
         log.setEntityType(EntityType.PURCHASE_ORDER);
         log.setEntityId(purchaseOrderHeader.getPurchaseOrderId());
-        log.setAction(Action.CREATE);
+        log.setAction(Action.UPDATE);
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
         auditLogsService.addAuditLog(log);
@@ -164,13 +164,14 @@ public class PurchaseOrderHeaderService {
     {   
         PurchaseOrderHeader purchaseOrderHeader=new PurchaseOrderHeader();
         purchaseOrderHeader.setPurchaseRequestHeader(purchaseRequestHeader);
-        purchaseOrderHeader.setStatus(Status.DRAFT);
+        purchaseOrderHeader.setStatus(Status.APPROVED);
         purchaseOrderHeader.setTotalAmount(purchaseRequestHeader.getTotalAmount());
+        purchaseOrderHeader.setVendor(purchaseRequestHeader.getVendor());
 
         DepartmentBudget departmentBudget=departmentBudgetService.getByDepartmentAndYear(purchaseRequestHeader.getForDepartment(), Year.now());
         departmentBudget.setRemainingBudgetAmount(departmentBudget.getRemainingBudgetAmount()-purchaseRequestHeader.getTotalAmount());
         departmentBudgetService.updateDepartmentBudget(departmentBudget,null);
-        
+
         purchaseOrderHeader = addPurchaseOrderHeader(purchaseOrderHeader,null);
         List<PurchaseRequestLine> lines= purchaseRequestLineService.getPurchaseRequestLineByHeader(purchaseRequestHeader);
         for(PurchaseRequestLine line :lines)
@@ -180,7 +181,7 @@ public class PurchaseOrderHeaderService {
              poline.setQuantity(line.getQuantity());
              poline.setUnitPrice(line.getUnitPrice());
              poline.setTotalPrice(line.getTotalPrice());
-             poline.setDiscount(line.getDiscount()==null?0:line.getDiscount());
+             poline.setDiscount(line.getDiscount()==null? 0:line.getDiscount());
             purchaseOrderLineService.addPurchaseOrderLine(poline);
         }
     }

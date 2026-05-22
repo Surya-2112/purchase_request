@@ -25,8 +25,8 @@ import jakarta.annotation.security.PermitAll;
 @PermitAll
 public class DepartmentView extends VerticalLayout {
 
-    private EmployeeService employeeService;
-    private SecurityService securityService;
+//     private EmployeeService employeeService;
+//     private SecurityService securityService;
     private DepartmentService departmentService;
 
     private final Grid<DepartmentDTO> departmentGrid = new Grid<>(DepartmentDTO.class, false);
@@ -44,7 +44,7 @@ public class DepartmentView extends VerticalLayout {
 
     public DepartmentView(DepartmentService departmentService, EmployeeService employeeService,SecurityService securityService) {
         this.departmentService = departmentService;
-        this.employeeService = employeeService;
+       // this.employeeService = employeeService;
 
         setSizeFull();
         setPadding(true);

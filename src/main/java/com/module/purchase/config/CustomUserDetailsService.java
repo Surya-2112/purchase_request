@@ -15,27 +15,21 @@ import com.module.purchase.entity.Users;
 import com.module.purchase.repository.UserRepository;
 
 @Service
-public class CustomUserDetailsService
-        implements UserDetailsService {
+public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public CustomUserDetailsService(
-            UserRepository userRepository) {
+    public CustomUserDetailsService(UserRepository userRepository) {
 
         this.userRepository = userRepository;
     }
 
     @Override
-    public UserDetails loadUserByUsername(
-            String username)
+    public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
 
-        Users user =
-                userRepository
-                        .findByUserNameOrUserEmail(
-                                username,
-                                username)
+        Users user = userRepository
+                        .findByUserNameOrUserEmail( username, username)
                         .orElseThrow(() ->
                                 new UsernameNotFoundException(
                                         "User not found"));

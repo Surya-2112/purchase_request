@@ -6,6 +6,7 @@ import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Role;
 import com.module.purchase.entityDTO.EmployeeDTO;
+import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.RoleService;
@@ -17,6 +18,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -29,7 +31,7 @@ import jakarta.annotation.security.PermitAll;
 public class EmployeeView extends VerticalLayout {
 
         private EmployeeService employeeService;
-         private final SecurityService securityService;
+       // private final SecurityService securityService;
         private final Grid<EmployeeDTO> employeeGrid = new Grid<>(EmployeeDTO.class, false);
 
         private final TextField employeeIdField = new TextField("Employee ID");
@@ -48,10 +50,12 @@ public class EmployeeView extends VerticalLayout {
         public EmployeeView(EmployeeService employeeService, RoleService roleService,
                         DepartmentService departmentService, SecurityService securityService) {
                 this.employeeService = employeeService;
-                this.securityService =securityService;
+           //     this.securityService =securityService;
                 setSizeFull();
                 setPadding(true);
                 setSpacing(true);
+
+                employeeIdField.setWidth("100px");
 
                 departmentField.setItems(departmentService.getDepartments());
 
@@ -65,6 +69,7 @@ public class EmployeeView extends VerticalLayout {
                                 Role::getRoleName);
 
                 activeField.setItems("Yes", "No");
+                activeField.setWidth("100px");
 
                 Button previousButton = new Button("Previous");
 
@@ -118,17 +123,15 @@ public class EmployeeView extends VerticalLayout {
 
                 HorizontalLayout headerLayout = new HorizontalLayout();
 
-                H2 title = new H2("Employees List");
+                H2 title = new H2("Employees List");  
 
                 Button addButton = new Button("Add Employee");
-
+                
                 addButton.addClickListener(event -> {
-                        EmployeeForm form = new EmployeeForm(
-                                        employeeService,departmentService,
-                                        roleService,securityService);
-
-                        form.open();
+                
+                        getUI().ifPresent(ui -> ui.navigate("employee-form"));
                 });
+                
 
                 headerLayout.add(title, addButton);
                 headerLayout.setWidthFull();
@@ -157,13 +160,20 @@ public class EmployeeView extends VerticalLayout {
 
                 // GRID COLUMNS
                 employeeGrid.addComponentColumn(employee -> {
+                
                         Button employeeIdButton = new Button(String.valueOf(employee.getEmployeeId()));
-
                         employeeIdButton.addClickListener(event -> {
-
+                                if(securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(employee.getEmployeeId()) 
+                                   || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.SUPER_ADMIN)
+                                   || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.MANAGER))
+                                {
                                 getUI().ifPresent(ui -> ui.navigate("employee-details/" + employee.getEmployeeId()));
+                                }else{
+                                        Notification.show("You have no permission to view others details", 3000, Position.TOP_CENTER);
+                                }
                         });
                         return employeeIdButton;
+
                 })
                                 .setHeader("Employee ID")
                                 .setAutoWidth(true);
@@ -273,10 +283,10 @@ public class EmployeeView extends VerticalLayout {
                                 currentPage,
                                 pageSize);
 
-                employeeGrid.setItems(
-                                employeePage.getContent());
+                employeeGrid.setItems(employeePage.getContent());
 
                 pageInfo.setText("Page " + (currentPage + 1)
                                 + " of " + employeePage.getTotalPages());
         }
+        
 }

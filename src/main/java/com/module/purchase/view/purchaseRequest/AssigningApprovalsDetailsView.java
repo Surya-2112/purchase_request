@@ -22,6 +22,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -76,6 +77,8 @@ public class AssigningApprovalsDetailsView extends VerticalLayout
     private final Span totalBudgetAmount = new Span();
 
     private final Span remainingBudgetAmount = new Span();
+
+    private Double remainingBudget;
 
     // ================= COMMENTS =================
 
@@ -292,8 +295,7 @@ public class AssigningApprovalsDetailsView extends VerticalLayout
     private void loadDepartmentBudget() {
 
         if (header.getForDepartment() == null) {
-            return;
-        }
+            return; }
 
         Department dept =
                 header.getForDepartment();
@@ -336,6 +338,8 @@ public class AssigningApprovalsDetailsView extends VerticalLayout
                 "Remaining Budget Amount : "
                         + budget.getRemainingBudgetAmount()
         );
+
+        remainingBudget=budget.getRemainingBudgetAmount();
     }
 
     // ================= GRID =================
@@ -385,6 +389,18 @@ public class AssigningApprovalsDetailsView extends VerticalLayout
     // ================= APPROVE =================
 
     private void approveRequest() {
+
+        if(remainingBudget<header.getTotalAmount())
+        {
+            Notification.show(
+
+                "Total amount more than the budget cannot approve",
+                3000,
+                Position.TOP_CENTER
+            );
+
+                return ;
+        }
 
         approval.setStatus(Status.APPROVED);
 

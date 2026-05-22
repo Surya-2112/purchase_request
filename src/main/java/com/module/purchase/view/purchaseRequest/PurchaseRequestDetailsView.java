@@ -1,9 +1,11 @@
 package com.module.purchase.view.purchaseRequest;
 
+import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.enums.ApprovalType;
+import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
@@ -34,6 +36,8 @@ public class PurchaseRequestDetailsView extends VerticalLayout
     private final AssigningApprovalsService assigningApprovalsService;
 
     private final PurchaseRequestLineService purchaseRequestLineService;
+
+    private final SecurityService securityService;
 
     private PurchaseRequestHeader header;
 
@@ -66,21 +70,14 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
     // ================= CONSTRUCTOR =================
 
-    public PurchaseRequestDetailsView(
-
-            PurchaseRequestHeaderService headerService,
-
+    public PurchaseRequestDetailsView( PurchaseRequestHeaderService headerService,
             AssigningApprovalsService assigningApprovalsService,
-
-            PurchaseRequestLineService purchaseRequestLineService) {
+            PurchaseRequestLineService purchaseRequestLineService,SecurityService securityService) {
 
         this.headerService = headerService;
-
-        this.assigningApprovalsService =
-                assigningApprovalsService;
-
-        this.purchaseRequestLineService =
-                purchaseRequestLineService;
+        this.assigningApprovalsService = assigningApprovalsService;
+        this.purchaseRequestLineService = purchaseRequestLineService;
+        this.securityService = securityService;
 
         setSizeFull();
 
@@ -247,10 +244,11 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
         actionLayout.removeAll();
 
-        if (header.getStatus() == Status.DRAFT) {
+        if (header.getStatus() == Status.DRAFT && (securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(header.getCreatedBy().getEmployeeId()) 
+                || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.SUPER_ADMIN)
+                || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.MANAGER) )) {
 
-            Button editButton =
-                    new Button("Edit Request");
+            Button editButton = new Button("Edit Request");
 
             editButton.addClickListener(e -> {
 
@@ -270,7 +268,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout
             deleteButton.addClickListener(e -> {
 
  
-                headerService.deletePurchaseRequestHeaderById( header.getPurchaseRequestId());
+                headerService.deletePurchaseRequestHeaderById(header.getPurchaseRequestId(), securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Purchase Request Deleted"
@@ -292,11 +290,12 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
         // ================= WAITING APPROVAL =================
 
-        if (header.getStatus()
-                == Status.WAITING_APPROVAL) {
+        if (header.getStatus()== Status.WAITING_APPROVAL && 
+           (     securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(header.getCreatedBy().getEmployeeId()) 
+                || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.SUPER_ADMIN)
+                || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.MANAGER) ) ) {
 
-            Button cancelButton =
-                    new Button("Cancel Request");
+            Button cancelButton = new Button("Cancel Request");
 
             cancelButton.addClickListener(e -> {
 
@@ -304,13 +303,9 @@ public class PurchaseRequestDetailsView extends VerticalLayout
                         Status.CANCELLED
                 );
 
-                headerService.updatePurchaseRequestHeader(
-                                header,
-                                null
-                        );
+                headerService.updatePurchaseRequestHeader(header, securityService.getLoggedInUser().getEmployee() );
 
-                Notification.show(
-                        "Purchase Request Cancelled"
+                Notification.show("Purchase Request Cancelled"
                 );
 
                 bindHeader();
@@ -346,9 +341,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                 .setHeader("Item Name");
 
-        lineGrid.addColumn(
-                        PurchaseRequestLine::getQuantity
-                )
+        lineGrid.addColumn(PurchaseRequestLine::getQuantity )
                 .setHeader("Quantity");
 
         lineGrid.addColumn(

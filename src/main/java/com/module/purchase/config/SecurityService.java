@@ -22,7 +22,7 @@ public class SecurityService {
                                 .getContext()
                                 .getAuthentication()
                                 .getName();
-
+                                
                 return userRepository.findByUserNameOrUserEmail(username, username)
                                 .orElseThrow();
         }

@@ -27,7 +27,7 @@ public class UsersView extends VerticalLayout {
 
     private final UsersService usersService;
 
-    private final SecurityService securityService;
+ //   private final SecurityService securityService;
 
 
     private final Grid<UsersDTO> userGrid = new Grid<>(UsersDTO.class, false);
@@ -49,7 +49,7 @@ public class UsersView extends VerticalLayout {
     public UsersView(UsersService usersService, EmployeeService employeeService,SecurityService securityService) {
 
         this.usersService = usersService;
-        this.securityService = securityService;
+    //    this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
@@ -110,6 +110,9 @@ public class UsersView extends VerticalLayout {
         // FILTER
         Button searchButton = new Button("Search", e -> applyFilter());
         Button clearButton = new Button("Clear", e -> clearFilter());
+
+        userIdField.setWidth("100px");
+        activeField.setWidth("100px");
 
         HorizontalLayout filterLayout = new HorizontalLayout(
                 userIdField,

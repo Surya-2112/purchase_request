@@ -11,7 +11,7 @@ import com.module.purchase.entityDTO.PurchaseOrderDTO;
 @Mapper(componentModel="spring")
 public interface PurchaseOrderMapper {
     
-    PurchaseOrderDTO toPurchaseOrderDTO(PurchaseOrderHeader purchaseRequest);
+    PurchaseOrderDTO toPurchaseOrderDTO(PurchaseOrderHeader purchaseOrderHeader);
 
-    List<PurchaseOrderDTO> toPurchaseOrdersDTO(List<PurchaseOrderHeader> purchaseRequests);
+    List<PurchaseOrderDTO> toPurchaseOrdersDTO(List<PurchaseOrderHeader> purchaseOrderHeaders);
 }

@@ -7,7 +7,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.module.purchase.enums.Status;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -38,6 +37,11 @@ public class PurchaseRequestHeader {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @ManyToOne
+    @JoinColumn(name = "vendorId")
+    private Vendor vendor;
+
 
     @ManyToOne
     @JoinColumn(name = "department")
@@ -124,4 +128,11 @@ public class PurchaseRequestHeader {
         this.assigningApprovals = assigningApprovals;
     }
 
+    public Vendor getVendor() {
+        return vendor;
+    }
+
+    public void setVendor(Vendor vendor) {
+        this.vendor = vendor;
+    }
 }

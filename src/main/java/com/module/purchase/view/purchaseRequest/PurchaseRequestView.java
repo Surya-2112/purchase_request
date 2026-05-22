@@ -37,8 +37,8 @@ public class PurchaseRequestView extends VerticalLayout {
     private final SecurityService securityService;
     private final DepartmentService departmentService;
     private final EmployeeService employeeService;
-    private final ItemService itemService;
-    private final AssigningConfigService assigningConfigService;
+//     private final ItemService itemService;
+//     private final AssigningConfigService assigningConfigService;
 
     // ================= GRIDS =================
 
@@ -111,9 +111,9 @@ public class PurchaseRequestView extends VerticalLayout {
         this.securityService = securityService;
         this.departmentService = departmentService;
         this.employeeService = employeeService;
-        this.itemService = itemService;
+      //  this.itemService = itemService;
         this.assigningApprovalsService = assigningApprovalsService;
-        this.assigningConfigService = assigningConfigService;
+     //   this.assigningConfigService = assigningConfigService;
 
         setSizeFull();
         setPadding(true);
@@ -125,13 +125,7 @@ public class PurchaseRequestView extends VerticalLayout {
         loadData();
     }
 
-    // =========================================================
-    // BUILD UI
-    // =========================================================
-
     private void buildUI() {
-
-        // ================= HEADER =================
 
         H2 title = new H2("Purchase Requests");
 
@@ -152,16 +146,11 @@ public class PurchaseRequestView extends VerticalLayout {
 
         headerLayout.setAlignItems(Alignment.CENTER);
 
-        // ================= TABS =================
+        Button allBtn = new Button("Purchase Requests");
 
-        Button allBtn =
-                new Button("Purchase Requests");
+        Button assignedBtn = new Button("Assigned to You");
 
-        Button assignedBtn =
-                new Button("Assigned to You");
-
-        Button createdBtn =
-                new Button("Created by You");
+        Button createdBtn = new Button("Created by You");
 
         allBtn.addClickListener(event -> {
 
@@ -193,32 +182,21 @@ public class PurchaseRequestView extends VerticalLayout {
                         assignedBtn,
                         createdBtn);
 
-        // =====================================================
-        // FILTERS
-        // =====================================================
+        createdByField.setItems(employeeService.getEmployees());
 
-        createdByField.setItems(
-                employeeService.getEmployees());
+        createdByField.setItemLabelGenerator( Employee::getEmployeeName);
 
-        createdByField.setItemLabelGenerator(
-                Employee::getEmployeeName);
+        departmentField.setItems(departmentService.getDepartments());
 
-        departmentField.setItems(
-                departmentService.getDepartments());
-
-        departmentField.setItemLabelGenerator(
-                Department::getDepartmentName);
+        departmentField.setItemLabelGenerator( Department::getDepartmentName);
 
         statusField.setItems(Status.values());
 
-        // ================= PR FILTERS =================
 
-        Button search =
-                new Button("Search",
+        Button search = new Button("Search",
                         e -> applyFilter());
 
-        Button clear =
-                new Button("Clear",
+        Button clear = new Button("Clear",
                         e -> clearFilter());
 
         prFilters = new HorizontalLayout(
@@ -231,8 +209,6 @@ public class PurchaseRequestView extends VerticalLayout {
                 clear);
 
         prFilters.setAlignItems(Alignment.END);
-
-        // ================= ASSIGN FILTERS =================
 
         assignStatusField.setItems(
                 Status.WAITING_APPROVAL,
@@ -259,10 +235,6 @@ public class PurchaseRequestView extends VerticalLayout {
                 assignClear);
 
         assignFilters.setAlignItems(Alignment.END);
-
-        // =====================================================
-        // PR GRID
-        // =====================================================
 
         prGrid.removeAllColumns();
 
@@ -310,11 +282,7 @@ public class PurchaseRequestView extends VerticalLayout {
 
         prGrid.setWidthFull();
         prGrid.setHeightFull();
-
-        // =====================================================
-        // ASSIGN GRID
-        // =====================================================
-
+   
         assignGrid.removeAllColumns();
 
         assignGrid.addComponentColumn(a -> {

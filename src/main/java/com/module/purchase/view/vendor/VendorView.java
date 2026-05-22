@@ -28,7 +28,7 @@ public class VendorView extends VerticalLayout {
 
     private final VendorService vendorService;
 
-    private final SecurityService securityService;
+ //   private final SecurityService securityService;
 
     private final Grid<VendorDTO> vendorGrid = new Grid<>(VendorDTO.class, false);
 
@@ -51,7 +51,7 @@ public class VendorView extends VerticalLayout {
     public VendorView(VendorService vendorService,VendorCategoryService vendorCategoryService,SecurityService securityService) {
 
         this.vendorService = vendorService;
-        this.securityService = securityService;
+//        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);

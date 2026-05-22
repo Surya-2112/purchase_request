@@ -47,8 +47,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
                 .getParameters()
                 .containsKey("logout")) {
 
-            Notification.show(
-                    "Logout successful");
+            Notification.show( "Logout successful");
         }
     }
 }

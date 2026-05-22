@@ -8,7 +8,7 @@ public enum EmployeeGroup {
     STAFF,
     INTERN,
     FINANCE,
-    PROCUREMENT,
+    PURCHASE,
     HR,
     CEO,
     DEPARTMENT_HEAD

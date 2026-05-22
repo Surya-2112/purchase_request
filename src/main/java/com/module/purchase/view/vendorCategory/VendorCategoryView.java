@@ -26,7 +26,7 @@ public class VendorCategoryView extends VerticalLayout {
 
     private final VendorCategoryService categoryService;
 
-    private final SecurityService securityService;
+ //   private final SecurityService securityService;
 
 
     private final Grid<VendorCategory> categoryGrid = new Grid<>(VendorCategory.class, false);
@@ -45,7 +45,7 @@ public class VendorCategoryView extends VerticalLayout {
     public VendorCategoryView(VendorCategoryService categoryService , SecurityService securityService) {
 
         this.categoryService = categoryService;
-        this.securityService =securityService;
+ //       this.securityService =securityService;
         setSizeFull();
         setPadding(true);
         setSpacing(true);
@@ -55,7 +55,6 @@ public class VendorCategoryView extends VerticalLayout {
 
         Button addButton = new Button("Add Category");
         addButton.addClickListener(event -> {
-            // TODO ::
            VendorCategoryForm form = new VendorCategoryForm(categoryService,securityService);
            form.open();
         });
