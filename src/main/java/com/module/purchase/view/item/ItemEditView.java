@@ -10,6 +10,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -28,6 +29,8 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
     // FIELDS
     private final TextField itemNameField = new TextField("Item Name");
     private final TextField itemCodeField = new TextField("Item Code");
+    private final NumberField unitPriceField = new NumberField("unit Price");
+    private final TextField VATCodeField = new TextField("VAT code");
 
     private Item item;
 
@@ -41,6 +44,7 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
 
         itemNameField.setRequired(true);
         itemCodeField.setRequired(true);
+        itemCodeField.setReadOnly(true);
     }
 
     @Override
@@ -58,20 +62,23 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
         H2 title = new H2("Update Item");
 
         // SET VALUES
-        itemNameField.setValue(
-                item.getItemName() == null ? "" : item.getItemName()
-        );
+        itemNameField.setValue( item.getItemName() == null ? "" : item.getItemName());
 
-        itemCodeField.setValue(
-                item.getItemCode() == null ? "" : item.getItemCode()
-        );
+        itemCodeField.setValue(item.getItemCode() == null ? "" : item.getItemCode() );
+
+        unitPriceField.setValue(item.getUnitPrice() == null ? 0.0 : item.getUnitPrice());
+        
+        VATCodeField.setValue(item.getVATCode() == null ? "": item.getVATCode());
+        
 
         // FORM
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
                 itemNameField,
-                itemCodeField
+                itemCodeField,
+                unitPriceField,
+                VATCodeField
         );
 
         formLayout.setResponsiveSteps(
@@ -100,6 +107,8 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
                 // UPDATE VALUES
                 item.setItemName(itemNameField.getValue());
                 item.setItemCode(itemCodeField.getValue());
+                item.setUnitPrice(unitPriceField.getValue());
+                item.setVATCode(VATCodeField.getValue());
 
                 // UPDATE
                 itemService.updateItem(item,securityService.getLoggedInUser().getEmployee());

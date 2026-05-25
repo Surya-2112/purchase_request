@@ -109,13 +109,14 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
                 user.setEmployee(employeeField.getValue());
 
-                user.setActive(
-                        activeField.getValue() != null
+                user.setActive(activeField.getValue() != null
                                 && activeField.getValue().equals("Active")
                 );
 
                 if (!passwordField.isEmpty()) {
                     user.setPassword(passwordField.getValue());
+                }else{
+                    user.setPassword(null);
                 }
 
                 usersService.updateUser(user,securityService.getLoggedInUser().getEmployee());

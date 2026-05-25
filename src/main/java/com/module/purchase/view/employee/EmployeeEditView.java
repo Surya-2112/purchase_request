@@ -89,6 +89,8 @@ public class EmployeeEditView extends VerticalLayout
 
                 // ACTIVE FIELD
                 activeField.setItems("Active", "Inactive");
+
+                employeeEmailField.setReadOnly(true);
         }
 
         @Override
@@ -198,6 +200,12 @@ public class EmployeeEditView extends VerticalLayout
                 saveButton.addClickListener(clickEvent -> {
 
                         try {
+
+                                phoneField.setPattern("[0-9]{10}");
+                                phoneField.setErrorMessage("Enter valid 10 digit number");
+
+                                postalCodeField.setPattern("[0-9]{6}");
+                                postalCodeField.setErrorMessage("Enter vaild 6 digit postal code");
 
                                 employee.setEmployeeName(
                                                 employeeNameField.getValue());

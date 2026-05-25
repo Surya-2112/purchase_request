@@ -254,10 +254,6 @@ public class PurchaseRequestView extends VerticalLayout {
 
         }).setHeader("PR ID");
 
-        prGrid.addColumn(
-                PurchaseRequestDTO::getStatus)
-                .setHeader("Status");
-
         prGrid.addColumn(pr ->
 
                 pr.getForDepartment() == null
@@ -279,6 +275,11 @@ public class PurchaseRequestView extends VerticalLayout {
         prGrid.addColumn(
                 PurchaseRequestDTO::getTotalAmount)
                 .setHeader("Total Amount");
+                
+          prGrid.addColumn(
+                PurchaseRequestDTO::getStatus)
+                .setHeader("Status");
+
 
         prGrid.setWidthFull();
         prGrid.setHeightFull();

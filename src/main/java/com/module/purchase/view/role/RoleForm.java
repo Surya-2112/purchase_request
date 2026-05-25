@@ -22,11 +22,9 @@ public class RoleForm extends Dialog {
 
 
     // FIELDS
-    private final TextField roleNameField =
-            new TextField("Role Name");
+    private final TextField roleNameField = new TextField("Role Name");
 
-    private final CheckboxGroup<EmployeeGroup> employeeGroupField =
-            new CheckboxGroup<>();
+    private final CheckboxGroup<EmployeeGroup> employeeGroupField = new CheckboxGroup<>();
 
     public RoleForm(RoleService roleService,SecurityService securityService) {
 

@@ -33,8 +33,7 @@ public class AssigningConfigEditView extends VerticalLayout
     private final ComboBox<ApprovalType> approvalTypeField =
             new ComboBox<>("Approval Type");
 
-    private final IntegerField levelField =
-            new IntegerField("Level");
+    private final IntegerField levelField = new IntegerField("Level");
 
     private final ComboBox<EmployeeGroup> employeeGroupField =
             new ComboBox<>("Employee Group");
@@ -85,8 +84,7 @@ public class AssigningConfigEditView extends VerticalLayout
             return;
         }
 
-        H2 title =
-                new H2("Update Assigning Config");
+        H2 title =  new H2("Update Assigning Config");
 
         // SET VALUES
         approvalTypeField.setValue(
@@ -140,6 +138,22 @@ public class AssigningConfigEditView extends VerticalLayout
 
                     return;
                 }
+
+                if(levelField.getValue()<1){
+                levelField.setInvalid(true);
+                levelField.setErrorMessage("level must be higher then 0");
+                return ;
+             }
+             if(minAmountField.getValue()<1.0){
+                minAmountField.setInvalid(true);
+                minAmountField.setErrorMessage("minimum amount must be higher then 0");
+                return ;
+             }
+             if(maxAmountField.getValue()<1.0 || maxAmountField.getValue()<= minAmountField.getValue()){
+                maxAmountField.setInvalid(true);
+                maxAmountField.setErrorMessage("maximum amount must be higher then minimum amount");
+                return ;
+             }
 
                 // UPDATE VALUES
                 assigningConfig.setApprovalType(

@@ -164,8 +164,9 @@ public class PurchaseOrderHeaderService {
     {   
         PurchaseOrderHeader purchaseOrderHeader=new PurchaseOrderHeader();
         purchaseOrderHeader.setPurchaseRequestHeader(purchaseRequestHeader);
-        purchaseOrderHeader.setStatus(Status.APPROVED);
+        purchaseOrderHeader.setStatus(Status.ORDER);
         purchaseOrderHeader.setTotalAmount(purchaseRequestHeader.getTotalAmount());
+        purchaseOrderHeader.setCreatedDate(LocalDate.now());
         purchaseOrderHeader.setVendor(purchaseRequestHeader.getVendor());
 
         DepartmentBudget departmentBudget=departmentBudgetService.getByDepartmentAndYear(purchaseRequestHeader.getForDepartment(), Year.now());

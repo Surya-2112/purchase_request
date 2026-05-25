@@ -63,7 +63,9 @@ public enum ViewName {
     VENDOR_CATEGORY("vendor-category"),
     VENDOR_CATEGORY_DETAILS("vendor-category-details"),
     VENDOR_CATEGORY_EDIT("vendor-category-edit"),
-    VENDOR_CATEGORY_FORM("vendor-category-form");
+    VENDOR_CATEGORY_FORM("vendor-category-form"),
+    
+    AUDIT_LOGS("audit-logs");
 
     private final String route;
 

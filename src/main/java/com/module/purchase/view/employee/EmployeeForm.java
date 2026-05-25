@@ -23,38 +23,27 @@ public class EmployeeForm extends VerticalLayout {
     private final EmployeeService employeeService;
     private final SecurityService securityService;
 
-    private final TextField employeeNameField =
-            new TextField("Employee Name");
+    private final TextField employeeNameField = new TextField("Employee Name");
 
-    private final EmailField employeeEmailField =
-            new EmailField("Employee Email");
+    private final EmailField employeeEmailField =new EmailField("Employee Email");
 
-    private final TextField phoneNumberField =
-            new TextField("Phone Number");
+    private final TextField phoneNumberField = new TextField("Phone Number");
 
-    private final ComboBox<Department> departmentField =
-            new ComboBox<>("Department");
+    private final ComboBox<Department> departmentField = new ComboBox<>("Department");
 
-    private final ComboBox<Role> roleField =
-            new ComboBox<>("Role");
+    private final ComboBox<Role> roleField =  new ComboBox<>("Role");
 
-    private final TextField addressLineField =
-            new TextField("Address Line");
+    private final TextField addressLineField = new TextField("Address Line");
 
-    private final TextField streetField =
-            new TextField("Street");
+    private final TextField streetField =  new TextField("Street");
 
-    private final TextField cityField =
-            new TextField("City");
+    private final TextField cityField = new TextField("City");
 
-    private final TextField stateField =
-            new TextField("State");
+    private final TextField stateField =new TextField("State");
 
-    private final TextField countryField =
-            new TextField("Country");
+    private final TextField countryField = new TextField("Country");
 
-    private final TextField postalCodeField =
-            new TextField("Pincode");
+    private final TextField postalCodeField =  new TextField("Pincode");
 
     public EmployeeForm(
             EmployeeService employeeService,
@@ -84,6 +73,11 @@ public class EmployeeForm extends VerticalLayout {
         roleField.setItemLabelGenerator(
                 Role::getRoleName);
 
+        phoneNumberField.setPattern("[0-9]{10}");
+        phoneNumberField.setErrorMessage("Enter valid 10 digit number");
+        postalCodeField.setPattern("[0-9]{6}");
+        postalCodeField.setErrorMessage("Enter vaild 6 digit postal code");
+        
         // REQUIRED
         employeeNameField.setRequired(true);
         employeeEmailField.setRequired(true);

@@ -43,8 +43,13 @@ public class AssigningConfigService {
 
     public AssigningConfig addAssigningConfig(AssigningConfig assigningConfig, Employee employee) {
 
-        assigningConfig=saveAssigningConfig(assigningConfig);
+        Optional<AssigningConfig> exist=assigningConfigRepository.findByApprovalTypeAndLevel(assigningConfig.getApprovalType(),assigningConfig.getLevel());
+        if(exist.isPresent())
+        {
+            throw new RuntimeException("AssigningConfig is already have this level for this approval type");
+        }
 
+        assigningConfig=saveAssigningConfig(assigningConfig);
         AuditLogs log= new AuditLogs();
         log.setEntityType(EntityType.ASSIGNING_CONFIG);
         log.setEntityId(assigningConfig.getId());

@@ -86,6 +86,11 @@ public class DepartmentBudgetService {
 
     public DepartmentBudget updateDepartmentBudget(DepartmentBudget departmentBudget,Employee employee) {
        
+        DepartmentBudget exist=getDepartmentBudgetById(departmentBudget.getDepartmentBudgetId()).get();
+         if(exist.getTotalBudgetAmount()- exist.getRemainingBudgetAmount()!= departmentBudget.getTotalBudgetAmount() - departmentBudget.getRemainingBudgetAmount())
+         {
+            throw new RuntimeException("This department budget spended amount is"+(exist.getTotalBudgetAmount()- exist.getRemainingBudgetAmount()));
+         }
         departmentBudget=saveDepartmentBudget(departmentBudget);
         AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.DEPARTMENT_BUDGET);
@@ -100,10 +105,13 @@ public class DepartmentBudgetService {
 
     public void deleteDepartmentBudgetById(Long departmentBudgetId,Employee employee) {
 
-
+        DepartmentBudget exist=getDepartmentBudgetById(departmentBudgetId).get();
+        if(exist.getRemainingBudgetAmount()!= exist.getTotalBudgetAmount())
+        {
+            throw new RuntimeException("This department budget is already in use do cannot delete");
+        }
         getDepartmentBudgetById(departmentBudgetId);
 
-        
         AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.DEPARTMENT_BUDGET);
         log.setEntityId(departmentBudgetId);

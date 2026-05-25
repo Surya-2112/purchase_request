@@ -49,6 +49,8 @@ public class RoleEditView extends VerticalLayout
 
         setPadding(true);
 
+        roleNameField.setReadOnly(true);
+
         employeeGroupField.setLabel(
                 "Employee Groups");
 

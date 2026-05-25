@@ -14,7 +14,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 public class DepartmentForm extends Dialog {
 
-    private DepartmentService departmentService;
+    private final DepartmentService departmentService;
     private final SecurityService securityService;
     //private EmployeeService employeeService;
 
@@ -70,6 +70,12 @@ public class DepartmentForm extends Dialog {
                 Notification.show(
                         "Please fill all required fields");
                 return;
+            }
+
+            if(departmentCodeField.getValue().length()<4)
+            {  
+                departmentCodeField.setInvalid(true);
+                departmentCodeField.setErrorMessage("Department code must be higher then 3");
             }
 
             Department department = new Department();

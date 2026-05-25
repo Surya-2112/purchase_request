@@ -34,14 +34,11 @@ public class DepartmentEditView extends VerticalLayout
     // FIELDS
     private final TextField departmentNameField = new TextField("Department Name");
 
-    private final TextField departmentCodeField =
-            new TextField("Department Code");
+    private final TextField departmentCodeField = new TextField("Department Code");
 
-    private final ComboBox<Employee> departmentHeadField =
-            new ComboBox<>("Department Head");
+    private final ComboBox<Employee> departmentHeadField = new ComboBox<>("Department Head");
 
-    private final ComboBox<String> activeField =
-            new ComboBox<>("Status");
+    private final ComboBox<String> activeField = new ComboBox<>("Status");
 
     private Department department;
 
@@ -97,6 +94,8 @@ public class DepartmentEditView extends VerticalLayout
                         ? ""
                         : department.getDepartmentCode());
 
+        departmentCodeField.setReadOnly(true);
+
         departmentHeadField.setValue(department.getHeadEmployee());
 
         activeField.setValue(
@@ -134,6 +133,12 @@ public class DepartmentEditView extends VerticalLayout
 
                     return;
                 }
+
+             if(departmentCodeField.getValue().length()<4)
+            {  
+                departmentCodeField.setInvalid(true);
+                departmentCodeField.setErrorMessage("Department code must be higher then 3");
+            }
 
                 // UPDATE VALUES
                 department.setDepartmentName(

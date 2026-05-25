@@ -8,6 +8,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 
 public class ItemForm extends Dialog {
@@ -20,6 +21,10 @@ public class ItemForm extends Dialog {
     private final TextField itemNameField = new TextField("Item Name");
 
     private final TextField itemCodeField = new TextField("Item Code");
+
+    private final NumberField unitAmountField= new NumberField("Unit Price");
+
+    private final TextField VATCodeField= new TextField("VAT Code");
 
     public ItemForm(ItemService itemService,SecurityService securityService) {
 
@@ -38,7 +43,9 @@ public class ItemForm extends Dialog {
 
         formLayout.add(
                 itemNameField,
-                itemCodeField
+                itemCodeField,
+                unitAmountField,
+                VATCodeField
         );
 
         formLayout.setResponsiveSteps(
@@ -63,8 +70,6 @@ public class ItemForm extends Dialog {
     private void saveItem() {
 
         try {
-
-            // VALIDATION
             if (itemNameField.isEmpty() || itemCodeField.isEmpty()) {
 
                 Notification.show(
@@ -80,6 +85,8 @@ public class ItemForm extends Dialog {
 
             item.setItemName(itemNameField.getValue());
             item.setItemCode(itemCodeField.getValue());
+            item.setUnitPrice(unitAmountField.getValue());
+            item.setVATCode(VATCodeField.getValue());
 
             itemService.addItem(item,securityService.getLoggedInUser().getEmployee());
 

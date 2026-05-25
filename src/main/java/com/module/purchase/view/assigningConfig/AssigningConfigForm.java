@@ -24,8 +24,7 @@ public class AssigningConfigForm extends Dialog {
     private final ComboBox<ApprovalType> approvalTypeField =
             new ComboBox<>("Approval Type");
 
-    private final IntegerField levelField =
-            new IntegerField("Level");
+    private final IntegerField levelField = new IntegerField("Level");
 
     private final ComboBox<EmployeeGroup> employeeGroupField =
             new ComboBox<>("Employee Group");
@@ -119,8 +118,23 @@ public class AssigningConfigForm extends Dialog {
                 return;
             }
 
-            AssigningConfig assigningConfig =
-                    new AssigningConfig();
+             if(levelField.getValue()<1){
+                levelField.setInvalid(true);
+                levelField.setErrorMessage("level must be higher then 0");
+                return ;
+             }
+             if(minAmountField.getValue()<1.0){
+                minAmountField.setInvalid(true);
+                minAmountField.setErrorMessage("minimum amount must be higher then 0");
+                return ;
+             }
+             if(maxAmountField.getValue()<1.0 || maxAmountField.getValue()<= minAmountField.getValue()){
+                maxAmountField.setInvalid(true);
+                maxAmountField.setErrorMessage("maximum amount must be higher then minimum amount");
+                return ;
+             }
+
+            AssigningConfig assigningConfig = new AssigningConfig();
 
             // SET VALUES
             assigningConfig.setApprovalType( approvalTypeField.getValue());

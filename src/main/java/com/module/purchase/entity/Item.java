@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Item {
@@ -19,7 +20,12 @@ public class Item {
 
     private String itemName;
 
+    @Size(max = 4)
     private String itemCode;
+
+    private Double unitPrice;
+
+    private String VATCode;
 
     @OneToMany(mappedBy = "item")
     @JsonIgnoreProperties({"item"})
@@ -68,4 +74,21 @@ public class Item {
     public void setPurchaseOrderLines(List<PurchaseOrderLine> purchaseOrderLines) {
         this.purchaseOrderLines = purchaseOrderLines;
     }
+
+    public Double getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(Double unitPrice) {
+        this.unitPrice = unitPrice;
+    }
+
+    public String getVATCode() {
+        return VATCode;
+    }
+
+    public void setVATCode(String VATCode) {
+        VATCode = VATCode;
+    }
+
 }

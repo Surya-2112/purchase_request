@@ -122,8 +122,19 @@ public class DepartmentBudgetForm extends Dialog {
                         "Please fill all required fields",
                         3000,
                         Notification.Position.TOP_CENTER);
-
                 return;
+            }
+
+            if(totalBudgetAmountField.getValue()<0)
+            {
+                totalBudgetAmountField.setEnabled(true);
+                totalBudgetAmountField.setErrorMessage("Total budgets must be greater then 0");
+            }
+
+            if(remainingBudgetAmountField.getValue()<0 ||totalBudgetAmountField.getValue() >= remainingBudgetAmountField.getValue())
+            {
+                remainingBudgetAmountField.setEnabled(true);
+                remainingBudgetAmountField.setErrorMessage("Remaining amount must be postive and smaller then Total amount");
             }
 
             DepartmentBudget departmentBudget =

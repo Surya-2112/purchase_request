@@ -34,6 +34,7 @@ public class ItemView extends VerticalLayout {
     private final TextField itemNameField = new TextField("Item Name");
     private final TextField itemCodeField = new TextField("Item Code");
 
+
     private int currentPage = 0;
     private int pageSize = 25;
 
@@ -135,6 +136,11 @@ public class ItemView extends VerticalLayout {
         itemGrid.addColumn(Item::getItemCode)
                 .setHeader("Item Code")
                 .setAutoWidth(true);
+        
+        itemGrid.addColumn(Item::getUnitPrice)
+                .setHeader("Unit Amount");
+
+        
 
         itemGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         itemGrid.setSizeFull();

@@ -81,13 +81,16 @@ public class RoleService {
         .and(RoleSpecification.hasEmployeeGroup(employeeGroup));
 
         Pageable pageable = PageRequest.of(page,size);
-        Page<Role> pageRole=roleRepository.findAll(spec,pageable);
+        Page<Role> pageRole = roleRepository.findAll(spec,pageable);
         return pageRole;
     }
 
     public Role updateRole(Role role,Employee employee)
-    {   getRoleById(role.getRoleId());
-
+    {   Role exist=getRoleById(role.getRoleId()).get();
+        if(!exist.getRoleName().equals(role.getRoleName()))
+        {
+            throw new RuntimeException("Role name not allowed to modified");
+        }
         role=saveRole(role);
 
         AuditLogs log= new AuditLogs();
