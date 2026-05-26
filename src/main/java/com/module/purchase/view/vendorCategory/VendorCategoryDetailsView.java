@@ -52,12 +52,10 @@ public class VendorCategoryDetailsView extends VerticalLayout
 
                 FormLayout formLayout = new FormLayout();
 
-                formLayout.addFormItem(
-                                new Span(String.valueOf(category.getCategoryId())),
+                formLayout.addFormItem(new Span(String.valueOf(category.getCategoryId())),
                                 "Category ID");
 
-                formLayout.addFormItem(
-                                new Span(category.getCategoryName() == null ? "" : category.getCategoryName()),
+                formLayout.addFormItem(new Span(category.getCategoryName() == null ? "" : category.getCategoryName()),
                                 "Category Name");
 
                 // UPDATE BUTTON
@@ -103,6 +101,8 @@ public class VendorCategoryDetailsView extends VerticalLayout
 
                         dialog.open();
                 });
+                updateButton.setVisible(securityService.canAccessView("vendor-category-edit"));
+                deleteButton.setVisible(securityService.canAccessView("vendor-category-form"));
 
                 HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 

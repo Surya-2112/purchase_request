@@ -29,225 +29,274 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.RouterLink;
 
 import jakarta.annotation.security.PermitAll;
+
 @PermitAll
 public class MainLayout extends AppLayout {
 
-    public MainLayout(SecurityService securityService) {
+        public MainLayout(SecurityService securityService) {
 
-        setPrimarySection(
-                Section.DRAWER);
+                setPrimarySection(
+                                Section.DRAWER);
 
-        // ================= CURRENT USER =================
+                // ================= CURRENT USER =================
 
-        Users loggedInUser =
-                securityService.getLoggedInUser();
+                Users loggedInUser = securityService.getLoggedInUser();
 
-        String employeeName =
-                loggedInUser.getEmployee() == null
-                        ? loggedInUser.getUserName()
-                        : loggedInUser.getEmployee()
-                                .getEmployeeName();
+                String employeeName = loggedInUser.getEmployee() == null
+                                ? loggedInUser.getUserName()
+                                : loggedInUser.getEmployee()
+                                                .getEmployeeName();
 
-        H2 title =
-                new H2("Purchase Management");
+                H2 title = new H2("Purchase Management");
 
-        title.getStyle()
-                .set("margin", "0");
+                title.getStyle()
+                                .set("margin", "0");
 
-        HorizontalLayout header =
-                new HorizontalLayout(title);
+                HorizontalLayout header = new HorizontalLayout(title);
 
-        header.setWidthFull();
+                header.setWidthFull();
 
-        header.setPadding(true);
+                header.setPadding(true);
 
-        header.setAlignItems(
-                FlexComponent.Alignment.CENTER);
+                header.setAlignItems(
+                                FlexComponent.Alignment.CENTER);
 
-        addToNavbar(header);
+                addToNavbar(header);
 
-        Avatar avatar =
-                new Avatar(employeeName);
+                Avatar avatar = new Avatar(employeeName);
 
-        avatar.setWidth("45px");
+                avatar.setWidth("45px");
 
-        avatar.setHeight("45px");
+                avatar.setHeight("45px");
 
-        H3 userName =
-                new H3(employeeName);
+                H3 userName = new H3(employeeName);
 
-        userName.getStyle()
-                .set("margin", "0")
-                .set("font-size", "18px");
+                userName.getStyle()
+                                .set("margin", "0")
+                                .set("font-size", "18px");
 
-        VerticalLayout profileText =
-                new VerticalLayout(userName);
+                VerticalLayout profileText = new VerticalLayout(userName);
 
-        profileText.setPadding(false);
+                profileText.setPadding(false);
 
-        profileText.setSpacing(false);
+                profileText.setSpacing(false);
 
-        HorizontalLayout profileSection =
-                new HorizontalLayout(
-                        avatar,
-                        profileText);
+                HorizontalLayout profileSection = new HorizontalLayout(
+                                avatar,
+                                profileText);
 
-        profileSection.setAlignItems(
-                FlexComponent.Alignment.CENTER);
+                profileSection.setAlignItems(
+                                FlexComponent.Alignment.CENTER);
 
-        profileSection.setWidthFull();
+                profileSection.setWidthFull();
 
-        profileSection.setPadding(true);
+                profileSection.setPadding(true);
 
-        profileSection.getStyle()
-                .set("cursor", "pointer")
-                .set("border-bottom",
-                        "1px solid #e5e5e5");
+                profileSection.getStyle()
+                                .set("cursor", "pointer")
+                                .set("border-bottom",
+                                                "1px solid #e5e5e5");
 
-        profileSection.addClickListener(event -> {
+                profileSection.addClickListener(event -> {
 
-            getUI().ifPresent(ui ->
+                        getUI().ifPresent(ui ->
 
-                    ui.navigate(
-                            "user-details/"
-                                    + loggedInUser.getUserId()));
-        });
+                        ui.navigate(
+                                        "user-details/"
+                                                        + loggedInUser.getUserId()));
+                });
 
-        // ================= MENU LINKS =================
+                // ================= MENU LINKS =================
 
-        VerticalLayout menuLinks =
-                new VerticalLayout();
+                VerticalLayout menuLinks = new VerticalLayout();
 
-        menuLinks.setPadding(false);
+                menuLinks.setPadding(false);
 
-        menuLinks.setSpacing(true);
+                menuLinks.setSpacing(true);
 
-        menuLinks.setWidthFull();
+                menuLinks.setWidthFull();
 
-        menuLinks.add(
+                addMenuIfAllowed(
+                                menuLinks,
+                                "dashboard",
+                                "Dashboard",
+                                DashboardView.class,
+                                securityService);
 
-                createLink(
-                        "Dashboard",
-                        DashboardView.class),
+                addMenuIfAllowed(
+                                menuLinks,
+                                "item",
+                                "Item",
+                                ItemView.class,
+                                securityService);
 
-                createLink(
-                        "Item",
-                        ItemView.class),
+                addMenuIfAllowed(
+                                menuLinks,
+                                "purchase-request",
+                                "Purchase Request",
+                                PurchaseRequestView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
+                                "purchase-order",
+                                "Purchase Order",
+                                PurchaseOrderView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
+                                "vendor",
+                                "Vendor",
+                                VendorView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
+                                "vendor-category",
+                                "Vendor Category",
+                                VendorCategoryView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
+                                "employee",
+                                "Employee",
+                                EmployeeView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
+                                "department",
+                                "Department",
+                                DepartmentView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
+                                "department-budget",
+                                "Department Budget",
+                                DepartmentBudgetView.class,
+                                securityService);
 
-                createLink(
-                        "Purchase Request",
-                        PurchaseRequestView.class),
+                addMenuIfAllowed(
+                                menuLinks,
+                                "role",
+                                "Role",
+                                RoleView.class,
+                                securityService);
 
-                createLink(
-                        "Purchase Order",
-                        PurchaseOrderView.class),
+                addMenuIfAllowed(
+                                menuLinks,
+                                "user",
+                                "User",
+                                UsersView.class,
+                                securityService);
 
-                createLink(
-                        "Vendor",
-                        VendorView.class),
+                addMenuIfAllowed(
+                                menuLinks,
+                                "assigning-config",
+                                "Assigning Config",
+                                AssigningConfigView.class,
+                                securityService);
 
-                createLink(
-                        "Vendor Category",
-                        VendorCategoryView.class),
+                addMenuIfAllowed(
+                                menuLinks,
+                                "audit-logs",
+                                "Audit Logs",
+                                AuditLogView.class,
+                                securityService);
 
-                createLink(
-                        "Employee",
-                        EmployeeView.class),
+                addMenuIfAllowed(
+                                menuLinks,
+                                "permission",
+                                "Permission",
+                                ViewPermissionView.class,
+                                securityService);
 
-                createLink(
-                        "Department",
-                        DepartmentView.class),
+                Scroller scroller = new Scroller(menuLinks);
 
-                createLink(
-                        "Department Budget",
-                        DepartmentBudgetView.class),
+                scroller.setSizeFull();
 
-                createLink(
-                        "Role",
-                        RoleView.class),
+                // ================= LOGOUT BUTTON =================
 
-                createLink(
-                        "User",
-                        UsersView.class),
+                Button logoutButton = new Button(
+                                "Logout",
+                                VaadinIcon.SIGN_OUT.create());
 
-                createLink(
-                        "Assigning Config",
-                        AssigningConfigView.class),
+                logoutButton.setWidthFull();
 
-                createLink( "Audit Logs",AuditLogView.class),
+                logoutButton.getStyle()
+                                .set("margin-top", "10px");
 
-                createLink("Permission",ViewPermissionView.class));                
+                logoutButton.addClickListener(event -> {
 
+                        SecurityContextHolder.clearContext();
 
+                        getUI().ifPresent(ui -> {
 
-        Scroller scroller = new Scroller(menuLinks);
+                                ui.getSession().close();
 
-        scroller.setSizeFull();
+                                ui.getPage().setLocation("/login");
+                        });
+                });
 
-        // ================= LOGOUT BUTTON =================
+                VerticalLayout drawerLayout = new VerticalLayout(
+                                profileSection,
+                                scroller,
+                                logoutButton);
 
-        Button logoutButton =
-                new Button(
-                        "Logout",
-                        VaadinIcon.SIGN_OUT.create());
+                drawerLayout.setSizeFull();
 
-        logoutButton.setWidthFull();
+                drawerLayout.setPadding(false);
 
-        logoutButton.getStyle()
-                .set("margin-top", "10px");
+                drawerLayout.setSpacing(false);
 
-        logoutButton.addClickListener(event -> {
+                drawerLayout.expand(scroller);
 
-            SecurityContextHolder.clearContext();
+                drawerLayout.getStyle()
+                                .set("overflow", "hidden");
 
-            getUI().ifPresent(ui -> {
+                addToDrawer(drawerLayout);
 
-                ui.getSession().close();
+                // ================= DRAWER WIDTH =================
 
-                ui.getPage().setLocation("/login");
-            });
-        });
+                getStyle().set(
+                                "--vaadin-app-layout-drawer-width",
+                                "260px");
+        }
 
-        VerticalLayout drawerLayout =
-                new VerticalLayout(
-                        profileSection,
-                        scroller,
-                        logoutButton);
+        // ================= CREATE MENU LINK =================
 
-        drawerLayout.setSizeFull();
+        private void addMenuIfAllowed(
 
-        drawerLayout.setPadding(false);
+                        VerticalLayout layout,
 
-        drawerLayout.setSpacing(false);
+                        String viewName,
 
-        drawerLayout.expand(scroller);
+                        String text,
 
-        drawerLayout.getStyle()
-                .set("overflow", "hidden");
+                        Class<? extends Component> navigationTarget,
 
-        addToDrawer(drawerLayout);
+                        SecurityService securityService) {
 
-        // ================= DRAWER WIDTH =================
+                if (securityService.canAccessView(viewName)) {
+                        layout.add(createLink(text , navigationTarget));
+                }
+        }
 
-        getStyle().set(
-                "--vaadin-app-layout-drawer-width",
-                "260px");
-    }
+        private RouterLink createLink(
+                        String text,
+                        Class<? extends Component> navigationTarget) {
 
-    // ================= CREATE MENU LINK =================
+                RouterLink link = new RouterLink(text, navigationTarget);
 
-   private RouterLink createLink(
-        String text,
-        Class<? extends Component> navigationTarget) {
+                link.getStyle()
+                                .set("padding", "10px 15px")
+                                .set("border-radius", "8px")
+                                .set("text-decoration", "none")
+                                .set("font-size", "15px");
 
-        RouterLink link = new RouterLink(text, navigationTarget);
-
-        link.getStyle()
-                .set("padding", "10px 15px")
-                .set("border-radius", "8px")
-                .set("text-decoration", "none")
-                .set("font-size", "15px");
-
-        return link;
-    }
+                return link;
+        }
 }

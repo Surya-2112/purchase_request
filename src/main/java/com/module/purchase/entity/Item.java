@@ -88,7 +88,8 @@ public class Item {
     }
 
     public void setVATCode(String VATCode) {
-        VATCode = VATCode;
+        
+        this.VATCode = VATCode;
     }
 
 }

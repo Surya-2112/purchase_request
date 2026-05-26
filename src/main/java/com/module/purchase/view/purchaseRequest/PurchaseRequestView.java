@@ -19,6 +19,7 @@ import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -61,25 +62,19 @@ public class PurchaseRequestView extends VerticalLayout {
 
     // ================= FILTER DTO =================
 
-    private PurchaseRequestDTO prFilter =
-            new PurchaseRequestDTO();
+    private PurchaseRequestDTO prFilter = new PurchaseRequestDTO();
 
-    private AssigningApprovalsDTO assignFilter =
-            new AssigningApprovalsDTO();
+    private AssigningApprovalsDTO assignFilter = new AssigningApprovalsDTO();
 
     // ================= PR FILTERS =================
 
-    private final TextField prIdField =
-            new TextField("PR ID");
+    private final TextField prIdField = new TextField("PR ID");
 
-    private final ComboBox<Employee> createdByField =
-            new ComboBox<>("Created By");
+    private final ComboBox<Employee> createdByField = new ComboBox<>("Created By");
 
-    private final ComboBox<Department> departmentField =
-            new ComboBox<>("Department");
+    private final ComboBox<Department> departmentField = new ComboBox<>("Department");
 
-    private final ComboBox<Status> statusField =
-            new ComboBox<>("Status");
+    private final ComboBox<Status> statusField = new ComboBox<>("Status");
 
     // ================= ASSIGN FILTERS =================
 
@@ -135,6 +130,8 @@ public class PurchaseRequestView extends VerticalLayout {
         addButton.addClickListener(event ->
                 getUI().ifPresent(ui ->
                         ui.navigate("purchase-request-form")));
+        
+        addButton.setVisible(securityService.canAccessView("purchase-request-form"));
 
         HorizontalLayout headerLayout =
                 new HorizontalLayout(title, addButton);
@@ -238,21 +235,7 @@ public class PurchaseRequestView extends VerticalLayout {
 
         prGrid.removeAllColumns();
 
-        prGrid.addComponentColumn(pr -> {
-
-            Button button = new Button(
-                    String.valueOf(
-                            pr.getPurchaseRequestId()));
-
-            button.addClickListener(event ->
-                    getUI().ifPresent(ui ->
-                            ui.navigate(
-                                    "purchase-request-details/"
-                                            + pr.getPurchaseRequestId())));
-
-            return button;
-
-        }).setHeader("PR ID");
+        prGrid.addColumn(PurchaseRequestDTO::getPurchaseRequestId).setHeader("PR ID");
 
         prGrid.addColumn(pr ->
 
@@ -276,31 +259,23 @@ public class PurchaseRequestView extends VerticalLayout {
                 PurchaseRequestDTO::getTotalAmount)
                 .setHeader("Total Amount");
                 
-          prGrid.addColumn(
+        prGrid.addColumn(
                 PurchaseRequestDTO::getStatus)
                 .setHeader("Status");
 
-
         prGrid.setWidthFull();
         prGrid.setHeightFull();
+        prGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+
+        prGrid.addItemDoubleClickListener(event->{
+                PurchaseRequestDTO pr = event.getItem();
+
+                getUI().ifPresent(ui ->ui.navigate( "purchase-request-details/" + pr.getPurchaseRequestId()));
+                });
    
         assignGrid.removeAllColumns();
 
-        assignGrid.addComponentColumn(a -> {
-
-            Button button =
-                    new Button(String.valueOf(
-                            a.getAssigningApprovalsId()));
-
-            button.addClickListener(event ->
-                    getUI().ifPresent(ui ->
-                            ui.navigate(
-                                    "assigning-approvals-details/"
-                                            + a.getAssigningApprovalsId())));
-
-            return button;
-
-        }).setHeader("Assign ID");
+        assignGrid.addColumn(AssigningApprovalsDTO::getAssigningApprovalsId).setHeader("Assign ID");
 
         assignGrid.addColumn(
                 AssigningApprovalsDTO::getReferenceId)
@@ -329,6 +304,11 @@ public class PurchaseRequestView extends VerticalLayout {
 
         assignGrid.setWidthFull();
         assignGrid.setHeightFull();
+
+        assignGrid.addItemDoubleClickListener(event ->{
+                   AssigningApprovalsDTO a= event.getItem();
+                    getUI().ifPresent(ui ->ui.navigate( "assigning-approvals-details/"+ a.getAssigningApprovalsId()));
+                });
 
         // =====================================================
         // PAGINATION

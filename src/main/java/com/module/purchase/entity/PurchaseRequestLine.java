@@ -1,7 +1,5 @@
 package com.module.purchase.entity;
 
-
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Entity;
@@ -34,7 +32,7 @@ public class PurchaseRequestLine {
 
     private Double discount;
 
-    private Double totalPrice;
+    private Double totalPrice; 
 
     public Long getPurchaseRequestLineId() {
         return purchaseRequestLineId;

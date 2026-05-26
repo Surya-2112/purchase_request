@@ -5,6 +5,7 @@ import java.time.Year;
 import org.springframework.data.domain.PageRequest;
 
 import com.module.purchase.entity.DepartmentBudget;
+import com.module.purchase.entityDTO.DepartmentBudgetDTO;
 import com.module.purchase.entityDTO.PurchaseOrderDTO;
 import com.module.purchase.entityDTO.PurchaseRequestDTO;
 import com.module.purchase.enums.Status;
@@ -212,11 +213,12 @@ public class DashboardView extends VerticalLayout {
 
         grid.setHeight("250px");
 
-         grid.addItemClickListener(event -> {
+        grid.addItemDoubleClickListener(event -> {
 
-            UI.getCurrent().navigate(
-                    "department-budget/"
-            );
+              DepartmentBudget departmentBudget = event.getItem();
+
+                getUI().ifPresent(ui -> ui.navigate("department-budget-details/"
+                                                + departmentBudget.getDepartmentBudgetId()));
         });
 
 
@@ -254,11 +256,9 @@ public class DashboardView extends VerticalLayout {
                         )
         );
 
-        grid.addItemClickListener(event -> {
-
-            UI.getCurrent().navigate(
-                    "purchase-request/"
-            );
+        grid.addItemDoubleClickListener(event -> {
+                PurchaseRequestDTO pr = event.getItem();
+              getUI().ifPresent(ui ->ui.navigate( "purchase-request-details/" + pr.getPurchaseRequestId()));
         });
 
         layout.add(title, grid);
@@ -299,13 +299,11 @@ public class DashboardView extends VerticalLayout {
 
         grid.addItemClickListener(event -> {
 
-            UI.getCurrent().navigate(
-                    "purchase-order/"
-            );
+           PurchaseOrderDTO po=event.getItem();
+               getUI().ifPresent(ui ->
+                        ui.navigate("purchase-order-details/"+ po.getPurchaseOrderId()));
         });
-
         layout.add(title, grid);
-
         return layout;
     }
 }

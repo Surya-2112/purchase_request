@@ -85,7 +85,6 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
         content.setPadding(true);
         content.setSpacing(true);
 
-        // ✅ IMPORTANT: scroll fix
         Scroller scroller = new Scroller(content);
         scroller.setSizeFull();
 
@@ -203,15 +202,19 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
     private void configureGrids() {
 
         // ================= LINE ITEMS =================
-        lineGrid.addColumn(l ->
-                        l.getItem() != null ? l.getItem().getItemName() : "")
+        lineGrid.addColumn(line ->
+                        line.getItem() != null ? line.getItem().getItemName() : "")
                 .setHeader("Item");
 
         lineGrid.addColumn(PurchaseOrderLine::getQuantity)
-                .setHeader("Qty");
+                .setHeader("Quantity");
 
         lineGrid.addColumn(PurchaseOrderLine::getUnitPrice)
                 .setHeader("Unit Price");
+        
+        lineGrid.addColumn(line -> 
+                line.getItem() == null ? " ":line.getItem().getVATCode()
+        ).setHeader("VAT Code");
 
         lineGrid.addColumn(PurchaseOrderLine::getTotalPrice)
                 .setHeader("Total");

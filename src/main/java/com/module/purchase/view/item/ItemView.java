@@ -26,14 +26,13 @@ public class ItemView extends VerticalLayout {
 
     private final ItemService itemService;
 
-  //  private final SecurityService securityService;
+    // private final SecurityService securityService;
 
     private final Grid<Item> itemGrid = new Grid<>(Item.class, false);
 
     private final TextField itemIdField = new TextField("Item ID");
     private final TextField itemNameField = new TextField("Item Name");
     private final TextField itemCodeField = new TextField("Item Code");
-
 
     private int currentPage = 0;
     private int pageSize = 25;
@@ -45,7 +44,7 @@ public class ItemView extends VerticalLayout {
     public ItemView(ItemService itemService, SecurityService securityService) {
 
         this.itemService = itemService;
-  //      this.securityService=securityService;
+        // this.securityService=securityService;
 
         setSizeFull();
         setPadding(true);
@@ -56,9 +55,11 @@ public class ItemView extends VerticalLayout {
 
         Button addButton = new Button("Add Item");
         addButton.addClickListener(e -> {
-            ItemForm form = new ItemForm(itemService,securityService);
+            ItemForm form = new ItemForm(itemService, securityService);
             form.open();
         });
+
+        addButton.setVisible(securityService.canAccessView("item-form"));
 
         HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
         headerLayout.setWidthFull();
@@ -73,8 +74,7 @@ public class ItemView extends VerticalLayout {
                 itemNameField,
                 itemCodeField,
                 searchButton,
-                clearButton
-        );
+                clearButton);
 
         filterLayout.setAlignItems(Alignment.END);
         filterLayout.setWidthFull();
@@ -104,30 +104,18 @@ public class ItemView extends VerticalLayout {
         });
 
         HorizontalLayout paginationLayout = new HorizontalLayout(
-                                previousButton,
-                                pageInfo,
-                                nextButton,
-                                new Span("Page Size"),
-                                pageSizeField);
+                previousButton,
+                pageInfo,
+                nextButton,
+                new Span("Page Size"),
+                pageSizeField);
 
         paginationLayout.setWidthFull();
         paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         paginationLayout.setAlignItems(Alignment.CENTER);
 
         // GRID
-        itemGrid.addComponentColumn(item -> {
-
-            Button idButton = new Button(String.valueOf(item.getItemId()));
-
-            idButton.addClickListener(e -> {
-                getUI().ifPresent(ui ->
-                        ui.navigate("item-details/" + item.getItemId())
-                );
-            });
-
-            return idButton;
-
-        }).setHeader("Item ID").setAutoWidth(true);
+        itemGrid.addColumn(Item::getItemId).setHeader("Item ID").setAutoWidth(true);
 
         itemGrid.addColumn(Item::getItemName)
                 .setHeader("Item Name")
@@ -136,23 +124,19 @@ public class ItemView extends VerticalLayout {
         itemGrid.addColumn(Item::getItemCode)
                 .setHeader("Item Code")
                 .setAutoWidth(true);
-        
+
         itemGrid.addColumn(Item::getUnitPrice)
                 .setHeader("Unit Amount");
-
-        
 
         itemGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         itemGrid.setSizeFull();
 
-        itemGrid.addItemClickListener(event -> {
+        itemGrid.addItemDoubleClickListener(event -> {
             Item item = event.getItem();
-
-            Notification.show(
-                    "Item: " + item.getItemName(),
-                    3000,
-                    Notification.Position.TOP_CENTER
-            );
+            getUI().ifPresent(ui ->
+            ui.navigate(
+                    "item-details/"
+                            + item.getItemId()));
         });
 
         // LOAD
@@ -167,15 +151,13 @@ public class ItemView extends VerticalLayout {
         Page<Item> page = itemService.getAllItems(
                 currentFilter,
                 currentPage,
-                pageSize
-        );
+                pageSize);
 
         itemGrid.setItems(page.getContent());
 
         pageInfo.setText(
                 "Page " + (currentPage + 1)
-                        + " of " + page.getTotalPages()
-        );
+                        + " of " + page.getTotalPages());
     }
 
     private void applyFilter() {

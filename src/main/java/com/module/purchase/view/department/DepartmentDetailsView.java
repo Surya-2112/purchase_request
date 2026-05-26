@@ -153,6 +153,10 @@ public class DepartmentDetailsView extends VerticalLayout
             dialog.open();
         });
 
+        updateButton.setVisible(securityService.canAccessView("department-edit"));
+
+        deleteButton.setVisible(securityService.canAccessView("department-form"));
+
         HorizontalLayout buttonLayout =
                 new HorizontalLayout(
                         updateButton,

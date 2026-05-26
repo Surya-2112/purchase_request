@@ -105,6 +105,8 @@ public class DepartmentBudgetView extends VerticalLayout {
                         form.open();
                 });
 
+                addButton.setVisible(securityService.canAccessView("department-budget-form"));
+
                 headerLayout.add(title, addButton);
 
                 headerLayout.setWidthFull();
@@ -139,15 +141,7 @@ public class DepartmentBudgetView extends VerticalLayout {
                 filterLayout.setWidthFull();
 
                 // GRID
-                departmentBudgetGrid.addComponentColumn(departmentBudget -> {
-                        Button idButton = new Button(String.valueOf(departmentBudget.getDepartmentBudgetId()));
-                        idButton.addClickListener(event -> {
-
-                                getUI().ifPresent(ui -> ui.navigate("department-budget-details/"
-                                                + departmentBudget.getDepartmentBudgetId()));
-                        });
-                        return idButton;
-                })
+                departmentBudgetGrid.addColumn(DepartmentBudgetDTO :: getDepartmentBudgetId )
                                 .setHeader("Budget ID")
                                 .setAutoWidth(true);
 
@@ -177,14 +171,12 @@ public class DepartmentBudgetView extends VerticalLayout {
 
                 departmentBudgetGrid.setSizeFull();
 
-                departmentBudgetGrid.addItemClickListener(event -> {
+                departmentBudgetGrid.addItemDoubleClickListener(event -> {
 
                         DepartmentBudgetDTO departmentBudget = event.getItem();
 
-                        Notification.show("Department : " + (departmentBudget.getDepartment() == null ? ""
-                                        : departmentBudget.getDepartment().getDepartmentName()),
-                                        3000,
-                                        Notification.Position.TOP_CENTER);
+                         getUI().ifPresent(ui -> ui.navigate("department-budget-details/"
+                                                + departmentBudget.getDepartmentBudgetId()));
 
                 });
 

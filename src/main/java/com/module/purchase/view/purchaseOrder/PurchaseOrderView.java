@@ -15,6 +15,7 @@ import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -233,18 +234,7 @@ public class PurchaseOrderView extends VerticalLayout {
 
         poGrid.removeAllColumns();
 
-        poGrid.addComponentColumn(po -> {
-
-            Button btn = new Button(String.valueOf(po.getPurchaseOrderId()));
-
-            btn.addClickListener(event ->getUI().ifPresent(ui ->
-                            ui.navigate(
-                                    "purchase-order-details/"
-                                            + po.getPurchaseOrderId()
-                            )) );
-            return btn;
-
-        }).setHeader("PO ID");
+        poGrid.addColumn( PurchaseOrderDTO::getPurchaseOrderId).setHeader("PO ID");
 
         poGrid.addColumn(po ->
 
@@ -272,6 +262,15 @@ public class PurchaseOrderView extends VerticalLayout {
         poGrid.setWidthFull();
 
         poGrid.setHeightFull();
+
+        poGrid.addItemDoubleClickListener(event->{
+               PurchaseOrderDTO po=event.getItem();
+
+               getUI().ifPresent(ui ->
+                        ui.navigate("purchase-order-details/"+ po.getPurchaseOrderId()));
+        
+        });
+        poGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
     }
 
     // =========================================================

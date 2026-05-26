@@ -90,6 +90,7 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
         vendorEmailField.setValue(
                 vendor.getVendorEmail() == null ? "" : vendor.getVendorEmail()
         );
+        vendorEmailField.setReadOnly(true);
 
         vendorPhoneField.setValue(
                 vendor.getVendorPhone() == null ? "" : vendor.getVendorPhone()
@@ -102,6 +103,8 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
                         ? "Active"
                         : "Inactive"
         );
+
+        activeField.setReadOnly(!securityService.canAccessView("vendor-form"));
 
         // ADDRESS
         Address address = vendor.getVendorAddress();

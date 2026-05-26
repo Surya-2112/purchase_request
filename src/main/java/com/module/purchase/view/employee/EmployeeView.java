@@ -18,7 +18,6 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -59,8 +58,7 @@ public class EmployeeView extends VerticalLayout {
 
                 departmentField.setItems(departmentService.getDepartments());
 
-                roleField.setItems(
-                                roleService.getRoles());
+                roleField.setItems(roleService.getRoles());
 
                 departmentField.setItemLabelGenerator(
                                 Department::getDepartmentName);
@@ -131,6 +129,8 @@ public class EmployeeView extends VerticalLayout {
                 
                         getUI().ifPresent(ui -> ui.navigate("employee-form"));
                 });
+
+                addButton.setVisible(securityService.canAccessView("employee-form"));
                 
 
                 headerLayout.add(title, addButton);
@@ -159,22 +159,7 @@ public class EmployeeView extends VerticalLayout {
                 filterLayout.setWidthFull();
 
                 // GRID COLUMNS
-                employeeGrid.addComponentColumn(employee -> {
-                
-                        Button employeeIdButton = new Button(String.valueOf(employee.getEmployeeId()));
-                        employeeIdButton.addClickListener(event -> {
-                                if(securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(employee.getEmployeeId()) 
-                                   || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.SUPER_ADMIN)
-                                   || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.MANAGER))
-                                {
-                                getUI().ifPresent(ui -> ui.navigate("employee-details/" + employee.getEmployeeId()));
-                                }else{
-                                        Notification.show("You have no permission to view others details", 3000, Position.TOP_CENTER);
-                                }
-                        });
-                        return employeeIdButton;
-
-                })
+                employeeGrid.addColumn(EmployeeDTO::getEmployeeId)
                                 .setHeader("Employee ID")
                                 .setAutoWidth(true);
 
@@ -203,16 +188,18 @@ public class EmployeeView extends VerticalLayout {
                 employeeGrid.setSizeFull();
 
                 // GRID ROW CLICK
-                employeeGrid.addItemClickListener(event -> {
+                employeeGrid.addItemDoubleClickListener(event -> {
 
                         EmployeeDTO employee = event.getItem();
-
-                        Notification.show(
-                                        "Employee: " + employee.getEmployeeName()
-                                                        + " | Department: " + employee.getDepartment()
-                                                        + " | Role: " + employee.getRole(),
-                                        5000,
-                                        Notification.Position.TOP_CENTER);
+                        if(securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(employee.getEmployeeId()) 
+                        || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.MANAGER)){
+                        getUI().ifPresent(ui -> ui.navigate("employee-details/" + employee.getEmployeeId()));
+                        }else{
+                                Notification.show(
+                                "Access Denied",
+                                3000,
+                                Notification.Position.MIDDLE);
+                        }
                 });
 
                 // LOAD DEFAULT DATA

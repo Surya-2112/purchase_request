@@ -103,6 +103,8 @@ public class UsersView extends VerticalLayout {
             form.open();
         });
 
+        addButton.setVisible(securityService.canAccessView("user-form"));
+
         HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
@@ -127,16 +129,7 @@ public class UsersView extends VerticalLayout {
         filterLayout.setWidthFull();
 
         // GRID
-        userGrid.addComponentColumn(user -> {
-
-            Button userIdButton = new Button(String.valueOf(user.getUserId()));
-
-            userIdButton.addClickListener(e -> {
-                getUI().ifPresent(ui -> ui.navigate("user-details/" + user.getUserId()));
-            });
-
-            return userIdButton;
-        })
+        userGrid.addColumn(UsersDTO::getUserId)
                 .setHeader("User ID")
                 .setAutoWidth(true);
 
@@ -152,10 +145,9 @@ public class UsersView extends VerticalLayout {
         userGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         userGrid.setSizeFull();
 
-        userGrid.addItemClickListener(event -> {
+        userGrid.addItemDoubleClickListener(event -> {
             UsersDTO user = event.getItem();
-            Notification.show("User: " + user.getUserName(), 3000,
-                    Notification.Position.TOP_CENTER);
+           getUI().ifPresent(ui -> ui.navigate("user-details/" + user.getUserId()));
         });
 
         loadUsers();

@@ -11,5 +11,6 @@ public enum EmployeeGroup {
     PURCHASE,
     HR,
     CEO,
-    DEPARTMENT_HEAD
+    DEPARTMENT_HEAD,
+    AUDITOR
 }

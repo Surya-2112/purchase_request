@@ -81,14 +81,16 @@ public class EmployeeEditView extends VerticalLayout
                                 Department::getDepartmentName);
 
                 // LOAD ROLES
-                roleField.setItems(
-                                roleService.getRoles());
+                roleField.setItems(roleService.getRoles());
 
-                roleField.setItemLabelGenerator(
-                                Role::getRoleName);
+                roleField.setReadOnly(!securityService.canAccessView("employee-form"));
+
+                roleField.setItemLabelGenerator(Role::getRoleName);
 
                 // ACTIVE FIELD
                 activeField.setItems("Active", "Inactive");
+
+                activeField.setReadOnly(!securityService.canAccessView("employee-form"));
 
                 employeeEmailField.setReadOnly(true);
         }

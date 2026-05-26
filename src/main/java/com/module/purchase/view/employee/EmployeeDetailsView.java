@@ -126,9 +126,6 @@ public class EmployeeDetailsView extends VerticalLayout
 
         deleteButton.addClickListener(clickEvent -> {
 
-        if(securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.SUPER_ADMIN)
-                   || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.MANAGER)){
-
             ConfirmDialog dialog = new ConfirmDialog();
 
             dialog.setHeader("Delete Employee");
@@ -161,11 +158,11 @@ public class EmployeeDetailsView extends VerticalLayout
 
             });
 
-            dialog.open();
-         }else{
-                        Notification.show("Not Have a permission to delete", 3000, Position.TOP_CENTER);
-                   }
-        });
+            dialog.open();});
+        
+        deleteButton.setVisible(securityService.canAccessView("employee-form"));
+
+        updateButton.setVisible(securityService.canAccessView("employee-edit"));
 
         HorizontalLayout buttonLayout = new HorizontalLayout(updateButton, deleteButton);
 

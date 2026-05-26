@@ -77,11 +77,14 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
         // SET VALUES
         userNameField.setValue(user.getUserName() == null ? "" : user.getUserName());
         userEmailField.setValue(user.getUserEmail() == null ? "" : user.getUserEmail());
+        userEmailField.setReadOnly(true);
 
         employeeField.setValue(user.getEmployee());
+        employeeField.setReadOnly(true);
 
         activeField.setValue(Boolean.TRUE.equals(user.getActive()) ? "Active" : "Inactive");
 
+        activeField.setReadOnly(!securityService.canAccessView("user-form"));
         // FORM
         FormLayout formLayout = new FormLayout();
 

@@ -349,10 +349,15 @@ public class PurchaseRequestDetailsView extends VerticalLayout
                 )
                 .setHeader("Unit Price");
 
+        lineGrid.addColumn( line->
+
+                line.getItem()==null? " ": line.getItem().getVATCode()
+
+        ).setHeader("VAT Code");
+
         lineGrid.addColumn(
                         PurchaseRequestLine::getDiscount
-                )
-                .setHeader("Discount");
+                ).setHeader("Discount");
 
         lineGrid.addColumn(
                         PurchaseRequestLine::getTotalPrice

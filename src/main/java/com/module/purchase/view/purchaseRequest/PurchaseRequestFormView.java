@@ -31,6 +31,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
@@ -46,7 +47,7 @@ public class PurchaseRequestFormView extends VerticalLayout
 
 //     private final DepartmentService departmentService;
 
-//     private final ItemService itemService;
+//     private final Item item;
 
     private final PurchaseRequestLineService lineService;
 
@@ -62,20 +63,17 @@ public class PurchaseRequestFormView extends VerticalLayout
 
     private final ComboBox<Vendor> vendorField= new ComboBox<>("Vendor");
 
-    private final ComboBox<Item> itemField =
-            new ComboBox<>("Item");
+    private final ComboBox<Item> itemField = new ComboBox<>("Item");
 
-    private final IntegerField quantityField =
-            new IntegerField("Quantity");
+    private final IntegerField quantityField = new IntegerField("Quantity");
 
-    private final NumberField unitPriceField =
-            new NumberField("Unit Price");
+    private final NumberField unitPriceField = new NumberField("Unit Price");
 
-    private final NumberField discountField =
-            new NumberField("Discount");
+    private final NumberField discountField = new NumberField("Discount");
 
-    private final List<PurchaseRequestLine> lines =
-            new ArrayList<>();
+    private final List<PurchaseRequestLine> lines = new ArrayList<>();
+
+    private final TextField VATCodeField= new TextField("VAT Code");
 
     private PurchaseRequestHeader editingHeader = null;
 
@@ -84,8 +82,7 @@ public class PurchaseRequestFormView extends VerticalLayout
     private final Grid<PurchaseRequestLine> lineGrid =
             new Grid<>(PurchaseRequestLine.class, false);
 
-    private final Button saveButton =
-            new Button("Save & Go To Approval");
+    private final Button saveButton = new Button("Save & Go To Approval");
 
     public PurchaseRequestFormView(
 
@@ -113,39 +110,35 @@ public class PurchaseRequestFormView extends VerticalLayout
 
         setSpacing(true);
 
-        departmentField.setItems(
-                departmentService.getDepartments()
-        );
+        departmentField.setItems( departmentService.getDepartments());
 
-        departmentField.setItemLabelGenerator(
-                Department::getDepartmentName
-        );
+        departmentField.setItemLabelGenerator(Department::getDepartmentName);
 
         vendorField.setItems(vendorService.getVendors());
 
         vendorField.setItemLabelGenerator(Vendor::getVendorName);
 
-        itemField.setItems(
-                itemService.getItems()
-        );
+        itemField.setItems(itemService.getItems());
+        itemField.setItemLabelGenerator(Item::getItemName);
 
-        itemField.setItemLabelGenerator(
-                Item::getItemName);
-
-        createdDateField.setValue(
-                LocalDate.now()
-        );
+        createdDateField.setValue(LocalDate.now() );
 
         quantityField.setValue(1);
+        quantityField.setWidth("100px");
 
-        unitPriceField.setValue(0.0);
+        itemField.addValueChangeListener( event ->{
+        Item item = event.getValue();
+        unitPriceField.setValue(item==null ? 0.0 : item.getUnitPrice());
+        VATCodeField.setValue(item==null ?" " :item.getVATCode());
+        VATCodeField.setReadOnly(true);
+        });
 
         discountField.setValue(0.0);
+        discountField.setWidth("100px");
 
         configureGrid();
 
-        Button addLineButton =
-                new Button(
+        Button addLineButton = new Button(
                         "Add / Update Line",
                         e -> addLine()
                 );
@@ -164,6 +157,8 @@ public class PurchaseRequestFormView extends VerticalLayout
                         quantityField,
 
                         unitPriceField,
+
+                        VATCodeField,
 
                         discountField,
 
@@ -244,8 +239,7 @@ public class PurchaseRequestFormView extends VerticalLayout
 
         lines.addAll(
 
-                lineService
-                        .getPurchaseRequestLineByHeader(
+                lineService .getPurchaseRequestLineByHeader(
                                 editingHeader
                         )
         );
@@ -253,9 +247,7 @@ public class PurchaseRequestFormView extends VerticalLayout
         lineGrid.getDataProvider()
                 .refreshAll();
 
-        saveButton.setText(
-                "Update & Go To Approval"
-        );
+        saveButton.setText( "Update & Go To Approval");
     }
 
     // ================= GRID =================
@@ -275,23 +267,27 @@ public class PurchaseRequestFormView extends VerticalLayout
                 )
 
                 .setHeader("Item")
-
-                .setAutoWidth(true);
+                .setWidth("80px");
 
         lineGrid.addColumn(
                         PurchaseRequestLine::getQuantity
                 )
-                .setHeader("Quantity");
+                .setHeader("Quantity")
+                .setWidth("50px");
 
         lineGrid.addColumn(
                         PurchaseRequestLine::getUnitPrice
                 )
                 .setHeader("Unit Price");
 
+        lineGrid.addColumn(line->
+                line.getItem()==null? " " :line.getItem().getVATCode()
+         ).setHeader("VAT code").setWidth("80px");
+
         lineGrid.addColumn(
                         PurchaseRequestLine::getDiscount
                 )
-                .setHeader("Discount");
+                .setHeader("Discount").setWidth("50px");;
 
         lineGrid.addColumn(
                         PurchaseRequestLine::getTotalPrice
@@ -342,63 +338,108 @@ public class PurchaseRequestFormView extends VerticalLayout
 
     private void addLine() {
 
-        if (itemField.isEmpty()) {
+    if (itemField.isEmpty()) {
 
-            Notification.show(
-                    "Please select item"
-            );
+        Notification.show(
+                "Please select item"
+        );
 
-            return;
+        return;
+    }
+
+    Integer qtyValue =
+            quantityField.getValue();
+
+    Double priceValue =
+            unitPriceField.getValue();
+
+    Double discountValue =
+            discountField.getValue();
+
+    int qty =
+            qtyValue == null ? 0 : qtyValue;
+
+    double price =
+            priceValue == null ? 0 : priceValue;
+
+    double discount =
+            discountValue == null ? 0 : discountValue;
+
+    double total =
+            (qty * price) - discount;
+
+    // ================= UPDATE =================
+
+    if (editingLine != null) {
+
+        editingLine.setItem(
+                itemField.getValue()
+        );
+
+        editingLine.setQuantity(qty);
+
+        editingLine.setUnitPrice(price);
+
+        editingLine.setDiscount(discount);
+
+        editingLine.setTotalPrice(total);
+
+        Notification.show(
+                "Line updated"
+        );
+
+        editingLine = null;
+
+    } else {
+
+        // ================= CHECK EXISTING ITEM =================
+
+        PurchaseRequestLine existingLine = null;
+
+        for (PurchaseRequestLine line : lines) {
+
+            if (line.getItem() != null
+                    && line.getItem()
+                            .getItemId()
+                            .equals(
+                                    itemField.getValue()
+                                            .getItemId()
+                            )) {
+
+                existingLine = line;
+
+                break;
+            }
         }
 
-        Integer qtyValue =
-                quantityField.getValue();
+        // ================= UPDATE EXISTING ROW =================
 
-        Double priceValue =
-                unitPriceField.getValue();
+        if (existingLine != null) {
 
-        Double discountValue =
-                discountField.getValue();
+            int newQty =
+                    existingLine.getQuantity() + qty;
 
-        int qty =
-                qtyValue == null ? 0 : qtyValue;
+            existingLine.setQuantity(newQty);
 
-        double price =
-                priceValue == null ? 0 : priceValue;
+            existingLine.setUnitPrice(price);
 
-        double discount =
-                discountValue == null
-                        ? 0
-                        : discountValue;
-
-        double total =
-                (qty * price) - discount;
-
-        // ================= UPDATE =================
-
-        if (editingLine != null) {
-
-            editingLine.setItem(
-                    itemField.getValue()
+            existingLine.setDiscount(
+                    existingLine.getDiscount() + discount
             );
 
-            editingLine.setQuantity(qty);
+            double updatedTotal =
+                    (newQty * price)
+                            - existingLine.getDiscount();
 
-            editingLine.setUnitPrice(price);
-
-            editingLine.setDiscount(discount);
-
-            editingLine.setTotalPrice(total);
+            existingLine.setTotalPrice(updatedTotal);
 
             Notification.show(
-                    "Line updated"
+                    "Existing item quantity updated"
             );
-
-            editingLine = null;
 
         } else {
 
-            // ================= ADD =================
+            // ================= NEW ROW =================
 
             PurchaseRequestLine line =
                     new PurchaseRequestLine();
@@ -421,13 +462,13 @@ public class PurchaseRequestFormView extends VerticalLayout
                     "Line added"
             );
         }
-
-        lineGrid.getDataProvider()
-                .refreshAll();
-
-        clearLine();
     }
 
+    lineGrid.getDataProvider()
+            .refreshAll();
+
+    clearLine();
+}
     // ================= EDIT LINE =================
 
     private void editLine(

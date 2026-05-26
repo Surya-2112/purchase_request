@@ -29,7 +29,7 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
     // FIELDS
     private final TextField itemNameField = new TextField("Item Name");
     private final TextField itemCodeField = new TextField("Item Code");
-    private final NumberField unitPriceField = new NumberField("unit Price");
+    private final NumberField unitPriceField = new NumberField("Unit Price");
     private final TextField VATCodeField = new TextField("VAT code");
 
     private Item item;

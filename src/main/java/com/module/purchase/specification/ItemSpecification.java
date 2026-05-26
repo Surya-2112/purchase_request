@@ -16,13 +16,13 @@ public class ItemSpecification {
     {
         return (root,query,cb)->
             itemCode == null || itemCode.isEmpty() ? null
-            : cb.like(root.get("itemCode"),"%"+itemCode+"%");
+            : cb.like(cb.lower(root.get("itemCode")),"%"+itemCode.toLowerCase()+"%");
     }
 
     public static Specification<Item> hasItemName(String itemName)
     {
         return (root,query,cb)->
             itemName == null || itemName.isEmpty() ?null
-            : cb.like(root.get("itemName"),"%"+itemName+"%"); 
+            : cb.like(cb.lower(root.get("itemName")),"%"+itemName.toLowerCase()+"%"); 
     }
 }

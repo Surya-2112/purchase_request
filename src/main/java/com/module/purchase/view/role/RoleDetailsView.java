@@ -138,6 +138,10 @@ public class RoleDetailsView extends VerticalLayout implements HasUrlParameter<L
 
                         dialog.open();
                 });
+                
+                updateButton.setVisible(securityService.canAccessView("role-edit"));
+                deleteButton.setVisible(securityService.canAccessView("role-form"));
+                
                 HorizontalLayout buttonLayout = new HorizontalLayout(updateButton,deleteButton);
 
                 add( title,formLayout, buttonLayout);

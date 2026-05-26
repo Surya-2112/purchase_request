@@ -82,13 +82,11 @@ public class AssigningApprovalsDetailsView extends VerticalLayout
 
     // ================= COMMENTS =================
 
-    private final TextArea comments =
-            new TextArea("Comments");
+    private final TextArea comments =new TextArea("Comments");
 
     // ================= GRID =================
 
-    private final Grid<PurchaseRequestLine> lineGrid =
-            new Grid<>(PurchaseRequestLine.class, false);
+    private final Grid<PurchaseRequestLine> lineGrid =new Grid<>(PurchaseRequestLine.class, false);
 
     public AssigningApprovalsDetailsView(
             PurchaseRequestHeaderService headerService,

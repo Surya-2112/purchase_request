@@ -142,6 +142,8 @@ public class RoleView extends VerticalLayout {
             form.open();
         });
 
+        addButton.setVisible(securityService.canAccessView("role-form"));
+
         headerLayout.add(
                 title,
                 addButton);
@@ -183,24 +185,7 @@ public class RoleView extends VerticalLayout {
         // GRID COLUMNS
 
         // ROLE ID
-        roleGrid.addComponentColumn(role -> {
-
-            Button roleIdButton =
-                    new Button(
-                            String.valueOf(
-                                    role.getRoleId()));
-
-            roleIdButton.addClickListener(event -> {
-
-                getUI().ifPresent(ui ->
-                        ui.navigate(
-                                "role-details/"
-                                        + role.getRoleId()));
-            });
-
-            return roleIdButton;
-
-        })
+        roleGrid.addColumn(Role::getRoleId)
         .setHeader("Role ID")
         .setAutoWidth(true);
 
@@ -243,16 +228,12 @@ public class RoleView extends VerticalLayout {
         // GRID ROW CLICK
         roleGrid.addItemClickListener(event -> {
 
-            Role role =
-                    event.getItem();
+            Role role = event.getItem();
 
-            Notification.show(
-                    "Role : "
-                            + (role.getRoleName() == null
-                                    ? ""
-                                    : role.getRoleName()),
-                    3000,
-                    Notification.Position.TOP_CENTER);
+            getUI().ifPresent(ui ->
+                        ui.navigate(
+                                "role-details/"
+                                        + role.getRoleId()));
 
         });
 

@@ -121,12 +121,11 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
             dialog.open();
         });
 
-        deleteButton.setVisible(false);
+        updateButton.setVisible( securityService.canAccessView("user-edit"));
 
-         if (securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.SUPER_ADMIN)
-                || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.MANAGER) ) {
-                        deleteButton.setVisible(true);
-                }
+        deleteButton.setVisible(securityService.canAccessView("user-form"));
+        
+
         HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 
         add(title, formLayout, buttons);

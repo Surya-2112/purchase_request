@@ -176,6 +176,9 @@ public class VendorDetailsView extends VerticalLayout implements HasUrlParameter
             dialog.open();
         });
 
+        updateButton.setVisible(securityService.canAccessView("vendor-edit"));
+        deleteButton.setVisible(securityService.canAccessView("vendor-form"));
+
         HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 
         add(title, formLayout, buttons);

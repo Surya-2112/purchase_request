@@ -7,6 +7,7 @@ import com.module.purchase.entityDTO.AssigningConfigDTO;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.AssigningConfigService;
+import com.module.purchase.service.EmployeeService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -52,7 +53,7 @@ public class AssigningConfigView extends VerticalLayout {
 
     private AssigningConfigDTO currentFilter = new AssigningConfigDTO();
 
-    public AssigningConfigView(AssigningConfigService assigningConfigService, SecurityService securityService) {
+    public AssigningConfigView(AssigningConfigService assigningConfigService, SecurityService securityService, EmployeeService employeeService) {
 
         this.assigningConfigService = assigningConfigService;
 
@@ -76,10 +77,12 @@ public class AssigningConfigView extends VerticalLayout {
 
         addButton.addClickListener(event -> {
 
-            AssigningConfigForm form = new AssigningConfigForm(assigningConfigService,securityService);
+            AssigningConfigForm form = new AssigningConfigForm(assigningConfigService,employeeService ,securityService);
 
             form.open();
         });
+
+        addButton.setVisible(securityService.canAccessView("assigning-config-form"));
 
         headerLayout.add(title,addButton);
 
@@ -114,20 +117,7 @@ public class AssigningConfigView extends VerticalLayout {
         filterLayout.setWidthFull();
 
         // GRID
-        assigningConfigGrid.addComponentColumn(config -> {
-
-            Button idButton =
-                    new Button(
-                            String.valueOf(config.getId()));
-
-            idButton.addClickListener(event -> {
-
-                getUI().ifPresent(ui ->ui.navigate("assigning-config-details/"+ config.getId()));
-            });
-
-            return idButton;
-
-        }).setHeader("Config ID")
+        assigningConfigGrid.addColumn(AssigningConfigDTO::getId).setHeader("Config ID")
                 .setAutoWidth(true);
 
         assigningConfigGrid.addColumn(
@@ -154,16 +144,11 @@ public class AssigningConfigView extends VerticalLayout {
 
         assigningConfigGrid.setSizeFull();
 
-        assigningConfigGrid.addItemClickListener(event -> {
+        assigningConfigGrid.addItemDoubleClickListener(event -> {
 
-            AssigningConfigDTO config =
-                    event.getItem();
+            AssigningConfigDTO config = event.getItem();
 
-            Notification.show(
-                    "Approval Type : "
-                            + config.getApprovalType(),
-                    3000,
-                    Notification.Position.TOP_CENTER);
+            getUI().ifPresent(ui ->ui.navigate("assigning-config-details/"+ config.getId()));
         });
 
         // PAGINATION

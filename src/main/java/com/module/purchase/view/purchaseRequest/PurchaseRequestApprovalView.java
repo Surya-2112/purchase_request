@@ -42,7 +42,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
     private final Span totalBudgetSpan = new Span();
     private final Span remainingBudgetSpan = new Span();
 
-    private final Button addBtn = new Button("Add Line");
+    private final Button addBtn = new Button("Add Approver");
     private final Button saveBtn = new Button("Save");
 
     private boolean budgetMissing = false;
@@ -74,14 +74,12 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
                 new H2("Purchase Request Approval Setup"),
                 buildBudgetLayout(),
                 new HorizontalLayout(addBtn, saveBtn),
-                grid
-        );
+                grid);
     }
 
     private VerticalLayout buildBudgetLayout() {
         VerticalLayout layout = new VerticalLayout(
-                budgetTitle, yearSpan, totalBudgetSpan, remainingBudgetSpan
-        );
+                budgetTitle, yearSpan, totalBudgetSpan, remainingBudgetSpan);
 
         layout.getStyle()
                 .set("border", "1px solid #ddd")
@@ -94,7 +92,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
     public void beforeEnter(BeforeEnterEvent event) {
 
         try {
-            Long id = Long.parseLong(event.getRouteParameters().get("id").orElseThrow());
+            Long id = Long.valueOf(event.getRouteParameters().get("id").orElseThrow());
 
             header = headerService.getPurchaseRequestHeaderById(id)
                     .orElseThrow(() -> new RuntimeException("Request not found"));
@@ -106,11 +104,9 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
                 return;
             }
 
-            DepartmentBudget budget =
-                    departmentBudgetService.getByDepartmentAndYear(
-                            header.getForDepartment(),
-                            Year.now()
-                    );
+            DepartmentBudget budget = departmentBudgetService.getByDepartmentAndYear(
+                    header.getForDepartment(),
+                    Year.now());
 
             if (budget == null) {
                 budgetMissing = true;
@@ -166,11 +162,9 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
             combo.setItemLabelGenerator(Employee::getEmployeeName);
 
             if (item.getSource() == ApprovalSource.AUTO) {
-                List<AssigningConfig> configs =
-                        configService.getConfigs(
-                                ApprovalType.PURCHASE_REQUEST_APPROVAL,
-                                header != null ? header.getTotalAmount() : 0
-                        );
+                List<AssigningConfig> configs = configService.getConfigs(
+                        ApprovalType.PURCHASE_REQUEST_APPROVAL,
+                        header != null ? header.getTotalAmount() : 0);
 
                 AssigningConfig config = configs.stream()
                         .filter(c -> Objects.equals(c.getLevel(), item.getLevel()))
@@ -179,17 +173,13 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
                 if (config != null) {
                     combo.setItems(
                             employeeService.getEmployeesByEmployeeGroup(
-                                    config.getEmployeeGroup()
-                            )
-                    );
+                                    config.getEmployeeGroup()));
                 }
             } else {
-                combo.setItems(employeeService.getEmployees());
+                combo.setItems(employeeService.getEmployeesByEmployeeGroup(EmployeeGroup.ADMIN));
             }
-
             combo.setValue(item.getApprover());
             combo.addValueChangeListener(e -> item.setApprover(e.getValue()));
-
             return combo;
         }).setHeader("Approver");
 
@@ -197,8 +187,8 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
                 .setHeader("Source");
 
         grid.addComponentColumn(item -> {
-            Button delete = new Button("Delete");
 
+            Button delete = new Button("Delete");
             delete.addClickListener(e -> {
                 if (budgetMissing) {
                     Notification.show("Budget missing - action blocked");
@@ -208,9 +198,15 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
                 grid.setItems(approvals);
             });
 
+            if (item.getSource().equals(ApprovalSource.AUTO)) {
+
+                delete.setVisible(false);
+            }
+
             delete.setEnabled(!budgetMissing);
+
             return delete;
-        });
+        }).setHeader("Action");
 
         grid.setItems(approvals);
         grid.setAllRowsVisible(true);
@@ -220,23 +216,21 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
 
         approvals.clear();
 
-        List<AssigningConfig> configs =
-                configService.getConfigs(
-                        ApprovalType.PURCHASE_REQUEST_APPROVAL,
-                        header.getTotalAmount()
-                );
+        List<AssigningConfig> configs = configService.getConfigs(
+                ApprovalType.PURCHASE_REQUEST_APPROVAL,
+                header.getTotalAmount());
 
-        for (AssigningConfig c : configs) {
+        configs.sort( Comparator.comparing(AssigningConfig::getLevel));
 
-            AssigningApprovals a = new AssigningApprovals();
-            a.setLevel(c.getLevel());
-            a.setStatus(Status.DRAFT);
-            a.setApprovalType(ApprovalType.PURCHASE_REQUEST_APPROVAL);
-            a.setSource(ApprovalSource.AUTO);
-
-            approvals.add(a);
+        for (AssigningConfig config : configs) {
+            AssigningApprovals approval = new AssigningApprovals();
+            approval.setLevel(config.getLevel());
+            approval.setStatus(Status.DRAFT);
+            approval.setApprovalType(ApprovalType.PURCHASE_REQUEST_APPROVAL);
+            approval.setSource(ApprovalSource.AUTO);
+            approval.setApprover(config.getDefaultApprover());
+            approvals.add(approval);
         }
-
         grid.setItems(approvals);
     }
 
@@ -293,7 +287,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
 
         header.setStatus(Status.WAITING_APPROVAL);
         header.setLevel(approvals.size());
-        headerService.updatePurchaseRequestHeader( header,securityService.getLoggedInUser().getEmployee());
+        headerService.updatePurchaseRequestHeader(header, securityService.getLoggedInUser().getEmployee());
 
         Notification.show("Saved successfully", 3000, Position.TOP_CENTER);
 

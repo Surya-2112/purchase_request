@@ -21,166 +21,162 @@ import jakarta.annotation.security.PermitAll;
 @Route(value = "assigning-config-details", layout = MainLayout.class)
 @PermitAll
 public class AssigningConfigDetailsView extends VerticalLayout
-        implements HasUrlParameter<Long> {
+                implements HasUrlParameter<Long> {
 
-    private final AssigningConfigService assigningConfigService;
+        private final AssigningConfigService assigningConfigService;
 
-    private final SecurityService securityService;
+        private final SecurityService securityService;
 
-    public AssigningConfigDetailsView(AssigningConfigService assigningConfigService,SecurityService securityService) {
+        public AssigningConfigDetailsView(AssigningConfigService assigningConfigService,
+                        SecurityService securityService) {
 
-        this.assigningConfigService = assigningConfigService;
-        this.securityService=securityService;
+                this.assigningConfigService = assigningConfigService;
+                this.securityService = securityService;
 
-        setSizeFull();
+                setSizeFull();
 
-        setPadding(true);
+                setPadding(true);
 
-        setSpacing(true);
-    }
-
-    @Override
-    public void setParameter(
-            BeforeEvent event,
-            Long assigningConfigId) {
-
-        removeAll();
-
-        AssigningConfig assigningConfig =
-                assigningConfigService
-                        .getAssigningConfigById(
-                                assigningConfigId)
-                        .orElse(null);
-
-        if (assigningConfig == null) {
-
-            add(new Span("Assigning Config Not Found"));
-
-            return;
+                setSpacing(true);
         }
 
-        H2 title =
-                new H2("Assigning Config Details");
+        @Override
+        public void setParameter(
+                        BeforeEvent event,
+                        Long assigningConfigId) {
 
-        FormLayout formLayout =
-                new FormLayout();
+                removeAll();
 
-        // ID
-        formLayout.addFormItem(
-                new Span(
-                        String.valueOf(
-                                assigningConfig.getId())),
-                "Config ID");
+                AssigningConfig assigningConfig = assigningConfigService
+                                .getAssigningConfigById(
+                                                assigningConfigId)
+                                .orElse(null);
 
-        // APPROVAL TYPE
-        formLayout.addFormItem(
-                new Span(
-                        assigningConfig.getApprovalType() == null
-                                ? ""
-                                : assigningConfig
-                                        .getApprovalType()
-                                        .name()),
-                "Approval Type");
+                if (assigningConfig == null) {
 
-        // LEVEL
-        formLayout.addFormItem(
-                new Span(
-                        String.valueOf(
-                                assigningConfig.getLevel())),
-                "Level");
+                        add(new Span("Assigning Config Not Found"));
 
-        // EMPLOYEE GROUP
-        formLayout.addFormItem(
-                new Span(
-                        assigningConfig.getEmployeeGroup() == null
-                                ? ""
-                                : assigningConfig
-                                        .getEmployeeGroup()
-                                        .name()),
-                "Employee Group");
-
-        // MIN AMOUNT
-        formLayout.addFormItem(
-                new Span(
-                        String.valueOf(
-                                assigningConfig.getMinAmount())),
-                "Min Amount");
-
-        formLayout.addFormItem(
-                new Span(
-                        String.valueOf(
-                                assigningConfig.getMaxAmount())),
-                "Max Amount");
-
-        // UPDATE BUTTON
-        Button updateButton =
-                new Button("Update");
-
-        updateButton.addClickListener(clickEvent -> {
-
-            getUI().ifPresent(ui ->
-                    ui.navigate(
-                            "assigning-config-edit/"
-                                    + assigningConfig.getId()));
-        });
-
-        // DELETE BUTTON
-        Button deleteButton =
-                new Button("Delete");
-
-        deleteButton.addClickListener(clickEvent -> {
-
-            ConfirmDialog dialog =
-                    new ConfirmDialog();
-
-            dialog.setHeader(
-                    "Delete Assigning Config");
-
-            dialog.setText(
-                    "Are you sure you want to delete this assigning config?");
-
-            dialog.setCancelable(true);
-
-            dialog.setConfirmText("Delete");
-
-            dialog.setConfirmButtonTheme(
-                    "error primary");
-
-            dialog.addConfirmListener(confirmEvent -> {
-
-                try {
-
-                    assigningConfigService
-                            .deleteAssigningConfigById(assigningConfig.getId(),securityService.getLoggedInUser().getEmployee());
-
-                    Notification.show(
-                            "Assigning Config Deleted Successfully");
-
-                    getUI().ifPresent(ui ->
-                            ui.navigate(
-                                    "assigning-config"));
-
-                } catch (Exception exception) {
-
-                    Notification.show(
-                            exception.getMessage(),
-                            5000,
-                            Notification.Position.TOP_CENTER);
+                        return;
                 }
 
-            });
+                H2 title = new H2("Assigning Config Details");
 
-            dialog.open();
-        });
+                FormLayout formLayout = new FormLayout();
 
-        HorizontalLayout buttonLayout =
-                new HorizontalLayout(
-                        updateButton,
-                        deleteButton);
+                // ID
+                formLayout.addFormItem(
+                                new Span(
+                                                String.valueOf(
+                                                                assigningConfig.getId())),
+                                "Config ID");
 
-        add(
-                title,
-                formLayout,
-                buttonLayout);
-    }
+                // APPROVAL TYPE
+                formLayout.addFormItem(
+                                new Span(
+                                                assigningConfig.getApprovalType() == null
+                                                                ? ""
+                                                                : assigningConfig
+                                                                                .getApprovalType()
+                                                                                .name()),
+                                "Approval Type");
+
+                // LEVEL
+                formLayout.addFormItem(
+                                new Span(
+                                                String.valueOf(
+                                                                assigningConfig.getLevel())),
+                                "Level");
+
+                // EMPLOYEE GROUP
+                formLayout.addFormItem(
+                                new Span(
+                                                assigningConfig.getEmployeeGroup() == null
+                                                                ? ""
+                                                                : assigningConfig
+                                                                                .getEmployeeGroup()
+                                                                                .name()),
+                                "Employee Group");
+
+                // MIN AMOUNT
+                formLayout.addFormItem(
+                                new Span(
+                                                String.valueOf(
+                                                                assigningConfig.getMinAmount())),
+                                "Min Amount");
+
+                formLayout.addFormItem(new Span(String.valueOf(assigningConfig.getMaxAmount())),"Max Amount");
+
+                formLayout.addFormItem(new Span(assigningConfig.getDefaultApprover() == null? ""
+                                       : assigningConfig.getDefaultApprover().getEmployeeName()),"Default Employee");
+
+                // UPDATE BUTTON
+                Button updateButton = new Button("Update");
+
+                updateButton.addClickListener(clickEvent -> {
+
+                        getUI().ifPresent(ui -> ui.navigate(
+                                        "assigning-config-edit/"
+                                                        + assigningConfig.getId()));
+                });
+
+                // DELETE BUTTON
+                Button deleteButton = new Button("Delete");
+
+                deleteButton.addClickListener(clickEvent -> {
+
+                        ConfirmDialog dialog = new ConfirmDialog();
+
+                        dialog.setHeader(
+                                        "Delete Assigning Config");
+
+                        dialog.setText(
+                                        "Are you sure you want to delete this assigning config?");
+
+                        dialog.setCancelable(true);
+
+                        dialog.setConfirmText("Delete");
+
+                        dialog.setConfirmButtonTheme(
+                                        "error primary");
+
+                        dialog.addConfirmListener(confirmEvent -> {
+
+                                try {
+
+                                        assigningConfigService
+                                                        .deleteAssigningConfigById(assigningConfig.getId(),
+                                                                        securityService.getLoggedInUser()
+                                                                                        .getEmployee());
+
+                                        Notification.show(
+                                                        "Assigning Config Deleted Successfully");
+
+                                        getUI().ifPresent(ui -> ui.navigate(
+                                                        "assigning-config"));
+
+                                } catch (Exception exception) {
+
+                                        Notification.show(
+                                                        exception.getMessage(),
+                                                        5000,
+                                                        Notification.Position.TOP_CENTER);
+                                }
+
+                        });
+
+                        dialog.open();
+                });
+
+                updateButton.setVisible(securityService.canAccessView("assigning-config-details"));
+                deleteButton.setVisible(securityService.canAccessView("assigning-config-form"));
+
+                HorizontalLayout buttonLayout = new HorizontalLayout(
+                                updateButton,
+                                deleteButton);
+
+                add(
+                                title,
+                                formLayout,
+                                buttonLayout);
+        }
 }

@@ -30,13 +30,17 @@ public class Employee {
 
     @ManyToOne
     @JoinColumn(name = "departmentId")
-    @JsonIgnoreProperties({"employees","headEmployee"})
+    @JsonIgnoreProperties({ "employees", "headEmployee" })
     private Department department;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "roleId")
-    @JsonIgnoreProperties({"employees"})
+    @JsonIgnoreProperties({ "employees" })
     private Role role;
+
+    @OneToMany(mappedBy = "defaultApprover")
+    @JsonIgnoreProperties({ "defaultApprover" })
+    private List<AssigningConfig> assigningConfigs;
 
     @Embedded
     private Address address;
@@ -45,29 +49,28 @@ public class Employee {
 
     @OneToOne
     @JoinColumn(name = "userId")
-    @JsonIgnoreProperties({"employee"})
+    @JsonIgnoreProperties({ "employee" })
     private Users user;
 
-
     @OneToMany(mappedBy = "createdBy")
-    @JsonIgnoreProperties({"createdBy"})
+    @JsonIgnoreProperties({ "createdBy" })
     private List<PurchaseRequestHeader> purchaseRequestHeaders;
 
-    @OneToMany(mappedBy="createdBy")
-    @JsonIgnoreProperties({"createdBy"})
+    @OneToMany(mappedBy = "createdBy")
+    @JsonIgnoreProperties({ "createdBy" })
     private List<PurchaseOrderHeader> purchaseOrderHeaders;
 
     @OneToMany(mappedBy = "approver")
-    @JsonIgnoreProperties({"approver"})
+    @JsonIgnoreProperties({ "approver" })
     private List<AssigningApprovals> forApprovals;
 
     @OneToMany(mappedBy = "assignedBy")
-    @JsonIgnoreProperties({"assignedBy"})
+    @JsonIgnoreProperties({ "assignedBy" })
     private List<AssigningApprovals> assignedApprovals;
 
     @OneToMany(mappedBy = "performedBy")
-    @JsonIgnoreProperties({"performedBy"})
-    private List<AuditLogs> auditLogs;  
+    @JsonIgnoreProperties({ "performedBy" })
+    private List<AuditLogs> auditLogs;
 
     public Long getEmployeeId() {
         return employeeId;
@@ -188,5 +191,12 @@ public class Employee {
                 + active + "]";
     }
 
-    
+    public List<AssigningConfig> getAssigningConfig() {
+        return assigningConfigs;
+    }
+
+    public void setAssigningConfig(List<AssigningConfig> assigningConfigs) {
+        this.assigningConfigs = assigningConfigs;
+    }
+
 }

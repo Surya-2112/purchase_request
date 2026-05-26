@@ -69,6 +69,15 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
                 "Item Code"
         );
 
+        formLayout.addFormItem(
+            new Span(item.getUnitPrice() == null ? "" : item.getUnitPrice().toString())
+            , "Unit Price");
+
+        formLayout.addFormItem(
+            new Span(item.getVATCode() == null ? "" : item.getVATCode())
+            , "VAT Code");
+    
+
         // UPDATE BUTTON
         Button updateButton = new Button("Update");
 
@@ -98,7 +107,7 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
 
                     itemService.deleteItemById(item.getItemId(),securityService.getLoggedInUser().getEmployee());
 
-                    Notification.show(
+                    Notification.show( 
                             "Item Deleted Successfully",
                             3000,
                             Notification.Position.TOP_CENTER
@@ -118,6 +127,10 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
 
             dialog.open();
         });
+
+        deleteButton.setVisible(securityService.canAccessView("item-form"));
+
+        updateButton.setVisible(securityService.canAccessView("item-edit"));
 
         HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 

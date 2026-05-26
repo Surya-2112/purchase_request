@@ -9,6 +9,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class AssigningConfig {
@@ -28,8 +30,11 @@ public class AssigningConfig {
     private Double minAmount;
 
     private Double maxAmount;
-    
 
+    @ManyToOne
+    @JoinColumn(name = "defaultApprover")
+    private Employee defaultApprover;
+    
     public Long getId() {
         return id;
     }
@@ -78,5 +83,12 @@ public class AssigningConfig {
         this.maxAmount = maxAmount;
     }
 
+    public Employee getDefaultApprover() {
+        return defaultApprover;
+    }
+
+    public void setDefaultApprover(Employee defaultApprover) {
+        this.defaultApprover = defaultApprover;
+    }
 
 }

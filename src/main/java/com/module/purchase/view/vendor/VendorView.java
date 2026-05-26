@@ -74,6 +74,8 @@ public class VendorView extends VerticalLayout {
             form.open();
         });
 
+        addButton.setVisible(securityService.canAccessView("vendor-form"));
+
         HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
@@ -95,20 +97,7 @@ public class VendorView extends VerticalLayout {
         filterLayout.setAlignItems(Alignment.END);
 
        
-        vendorGrid.addComponentColumn(vendor -> {
-
-            Button idButton =
-                    new Button(String.valueOf(vendor.getVendorId()));
-
-            idButton.addClickListener(e -> {
-                getUI().ifPresent(ui ->
-                        ui.navigate("vendor-details/" + vendor.getVendorId())
-                );
-            });
-
-            return idButton;
-
-        }).setHeader("Vendor ID").setAutoWidth(true);
+        vendorGrid.addColumn(VendorDTO::getVendorId).setHeader("Vendor ID").setAutoWidth(true);
 
         vendorGrid.addColumn(VendorDTO::getVendorName)
                 .setHeader("Vendor Name")
@@ -127,14 +116,11 @@ public class VendorView extends VerticalLayout {
         vendorGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         vendorGrid.setSizeFull();
 
-        vendorGrid.addItemClickListener(event -> {
+        vendorGrid.addItemDoubleClickListener(event -> {
             VendorDTO vendor = event.getItem();
-
-            Notification.show(
-                    "Vendor: " + vendor.getVendorName(),
-                    3000,
-                    Notification.Position.TOP_CENTER
-            );
+           getUI().ifPresent(ui ->
+                        ui.navigate("vendor-details/" + vendor.getVendorId())
+                );
         });
 
         // =========================

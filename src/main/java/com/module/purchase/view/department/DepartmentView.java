@@ -113,6 +113,8 @@ public class DepartmentView extends VerticalLayout {
             form.open();
         });
 
+        addButton.setVisible(securityService.canAccessView("department-form"));
+
         headerLayout.add(
                 title,
                 addButton);
@@ -144,21 +146,7 @@ public class DepartmentView extends VerticalLayout {
         filterLayout.setWidthFull();
 
         // GRID COLUMNS
-        departmentGrid.addComponentColumn(department -> {
-
-            Button departmentIdButton = new Button(
-                    String.valueOf(department.getDepartmentId()));
-
-            departmentIdButton.addClickListener(event -> {
-
-                getUI().ifPresent(ui -> ui.navigate(
-                        "department-details/"
-                                + department.getDepartmentId()));
-            });
-
-            return departmentIdButton;
-
-        })
+        departmentGrid.addColumn(DepartmentDTO::getDepartmentId)
                 .setHeader("Department ID")
                 .setAutoWidth(true);
 
@@ -201,22 +189,12 @@ public class DepartmentView extends VerticalLayout {
 
         departmentGrid.setSizeFull();
 
-        // GRID ROW CLICK
-        departmentGrid.addItemClickListener(event -> {
+        departmentGrid.addItemDoubleClickListener(event -> {
 
-            DepartmentDTO department = event.getItem();
-
-            Notification.show(
-                    "Department: "
-                            + (department.getDepartmentName() == null
-                                    ? ""
-                                    : department.getDepartmentName())
-                            + " | Department Code: "
-                            + (department.getDepartmentCode() == null
-                                    ? ""
-                                    : department.getDepartmentCode()),
-                    5000,
-                    Notification.Position.TOP_CENTER);
+                DepartmentDTO department = event.getItem();
+                getUI().ifPresent(ui -> ui.navigate(
+                        "department-details/"
+                                + department.getDepartmentId()));
         });
 
         // LOAD DEFAULT DATA

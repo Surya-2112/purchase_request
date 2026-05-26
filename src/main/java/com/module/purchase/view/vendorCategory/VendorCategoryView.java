@@ -59,6 +59,8 @@ public class VendorCategoryView extends VerticalLayout {
            form.open();
         });
 
+        addButton.setVisible(securityService.canAccessView("vendor-category-form"));
+
         HorizontalLayout headerLayout =
                 new HorizontalLayout(title, addButton);
 
@@ -80,19 +82,7 @@ public class VendorCategoryView extends VerticalLayout {
         filterLayout.setAlignItems(Alignment.END);
 
         // GRID
-        categoryGrid.addComponentColumn(category -> {
-
-            Button idButton =new Button(String.valueOf(category.getCategoryId()));
-
-            idButton.addClickListener(e -> {
-                getUI().ifPresent(ui ->
-                        ui.navigate("vendor-category-details/" + category.getCategoryId())
-                );
-            });
-
-            return idButton;
-
-        }).setHeader("Category ID").setAutoWidth(true);
+        categoryGrid.addColumn(VendorCategory::getCategoryId).setHeader("Category ID").setAutoWidth(true);
 
         categoryGrid.addColumn(VendorCategory::getCategoryName)
                 .setHeader("Category Name")
@@ -101,14 +91,10 @@ public class VendorCategoryView extends VerticalLayout {
         categoryGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         categoryGrid.setSizeFull();
 
-        categoryGrid.addItemClickListener(event -> {
+        categoryGrid.addItemDoubleClickListener(event -> {
             VendorCategory category = event.getItem();
+                getUI().ifPresent(ui -> ui.navigate("vendor-category-details/" + category.getCategoryId()));
 
-            Notification.show(
-                    "Category: " + category.getCategoryName(),
-                    3000,
-                    Notification.Position.TOP_CENTER
-            );
         });
 
         // PAGINATION

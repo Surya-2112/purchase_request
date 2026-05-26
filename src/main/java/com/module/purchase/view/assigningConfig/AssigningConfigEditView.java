@@ -2,9 +2,11 @@ package com.module.purchase.view.assigningConfig;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningConfig;
+import com.module.purchase.entity.Employee;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.AssigningConfigService;
+import com.module.purchase.service.EmployeeService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -27,13 +29,16 @@ public class AssigningConfigEditView extends VerticalLayout
         implements HasUrlParameter<Long> {
 
     private final AssigningConfigService assigningConfigService;
-    
+
+    private final EmployeeService employeeService;
+
     private final SecurityService securityService;
 
     private final ComboBox<ApprovalType> approvalTypeField =
             new ComboBox<>("Approval Type");
 
-    private final IntegerField levelField = new IntegerField("Level");
+    private final IntegerField levelField =
+            new IntegerField("Level");
 
     private final ComboBox<EmployeeGroup> employeeGroupField =
             new ComboBox<>("Employee Group");
@@ -44,12 +49,19 @@ public class AssigningConfigEditView extends VerticalLayout
     private final NumberField maxAmountField =
             new NumberField("Max Amount");
 
+    private final ComboBox<Employee> defaultEmployeeField =
+            new ComboBox<>("Default Employee");
+
     private AssigningConfig assigningConfig;
 
-    public AssigningConfigEditView(AssigningConfigService assigningConfigService ,SecurityService securityService) {
+    public AssigningConfigEditView(
+            AssigningConfigService assigningConfigService,
+            EmployeeService employeeService,
+            SecurityService securityService) {
 
         this.assigningConfigService = assigningConfigService;
-        this.securityService=securityService;
+        this.employeeService = employeeService;
+        this.securityService = securityService;
 
         setSizeFull();
 
@@ -62,6 +74,29 @@ public class AssigningConfigEditView extends VerticalLayout
         // LOAD EMPLOYEE GROUPS
         employeeGroupField.setItems(
                 EmployeeGroup.values());
+
+        // DEFAULT EMPLOYEE
+        defaultEmployeeField.setItemLabelGenerator(
+                Employee::getEmployeeName);
+
+        // LOAD EMPLOYEES BASED ON GROUP
+        employeeGroupField.addValueChangeListener(event -> {
+
+            EmployeeGroup group = event.getValue();
+
+            if (group != null) {
+
+                defaultEmployeeField.setItems(
+                        employeeService
+                                .getEmployeesByEmployeeGroup(group));
+
+            } else {
+
+                defaultEmployeeField.clear();
+
+                defaultEmployeeField.setItems();
+            }
+        });
     }
 
     @Override
@@ -84,7 +119,8 @@ public class AssigningConfigEditView extends VerticalLayout
             return;
         }
 
-        H2 title =  new H2("Update Assigning Config");
+        H2 title =
+                new H2("Update Assigning Config");
 
         // SET VALUES
         approvalTypeField.setValue(
@@ -102,6 +138,18 @@ public class AssigningConfigEditView extends VerticalLayout
         maxAmountField.setValue(
                 assigningConfig.getMaxAmount());
 
+        // LOAD EMPLOYEES FOR CURRENT GROUP
+        if (assigningConfig.getEmployeeGroup() != null) {
+
+            defaultEmployeeField.setItems(
+                    employeeService.getEmployeesByEmployeeGroup(
+                            assigningConfig.getEmployeeGroup()));
+        }
+
+        // SET DEFAULT EMPLOYEE
+        defaultEmployeeField.setValue(
+                assigningConfig.getDefaultApprover());
+
         // FORM
         FormLayout formLayout =
                 new FormLayout();
@@ -111,7 +159,8 @@ public class AssigningConfigEditView extends VerticalLayout
                 levelField,
                 employeeGroupField,
                 minAmountField,
-                maxAmountField);
+                maxAmountField,
+                defaultEmployeeField);
 
         formLayout.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 2));
@@ -129,7 +178,8 @@ public class AssigningConfigEditView extends VerticalLayout
                         || levelField.isEmpty()
                         || employeeGroupField.isEmpty()
                         || minAmountField.isEmpty()
-                        || maxAmountField.isEmpty()) {
+                        || maxAmountField.isEmpty()
+                        || defaultEmployeeField.isEmpty()) {
 
                     Notification.show(
                             "Please fill all required fields",
@@ -139,21 +189,37 @@ public class AssigningConfigEditView extends VerticalLayout
                     return;
                 }
 
-                if(levelField.getValue()<1){
-                levelField.setInvalid(true);
-                levelField.setErrorMessage("level must be higher then 0");
-                return ;
-             }
-             if(minAmountField.getValue()<1.0){
-                minAmountField.setInvalid(true);
-                minAmountField.setErrorMessage("minimum amount must be higher then 0");
-                return ;
-             }
-             if(maxAmountField.getValue()<1.0 || maxAmountField.getValue()<= minAmountField.getValue()){
-                maxAmountField.setInvalid(true);
-                maxAmountField.setErrorMessage("maximum amount must be higher then minimum amount");
-                return ;
-             }
+                if (levelField.getValue() < 1) {
+
+                    levelField.setInvalid(true);
+
+                    levelField.setErrorMessage(
+                            "Level must be higher than 0");
+
+                    return;
+                }
+
+                if (minAmountField.getValue() < 1.0) {
+
+                    minAmountField.setInvalid(true);
+
+                    minAmountField.setErrorMessage(
+                            "Minimum amount must be higher than 0");
+
+                    return;
+                }
+
+                if (maxAmountField.getValue() < 1.0
+                        || maxAmountField.getValue()
+                                <= minAmountField.getValue()) {
+
+                    maxAmountField.setInvalid(true);
+
+                    maxAmountField.setErrorMessage(
+                            "Maximum amount must be higher than minimum amount");
+
+                    return;
+                }
 
                 // UPDATE VALUES
                 assigningConfig.setApprovalType(
@@ -171,8 +237,15 @@ public class AssigningConfigEditView extends VerticalLayout
                 assigningConfig.setMaxAmount(
                         maxAmountField.getValue());
 
+                assigningConfig.setDefaultApprover(
+                        defaultEmployeeField.getValue());
+
                 // UPDATE
-                assigningConfigService.updateAssigningConfig(assigningConfig,securityService.getLoggedInUser().getEmployee());
+                assigningConfigService.updateAssigningConfig(
+                        assigningConfig,
+                        securityService
+                                .getLoggedInUser()
+                                .getEmployee());
 
                 Notification.show(
                         "Assigning Config Updated Successfully",
@@ -212,6 +285,9 @@ public class AssigningConfigEditView extends VerticalLayout
                         saveButton,
                         cancelButton);
 
-        add(title, formLayout, buttonLayout);
+        add(
+                title,
+                formLayout,
+                buttonLayout);
     }
 }
