@@ -52,7 +52,7 @@ public class RoleEditView extends VerticalLayout
         roleNameField.setReadOnly(true);
 
         employeeGroupField.setLabel(
-                "Employee Groups");
+                "Role Groups");
 
         // LOAD EMPLOYEE GROUPS
         employeeGroupField.setItems(

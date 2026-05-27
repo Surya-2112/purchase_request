@@ -2,7 +2,6 @@ package com.module.purchase.view.user;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Users;
-import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.UsersService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;

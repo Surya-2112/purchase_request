@@ -2,6 +2,7 @@ package com.module.purchase.view.role;
 
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Role;
 import com.module.purchase.enums.EmployeeGroup;
@@ -13,7 +14,6 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -37,7 +37,7 @@ public class RoleView extends VerticalLayout {
 
     private final TextField roleNameField = new TextField("Role Name");
 
-    private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Employee Group");
+    private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Role Group");
 
     // PAGINATION
     private int currentPage = 0;
@@ -60,31 +60,22 @@ public class RoleView extends VerticalLayout {
         setSpacing(true);
 
         // EMPLOYEE GROUPS
-        employeeGroupField.setItems(
-                EmployeeGroup.values());
+        employeeGroupField.setItems(EmployeeGroup.values());
 
         // PAGINATION
-        Button previousButton =
-                new Button("Previous");
+        Button previousButton = new Button("Previous");
 
-        Button nextButton =
-                new Button("Next");
+        Button nextButton =new Button("Next");
 
-        ComboBox<Integer> pageSizeField =
-                new ComboBox<>();
+        ComboBox<Integer> pageSizeField =new ComboBox<>();
 
-        pageSizeField.setItems(
-                10,
-                25,
-                50,
-                100);
+        pageSizeField.setItems(10, 25, 50, 100);
 
         pageSizeField.setValue(25);
 
         pageSizeField.addValueChangeListener(event -> {
 
-            pageSize =
-                    event.getValue();
+            pageSize =event.getValue();
 
             currentPage = 0;
 
@@ -118,60 +109,44 @@ public class RoleView extends VerticalLayout {
 
         paginationLayout.setWidthFull();
 
-        paginationLayout.setJustifyContentMode(
-                JustifyContentMode.CENTER);
+        paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
 
-        paginationLayout.setAlignItems(
-                Alignment.CENTER);
+        paginationLayout.setAlignItems(Alignment.CENTER);
 
         // HEADER
-        HorizontalLayout headerLayout =
-                new HorizontalLayout();
+        HorizontalLayout headerLayout = new HorizontalLayout();
 
-        H2 title =
-                new H2("Role List");
+        H2 title = new H2("Role List");
 
-        Button addButton =
-                new Button("Add Role");
+        Button addButton = new Button("Add Role");
 
         addButton.addClickListener(event -> {
 
-            RoleForm form =
-                    new RoleForm(roleService,securityService);
+            RoleForm form = new RoleForm(roleService,securityService);
 
             form.open();
         });
 
         addButton.setVisible(securityService.canAccessView("role-form"));
 
-        headerLayout.add(
-                title,
-                addButton);
+        headerLayout.add( title, addButton);
 
         headerLayout.setWidthFull();
 
-        headerLayout.setJustifyContentMode(
-                JustifyContentMode.BETWEEN);
+        headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-        headerLayout.setAlignItems(
-                Alignment.CENTER);
+        headerLayout.setAlignItems(Alignment.CENTER);
 
         // FILTER
-        HorizontalLayout filterLayout =
-                new HorizontalLayout();
+        HorizontalLayout filterLayout =new HorizontalLayout();
 
         Button searchButton =
-                new Button(
-                        "Search",
-                        event -> applyFilter());
+                new Button("Search",event -> applyFilter());
 
         Button clearButton =
-                new Button(
-                        "Clear",
-                        event -> clearFilter());
+                new Button( "Clear", event -> clearFilter());
 
-        filterLayout.setAlignItems(
-                Alignment.END);
+        filterLayout.setAlignItems( Alignment.END);
 
         filterLayout.add(
                 roleIdField,
@@ -193,8 +168,7 @@ public class RoleView extends VerticalLayout {
         roleGrid.addColumn(role -> {
 
             return role.getRoleName() == null
-                    ? ""
-                    : role.getRoleName();
+                    ? "" : role.getRoleName();
 
         })
         .setHeader("Role Name")
@@ -203,21 +177,15 @@ public class RoleView extends VerticalLayout {
         // EMPLOYEE GROUPS
         roleGrid.addColumn(role -> {
 
-            if (role.getEmployeeGroups() == null
-                    || role.getEmployeeGroups().isEmpty()) {
-
+            if (role.getEmployeeGroups() == null || role.getEmployeeGroups().isEmpty()) {
                 return "";
             }
 
-            return String.join(
-                    ", ",
-                    role.getEmployeeGroups()
-                            .stream()
-                            .map(EmployeeGroup::name)
+            return String.join( ", ", role.getEmployeeGroups().stream().map(EmployeeGroup::name)
                             .toList());
 
         })
-        .setHeader("Employee Groups")
+        .setHeader("Role Groups")
         .setAutoWidth(true);
 
         roleGrid.addThemeVariants(
@@ -240,8 +208,7 @@ public class RoleView extends VerticalLayout {
         // LOAD DATA
         loadRoles();
 
-        add(
-                headerLayout,
+        add(    headerLayout,
                 filterLayout,
                 roleGrid,
                 paginationLayout);
@@ -281,20 +248,15 @@ public class RoleView extends VerticalLayout {
                             .trim());
         }
 
-        currentFilter =
-                new Role();
+        currentFilter = new Role();
 
-        currentFilter.setRoleId(
-                roleId);
+        currentFilter.setRoleId(roleId);
 
-        currentFilter.setRoleName(
-                roleNameField.getValue());
+        currentFilter.setRoleName(roleNameField.getValue());
 
         if (employeeGroupField.getValue() != null) {
 
-            currentFilter.setEmployeeGroups(
-                    java.util.List.of(
-                            employeeGroupField.getValue()));
+            currentFilter.setEmployeeGroups( List.of(employeeGroupField.getValue()));
         }
 
         currentPage = 0;

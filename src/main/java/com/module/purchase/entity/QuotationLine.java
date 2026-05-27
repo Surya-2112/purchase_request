@@ -1,6 +1,6 @@
 package com.module.purchase.entity;
 
-import jakarta.persistence.Entity;
+// import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,4 +13,12 @@ public class QuotationLine {
     private Long lineId;
 
    // private Quotation
+
+    public Long getLineId() {
+        return lineId;
+    }
+
+    public void setLineId(Long lineId) {
+        this.lineId = lineId;
+    }
 }

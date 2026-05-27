@@ -18,7 +18,7 @@ public class RoleSpecification {
         return (root,query,cb) ->
         roleName == null || roleName.isEmpty()
         ? null
-        : cb.like(cb.lower(root.get("roleName")),roleName.toLowerCase()); 
+        : cb.like(cb.lower(root.get("roleName")),"%"+roleName.toLowerCase()+"%"); 
     }
 
    public static Specification<Role> hasEmployeeGroup(EmployeeGroup group)

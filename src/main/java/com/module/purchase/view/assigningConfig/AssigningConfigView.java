@@ -15,7 +15,6 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -42,7 +41,7 @@ public class AssigningConfigView extends VerticalLayout {
             new IntegerField("Level");
 
     private final ComboBox<EmployeeGroup> employeeGroupField =
-            new ComboBox<>("Employee Group");
+            new ComboBox<>("Role Group");
 
     // PAGINATION
     private int currentPage = 0;
@@ -136,7 +135,7 @@ public class AssigningConfigView extends VerticalLayout {
                 config -> config.getEmployeeGroup() == null
                         ? ""
                         : config.getEmployeeGroup().name())
-                .setHeader("Employee Group")
+                .setHeader("Role Group")
                 .setAutoWidth(true);
 
         assigningConfigGrid.addThemeVariants(

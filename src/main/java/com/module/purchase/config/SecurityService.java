@@ -46,8 +46,6 @@ public class SecurityService {
                 .orElseThrow();
     }
 
-    // ================= CHECK VIEW ACCESS =================
-
     public boolean canAccessView( String viewName) {
 
         try {
@@ -65,7 +63,6 @@ public class SecurityService {
                             .getRole()
                             .getRoleName();
 
-            // SUPER ADMIN ACCESS
 
             if ("SUPER_ADMIN".equals(roleName)) {
 

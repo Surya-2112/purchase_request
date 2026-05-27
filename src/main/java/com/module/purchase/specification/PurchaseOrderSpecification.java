@@ -15,7 +15,7 @@ public class PurchaseOrderSpecification {
 
                 return (root, query, cb) ->
                         purchaseOrderId == null? null
-                        : cb.equal( root.get("purchaseOrderHeaderId"),purchaseOrderId);
+                        : cb.equal( root.get("purchaseOrderId"),purchaseOrderId);
         }
 
         public static Specification<PurchaseOrderHeader> hasCreatedBy(Employee createdBy) {
@@ -29,39 +29,26 @@ public class PurchaseOrderSpecification {
 
                 return (root, query, cb) ->
 
-                status == null
+                status == null? null
 
-                                ? null
-
-                                : cb.equal(
-                                                root.get("status"),
+                                : cb.equal( root.get("status"),
                                                 status);
         }
 
         public static Specification<PurchaseOrderHeader> hasDepartment(Department department) {
 
                 return (root, query, cb) ->
-
                 department == null
-
                                 ? null
-
-                                : cb.equal(
-                                                root.get("forDepartment"),
+                                : cb.equal( root.get("forDepartment"),
                                                 department);
         }
 
         public static Specification<PurchaseOrderHeader> hasVendor(Vendor vendor) {
 
                 return (root, query, cb) ->
-
-                vendor == null
-
-                                ? null
-
-                                : cb.equal(
-                                                root.get("vendor"),
-                                                vendor);
+                vendor == null ? null
+                                : cb.equal(root.get("vendor"),vendor);
         }
 
         public static Specification<PurchaseOrderHeader> hasTotalAmount(Double totalAmount) {
@@ -83,11 +70,8 @@ public class PurchaseOrderSpecification {
                 return (root, query, cb) ->
 
                 purchaseRequestHeader == null
-
                                 ? null
-
-                                : cb.equal(
-                                                root.get("purchaseRequestHeader"),
+                                : cb.equal(root.get("purchaseRequestHeader"),
                                                 purchaseRequestHeader);
         }
 }

@@ -42,6 +42,8 @@ public class PurchaseRequestHeader {
     @JoinColumn(name = "vendorId")
     private Vendor vendor;
 
+    @OneToMany(mappedBy = "purchaseRequestHeader")
+    private List<PurchaseRequestDocument> documents;
 
     @ManyToOne
     @JoinColumn(name = "department")
@@ -134,5 +136,13 @@ public class PurchaseRequestHeader {
 
     public void setVendor(Vendor vendor) {
         this.vendor = vendor;
+    }
+
+    public List<PurchaseRequestDocument> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<PurchaseRequestDocument> documents) {
+        this.documents = documents;
     }
 }

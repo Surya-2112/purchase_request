@@ -70,12 +70,7 @@ public class RoleDetailsView extends VerticalLayout implements HasUrlParameter<L
                                 "Role ID");
 
                 // ROLE NAME
-                formLayout.addFormItem(
-                                new Span(
-                                                role.getRoleName() == null
-                                                                ? ""
-                                                                : role.getRoleName()),
-                                "Role Name");
+                formLayout.addFormItem( new Span( role.getRoleName() == null ? "" : role.getRoleName()), "Role Name");
 
                 // EMPLOYEE GROUPS
                 String employeeGroups = role.getEmployeeGroups() == null
@@ -85,9 +80,7 @@ public class RoleDetailsView extends VerticalLayout implements HasUrlParameter<L
                                                 .map(Enum::name)
                                                 .collect(Collectors.joining(", "));
 
-                formLayout.addFormItem(
-                                new Span(employeeGroups),
-                                "Employee Groups");
+                formLayout.addFormItem( new Span(employeeGroups),"Role Groups");
 
                 // UPDATE BUTTON
                 Button updateButton = new Button("Update");
@@ -129,10 +122,7 @@ public class RoleDetailsView extends VerticalLayout implements HasUrlParameter<L
 
                                 } catch (Exception exception) {
 
-                                        Notification.show(
-                                                        exception.getMessage(),
-                                                        5000,
-                                                        Notification.Position.TOP_CENTER);
+                                        Notification.show( exception.getMessage(), 5000,Notification.Position.TOP_CENTER);
                                 }
                         });
 

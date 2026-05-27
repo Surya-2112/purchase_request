@@ -120,7 +120,7 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
         VerticalLayout layout = new VerticalLayout(
                 orderId,
                 requestId,
-                createdBy,
+               // createdBy,
                 department,
                 vendor,
                 totalAmount,

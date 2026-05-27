@@ -38,7 +38,7 @@ public class RoleForm extends Dialog {
         // REQUIRED
         roleNameField.setRequiredIndicatorVisible(true);
 
-        employeeGroupField.setLabel("Employee Groups");
+        employeeGroupField.setLabel("Role Groups");
 
         employeeGroupField.setRequiredIndicatorVisible(true);
 
@@ -70,10 +70,7 @@ public class RoleForm extends Dialog {
         cancelButton.addClickListener(
                 event -> close());
 
-        HorizontalLayout buttonLayout =
-                new HorizontalLayout(
-                        saveButton,
-                        cancelButton);
+        HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
 
         add(formLayout, buttonLayout);
     }
@@ -101,9 +98,7 @@ public class RoleForm extends Dialog {
             role.setRoleName(
                     roleNameField.getValue());
 
-            role.setEmployeeGroups(
-                    List.copyOf(
-                            employeeGroupField.getValue()));
+            role.setEmployeeGroups( List.copyOf( employeeGroupField.getValue()));
 
             // SAVE
             roleService.addRole(role,securityService.getLoggedInUser().getEmployee());

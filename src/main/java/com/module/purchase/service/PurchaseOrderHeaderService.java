@@ -120,9 +120,7 @@ public class PurchaseOrderHeaderService {
 
         Specification<PurchaseOrderHeader> spec = Specification
                 .where(PurchaseOrderSpecification.hasPurchaseOrderId(purchaseOrderDTO.getPurchaseOrderId()))
-                .and(PurchaseOrderSpecification.hasCreatedBy(purchaseOrderDTO.getCreatedBy()))
-                .and(PurchaseOrderSpecification.hasDepartment(purchaseOrderDTO.getForDepartment()))
-                .and(PurchaseOrderSpecification.hasStatus(purchaseOrderDTO.getStatus()));
+                .and(PurchaseOrderSpecification.hasVendor(purchaseOrderDTO.getVendor()));
 
         Pageable pageable = PageRequest.of(page, size);
         Page<PurchaseOrderHeader> prpage = purchaseOrderHeaderRepository.findAll(spec, pageable);
@@ -182,7 +180,7 @@ public class PurchaseOrderHeaderService {
              poline.setQuantity(line.getQuantity());
              poline.setUnitPrice(line.getUnitPrice());
              poline.setTotalPrice(line.getTotalPrice());
-             poline.setDiscount(line.getDiscount()==null? 0:line.getDiscount());
+             poline.setDiscount(line.getDiscount());
             purchaseOrderLineService.addPurchaseOrderLine(poline);
         }
     }

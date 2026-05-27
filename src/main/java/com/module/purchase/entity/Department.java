@@ -115,8 +115,5 @@ public class Department {
         return "Department [departmentId=" + departmentId + ", departmentName=" + departmentName + ", departmentCode="
                 + departmentCode + ", headEmployee=" + headEmployee + ", active=" + active + "]";
     }
-
-    
-
 }
 

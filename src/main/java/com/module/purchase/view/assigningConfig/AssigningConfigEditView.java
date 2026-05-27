@@ -41,7 +41,7 @@ public class AssigningConfigEditView extends VerticalLayout
             new IntegerField("Level");
 
     private final ComboBox<EmployeeGroup> employeeGroupField =
-            new ComboBox<>("Employee Group");
+            new ComboBox<>("Role Group");
 
     private final NumberField minAmountField =
             new NumberField("Min Amount");

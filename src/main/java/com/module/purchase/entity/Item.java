@@ -86,7 +86,7 @@ public class Item {
     public String getVATCode() {
         return VATCode;
     }
-
+    
     public void setVATCode(String VATCode) {
         
         this.VATCode = VATCode;

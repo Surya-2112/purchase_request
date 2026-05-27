@@ -35,10 +35,7 @@ public class MainLayout extends AppLayout {
 
         public MainLayout(SecurityService securityService) {
 
-                setPrimarySection(
-                                Section.DRAWER);
-
-                // ================= CURRENT USER =================
+                setPrimarySection(Section.DRAWER);
 
                 Users loggedInUser = securityService.getLoggedInUser();
 
@@ -118,7 +115,7 @@ public class MainLayout extends AppLayout {
 
                 addMenuIfAllowed(
                                 menuLinks,
-                                "dashboard",
+                                "",
                                 "Dashboard",
                                 DashboardView.class,
                                 securityService);

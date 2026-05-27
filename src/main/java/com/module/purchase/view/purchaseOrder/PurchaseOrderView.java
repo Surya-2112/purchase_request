@@ -218,7 +218,7 @@ public class PurchaseOrderView extends VerticalLayout {
         pagination.setAlignItems( Alignment.CENTER);
 
         add(headerLayout,
-              //   tabs, 
+                //   tabs, 
                  poFilters,
                   assignFilters,
                    poGrid, 
@@ -272,10 +272,6 @@ public class PurchaseOrderView extends VerticalLayout {
         });
         poGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
     }
-
-    // =========================================================
-    // APPROVAL GRID
-    // =========================================================
 
     private void configureAssignGrid() {
 
@@ -333,6 +329,8 @@ public class PurchaseOrderView extends VerticalLayout {
         poFilters.setVisible(false);
 
         assignFilters.setVisible(false);
+
+        viewMode="ALL";
 
         if ("ASSIGNED".equals(viewMode)) {
 
@@ -392,9 +390,7 @@ public class PurchaseOrderView extends VerticalLayout {
 
             poFilters.setVisible(true);
 
-            Page<PurchaseOrderDTO> page =
-
-                    poService.getAllPurchaseOrder( poFilter, currentPage,pageSize );
+            Page<PurchaseOrderDTO> page = poService.getAllPurchaseOrder( poFilter, currentPage,pageSize );
 
             poGrid.setItems(
 
@@ -428,7 +424,7 @@ public class PurchaseOrderView extends VerticalLayout {
 
         poFilter.setStatus(poStatusField.getValue() );
 
-        poFilter.setVendor( vendorField.getValue());
+        poFilter.setVendor(vendorField.getValue());
 
         currentPage = 0;
 

@@ -18,14 +18,14 @@ public class UsersSpecification {
     {
         return (root,query,cb) ->
         userName == null || userName.isEmpty() ? null
-        :cb.like(cb.lower(root.get("userName")),userName.toLowerCase());
+        :cb.like(cb.lower(root.get("userName")),"%"+userName.toLowerCase()+"%");
     }
 
     public static Specification<Users> hasuserEmail(String userEmail)
     {
         return (root,query,cb) ->
         userEmail == null || userEmail.isEmpty() ? null
-        : cb.like(cb.lower(root.get("userEmail")),userEmail.toLowerCase());
+        : cb.like(cb.lower(root.get("userEmail")),"%"+userEmail.toLowerCase()+"%");
     }
     
     public static Specification<Users> hasEmployee(Employee employee)

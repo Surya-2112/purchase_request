@@ -89,7 +89,4 @@ public class PurchaseOrderLine {
     public void setTotalPrice(Double totalPrice) {
         this.totalPrice = totalPrice;
     }
-
-    
-
 }

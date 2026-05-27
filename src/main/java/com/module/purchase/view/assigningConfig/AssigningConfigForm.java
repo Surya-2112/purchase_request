@@ -1,7 +1,6 @@
 package com.module.purchase.view.assigningConfig;
 
 import java.util.Collections;
-import java.util.List;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningConfig;
@@ -25,7 +24,7 @@ public class AssigningConfigForm extends Dialog {
 
     private final SecurityService securityService;
 
-    private final EmployeeService employeeService;
+   // private final EmployeeService employeeService;
 
     // ================= FIELDS =================
 
@@ -59,8 +58,7 @@ public class AssigningConfigForm extends Dialog {
         this.assigningConfigService =
                 assigningConfigService;
 
-        this.employeeService =
-                employeeService;
+        //this.employeeService = employeeService;
 
         this.securityService =
                 securityService;
@@ -309,13 +307,8 @@ public class AssigningConfigForm extends Dialog {
 
             exception.printStackTrace();
 
-            Notification.show(
-
-                    "Error : "
-                            + exception.getMessage(),
-
-                    5000,
-
+            Notification.show( 
+                "Error : "+ exception.getMessage(),5000,
                     Notification.Position.TOP_CENTER
             );
         }

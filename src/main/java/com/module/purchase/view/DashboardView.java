@@ -5,7 +5,6 @@ import java.time.Year;
 import org.springframework.data.domain.PageRequest;
 
 import com.module.purchase.entity.DepartmentBudget;
-import com.module.purchase.entityDTO.DepartmentBudgetDTO;
 import com.module.purchase.entityDTO.PurchaseOrderDTO;
 import com.module.purchase.entityDTO.PurchaseRequestDTO;
 import com.module.purchase.enums.Status;
@@ -211,8 +210,6 @@ public class DashboardView extends VerticalLayout {
 
         grid.setItems(departmentBudgetService.getDepartmentSpendingData(Year.now()));
 
-        grid.setHeight("250px");
-
         grid.addItemDoubleClickListener(event -> {
 
               DepartmentBudget departmentBudget = event.getItem();
@@ -223,6 +220,8 @@ public class DashboardView extends VerticalLayout {
 
 
         layout.add(title, grid);
+
+        grid.setAllRowsVisible(true);
 
         return layout;
     }
@@ -262,6 +261,7 @@ public class DashboardView extends VerticalLayout {
         });
 
         layout.add(title, grid);
+         grid.setAllRowsVisible(true);
 
         return layout;
     }
@@ -304,6 +304,7 @@ public class DashboardView extends VerticalLayout {
                         ui.navigate("purchase-order-details/"+ po.getPurchaseOrderId()));
         });
         layout.add(title, grid);
+         grid.setAllRowsVisible(true);
         return layout;
     }
 }

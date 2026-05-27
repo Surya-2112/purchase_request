@@ -17,7 +17,6 @@ import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
-import com.module.purchase.entity.Users;
 import com.module.purchase.entityDTO.EmployeeDTO;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.EntityType;

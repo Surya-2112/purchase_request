@@ -27,11 +27,11 @@ public class ViewPermissionView extends VerticalLayout {
 
     private final ViewPermissionService viewPermissionService;
     
-     private final Grid<ViewPermission> grid = new Grid<>(ViewPermission.class, false);
+    private final Grid<ViewPermission> grid = new Grid<>(ViewPermission.class, false);
 
     private final ComboBox<ViewName> viewField = new ComboBox<>("View");
 
-    private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Employee Group");
+    private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Role Group");
 
     private int currentPage = 0;
 
@@ -158,7 +158,7 @@ public class ViewPermissionView extends VerticalLayout {
                 permission.getEmployeeGroup() == null
                         ? ""
                         : permission.getEmployeeGroup().name())
-                .setHeader("Employee Group")
+                .setHeader("Role Group")
                 .setAutoWidth(true);
 
         // DELETE BUTTON
@@ -219,11 +219,9 @@ public class ViewPermissionView extends VerticalLayout {
 
         grid.setSizeFull();
 
-        Button previousButton =
-                new Button("Previous");
+        Button previousButton =new Button("Previous");
 
-        Button nextButton =
-                new Button("Next");
+        Button nextButton = new Button("Next");
 
         ComboBox<Integer> pageSizeField =
                 new ComboBox<>();
