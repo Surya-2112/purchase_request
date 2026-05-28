@@ -25,14 +25,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username)throws UsernameNotFoundException {
 
-        Users user = userRepository
-                        .findByUserNameOrUserEmail( username, username)
-                        .orElseThrow(() ->
-                                new UsernameNotFoundException(
-                                        "User not found"));
+        Users user = userRepository.findByUserNameOrUserEmail( username, username).orElseThrow(() ->
+                                new UsernameNotFoundException( "User not found"));
 
         return new User(
 
@@ -52,27 +48,19 @@ public class CustomUserDetailsService implements UserDetailsService {
         );
     }
 
-    private Collection<SimpleGrantedAuthority>
-            getAuthorities(Users user) {
+    private Collection<SimpleGrantedAuthority> getAuthorities(Users user) {
 
-        if (user.getEmployee() == null
-                || user.getEmployee().getRole() == null
-                || user.getEmployee()
+        if (user.getEmployee() == null || user.getEmployee().getRole() == null|| user.getEmployee()
                         .getRole()
                         .getEmployeeGroups() == null) {
 
-            return Collections.singleton(
-                    new SimpleGrantedAuthority(
-                            "ROLE_USER"));
+            return Collections.singleton(new SimpleGrantedAuthority(  "ROLE_USER"));
         }
 
-        return user.getEmployee()
-                .getRole()
+        return user.getEmployee() .getRole()
                 .getEmployeeGroups()
                 .stream()
-                .map(group ->
-                        new SimpleGrantedAuthority(
-                                "ROLE_" + group.name()))
+                .map(group -> new SimpleGrantedAuthority("ROLE_" + group.name()))
                 .collect(Collectors.toList());
     }
 }

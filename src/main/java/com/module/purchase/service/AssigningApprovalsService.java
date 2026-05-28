@@ -54,9 +54,6 @@ public class AssigningApprovalsService {
     private PurchaseOrderHeaderService purchaseOrderHeaderService;
 
     @Autowired
-    private DepartmentBudgetService departmentBudgetService;
-
-    @Autowired
     private AuditLogsService auditLogsService;
 
     public AssigningApprovals saveAssigningApproval(AssigningApprovals assigningApproval) {
@@ -101,22 +98,6 @@ public class AssigningApprovalsService {
         return approvalsPage.map(assigningApprovalsMapper::toAssigningApprovalsDTO);
     }
 
-    public Page<AssigningApprovalsDTO> getPurchaseOrderApprovalsForMe(AssigningApprovalsDTO assigningApprovalsDTO,Long userId,int page, int size) {
-
-        Specification<AssigningApprovals> spec = Specification
-        .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
-        .and(AssigningApprovalsSpecification.hasApprover(userService.getUserById(userId).get().getEmployee()))
-        .and(AssigningApprovalsSpecification.hasApprovalType(ApprovalType.PURCHASE_ORDER_APPROVAL))
-        .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
-        .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
-
-        Pageable pageable = PageRequest.of(page, size);
-
-        Page<AssigningApprovals> approvalsPage = assigningApprovalsRepository.findAll(spec, pageable);
-
-        return approvalsPage.map(assigningApprovalsMapper::toAssigningApprovalsDTO);
-    }
-
      public AssigningApprovals addApprovals(AssigningApprovals assigningApproval,Employee employee) {
         if(assigningApproval.getLevel()==1)
         {
@@ -138,7 +119,7 @@ public class AssigningApprovalsService {
     {   
         AuditLogs log = new AuditLogs();
         AssigningApprovals exist = getAssigningApprovalById(assigningApprovals.getAssigningApprovalsId()).get();
-        if(assigningApprovals.getApprovalType()==ApprovalType.PURCHASE_REQUEST_APPROVAL){
+      
         PurchaseRequestHeader purchaseRequestHeader=purchaseRequestHeaderService.getPurchaseRequestHeaderById(exist.getReferenceId()).get();
         if(assigningApprovals.getStatus()==Status.APPROVED)
         {   log.setAction(Action.APPROVE);
@@ -158,41 +139,11 @@ public class AssigningApprovalsService {
             log.setAction(Action.REJECT);
             purchaseRequestHeader.setStatus(Status.REJECTED);
             purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader,null);
-        }} else{
-     
-        PurchaseOrderHeader purchaseOrderHeader= purchaseOrderHeaderService.getPurchaseOrderHeaderById(exist.getReferenceId()).get();
-        if(assigningApprovals.getStatus()==Status.APPROVED)
-        {   
-            log.setAction(Action.APPROVE);
-           if(purchaseOrderHeader.getLevel()> assigningApprovals.getLevel())
-           {AssigningApprovals next = getAssigningApprovalByTypeAndReferIdAndLevle(
-                                ApprovalType.PURCHASE_ORDER_APPROVAL,
-                                purchaseOrderHeader.getPurchaseOrderId(),
-                                assigningApprovals.getLevel()+1);
-            next.setStatus(Status.WAITING_APPROVAL);
-            saveAssigningApproval(next);
-           }else{
-                purchaseOrderHeader.setStatus(Status.APPROVED);
-                purchaseOrderHeader.setExpectedDeliveryDate(LocalDate.now().plusDays(10));
-                purchaseOrderHeaderService.updatePurchaseOrderHeader(purchaseOrderHeader,null);
-           }
-        }else if(assigningApprovals.getStatus()==Status.REJECTED){
-            purchaseOrderHeader.setStatus(Status.REJECTED);
-            log.setAction(Action.REJECT);
-
-            DepartmentBudget  existBudget=departmentBudgetService.getByDepartmentAndYear(
-                    purchaseOrderHeader.getPurchaseRequestHeader().getForDepartment(),Year.now());
-                    existBudget.setRemainingBudgetAmount(purchaseOrderHeader.getTotalAmount()+existBudget.getRemainingBudgetAmount());
-            departmentBudgetService.updateDepartmentBudget(existBudget,employee);
-
-            purchaseOrderHeaderService.updatePurchaseOrderHeader(purchaseOrderHeader,null);
         }
-        } 
         if(assigningApprovals.getStatus()==Status.CANCELLED)
         {
             log.setAction(Action.CANCEL);
         }
-
         log.setEntityType(EntityType.ASSIGNING_APPROVAL);
         log.setEntityId(assigningApprovals.getAssigningApprovalsId());
         log.setPerformedBy(employee);

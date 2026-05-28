@@ -17,49 +17,39 @@ public class SecurityService {
 
     private final ViewPermissionService viewPermissionService;
 
-    public SecurityService(
-
-            UserRepository userRepository,
-
-            ViewPermissionService viewPermissionService
-    ) {
+    public SecurityService(UserRepository userRepository, ViewPermissionService viewPermissionService ) {
 
         this.userRepository = userRepository;
 
-        this.viewPermissionService =
-                viewPermissionService;
+        this.viewPermissionService = viewPermissionService;
     }
 
     public Users getLoggedInUser() {
 
-        String username =
-                SecurityContextHolder
+        String username = SecurityContextHolder
                         .getContext()
                         .getAuthentication()
                         .getName();
 
-        return userRepository
-                .findByUserNameOrUserEmail(
-                        username,
-                        username
-                )
+        return userRepository.findByUserNameOrUserEmail(username, username)
                 .orElseThrow();
     }
 
     public boolean canAccessView( String viewName) {
 
+        if(viewName.equals(""))
+        {
+           return true;
+        }
         try {
-
             Users user = getLoggedInUser();
 
-            if (user == null || user.getEmployee() == null
-                    || user.getEmployee() .getRole() == null) {
+            if (user == null || user.getEmployee() == null || user.getEmployee() .getRole() == null) {
 
                 return false;
             }
 
-            String roleName =
-                    user.getEmployee()
+            String roleName =user.getEmployee()
                             .getRole()
                             .getRoleName();
 
@@ -69,24 +59,16 @@ public class SecurityService {
                 return true;
             }
 
-            List<EmployeeGroup> userGroups =
-
-                    user.getEmployee()
-                            .getRole()
-                            .getEmployeeGroups();
+            List<EmployeeGroup> userGroups =user.getEmployee() .getRole().getEmployeeGroups();
 
             List<EmployeeGroup> allowedGroups =viewPermissionService.getGroupsByView(viewName);
 
-            if (allowedGroups == null
-                    || allowedGroups.isEmpty()) {
+            if (allowedGroups == null|| allowedGroups.isEmpty()) {
 
                 return false;
             }
 
-            return userGroups.stream()
-                    .anyMatch(
-                            allowedGroups::contains
-                    );
+            return userGroups.stream().anyMatch(allowedGroups::contains);
 
         } catch (Exception exception) {
 

@@ -73,13 +73,13 @@ public class DashboardView extends VerticalLayout {
 
         long rejectedPR = purchaseRequestService.countByStatus(Status.REJECTED);
 
-        long totalPO = purchaseOrderService.countAll();
+        // long totalPO = purchaseOrderService.countAll();
 
-        long draftPO = purchaseOrderService.countByStatus(Status.DRAFT);
+        // long draftPO = purchaseOrderService.countByStatus(Status.DRAFT);
 
-        long approvedPO = purchaseOrderService.countByStatus(Status.APPROVED);
+        // long approvedPO = purchaseOrderService.countByStatus(Status.APPROVED);
 
-        long rejectedPO = purchaseOrderService.countByStatus(Status.REJECTED);
+        // long rejectedPO = purchaseOrderService.countByStatus(Status.REJECTED);
 
         HorizontalLayout row1 = new HorizontalLayout(
                 createCard(
@@ -111,38 +111,38 @@ public class DashboardView extends VerticalLayout {
                 )
         );
 
-        HorizontalLayout row2 = new HorizontalLayout(
-                createCard(
-                        "Total PO",
-                        String.valueOf(totalPO),
-                        VaadinIcon.CART.create(),
-                        "purchase-order"
-                ),
+        // HorizontalLayout row2 = new HorizontalLayout(
+        //         createCard(
+        //                 "Total PO",
+        //                 String.valueOf(totalPO),
+        //                 VaadinIcon.CART.create(),
+        //                 "purchase-order"
+        //         ),
 
-                createCard(
-                        "Draft PO",
-                        String.valueOf(draftPO),
-                        VaadinIcon.FILE_TEXT.create(),
-                        "purchase-order"
-                ),
+        //         createCard(
+        //                 "Draft PO",
+        //                 String.valueOf(draftPO),
+        //                 VaadinIcon.FILE_TEXT.create(),
+        //                 "purchase-order"
+        //         ),
 
-                createCard(
-                        "Approved",
-                        String.valueOf(approvedPO),
-                        VaadinIcon.CHECK.create(),
-                        "purchase-order"
-                ),
+        //         createCard(
+        //                 "Approved",
+        //                 String.valueOf(approvedPO),
+        //                 VaadinIcon.CHECK.create(),
+        //                 "purchase-order"
+        //         ),
 
-                createCard(
-                        "Rejected",
-                        String.valueOf(rejectedPO),
-                        VaadinIcon.CLOSE.create(),
-                        "purchase-order"
-                )
-        );
+        //         createCard(
+        //                 "Rejected",
+        //                 String.valueOf(rejectedPO),
+        //                 VaadinIcon.CLOSE.create(),
+        //                 "purchase-order"
+        //         )
+        // );
 
         row1.setWidthFull();
-        row2.setWidthFull();
+        // row2.setWidthFull();
 
         VerticalLayout layout = new VerticalLayout(row1
                 // ,row2

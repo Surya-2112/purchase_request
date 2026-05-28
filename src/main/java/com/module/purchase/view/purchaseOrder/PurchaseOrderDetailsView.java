@@ -2,22 +2,15 @@ package com.module.purchase.view.purchaseOrder;
 
 import java.util.List;
 
-import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
-import com.module.purchase.enums.ApprovalType;
-import com.module.purchase.enums.Status;
-import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.PurchaseOrderHeaderService;
 import com.module.purchase.service.PurchaseOrderLineService;
 import com.module.purchase.view.MainLayout;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -32,11 +25,9 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
 
     private final PurchaseOrderHeaderService headerService;
     private final PurchaseOrderLineService lineService;
-    private final AssigningApprovalsService approvalsService;
 
     private PurchaseOrderHeader header;
 
-    // ================= HEADER =================
     private final Span orderId = new Span();
     private final Span requestId = new Span();
     private final Span createdBy = new Span();
@@ -46,22 +37,13 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
     private final Span createdDate = new Span();
     private final Span status = new Span();
 
-    // ================= ACTIONS =================
-    private final HorizontalLayout actionLayout = new HorizontalLayout();
-
-    // ================= GRIDS =================
     private final Grid<PurchaseOrderLine> lineGrid = new Grid<>(PurchaseOrderLine.class, false);
-    private final Grid<AssigningApprovals> approvalGrid = new Grid<>(AssigningApprovals.class, false);
 
-    public PurchaseOrderDetailsView(
-            PurchaseOrderHeaderService headerService,
-            PurchaseOrderLineService lineService,
-            AssigningApprovalsService approvalsService
-    ) {
+    public PurchaseOrderDetailsView( PurchaseOrderHeaderService headerService, PurchaseOrderLineService lineService ) {
+
         this.headerService = headerService;
         this.lineService = lineService;
-        this.approvalsService = approvalsService;
-
+        
         setSizeFull();
         setPadding(false);
         setSpacing(false);
@@ -74,11 +56,8 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
         VerticalLayout content = new VerticalLayout(
                 new H2("Purchase Order Details"),
                 headerSection,
-                actionLayout,
                 new H3("Line Items"),
-                lineGrid //,
-               // new H3("Approval Flow"),
-              //  approvalGrid
+                lineGrid 
         );
 
         content.setWidthFull();
@@ -92,14 +71,10 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
         setSizeFull();
     }
 
-    // =========================================================
-    // LOAD
-    // =========================================================
-
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
 
-        Long id = Long.parseLong(
+        Long id = Long.valueOf(
                 event.getRouteParameters().get("id").get()
         );
 
@@ -108,19 +83,14 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
 
         bindHeader();
         loadGrids();
-        configureActions();
     }
-
-    // =========================================================
-    // HEADER UI
-    // =========================================================
 
     private VerticalLayout buildHeaderSection() {
 
         VerticalLayout layout = new VerticalLayout(
                 orderId,
                 requestId,
-               // createdBy,
+                createdBy,
                 department,
                 vendor,
                 totalAmount,
@@ -151,7 +121,7 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
         createdBy.setText("Created By : " +
                 (header.getCreatedBy() != null
                         ? header.getCreatedBy().getEmployeeName()
-                        : "-"));
+                        : "Auto"));
 
         department.setText("Department : " +
                 header.getPurchaseRequestHeader().getForDepartment().getDepartmentName());
@@ -164,44 +134,8 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
         status.setText("Status : " + header.getStatus());
     }
 
-    // =========================================================
-    // ACTIONS (LIKE PURCHASE REQUEST)
-    // =========================================================
-
-    private void configureActions() {
-
-        actionLayout.removeAll();
-
-        if (header.getStatus() == Status.WAITING_APPROVAL) {
-
-            Button cancelBtn = new Button("Cancel Purchase Order");
-
-            cancelBtn.addClickListener(e -> {
-
-                header.setStatus(Status.CANCELLED);
-
-                headerService.updatePurchaseOrderHeader(
-                        header,
-                        header.getCreatedBy()
-                );
-
-                Notification.show("Purchase Order Cancelled");
-
-                bindHeader();
-                configureActions();
-            });
-
-            actionLayout.add(cancelBtn);
-        }
-    }
-
-    // =========================================================
-    // GRID CONFIG
-    // =========================================================
-
     private void configureGrids() {
 
-        // ================= LINE ITEMS =================
         lineGrid.addColumn(line ->
                         line.getItem() != null ? line.getItem().getItemName() : "")
                 .setHeader("Item");
@@ -221,31 +155,7 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
 
         lineGrid.setWidthFull();
         lineGrid.setAllRowsVisible(true);
-
-        // ================= APPROVAL =================
-        approvalGrid.addColumn(AssigningApprovals::getLevel)
-                .setHeader("Level");
-
-        approvalGrid.addColumn(a ->
-                        a.getApprover() != null
-                                ? a.getApprover().getEmployeeName()
-                                : "NOT ASSIGNED")
-                .setHeader("Approver");
-
-        approvalGrid.addColumn(AssigningApprovals::getAssignedDate)
-                .setHeader("Assigned Date");
-
-        approvalGrid.addColumn(a ->
-                        a.getStatus() != null ? a.getStatus().name() : "")
-                .setHeader("Status");
-
-        approvalGrid.setWidthFull();
-        approvalGrid.setAllRowsVisible(true);
     }
-
-    // =========================================================
-    // LOAD DATA
-    // =========================================================
 
     private void loadGrids() {
 
@@ -253,13 +163,5 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
                 lineService.getPurchaseOrderLineByHeader(header);
 
         lineGrid.setItems(lines);
-
-        List<AssigningApprovals> approvals =
-                approvalsService.getAssigningApprovalByTypeAndReferId(
-                        ApprovalType.PURCHASE_ORDER_APPROVAL,
-                        header.getPurchaseOrderId()
-                );
-
-        approvalGrid.setItems(approvals);
     }
 }

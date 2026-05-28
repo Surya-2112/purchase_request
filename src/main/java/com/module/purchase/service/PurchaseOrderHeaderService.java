@@ -89,32 +89,32 @@ public class PurchaseOrderHeaderService {
             return purchaseOrderMapper.toPurchaseOrdersDTO(purchaseOrderHeaderRepository.findAll(spec));
     }
 
-     public List<PurchaseOrderDTO> getPurchaseOrderHeaders() {
-        return purchaseOrderMapper.toPurchaseOrdersDTO(purchaseOrderHeaderRepository.findAll());
-    }
+    // public List<PurchaseOrderDTO> getPurchaseOrderHeaders() {
+    //     return purchaseOrderMapper.toPurchaseOrdersDTO(purchaseOrderHeaderRepository.findAll());
+    // }
 
-    public List<PurchaseOrderHeader> getAllPurchaseOrderHeaders() {
-        return purchaseOrderHeaderRepository.findAll();
-    }
+    // public List<PurchaseOrderHeader> getAllPurchaseOrderHeaders() {
+    //     return purchaseOrderHeaderRepository.findAll();
+    // }
 
     public List<PurchaseOrderDTO> getRecentPurchaseOrders(PageRequest pageRequest) {
         return purchaseOrderMapper.toPurchaseOrdersDTO(purchaseOrderHeaderRepository.findAllByOrderByPurchaseOrderIdDesc(pageRequest));
     }
 
 
-    public Page<PurchaseOrderDTO> getCreatedByUser(PurchaseOrderDTO purchaseOrderDTO, Long userId, int page,
-            int size) {
-        Employee existEmployee = userservice.getUserById(userId).get().getEmployee();
-        Specification<PurchaseOrderHeader> spec = Specification
-                .where(PurchaseOrderSpecification.hasPurchaseOrderId(purchaseOrderDTO.getPurchaseOrderId()))
-                .and(PurchaseOrderSpecification.hasCreatedBy(existEmployee))
-                .and(PurchaseOrderSpecification.hasDepartment(purchaseOrderDTO.getForDepartment()))
-                .and(PurchaseOrderSpecification.hasStatus(purchaseOrderDTO.getStatus()));
+    // public Page<PurchaseOrderDTO> getCreatedByUser(PurchaseOrderDTO purchaseOrderDTO, Long userId, int page,
+    //         int size) {
+    //     Employee existEmployee = userservice.getUserById(userId).get().getEmployee();
+    //     Specification<PurchaseOrderHeader> spec = Specification
+    //             .where(PurchaseOrderSpecification.hasPurchaseOrderId(purchaseOrderDTO.getPurchaseOrderId()))
+    //             .and(PurchaseOrderSpecification.hasCreatedBy(existEmployee))
+    //             .and(PurchaseOrderSpecification.hasDepartment(purchaseOrderDTO.getForDepartment()))
+    //             .and(PurchaseOrderSpecification.hasStatus(purchaseOrderDTO.getStatus()));
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<PurchaseOrderHeader> prpage = purchaseOrderHeaderRepository.findAll(spec, pageable);
-        return prpage.map(purchaseOrderMapper::toPurchaseOrderDTO);
-    }
+    //     Pageable pageable = PageRequest.of(page, size);
+    //     Page<PurchaseOrderHeader> prpage = purchaseOrderHeaderRepository.findAll(spec, pageable);
+    //     return prpage.map(purchaseOrderMapper::toPurchaseOrderDTO);
+    // }
 
      public Page<PurchaseOrderDTO> getAllPurchaseOrder(PurchaseOrderDTO purchaseOrderDTO, int page, int size) {
 
@@ -128,35 +128,35 @@ public class PurchaseOrderHeaderService {
     }
 
 
-    public PurchaseOrderHeader updatePurchaseOrderHeader(PurchaseOrderHeader purchaseOrderHeader,Employee employee)
-    {
-       if(purchaseOrderHeader.getStatus()==Status.CANCELLED)
-       {  DepartmentBudget departmentBudget=departmentBudgetService.getByDepartmentAndYear(purchaseOrderHeader.getPurchaseRequestHeader().getForDepartment(), Year.now());
-        departmentBudget.setRemainingBudgetAmount(departmentBudget.getRemainingBudgetAmount()+purchaseOrderHeader.getPurchaseRequestHeader().getTotalAmount());
-        departmentBudgetService.updateDepartmentBudget(departmentBudget,employee);
-       }
+    // public PurchaseOrderHeader updatePurchaseOrderHeader(PurchaseOrderHeader purchaseOrderHeader,Employee employee)
+    // {
+    //    if(purchaseOrderHeader.getStatus()==Status.CANCELLED)
+    //    {  DepartmentBudget departmentBudget=departmentBudgetService.getByDepartmentAndYear(purchaseOrderHeader.getPurchaseRequestHeader().getForDepartment(), Year.now());
+    //     departmentBudget.setRemainingBudgetAmount(departmentBudget.getRemainingBudgetAmount()+purchaseOrderHeader.getPurchaseRequestHeader().getTotalAmount());
+    //     departmentBudgetService.updateDepartmentBudget(departmentBudget,employee);
+    //    }
 
-       purchaseOrderHeader=savePurchaseOrderHeader(purchaseOrderHeader);
-        AuditLogs log= new AuditLogs();
-        log.setEntityType(EntityType.PURCHASE_ORDER);
-        log.setEntityId(purchaseOrderHeader.getPurchaseOrderId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+    //    purchaseOrderHeader=savePurchaseOrderHeader(purchaseOrderHeader);
+    //     AuditLogs log= new AuditLogs();
+    //     log.setEntityType(EntityType.PURCHASE_ORDER);
+    //     log.setEntityId(purchaseOrderHeader.getPurchaseOrderId());
+    //     log.setAction(Action.UPDATE);
+    //     log.setPerformedBy(employee);
+    //     log.setTimestamp(LocalDate.now());
+    //     auditLogsService.addAuditLog(log);
 
-        return purchaseOrderHeader;
-    }
+    //     return purchaseOrderHeader;
+    // }
 
-    public Long countAll()
-    {
-        return purchaseOrderHeaderRepository.count();
-    }
+    // public Long countAll()
+    // {
+    //     return purchaseOrderHeaderRepository.count();
+    // }
 
-    public Long countByStatus(Status status)
-    {
-        return purchaseOrderHeaderRepository.countByStatus(status);
-    }
+    // public Long countByStatus(Status status)
+    // {
+    //     return purchaseOrderHeaderRepository.countByStatus(status);
+    // }
 
     public void genratepurchaseOrder(PurchaseRequestHeader purchaseRequestHeader)
     {   

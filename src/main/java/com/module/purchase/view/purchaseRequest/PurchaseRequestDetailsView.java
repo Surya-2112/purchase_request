@@ -295,11 +295,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                                 getUI().ifPresent(ui ->
 
-                                ui.navigate(
-
-                                                "purchase-request-form/"
-                                                                + header
-                                                                                .getPurchaseRequestId()));
+                                ui.navigate( "purchase-request-form/"+ header.getPurchaseRequestId()));
                         });
 
                         Button deleteButton = new Button("Delete Request");
@@ -328,30 +324,18 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                 // ================= WAITING APPROVAL =================
 
-                if (header.getStatus() == Status.WAITING_APPROVAL
-                                && (
-
-                                securityService.getLoggedInUser()
+                if (header.getStatus() == Status.WAITING_APPROVAL && (securityService.getLoggedInUser()
                                                 .getEmployee()
                                                 .getEmployeeId()
-                                                .equals(
-                                                                header.getCreatedBy()
-                                                                                .getEmployeeId())
+                                                .equals(header.getCreatedBy().getEmployeeId())
 
-                                                ||
-
-                                                securityService.getLoggedInUser()
-                                                                .getEmployee()
+                                                ||securityService.getLoggedInUser().getEmployee()
                                                                 .getRole()
                                                                 .getEmployeeGroups()
                                                                 .contains(EmployeeGroup.SUPER_ADMIN)
 
-                                                ||
-
-                                                securityService.getLoggedInUser()
-                                                                .getEmployee()
-                                                                .getRole()
-                                                                .getEmployeeGroups()
+                                                ||  securityService.getLoggedInUser()
+                                                                .getEmployee().getRole().getEmployeeGroups()
                                                                 .contains(EmployeeGroup.MANAGER)
 
                                 )) {

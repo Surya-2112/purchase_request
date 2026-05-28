@@ -19,14 +19,7 @@ import com.module.purchase.repository.UserRepository;
 public class DefaultAdminConfig {
 
     @Bean
-    CommandLineRunner createDefaultAdmin(
-
-            UserRepository userRepository,
-
-            EmployeeRepository employeeRepository,
-
-            RoleRepository roleRepository,
-
+    CommandLineRunner createDefaultAdmin(UserRepository userRepository, EmployeeRepository employeeRepository, RoleRepository roleRepository,
             PasswordEncoder passwordEncoder) {
 
         return args -> {
@@ -37,9 +30,7 @@ public class DefaultAdminConfig {
 
                 role.setRoleName("SUPER_ADMIN");
 
-                role.setEmployeeGroups(
-                        Arrays.asList(EmployeeGroup.values())
-                );
+                role.setEmployeeGroups(Arrays.asList(EmployeeGroup.values()));
 
                 role = roleRepository.save(role);
 
@@ -49,9 +40,7 @@ public class DefaultAdminConfig {
 
                 user.setUserEmail("admin@gmail.com");
 
-                user.setPassword(
-                        passwordEncoder.encode("admin123")
-                );
+                user.setPassword( passwordEncoder.encode("admin123"));
 
                 user.setActive(true);
 
@@ -61,9 +50,7 @@ public class DefaultAdminConfig {
 
                 employee.setEmployeeName("Super Admin");
 
-                employee.setEmployeeEmail(
-                        "admin@gmail.com"
-                );
+                employee.setEmployeeEmail("admin@gmail.com" );
 
                 employee.setActive(true);
 
