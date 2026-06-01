@@ -22,8 +22,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "department-details", layout = MainLayout.class)
 @PermitAll
-public class DepartmentDetailsView extends VerticalLayout
-        implements HasUrlParameter<Long> {
+public class DepartmentDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final DepartmentService departmentService;
 
@@ -40,14 +39,11 @@ public class DepartmentDetailsView extends VerticalLayout
     }
 
     @Override
-    public void setParameter(
-            BeforeEvent event,
-            Long departmentId) {
+    public void setParameter( BeforeEvent event, Long departmentId) {
 
         removeAll();
 
-        Optional<Department> optionalDepartment =
-                departmentService.getDepartmentById(departmentId);
+        Optional<Department> optionalDepartment = departmentService.getDepartmentById(departmentId);
 
         if (optionalDepartment.isEmpty()) {
 
@@ -62,35 +58,23 @@ public class DepartmentDetailsView extends VerticalLayout
 
         FormLayout formLayout = new FormLayout();
 
-        // DEPARTMENT ID
-        formLayout.addFormItem(
-                new Span(
-                        String.valueOf(
-                                department.getDepartmentId())),
-                "Department ID");
+        formLayout.addFormItem(new Span(String.valueOf( department.getDepartmentId())),"Department ID");
 
-        // DEPARTMENT NAME
         formLayout.addFormItem(
                 new Span(
                         department.getDepartmentName()),
                 "Department Name");
 
-        // DEPARTMENT CODE
         formLayout.addFormItem(
-                new Span(
-                        department.getDepartmentCode()),
+                new Span(department.getDepartmentCode()),
                 "Department Code");
 
-        // DEPARTMENT HEAD
         formLayout.addFormItem(
-                new Span(
-                        department.getHeadEmployee() == null
-                                ? ""
+                new Span(department.getHeadEmployee() == null? ""
                                 : department.getHeadEmployee()
                                         .getEmployeeName()),
                 "Department Head");
 
-        // STATUS
         formLayout.addFormItem(
                 new Span(
                         department.getActive()
@@ -98,7 +82,6 @@ public class DepartmentDetailsView extends VerticalLayout
                                 : "Inactive"),
                 "Status");
 
-        // UPDATE BUTTON
         Button updateButton = new Button("Update");
 
         updateButton.addClickListener(clickEvent -> {
@@ -109,7 +92,6 @@ public class DepartmentDetailsView extends VerticalLayout
                                     + department.getDepartmentId()));
         });
 
-        // DELETE BUTTON
         Button deleteButton = new Button("Delete");
 
         deleteButton.addClickListener(clickEvent -> {

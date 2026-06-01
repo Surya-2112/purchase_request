@@ -1,5 +1,7 @@
 package com.module.purchase.view.assigningConfig;
 
+import java.util.Map;
+
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningConfig;
 import com.module.purchase.service.AssigningConfigService;
@@ -42,7 +44,6 @@ public class AssigningConfigDetailsView extends VerticalLayout  implements HasUr
         public void setParameter(BeforeEvent event, Long assigningConfigId) {
 
                 removeAll();
-
                 AssigningConfig assigningConfig = assigningConfigService
                                 .getAssigningConfigById(assigningConfigId)
                                 .orElse(null);
@@ -66,7 +67,6 @@ public class AssigningConfigDetailsView extends VerticalLayout  implements HasUr
                 formLayout.addFormItem( new Span(String.valueOf(assigningConfig.getLevel())),
                                 "Level");
 
-                // EMPLOYEE GROUP
                 formLayout.addFormItem( new Span(assigningConfig.getEmployeeGroup() == null? ""
                                                 : assigningConfig.getEmployeeGroup().name()),"Role Group");
 
@@ -125,11 +125,12 @@ public class AssigningConfigDetailsView extends VerticalLayout  implements HasUr
                         dialog.open();
                 });
 
-                updateButton.setVisible(securityService.canAccessView("assigning-config-details"));
+                updateButton.setVisible(securityService.canAccessView("assigning-config-edit"));
                 deleteButton.setVisible(securityService.canAccessView("assigning-config-form"));
 
                 HorizontalLayout buttonLayout = new HorizontalLayout(updateButton, deleteButton);
 
                 add( title,formLayout,buttonLayout);
-        }
+
+                }
 }

@@ -33,7 +33,6 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
     private Users user;
 
-    // FIELDS
     private final TextField userNameField = new TextField("User Name");
     private final EmailField userEmailField = new EmailField("User Email");
 
@@ -52,11 +51,9 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
         setSizeFull();
         setPadding(true);
 
-        // EMPLOYEE LIST
         employeeField.setItems(employeeService.getEmployees());
         employeeField.setItemLabelGenerator(Employee::getEmployeeName);
 
-        // ACTIVE
         activeField.setItems("Active", "Inactive");
     }
 
@@ -74,7 +71,6 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
         H2 title = new H2("Update User");
 
-        // SET VALUES
         userNameField.setValue(user.getUserName() == null ? "" : user.getUserName());
         userEmailField.setValue(user.getUserEmail() == null ? "" : user.getUserEmail());
         userEmailField.setReadOnly(true);
@@ -85,13 +81,12 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
         activeField.setValue(Boolean.TRUE.equals(user.getActive()) ? "Active" : "Inactive");
 
         activeField.setReadOnly(!securityService.canAccessView("user-form"));
-        // FORM
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
                 userNameField,
                 userEmailField,
-                passwordField, // optional
+                passwordField,
                 employeeField,
                 activeField
         );
@@ -100,7 +95,6 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
                 new FormLayout.ResponsiveStep("0", 2)
         );
 
-        // SAVE
         Button saveButton = new Button("Update");
 
         saveButton.addClickListener(e -> {
@@ -112,9 +106,7 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
                 user.setEmployee(employeeField.getValue());
 
-                user.setActive(activeField.getValue() != null
-                                && activeField.getValue().equals("Active")
-                );
+                user.setActive(activeField.getValue() != null && activeField.getValue().equals("Active"));
 
                 if (!passwordField.isEmpty()) {
                     user.setPassword(passwordField.getValue());

@@ -25,12 +25,7 @@ public class Department {
 
     @OneToOne
     @JoinColumn(name = "headEmployeeId")
-    @JsonIgnoreProperties({
-    "department",
-    "role",
-    "user",
-    "address"
-})
+    @JsonIgnoreProperties({"department","role","user","address"})
     private Employee headEmployee;
    
     private Boolean active;

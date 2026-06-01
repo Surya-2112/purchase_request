@@ -2,6 +2,8 @@ package com.module.purchase.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.repository.AuditLogsRepository;
 import java.util.Optional;
@@ -25,7 +27,7 @@ public class AuditLogsService {
     public Optional<AuditLogs> getAuditLogById(Long id) {
        Optional<AuditLogs> existingAuditLog = auditLogsRepository.findById(id);
         if (!existingAuditLog.isPresent()) {
-                throw new RuntimeException("Audit log not found with id: " + id);
+                throw new ResourceNotFoundException("Audit log not found with id: " + id);
         }
        return existingAuditLog;
     }

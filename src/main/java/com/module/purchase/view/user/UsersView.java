@@ -26,8 +26,6 @@ public class UsersView extends VerticalLayout {
 
     private final UsersService usersService;
 
- //   private final SecurityService securityService;
-
 
     private final Grid<UsersDTO> userGrid = new Grid<>(UsersDTO.class, false);
 
@@ -48,19 +46,15 @@ public class UsersView extends VerticalLayout {
     public UsersView(UsersService usersService, EmployeeService employeeService,SecurityService securityService) {
 
         this.usersService = usersService;
-    //    this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
         setSpacing(true);
 
-        // EMPLOYEE dropdown
         employeeField.setItems(employeeService.getEmployees());
         employeeField.setItemLabelGenerator(Employee::getEmployeeName);
 
         activeField.setItems("Yes", "No");
-
-        // PAGINATION
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);
@@ -94,7 +88,6 @@ public class UsersView extends VerticalLayout {
         paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         paginationLayout.setAlignItems(Alignment.CENTER);
 
-        // HEADER
         H2 title = new H2("Users List");
 
         Button addButton = new Button("Add User", e -> {
@@ -108,7 +101,6 @@ public class UsersView extends VerticalLayout {
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-        // FILTER
         Button searchButton = new Button("Search", e -> applyFilter());
         Button clearButton = new Button("Clear", e -> clearFilter());
 
@@ -192,16 +184,13 @@ public class UsersView extends VerticalLayout {
     }
 
     private void clearFilter() {
-
         userIdField.clear();
         userNameField.clear();
         userEmailField.clear();
         employeeField.clear();
         activeField.clear();
-
         currentFilter = new UsersDTO();
         currentPage = 0;
-
         loadUsers();
     }
 }

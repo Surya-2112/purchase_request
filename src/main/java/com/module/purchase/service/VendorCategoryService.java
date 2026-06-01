@@ -14,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.module.purchase.customException.ResourceAlreadyUsedException;
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.VendorCategory;
@@ -42,7 +43,7 @@ public class VendorCategoryService {
         
         Optional<VendorCategory> existingVendorCategory = vendorCategoryRepository.findByCategoryName(vendorCategory.getCategoryName());
         if (existingVendorCategory.isPresent()) {
-            throw new RuntimeException("Vendor category already exists with name: " + vendorCategory.getCategoryName());
+            throw new ResourceAlreadyUsedException("Vendor category already exists with name: " + vendorCategory.getCategoryName());
         }
         vendorCategory = saveVendorCategory(vendorCategory);
 
@@ -60,7 +61,7 @@ public class VendorCategoryService {
     public Optional<VendorCategory> getVendorCategoryById(Long id) {
         Optional<VendorCategory> existingVendorCategory = vendorCategoryRepository.findById(id);
         if (!existingVendorCategory.isPresent()) {
-            throw new RuntimeException("Vendor category not found with id: " + id);
+            throw new ResourceNotFoundException("Vendor category not found with id: " + id);
         }
         return existingVendorCategory;
     }
@@ -81,8 +82,8 @@ public class VendorCategoryService {
     }
 
     public VendorCategory updateVendorCategory(VendorCategory vendorCategory,Employee employee)
-    {    getVendorCategoryById(vendorCategory.getCategoryId()).get();
-
+    {    
+        getVendorCategoryById(vendorCategory.getCategoryId()).get();
         vendorCategory=saveVendorCategory(vendorCategory);
 
         AuditLogs log = new AuditLogs();

@@ -18,7 +18,9 @@ import java.util.List;
 import org.springframework.data.domain.PageRequest;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
+import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceIsNotActiveException;
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.mapper.UsersMapper;
 import com.module.purchase.specification.UsersSpecification;
 import com.module.purchase.enums.EntityType;
@@ -53,16 +55,19 @@ public class UsersService {
     public Users addUsers(Users user, Employee created) {
         Optional<Users> existingUser = userRepository.findByUserEmail(user.getUserEmail());
         if (existingUser.isPresent()) {
-            throw new RuntimeException("User already exists with email: " + user.getUserEmail());
+            throw new ResourceAlreadyUsedException("User already exists with email: " + user.getUserEmail());
         }
+
         Employee employee = employeeService.getEmployeeById(user.getEmployee().getEmployeeId()).get();
         if (employee.getUser() != null) {
-            throw new RuntimeException("This Employee as another user");
+            throw new ResourceAlreadyUsedException("This Employee as another user");
         }
+
         employeeService.updateEmployee(employee, created);
         if (user.getUserId() == null) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
+        
         user = saveUsers(user);
         employee.setUser(user);
 
@@ -80,7 +85,7 @@ public class UsersService {
     public Optional<Users> getUserById(Long id) {
         Optional<Users> existingUser = userRepository.findById(id);
         if (!existingUser.isPresent()) {
-            throw new RuntimeException("User not found with id: " + id);
+            throw new ResourceNotFoundException("User not found with id: " + id);
         }
         return existingUser;
     }

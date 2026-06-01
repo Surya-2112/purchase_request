@@ -12,6 +12,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import com.module.purchase.customException.ModificationNotAllowedException;
+import com.module.purchase.customException.ResourceAlreadyUsedException;
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Department;
@@ -44,7 +47,7 @@ public class DepartmentBudgetService {
         Optional<DepartmentBudget> existingDepartmentBudget = departmentBudgetRepository
                 .findByDepartmentAndYear(departmentBudget.getDepartment(), departmentBudget.getYear());
         if (existingDepartmentBudget.isPresent()) {
-            throw new RuntimeException("Department budget for the given department and year already exists.");
+            throw new ResourceAlreadyUsedException("Department budget for the given department and year already exists.");
         }
         departmentBudget=saveDepartmentBudget(departmentBudget);
 
@@ -62,7 +65,7 @@ public class DepartmentBudgetService {
     public Optional<DepartmentBudget> getDepartmentBudgetById(Long id) {
         Optional<DepartmentBudget> existingDepartmentBudget = departmentBudgetRepository.findById(id);
         if (!existingDepartmentBudget.isPresent()) {
-            throw new RuntimeException("Department budget not found with id: " + id);
+            throw new ResourceNotFoundException("Department budget not found with id: " + id);
         }
         return existingDepartmentBudget;
     }
@@ -89,7 +92,7 @@ public class DepartmentBudgetService {
         DepartmentBudget exist=getDepartmentBudgetById(departmentBudget.getDepartmentBudgetId()).get();
          if(exist.getTotalBudgetAmount()- exist.getRemainingBudgetAmount()!= departmentBudget.getTotalBudgetAmount() - departmentBudget.getRemainingBudgetAmount())
          {
-            throw new RuntimeException("This department budget spended amount is"+(exist.getTotalBudgetAmount()- exist.getRemainingBudgetAmount()));
+            throw new ModificationNotAllowedException("This department budget spended amount is"+(exist.getTotalBudgetAmount()- exist.getRemainingBudgetAmount()));
          }
         departmentBudget=saveDepartmentBudget(departmentBudget);
         AuditLogs log = new AuditLogs();
@@ -108,7 +111,7 @@ public class DepartmentBudgetService {
         DepartmentBudget exist=getDepartmentBudgetById(departmentBudgetId).get();
         if(exist.getRemainingBudgetAmount()!= exist.getTotalBudgetAmount())
         {
-            throw new RuntimeException("This department budget is already in use do cannot delete");
+            throw new ResourceAlreadyUsedException("This department budget is already in use do cannot delete");
         }
         getDepartmentBudgetById(departmentBudgetId);
 

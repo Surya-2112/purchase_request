@@ -21,15 +21,12 @@ public class UsersForm extends Dialog {
 
     private final SecurityService securityService;
 
-    // BASIC INFO
     private final TextField userNameField = new TextField("User Name");
     private final EmailField userEmailField = new EmailField("User Email");
 
-    // PASSWORD
     private final PasswordField passwordField = new PasswordField("Password");
     private final PasswordField confirmPasswordField = new PasswordField("Confirm Password");
 
-    // EMPLOYEE LINK
     private final ComboBox<Employee> employeeField = new ComboBox<>("Employee");
 
 
@@ -41,18 +38,15 @@ public class UsersForm extends Dialog {
         setHeaderTitle("Add User");
         setWidth("600px");
 
-        // EMPLOYEE LOAD
         employeeField.setItems(employeeService.getEmployees());
         employeeField.setItemLabelGenerator(Employee::getEmployeeName);
 
-        // REQUIRED FIELDS
         userNameField.setRequired(true);
         userEmailField.setRequired(true);
         passwordField.setRequired(true);
         confirmPasswordField.setRequired(true);
         employeeField.setRequired(true);
 
-        // FORM
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
@@ -67,7 +61,6 @@ public class UsersForm extends Dialog {
                 new FormLayout.ResponsiveStep("0", 2)
         );
 
-        // BUTTONS
         Button saveButton = new Button("Save", e -> saveUser());
         Button cancelButton = new Button("Cancel", e -> close());
 
@@ -80,7 +73,6 @@ public class UsersForm extends Dialog {
 
         try {
 
-            // VALIDATION
             if (userNameField.isEmpty()
                     || userEmailField.isEmpty()
                     || passwordField.isEmpty()
@@ -103,7 +95,6 @@ public class UsersForm extends Dialog {
             user.setEmployee(employeeField.getValue());
             user.setActive(true);
 
-            //  IMPORTANT: In real app, NEVER store raw password in DTO/entity
             user.setPassword(passwordField.getValue());
 
             usersService.addUsers(user,securityService.getLoggedInUser().getEmployee());

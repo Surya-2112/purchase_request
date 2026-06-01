@@ -13,6 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
@@ -81,7 +82,7 @@ public class PurchaseRequestHeaderService {
     public Optional<PurchaseRequestHeader> getPurchaseRequestHeaderById(Long id) {
         Optional<PurchaseRequestHeader> existingPurchaseRequestHeader = purchaseRequestHeaderRepository.findById(id);
         if (!existingPurchaseRequestHeader.isPresent()) {
-            throw new RuntimeException("Purchase request header not found with id: " + id);
+            throw new ResourceNotFoundException("Purchase request header not found with id: " + id);
         }
        // System.out.println(existingPurchaseRequestHeader);
         return existingPurchaseRequestHeader;
@@ -138,7 +139,7 @@ public List<PurchaseRequestDTO> getRecentPurchaseRequests(PageRequest pageReques
 
          AuditLogs log= new AuditLogs();
 
-        if(purchaseRequestHeader.getStatus()==Status.CANCELLED)
+        if(purchaseRequestHeader.getStatus().equals(Status.CANCELLED))
         {  log.setAction(Action.CANCEL);
             List<AssigningApprovals> lines = assigningApprovalsService.getAssigningApprovalByTypeAndReferId(ApprovalType.PURCHASE_REQUEST_APPROVAL,purchaseRequestHeader.getPurchaseRequestId());
 
@@ -151,8 +152,7 @@ public List<PurchaseRequestDTO> getRecentPurchaseRequests(PageRequest pageReques
             }
         }
         else if(purchaseRequestHeader.getStatus()==Status.APPROVED)
-        {
-            log.setAction(Action.APPROVE);
+        {   log.setAction(Action.APPROVE);
         }else if(purchaseRequestHeader.getStatus()==Status.REJECTED){
              log.setAction(Action.REJECT);
         }else{

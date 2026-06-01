@@ -122,7 +122,6 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 getStyle().set("overflow", "auto");
 
-                // ================= DEPARTMENT =================
 
                 departmentField.setItems(departmentService.getDepartments());
 
@@ -130,7 +129,6 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 departmentField.setWidth("300px");
 
-                // ================= VENDOR =================
 
                 vendorField.setItems(vendorService.getVendors());
 

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Item;
@@ -58,7 +59,7 @@ public class ItemService {
     public Optional<Item> getItemById(Long id) {
         Optional<Item> existingItem = itemRepository.findById(id);
         if (!existingItem.isPresent()) {
-            throw new RuntimeException("Item not found with id: " + id);
+            throw new ResourceNotFoundException("Item not found with id: " + id);
         }       
         return existingItem;
     }

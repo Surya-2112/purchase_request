@@ -18,7 +18,9 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 
+import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.specification.RoleSpecification;
 
@@ -42,7 +44,7 @@ public class RoleService {
     public Role addRole(Role role,Employee employee) {
         Optional<Role> existingRole = roleRepository.findByRoleName(role.getRoleName());
         if (existingRole.isPresent()) {
-            throw new RuntimeException("Role already exists with name: " + role.getRoleName());
+            throw new ResourceAlreadyUsedException("Role already exists with name: " + role.getRoleName());
         }  
         role=saveRole(role);
         AuditLogs log= new AuditLogs();
@@ -59,7 +61,7 @@ public class RoleService {
     public Optional<Role> getRoleById(Long id) {
         Optional<Role> existingRole = roleRepository.findById(id);
         if (!existingRole.isPresent()) {
-            throw new RuntimeException("Role not found with id: " + id);
+            throw new ResourceNotFoundException("Role not found with id: " + id);
         }
         return existingRole;
     }
@@ -89,7 +91,7 @@ public class RoleService {
     {   Role exist=getRoleById(role.getRoleId()).get();
         if(!exist.getRoleName().equals(role.getRoleName()))
         {
-            throw new RuntimeException("Role name not allowed to modified");
+            throw new ModificationNotAllowedException("Role name not allowed to modified");
         }
         role=saveRole(role);
 

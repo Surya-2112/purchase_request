@@ -24,27 +24,17 @@ public class AssigningConfigForm extends Dialog {
 
     private final SecurityService securityService;
 
-   // private final EmployeeService employeeService;
+    private final ComboBox<ApprovalType> approvalTypeField = new ComboBox<>("Approval Type");
 
-    // ================= FIELDS =================
+    private final IntegerField levelField = new IntegerField("Level");
 
-    private final ComboBox<ApprovalType> approvalTypeField =
-            new ComboBox<>("Approval Type");
+    private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Role Group");
 
-    private final IntegerField levelField =
-            new IntegerField("Level");
+    private final NumberField minAmountField = new NumberField("Min Amount");
 
-    private final ComboBox<EmployeeGroup> employeeGroupField =
-            new ComboBox<>("Role Group");
+    private final NumberField maxAmountField = new NumberField("Max Amount");
 
-    private final NumberField minAmountField =
-            new NumberField("Min Amount");
-
-    private final NumberField maxAmountField =
-            new NumberField("Max Amount");
-
-    private final ComboBox<Employee> defaultEmployeeField =
-            new ComboBox<>("Default Employee");
+    private final ComboBox<Employee> defaultEmployeeField = new ComboBox<>("Default Employee");
 
     public AssigningConfigForm(
 
@@ -55,21 +45,14 @@ public class AssigningConfigForm extends Dialog {
             SecurityService securityService
     ) {
 
-        this.assigningConfigService =
-                assigningConfigService;
+        this.assigningConfigService = assigningConfigService;
 
-        //this.employeeService = employeeService;
 
-        this.securityService =
-                securityService;
+        this.securityService = securityService;
 
-        setHeaderTitle(
-                "Add Assigning Config"
-        );
+        setHeaderTitle( "Add Assigning Config");
 
         setWidth("700px");
-
-        // ================= REQUIRED =================
 
         approvalTypeField.setRequired(true);
 
@@ -87,48 +70,29 @@ public class AssigningConfigForm extends Dialog {
 
         defaultEmployeeField.setRequiredIndicatorVisible(true);
 
-        // ================= LOAD ENUMS =================
+        approvalTypeField.setItems( ApprovalType.values());
 
-        approvalTypeField.setItems(
-                ApprovalType.values()
-        );
+        employeeGroupField.setItems(EmployeeGroup.values());
 
-        employeeGroupField.setItems(
-                EmployeeGroup.values()
-        );
-
-        // ================= EMPLOYEE DROPDOWN =================
-
-        defaultEmployeeField.setItemLabelGenerator(
-                Employee::getEmployeeName
-        );
-
-        // LOAD EMPLOYEES BASED ON GROUP
+        defaultEmployeeField.setItemLabelGenerator(Employee::getEmployeeName);
 
         employeeGroupField.addValueChangeListener(event -> {
 
-            EmployeeGroup selectedGroup =
-                    event.getValue();
+            EmployeeGroup selectedGroup = event.getValue();
 
             if (selectedGroup != null) {
 
-                defaultEmployeeField.setItems(
-                        employeeService.getEmployeesByEmployeeGroup(selectedGroup));
+                defaultEmployeeField.setItems( employeeService.getEmployeesByEmployeeGroup(selectedGroup));
 
             } else {
 
                 defaultEmployeeField.clear();
 
-                defaultEmployeeField.setItems(
-                        Collections.emptyList()
-                );
+                defaultEmployeeField.setItems(Collections.emptyList());
             }
         });
 
-        // ================= FORM =================
-
-        FormLayout formLayout =
-                new FormLayout();
+        FormLayout formLayout = new FormLayout();
 
         formLayout.add(
 
@@ -153,28 +117,17 @@ public class AssigningConfigForm extends Dialog {
                 )
         );
 
-        // ================= BUTTONS =================
 
-        Button saveButton =
-                new Button("Save");
+        Button saveButton = new Button("Save");
 
-        Button cancelButton =
-                new Button("Cancel");
+        Button cancelButton = new Button("Cancel");
 
-        saveButton.addClickListener(
+        saveButton.addClickListener(event -> saveAssigningConfig());
 
-                event -> saveAssigningConfig()
-        );
+        cancelButton.addClickListener(event -> close());
 
-        cancelButton.addClickListener(
-                event -> close()
-        );
-
-        HorizontalLayout buttonLayout =
-                new HorizontalLayout(
-
+        HorizontalLayout buttonLayout = new HorizontalLayout(
                         saveButton,
-
                         cancelButton
                 );
 
@@ -184,14 +137,9 @@ public class AssigningConfigForm extends Dialog {
         );
     }
 
-    // ================= SAVE =================
-
     private void saveAssigningConfig() {
 
         try {
-
-            // ================= VALIDATION =================
-
             if (approvalTypeField.isEmpty()
                     || levelField.isEmpty()
                     || employeeGroupField.isEmpty()
@@ -233,9 +181,7 @@ public class AssigningConfigForm extends Dialog {
                 return;
             }
 
-            if (maxAmountField.getValue() < 1.0
-                    || maxAmountField.getValue()
-                            <= minAmountField.getValue()) {
+            if (maxAmountField.getValue() < 1.0 || maxAmountField.getValue() <= minAmountField.getValue()) {
 
                 maxAmountField.setInvalid(true);
 
@@ -247,29 +193,18 @@ public class AssigningConfigForm extends Dialog {
                 return;
             }
 
-            // ================= CREATE ENTITY =================
+            AssigningConfig assigningConfig = new AssigningConfig();
 
-            AssigningConfig assigningConfig =
-                    new AssigningConfig();
+            assigningConfig.setApprovalType(approvalTypeField.getValue());
 
-            assigningConfig.setApprovalType(
-
-                    approvalTypeField.getValue()
-            );
-
-            assigningConfig.setLevel(
-                    levelField.getValue()
-            );
+            assigningConfig.setLevel(levelField.getValue());
 
             assigningConfig.setEmployeeGroup(
 
                     employeeGroupField.getValue()
             );
 
-            assigningConfig.setMinAmount(
-
-                    minAmountField.getValue()
-            );
+            assigningConfig.setMinAmount( minAmountField.getValue() );
 
             assigningConfig.setMaxAmount(
 
@@ -280,8 +215,6 @@ public class AssigningConfigForm extends Dialog {
 
                     defaultEmployeeField.getValue()
             );
-
-            // ================= SAVE =================
 
             assigningConfigService.addAssigningConfig(
 

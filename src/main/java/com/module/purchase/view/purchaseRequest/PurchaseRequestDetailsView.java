@@ -17,10 +17,9 @@ import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
@@ -49,8 +48,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
         private PurchaseRequestHeader header;
 
-        // ================= HEADER UI =================
-
         private final Span requestId = new Span();
 
         private final Span createdBy = new Span();
@@ -63,35 +60,22 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
         private final Span status = new Span();
 
-        // ================= ACTIONS =================
-
         private final HorizontalLayout actionLayout = new HorizontalLayout();
-
-        // ================= GRIDS =================
 
         private final Grid<PurchaseRequestLine> lineGrid = new Grid<>(PurchaseRequestLine.class, false);
 
         private final Grid<AssigningApprovals> approvalGrid = new Grid<>(AssigningApprovals.class, false);
 
-        // ================= DOCUMENTS =================
+        private final VerticalLayout previewOverlay = new VerticalLayout();
+
+        private final Dialog previewDialog = new Dialog();
 
         private final Grid<PurchaseRequestDocument> documentGrid = new Grid<>(PurchaseRequestDocument.class, false);
 
-        // ================= CONSTRUCTOR =================
-
-        public PurchaseRequestDetailsView(
-
-                        PurchaseRequestHeaderService headerService,
-
+        public PurchaseRequestDetailsView(PurchaseRequestHeaderService headerService,
                         AssigningApprovalsService assigningApprovalsService,
-
                         PurchaseRequestLineService purchaseRequestLineService,
-
-                        PurchaseRequestDocumentService documentService,
-
-                        SecurityService securityService
-
-        ) {
+                        PurchaseRequestDocumentService documentService, SecurityService securityService) {
 
                 this.headerService = headerService;
 
@@ -147,10 +131,12 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                 scroller.setSizeFull();
 
-                add(scroller);
-        }
+                previewDialog.setWidth("80%");
+                previewDialog.setHeight("90%");
+                add(previewDialog);
 
-        // ================= ROUTE =================
+                add(scroller, previewOverlay);
+        }
 
         @Override
         public void beforeEnter(BeforeEnterEvent event) {
@@ -179,8 +165,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout
                 configureActions();
         }
 
-        // ================= HEADER =================
-
         private VerticalLayout buildHeaderSection() {
 
                 VerticalLayout layout = new VerticalLayout(
@@ -203,12 +187,8 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                 layout.setWidthFull();
 
-                layout.getStyle()
-
-                                .set("background", "#f9f9f9")
-
+                layout.getStyle().set("background", "#f9f9f9")
                                 .set("border", "1px solid #ddd")
-
                                 .set("border-radius", "8px");
 
                 return layout;
@@ -216,78 +196,33 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
         private void bindHeader() {
 
-                requestId.setText(
-                                "Request ID : "
-                                                + header.getPurchaseRequestId());
+                requestId.setText("Request ID : " + header.getPurchaseRequestId());
 
-                createdBy.setText(
-                                "Created By : "
-                                                + (
+                createdBy.setText("Created By : "
+                                + (header.getCreatedBy() != null ? header.getCreatedBy().getEmployeeName() : "-"));
 
-                                                header.getCreatedBy() != null
+                department.setText("Department : "
+                                + (header.getForDepartment() != null ? header.getForDepartment().getDepartmentName()
+                                                : "-"));
 
-                                                                ? header.getCreatedBy()
-                                                                                .getEmployeeName()
+                totalAmount.setText("Total Amount : " + header.getTotalAmount());
 
-                                                                : "-"));
+                createdDate.setText("Created Date : " + header.getCreatedDate());
 
-                department.setText(
-                                "Department : "
-                                                + (
-
-                                                header.getForDepartment() != null
-
-                                                                ? header.getForDepartment()
-                                                                                .getDepartmentName()
-
-                                                                : "-"));
-
-                totalAmount.setText(
-                                "Total Amount : "
-                                                + header.getTotalAmount());
-
-                createdDate.setText(
-                                "Created Date : "
-                                                + header.getCreatedDate());
-
-                status.setText(
-                                "Status : "
-                                                + header.getStatus());
+                status.setText("Status : " + header.getStatus());
         }
-
-        // ================= ACTIONS =================
 
         private void configureActions() {
 
                 actionLayout.removeAll();
 
                 if (header.getStatus() == Status.DRAFT
-                                && (
-
-                                securityService.getLoggedInUser()
-                                                .getEmployee()
-                                                .getEmployeeId()
-                                                .equals(
-                                                                header.getCreatedBy()
-                                                                                .getEmployeeId())
-
-                                                ||
-
-                                                securityService.getLoggedInUser()
-                                                                .getEmployee()
-                                                                .getRole()
-                                                                .getEmployeeGroups()
-                                                                .contains(EmployeeGroup.SUPER_ADMIN)
-
-                                                ||
-
-                                                securityService.getLoggedInUser()
-                                                                .getEmployee()
-                                                                .getRole()
-                                                                .getEmployeeGroups()
-                                                                .contains(EmployeeGroup.MANAGER)
-
-                                )) {
+                                && (securityService.getLoggedInUser().getEmployee().getEmployeeId()
+                                                .equals(header.getCreatedBy().getEmployeeId())
+                                                || securityService.getLoggedInUser().getEmployee().getRole()
+                                                                .getEmployeeGroups().contains(EmployeeGroup.SUPER_ADMIN)
+                                                || securityService.getLoggedInUser().getEmployee().getRole()
+                                                                .getEmployeeGroups().contains(EmployeeGroup.MANAGER))) {
 
                         Button editButton = new Button("Edit Request");
 
@@ -295,7 +230,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                                 getUI().ifPresent(ui ->
 
-                                ui.navigate( "purchase-request-form/"+ header.getPurchaseRequestId()));
+                                ui.navigate("purchase-request-form/" + header.getPurchaseRequestId()));
                         });
 
                         Button deleteButton = new Button("Delete Request");
@@ -306,39 +241,33 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                                                 header.getPurchaseRequestId(),
 
-                                                securityService.getLoggedInUser()
-                                                                .getEmployee());
+                                                securityService.getLoggedInUser().getEmployee());
 
-                                Notification.show(
-                                                "Purchase Request Deleted");
+                                Notification.show("Purchase Request Deleted");
 
                                 getUI().ifPresent(ui ->
 
                                 ui.navigate("purchase-request"));
                         });
 
-                        actionLayout.add(
-                                        editButton,
-                                        deleteButton);
+                        actionLayout.add(editButton, deleteButton);
                 }
 
-                // ================= WAITING APPROVAL =================
-
                 if (header.getStatus() == Status.WAITING_APPROVAL && (securityService.getLoggedInUser()
-                                                .getEmployee()
-                                                .getEmployeeId()
-                                                .equals(header.getCreatedBy().getEmployeeId())
+                                .getEmployee()
+                                .getEmployeeId()
+                                .equals(header.getCreatedBy().getEmployeeId())
 
-                                                ||securityService.getLoggedInUser().getEmployee()
-                                                                .getRole()
-                                                                .getEmployeeGroups()
-                                                                .contains(EmployeeGroup.SUPER_ADMIN)
+                                || securityService.getLoggedInUser().getEmployee()
+                                                .getRole()
+                                                .getEmployeeGroups()
+                                                .contains(EmployeeGroup.SUPER_ADMIN)
 
-                                                ||  securityService.getLoggedInUser()
-                                                                .getEmployee().getRole().getEmployeeGroups()
-                                                                .contains(EmployeeGroup.MANAGER)
+                                || securityService.getLoggedInUser()
+                                                .getEmployee().getRole().getEmployeeGroups()
+                                                .contains(EmployeeGroup.MANAGER)
 
-                                )) {
+                )) {
 
                         Button cancelButton = new Button("Cancel Request");
 
@@ -350,9 +279,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout
                                 headerService.updatePurchaseRequestHeader(
 
                                                 header,
-
-                                                securityService.getLoggedInUser()
-                                                                .getEmployee());
+                                                securityService.getLoggedInUser().getEmployee());
 
                                 Notification.show(
                                                 "Purchase Request Cancelled");
@@ -366,11 +293,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout
                 }
         }
 
-        // ================= GRID CONFIG =================
-
         private void configureGrids() {
-
-                // ================= LINE GRID =================
 
                 lineGrid.addColumn(
                                 PurchaseRequestLine::getPurchaseRequestLineId)
@@ -405,23 +328,15 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                 ).setHeader("VAT Code");
 
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getDiscount)
-                                .setHeader("Discount");
+                lineGrid.addColumn(PurchaseRequestLine::getDiscount).setHeader("Discount");
 
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getTotalPrice)
-                                .setHeader("Total Price");
+                lineGrid.addColumn(PurchaseRequestLine::getTotalPrice).setHeader("Total Price");
 
                 lineGrid.setWidthFull();
 
                 lineGrid.setAllRowsVisible(true);
 
-                // ================= APPROVAL GRID =================
-
-                approvalGrid.addColumn(
-                                AssigningApprovals::getLevel)
-                                .setHeader("Level");
+                approvalGrid.addColumn(AssigningApprovals::getLevel).setHeader("Level");
 
                 approvalGrid.addColumn(a ->
 
@@ -452,16 +367,13 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                 approvalGrid.setAllRowsVisible(true);
 
-                documentGrid.addColumn(
-                                PurchaseRequestDocument::getFileName)
+                documentGrid.addColumn(PurchaseRequestDocument::getFileName)
                                 .setHeader("File Name");
 
-                documentGrid.addColumn(
-                                PurchaseRequestDocument::getFileType)
+                documentGrid.addColumn(PurchaseRequestDocument::getFileType)
                                 .setHeader("Type");
 
-                documentGrid.addColumn(
-                                PurchaseRequestDocument::getFileSize)
+                documentGrid.addColumn(PurchaseRequestDocument::getFileSize)
                                 .setHeader("Size");
 
                 documentGrid.setWidthFull();
@@ -469,40 +381,78 @@ public class PurchaseRequestDetailsView extends VerticalLayout
                 documentGrid.setAllRowsVisible(true);
 
                 documentGrid.addItemDoubleClickListener(event -> {
+
                         PurchaseRequestDocument document = event.getItem();
+
                         StreamResource resource = new StreamResource(
                                         document.getFileName(),
                                         () -> new ByteArrayInputStream(document.getDocumentData()));
+
+                        resource.setContentType(document.getFileType());
+
                         getUI().ifPresent(ui -> {
+
                                 var registration = ui.getSession()
                                                 .getResourceRegistry()
                                                 .registerResource(resource);
 
-                                String url = registration.getResourceUri()
-                                                .toString();
+                                String url = registration.getResourceUri().toString();
 
-                                ui.getPage().open(url, "_blank");
+                                previewDialog.setWidth("90vw");
+                                previewDialog.setHeight("90vh");
+
+                                Button closeButton = new Button("Close");
+                                closeButton.addClickListener(e -> previewDialog.close());
+
+                                VerticalLayout content = new VerticalLayout();
+                                content.setSizeFull();
+
+                                String fileType = document.getFileType();
+
+                                if (fileType != null && fileType.startsWith("image/")) {
+
+                                        com.vaadin.flow.component.html.Image image = new com.vaadin.flow.component.html.Image(
+                                                        url,
+                                                        document.getFileName());
+
+                                        image.setWidthFull();
+                                        image.setMaxHeight("80vh");
+
+                                        content.add(closeButton, image);
+
+                                } else if ("application/pdf".equals(fileType)) {
+
+                                        com.vaadin.flow.component.Html pdfViewer = new com.vaadin.flow.component.Html(
+                                                        "<embed src='" + url +
+                                                                        "' type='application/pdf' width='100%' height='800px'>");
+
+                                        content.add(closeButton, pdfViewer);
+
+                                } else {
+
+                                        Button downloadButton = new Button("Download File");
+                                        downloadButton.addClickListener(e -> ui.getPage().open(url, "_blank"));
+
+                                        content.add(
+                                                        closeButton,
+                                                        new Span("Preview not available for this file type."),
+                                                        downloadButton);
+                                }
+
+                                previewDialog.add(content);
+                                previewDialog.open();
                         });
                 });
-
         }
-
-        // ================= LOAD DATA =================
 
         private void loadGrids() {
 
-                lineGrid.setItems(
+                lineGrid.setItems(purchaseRequestLineService.getPurchaseRequestLineByHeader(header));
 
-                                purchaseRequestLineService
-                                                .getPurchaseRequestLineByHeader(
-                                                                header));
-
-                approvalGrid.setItems(assigningApprovalsService
-                                .getAssigningApprovalByTypeAndReferId(ApprovalType.PURCHASE_REQUEST_APPROVAL,
-                                                header.getPurchaseRequestId()));
+                approvalGrid.setItems(assigningApprovalsService.getAssigningApprovalByTypeAndReferId(
+                                ApprovalType.PURCHASE_REQUEST_APPROVAL,
+                                header.getPurchaseRequestId()));
         }
-
-        // ================= DOCUMENTS =================
 
         private void loadDocuments() {
 

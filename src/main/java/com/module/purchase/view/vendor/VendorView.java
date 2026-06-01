@@ -27,8 +27,6 @@ public class VendorView extends VerticalLayout {
 
     private final VendorService vendorService;
 
- //   private final SecurityService securityService;
-
     private final Grid<VendorDTO> vendorGrid = new Grid<>(VendorDTO.class, false);
 
     private final TextField vendorIdField = new TextField("Vendor ID");
@@ -50,13 +48,11 @@ public class VendorView extends VerticalLayout {
     public VendorView(VendorService vendorService,VendorCategoryService vendorCategoryService,SecurityService securityService) {
 
         this.vendorService = vendorService;
-//        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
         setSpacing(true);
 
-        // CATEGORY
         vendorCategoryField.setItems(vendorCategoryService.getVendorCategories());
         vendorCategoryField.setItemLabelGenerator(
                 VendorCategory::getCategoryName
@@ -79,7 +75,6 @@ public class VendorView extends VerticalLayout {
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-        // FILTER
         Button searchButton = new Button("Search", e -> applyFilter());
         Button clearButton = new Button("Clear", e -> clearFilter());
 
@@ -122,9 +117,6 @@ public class VendorView extends VerticalLayout {
                 );
         });
 
-        // =========================
-        // PAGINATION
-        // =========================
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);

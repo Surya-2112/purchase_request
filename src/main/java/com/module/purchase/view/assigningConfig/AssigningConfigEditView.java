@@ -34,23 +34,17 @@ public class AssigningConfigEditView extends VerticalLayout
 
     private final SecurityService securityService;
 
-    private final ComboBox<ApprovalType> approvalTypeField =
-            new ComboBox<>("Approval Type");
+    private final ComboBox<ApprovalType> approvalTypeField =new ComboBox<>("Approval Type");
 
-    private final IntegerField levelField =
-            new IntegerField("Level");
+    private final IntegerField levelField =new IntegerField("Level");
 
-    private final ComboBox<EmployeeGroup> employeeGroupField =
-            new ComboBox<>("Role Group");
+    private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Role Group");
 
-    private final NumberField minAmountField =
-            new NumberField("Min Amount");
+    private final NumberField minAmountField = new NumberField("Min Amount");
 
-    private final NumberField maxAmountField =
-            new NumberField("Max Amount");
+    private final NumberField maxAmountField = new NumberField("Max Amount");
 
-    private final ComboBox<Employee> defaultEmployeeField =
-            new ComboBox<>("Default Employee");
+    private final ComboBox<Employee> defaultEmployeeField =new ComboBox<>("Default Employee");
 
     private AssigningConfig assigningConfig;
 
@@ -67,13 +61,9 @@ public class AssigningConfigEditView extends VerticalLayout
 
         setPadding(true);
 
-        // LOAD APPROVAL TYPES
-        approvalTypeField.setItems(
-                ApprovalType.values());
+        approvalTypeField.setItems(ApprovalType.values());
 
-        // LOAD EMPLOYEE GROUPS
-        employeeGroupField.setItems(
-                EmployeeGroup.values());
+        employeeGroupField.setItems( EmployeeGroup.values());
 
         // DEFAULT EMPLOYEE
         defaultEmployeeField.setItemLabelGenerator(

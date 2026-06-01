@@ -3,7 +3,6 @@ package com.module.purchase.service;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.time.Year;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,10 +19,9 @@ import com.module.purchase.repository.AssigningApprovalsRepository;
 import com.module.purchase.specification.AssigningApprovalsSpecification;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.AuditLogs;
-import com.module.purchase.entity.DepartmentBudget;
-import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;
 import com.module.purchase.entity.Employee;
@@ -63,7 +61,7 @@ public class AssigningApprovalsService {
     public Optional<AssigningApprovals> getAssigningApprovalById(Long id) {
         Optional<AssigningApprovals> existingApproval = assigningApprovalsRepository.findById(id);
         if (!existingApproval.isPresent()) {
-            throw new RuntimeException("Assigning approval not found with id: " + id);
+            throw new ResourceNotFoundException("Assigning approval not found with id: " + id);
         }
         return existingApproval;
     }
@@ -76,6 +74,7 @@ public class AssigningApprovalsService {
     public List<AssigningApprovals> getAllApprovals() {
         return assigningApprovalsRepository.findAll();
     }
+    
     public AssigningApprovals getAssigningApprovalByTypeAndReferIdAndLevle(ApprovalType approvalType,Long referenceId,Integer level)
     {
      Optional<AssigningApprovals> exist=assigningApprovalsRepository.findByApprovalTypeAndReferenceIdAndLevel(approvalType,referenceId,level);
@@ -99,6 +98,7 @@ public class AssigningApprovalsService {
     }
 
      public AssigningApprovals addApprovals(AssigningApprovals assigningApproval,Employee employee) {
+        
         if(assigningApproval.getLevel()==1)
         {
             assigningApproval.setStatus(Status.WAITING_APPROVAL);

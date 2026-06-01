@@ -16,11 +16,10 @@ public class DepartmentForm extends Dialog {
 
     private final DepartmentService departmentService;
     private final SecurityService securityService;
-    //private EmployeeService employeeService;
 
     private final TextField departmentNameField = new TextField("Department Name");
     private final TextField departmentCodeField = new TextField("Department Code");
-  //  private final ComboBox<Employee> departmentHeadCombo = new ComboBox<>("Department Head");
+  
 
     public DepartmentForm(DepartmentService departmentService, EmployeeService employeeServices, SecurityService securityService) {
         this.departmentService = departmentService;

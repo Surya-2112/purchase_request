@@ -1,10 +1,6 @@
 package com.module.purchase.entity;
 
 import java.time.LocalDate;
-
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.module.purchase.enums.Status;
 
 import jakarta.persistence.Entity;
@@ -15,7 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
 @Entity
@@ -41,16 +36,8 @@ public class PurchaseOrderHeader {
 
     private LocalDate createdDate;
 
-    private LocalDate expectedDeliveryDate;
-
-    private Integer level;
-
     @Enumerated(EnumType.STRING)
     private Status status;
-
-    @OneToMany(mappedBy = "referenceId")
-    @JsonIgnoreProperties({"approver", "assignedBy"})
-    private List<AssigningApprovals> assigningApprovals;
 
     public Long getPurchaseOrderId() {
         return purchaseOrderId;
@@ -100,22 +87,6 @@ public class PurchaseOrderHeader {
         this.createdDate = createdDate;
     }
 
-    public LocalDate getExpectedDeliveryDate() {
-        return expectedDeliveryDate;
-    }
-
-    public void setExpectedDeliveryDate(LocalDate expectedDeliveryDate) {
-        this.expectedDeliveryDate = expectedDeliveryDate;
-    }
-
-    public Integer getLevel() {
-        return level;
-    }
-
-    public void setLevel(Integer level) {
-        this.level = level;
-    }
-
     public Status getStatus() {
         return status;
     }
@@ -123,14 +94,5 @@ public class PurchaseOrderHeader {
     public void setStatus(Status status) {
         this.status = status;
     }
-
-    public List<AssigningApprovals> getAssigningApprovals() {
-        return assigningApprovals;
-    }
-
-    public void setAssigningApprovals(List<AssigningApprovals> assigningApprovals) {
-        this.assigningApprovals = assigningApprovals;
-    }
-
 
 }

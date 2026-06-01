@@ -20,6 +20,7 @@ import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
@@ -41,546 +42,530 @@ import jakarta.annotation.security.PermitAll;
 @Route(value = "assigning-approvals-details/:id", layout = MainLayout.class)
 @PermitAll
 public class AssigningApprovalsDetailsView extends VerticalLayout
-        implements BeforeEnterObserver {
+                implements BeforeEnterObserver {
 
-    private final PurchaseRequestHeaderService headerService;
+        private final PurchaseRequestHeaderService headerService;
 
-    private final PurchaseRequestLineService lineService;
+        private final PurchaseRequestLineService lineService;
 
-    private final AssigningApprovalsService approvalsService;
+        private final AssigningApprovalsService approvalsService;
 
-    private final DepartmentBudgetService departmentBudgetService;
+        private final DepartmentBudgetService departmentBudgetService;
 
-    private final PurchaseRequestDocumentService documentService;
+        private final PurchaseRequestDocumentService documentService;
 
-    private final SecurityService securityService;
+        private final SecurityService securityService;
 
-    private PurchaseRequestHeader header;
+        private PurchaseRequestHeader header;
 
-    private AssigningApprovals approval;
+        private AssigningApprovals approval;
 
-    // ================= HEADER =================
+        private final Span requestId = new Span();
 
-    private final Span requestId = new Span();
+        private final Span createdBy = new Span();
 
-    private final Span createdBy = new Span();
+        private final Span department = new Span();
 
-    private final Span department = new Span();
+        private final Span totalAmount = new Span();
 
-    private final Span totalAmount = new Span();
+        private final Span createdDate = new Span();
 
-    private final Span createdDate = new Span();
+        private final Span level = new Span();
 
-    private final Span level = new Span();
+        private final Span status = new Span();
 
-    private final Span status = new Span();
+        private final H3 budgetTitle = new H3();
 
-    // ================= BUDGET =================
+        private final Span budgetYear = new Span();
 
-    private final H3 budgetTitle = new H3();
+        private final Span totalBudgetAmount = new Span();
 
-    private final Span budgetYear = new Span();
+        private final Span remainingBudgetAmount = new Span();
 
-    private final Span totalBudgetAmount = new Span();
+        private Double remainingBudget;
 
-    private final Span remainingBudgetAmount = new Span();
+        private Button approveBtn;
 
-    private Double remainingBudget;
+        private Button rejectBtn;
 
-    private Button approveBtn;
+        private final TextArea comments = new TextArea("Comments");
 
-    private Button rejectBtn;
+        private final Grid<PurchaseRequestLine> lineGrid = new Grid<>(PurchaseRequestLine.class, false);
 
-    private final TextArea comments = new TextArea("Comments");
+        private final Grid<PurchaseRequestDocument> documentGrid = new Grid<>(PurchaseRequestDocument.class, false);
 
-    private final Grid<PurchaseRequestLine> lineGrid =
-            new Grid<>(PurchaseRequestLine.class, false);
+        public AssigningApprovalsDetailsView(
 
-    private final Grid<PurchaseRequestDocument> documentGrid =
-            new Grid<>(PurchaseRequestDocument.class, false);
+                        PurchaseRequestHeaderService headerService,
 
-    // ================= CONSTRUCTOR =================
+                        PurchaseRequestLineService lineService,
 
-    public AssigningApprovalsDetailsView(
+                        AssigningApprovalsService approvalsService,
 
-            PurchaseRequestHeaderService headerService,
+                        DepartmentBudgetService departmentBudgetService,
 
-            PurchaseRequestLineService lineService,
+                        PurchaseRequestDocumentService documentService,
 
-            AssigningApprovalsService approvalsService,
+                        SecurityService securityService) {
 
-            DepartmentBudgetService departmentBudgetService,
+                this.headerService = headerService;
 
-            PurchaseRequestDocumentService documentService,
+                this.lineService = lineService;
 
-            SecurityService securityService) {
+                this.approvalsService = approvalsService;
 
-        this.headerService = headerService;
+                this.departmentBudgetService = departmentBudgetService;
 
-        this.lineService = lineService;
+                this.documentService = documentService;
 
-        this.approvalsService = approvalsService;
+                this.securityService = securityService;
 
-        this.departmentBudgetService = departmentBudgetService;
+                setSizeFull();
 
-        this.documentService = documentService;
+                setPadding(false);
 
-        this.securityService = securityService;
+                setSpacing(false);
 
-        setSizeFull();
+                comments.setWidthFull();
 
-        setPadding(false);
+                comments.setMinHeight("120px");
 
-        setSpacing(false);
+                configureLineGrid();
 
-        comments.setWidthFull();
+                configureDocumentGrid();
 
-        comments.setMinHeight("120px");
+                approveBtn = new Button("Approve");
 
-        configureLineGrid();
+                rejectBtn = new Button("Reject");
 
-        configureDocumentGrid();
+                approveBtn.addClickListener(e -> approveRequest());
 
-        approveBtn = new Button("Approve");
+                rejectBtn.addClickListener(e -> rejectRequest());
 
-        rejectBtn = new Button("Reject");
+                HorizontalLayout buttonLayout = new HorizontalLayout(
+                                approveBtn,
+                                rejectBtn);
 
-        approveBtn.addClickListener(e -> approveRequest());
+                VerticalLayout content = new VerticalLayout(
 
-        rejectBtn.addClickListener(e -> rejectRequest());
+                                new H2("Purchase Request Approval Details"),
 
-        HorizontalLayout buttonLayout =
-                new HorizontalLayout(
-                        approveBtn,
-                        rejectBtn
-                );
+                                buildHeaderSection(),
 
-        VerticalLayout content = new VerticalLayout(
+                                buildBudgetSection(),
 
-                new H2("Purchase Request Approval Details"),
+                                new H3("Line Items"),
 
-                buildHeaderSection(),
+                                lineGrid,
 
-                buildBudgetSection(),
+                                new H3("Documents"),
 
-                new H3("Line Items"),
+                                documentGrid,
 
-                lineGrid,
+                                comments,
 
-                new H3("Documents"),
+                                buttonLayout);
 
-                documentGrid,
+                content.setWidthFull();
 
-                comments,
+                content.setPadding(true);
 
-                buttonLayout
-        );
+                content.setSpacing(true);
 
-        content.setWidthFull();
+                Scroller scroller = new Scroller(content);
 
-        content.setPadding(true);
+                scroller.setSizeFull();
 
-        content.setSpacing(true);
-
-        Scroller scroller = new Scroller(content);
-
-        scroller.setSizeFull();
-
-        add(scroller);
-    }
-
-    // ================= LOAD =================
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-
-        Long approvalId =
-                Long.parseLong(
-                        event.getRouteParameters()
-                                .get("id")
-                                .get()
-                );
-
-        approval = approvalsService
-                .getAssigningApprovalById(approvalId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Approval not found"
-                        ));
-
-        header = headerService
-                .getPurchaseRequestHeaderById(
-                        approval.getReferenceId()
-                )
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Purchase Request not found"
-                        ));
-
-        bindHeader();
-
-        loadDepartmentBudget();
-
-        loadLines();
-
-        loadDocuments();
-    }
-
-    // ================= HEADER SECTION =================
-
-    private VerticalLayout buildHeaderSection() {
-
-        VerticalLayout layout =
-                new VerticalLayout(
-
-                        requestId,
-
-                        createdBy,
-
-                        department,
-
-                        totalAmount,
-
-                        createdDate,
-
-                        level,
-
-                        status
-                );
-
-        layout.setSpacing(false);
-
-        layout.setPadding(false);
-
-        return layout;
-    }
-
-    // ================= BUDGET SECTION =================
-
-    private VerticalLayout buildBudgetSection() {
-
-        VerticalLayout layout =
-                new VerticalLayout(
-
-                        budgetTitle,
-
-                        budgetYear,
-
-                        totalBudgetAmount,
-
-                        remainingBudgetAmount
-                );
-
-        layout.setSpacing(false);
-
-        layout.setPadding(false);
-
-        return layout;
-    }
-
-    // ================= BIND HEADER =================
-
-    private void bindHeader() {
-
-        requestId.setText(
-                "Purchase Request ID : "
-                        + header.getPurchaseRequestId()
-        );
-
-        createdBy.setText(
-                "Created By : "
-                        + (header.getCreatedBy() != null
-                        ? header.getCreatedBy()
-                                .getEmployeeName()
-                        : "-")
-        );
-
-        department.setText(
-                "Department : "
-                        + (header.getForDepartment() != null
-                        ? header.getForDepartment()
-                                .getDepartmentName()
-                        : "-")
-        );
-
-        totalAmount.setText(
-                "Total Amount : "
-                        + header.getTotalAmount()
-        );
-
-        createdDate.setText(
-                "Created Date : "
-                        + header.getCreatedDate()
-        );
-
-        level.setText(
-                "Approval Level : "
-                        + approval.getLevel()
-        );
-
-        status.setText(
-                "Approval Status : "
-                        + approval.getStatus()
-        );
-
-        if (!approval.getStatus().equals(Status.WAITING_APPROVAL)
-
-                ||
-
-                !approval.getApprover()
-                        .getEmployeeId()
-                        .equals(
-
-                                securityService
-                                        .getLoggedInUser()
-                                        .getEmployee()
-                                        .getEmployeeId()
-
-                        )) {
-
-            rejectBtn.setVisible(false);
-
-            approveBtn.setVisible(false);
-
-            comments.setValue(
-                    approval.getComments() == null
-                            ? ""
-                            : approval.getComments());
-
-            comments.setReadOnly(true);
-        }
-    }
-
-    // ================= LOAD BUDGET =================
-
-    private void loadDepartmentBudget() {
-
-        if (header.getForDepartment() == null) {
-            return;
+                add(scroller);
         }
 
-        Department dept =
-                header.getForDepartment();
+        @Override
+        public void beforeEnter(BeforeEnterEvent event) {
 
-        DepartmentBudget budget =
-                departmentBudgetService
-                        .getByDepartmentAndYear(
-                                dept,
-                                Year.now()
-                        );
+                Long approvalId = Long.parseLong(
+                                event.getRouteParameters()
+                                                .get("id")
+                                                .get());
 
-        if (budget == null) {
+                approval = approvalsService
+                                .getAssigningApprovalById(approvalId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Approval not found"));
 
-            budgetTitle.setText(
-                    "Department Budget Not Configured"
-            );
+                header = headerService
+                                .getPurchaseRequestHeaderById(
+                                                approval.getReferenceId())
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Purchase Request not found"));
 
-            budgetYear.setText("");
+                bindHeader();
 
-            totalBudgetAmount.setText("");
+                loadDepartmentBudget();
 
-            remainingBudgetAmount.setText("");
+                loadLines();
 
-            return;
+                loadDocuments();
         }
 
-        budgetTitle.setText("Department Budget");
+        // ================= HEADER SECTION =================
 
-        budgetYear.setText(
-                "Year : "
-                        + budget.getYear()
-        );
+        private VerticalLayout buildHeaderSection() {
 
-        totalBudgetAmount.setText(
-                "Total Budget Amount : "
-                        + budget.getTotalBudgetAmount()
-        );
+                VerticalLayout layout = new VerticalLayout(
 
-        remainingBudgetAmount.setText(
-                "Remaining Budget Amount : "
-                        + budget.getRemainingBudgetAmount()
-        );
+                                requestId,
 
-        remainingBudget =
-                budget.getRemainingBudgetAmount();
-    }
+                                createdBy,
 
-    // ================= LINE GRID =================
+                                department,
 
-    private void configureLineGrid() {
+                                totalAmount,
 
-        lineGrid.setWidthFull();
+                                createdDate,
 
-        lineGrid.addColumn(
-                PurchaseRequestLine::getPurchaseRequestLineId
-        ).setHeader("Line ID");
+                                level,
 
-        lineGrid.addColumn(line ->
+                                status);
 
-        line.getItem() != null
+                layout.setSpacing(false);
 
-                ? line.getItem().getItemName()
+                layout.setPadding(false);
 
-                : ""
+                return layout;
+        }
 
-        ).setHeader("Item Name");
+        // ================= BUDGET SECTION =================
 
-        lineGrid.addColumn(
-                PurchaseRequestLine::getQuantity
-        ).setHeader("Quantity");
+        private VerticalLayout buildBudgetSection() {
 
-        lineGrid.addColumn(
-                PurchaseRequestLine::getUnitPrice
-        ).setHeader("Unit Price");
+                VerticalLayout layout = new VerticalLayout(
 
-        lineGrid.addColumn(
-                PurchaseRequestLine::getDiscount
-        ).setHeader("Discount");
+                                budgetTitle,
 
-        lineGrid.addColumn(
-                PurchaseRequestLine::getTotalPrice
-        ).setHeader("Total Price");
+                                budgetYear,
 
-        lineGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        lineGrid.setAllRowsVisible(true);
-    }
+                                totalBudgetAmount,
 
-    // ================= DOCUMENT GRID =================
+                                remainingBudgetAmount);
 
-    private void configureDocumentGrid() {
+                layout.setSpacing(false);
 
-        documentGrid.setWidthFull();
+                layout.setPadding(false);
 
-        documentGrid.addColumn(
-                PurchaseRequestDocument::getFileName)
-                .setHeader("File Name");
+                return layout;
+        }
 
-        documentGrid.addColumn(
-                PurchaseRequestDocument::getFileType)
-                .setHeader("File Type");
+        private void bindHeader() {
 
-        documentGrid.addColumn(
-                PurchaseRequestDocument::getFileSize)
-                .setHeader("File Size");
+                requestId.setText(
+                                "Purchase Request ID : "
+                                                + header.getPurchaseRequestId());
 
-        documentGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        documentGrid.setAllRowsVisible(true);
+                createdBy.setText(
+                                "Created By : "
+                                                + (header.getCreatedBy() != null
+                                                                ? header.getCreatedBy()
+                                                                                .getEmployeeName()
+                                                                : "-"));
 
-        // DOUBLE CLICK OPEN
+                department.setText(
+                                "Department : "
+                                                + (header.getForDepartment() != null
+                                                                ? header.getForDepartment()
+                                                                                .getDepartmentName()
+                                                                : "-"));
 
-        documentGrid.addItemDoubleClickListener(event -> {
+                totalAmount.setText(
+                                "Total Amount : "
+                                                + header.getTotalAmount());
+
+                createdDate.setText(
+                                "Created Date : "
+                                                + header.getCreatedDate());
+
+                level.setText(
+                                "Approval Level : "
+                                                + approval.getLevel());
+
+                status.setText(
+                                "Approval Status : "
+                                                + approval.getStatus());
+
+                if (!approval.getStatus().equals(Status.WAITING_APPROVAL)
+
+                                ||
+
+                                !approval.getApprover()
+                                                .getEmployeeId()
+                                                .equals(
+
+                                                                securityService
+                                                                                .getLoggedInUser()
+                                                                                .getEmployee()
+                                                                                .getEmployeeId()
+
+                                                )) {
+
+                        rejectBtn.setVisible(false);
+
+                        approveBtn.setVisible(false);
+
+                        comments.setValue(
+                                        approval.getComments() == null
+                                                        ? ""
+                                                        : approval.getComments());
+
+                        comments.setReadOnly(true);
+                }
+        }
+
+        // ================= LOAD BUDGET =================
+
+        private void loadDepartmentBudget() {
+
+                if (header.getForDepartment() == null) {
+                        return;
+                }
+
+                Department dept = header.getForDepartment();
+
+                DepartmentBudget budget = departmentBudgetService
+                                .getByDepartmentAndYear(
+                                                dept,
+                                                Year.now());
+
+                if (budget == null) {
+
+                        budgetTitle.setText(
+                                        "Department Budget Not Configured");
+
+                        budgetYear.setText("");
+
+                        totalBudgetAmount.setText("");
+
+                        remainingBudgetAmount.setText("");
+
+                        return;
+                }
+
+                budgetTitle.setText("Department Budget");
+
+                budgetYear.setText(
+                                "Year : "
+                                                + budget.getYear());
+
+                totalBudgetAmount.setText(
+                                "Total Budget Amount : "
+                                                + budget.getTotalBudgetAmount());
+
+                remainingBudgetAmount.setText(
+                                "Remaining Budget Amount : "
+                                                + budget.getRemainingBudgetAmount());
+
+                remainingBudget = budget.getRemainingBudgetAmount();
+        }
+
+        // ================= LINE GRID =================
+
+        private void configureLineGrid() {
+
+                lineGrid.setWidthFull();
+
+                lineGrid.addColumn(
+                                PurchaseRequestLine::getPurchaseRequestLineId).setHeader("Line ID");
+
+                lineGrid.addColumn(line ->
+
+                line.getItem() != null
+
+                                ? line.getItem().getItemName()
+
+                                : ""
+
+                ).setHeader("Item Name");
+
+                lineGrid.addColumn(
+                                PurchaseRequestLine::getQuantity).setHeader("Quantity");
+
+                lineGrid.addColumn(
+                                PurchaseRequestLine::getUnitPrice).setHeader("Unit Price");
+
+                lineGrid.addColumn(
+                                PurchaseRequestLine::getDiscount).setHeader("Discount");
+
+                lineGrid.addColumn(
+                                PurchaseRequestLine::getTotalPrice).setHeader("Total Price");
+
+                lineGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+                lineGrid.setAllRowsVisible(true);
+        }
+
+        // ================= DOCUMENT GRID =================
+
+        private void configureDocumentGrid() {
+
+                documentGrid.setWidthFull();
+
+                documentGrid.addColumn(
+                                PurchaseRequestDocument::getFileName)
+                                .setHeader("File Name");
+
+                documentGrid.addColumn(
+                                PurchaseRequestDocument::getFileType)
+                                .setHeader("File Type");
+
+                documentGrid.addColumn(
+                                PurchaseRequestDocument::getFileSize)
+                                .setHeader("File Size");
+
+                documentGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+                documentGrid.setAllRowsVisible(true);
+
+                documentGrid.addItemDoubleClickListener(event -> {
+
                         PurchaseRequestDocument document = event.getItem();
+
                         StreamResource resource = new StreamResource(
                                         document.getFileName(),
                                         () -> new ByteArrayInputStream(document.getDocumentData()));
+
+                        resource.setContentType(document.getFileType());
+
                         getUI().ifPresent(ui -> {
+
                                 var registration = ui.getSession()
                                                 .getResourceRegistry()
                                                 .registerResource(resource);
 
-                                String url = registration.getResourceUri()
-                                                .toString();
+                                String url = registration.getResourceUri().toString();
 
-                                ui.getPage().open(url, "_blank");
+                                Dialog previewDialog = new Dialog();
+                                previewDialog.setWidth("90vw");
+                                previewDialog.setHeight("90vh");
+
+                                Button closeButton = new Button("Close");
+                                closeButton.addClickListener(e -> previewDialog.close());
+
+                                VerticalLayout content = new VerticalLayout();
+                                content.setSizeFull();
+
+                                String fileType = document.getFileType();
+
+                                if (fileType != null && fileType.startsWith("image/")) {
+
+                                        com.vaadin.flow.component.html.Image image = new com.vaadin.flow.component.html.Image(
+                                                        url,
+                                                        document.getFileName());
+
+                                        image.setWidthFull();
+                                        image.setMaxHeight("80vh");
+
+                                        content.add(closeButton, image);
+
+                                } else if ("application/pdf".equals(fileType)) {
+
+                                        com.vaadin.flow.component.Html pdfViewer = new com.vaadin.flow.component.Html(
+                                                        "<embed src='" + url +
+                                                                        "' type='application/pdf' width='100%' height='800px'>");
+
+                                        content.add(closeButton, pdfViewer);
+
+                                } else {
+
+                                        Button downloadButton = new Button("Download File");
+                                        downloadButton.addClickListener(e -> ui.getPage().open(url, "_blank"));
+
+                                        content.add(
+                                                        closeButton,
+                                                        new Span("Preview not available for this file type."),
+                                                        downloadButton);
+                                }
+
+                                previewDialog.add(content);
+                                previewDialog.open();
                         });
                 });
-    }
-
-    // ================= LOAD LINES =================
-
-    private void loadLines() {
-
-        List<PurchaseRequestLine> lines =
-                lineService
-                        .getPurchaseRequestLineByHeader(
-                                header
-                        );
-
-        lineGrid.setItems(lines);
-    }
-
-    // ================= LOAD DOCUMENTS =================
-
-    private void loadDocuments() {
-
-        List<PurchaseRequestDocument> documents =
-                documentService
-                        .getByPurchaseRequestHeader(header);
-
-        documentGrid.setItems(documents);
-    }
-
-    // ================= APPROVE =================
-
-    private void approveRequest() {
-
-        if (remainingBudget < header.getTotalAmount()) {
-
-            Notification.show(
-
-                    "Total amount more than the budget cannot approve",
-
-                    3000,
-
-                    Position.TOP_CENTER
-            );
-
-            return;
         }
 
-        approval.setStatus(Status.APPROVED);
+        // ================= LOAD LINES =================
 
-        approval.setComments(
-                comments.getValue()
-        );
+        private void loadLines() {
 
-        approval.setApprovedDate(
-                LocalDate.now()
-        );
+                List<PurchaseRequestLine> lines = lineService
+                                .getPurchaseRequestLineByHeader(
+                                                header);
 
-        approvalsService.updateApprovals(
-                approval,
-                securityService
-                        .getLoggedInUser()
-                        .getEmployee()
-        );
+                lineGrid.setItems(lines);
+        }
 
-        Notification.show(
-                "Purchase Request Approved"
-        );
+        // ================= LOAD DOCUMENTS =================
 
-        getUI().ifPresent(ui ->
-                ui.navigate("purchase-request")
-        );
-    }
+        private void loadDocuments() {
 
-    // ================= REJECT =================
+                List<PurchaseRequestDocument> documents = documentService
+                                .getByPurchaseRequestHeader(header);
 
-    private void rejectRequest() {
+                documentGrid.setItems(documents);
+        }
 
-        approval.setStatus(Status.REJECTED);
+        // ================= APPROVE =================
 
-        approval.setComments(
-                comments.getValue()
-        );
+        private void approveRequest() {
 
-        approval.setApprovedDate(
-                LocalDate.now()
-        );
+                if (remainingBudget < header.getTotalAmount()) {
 
-        approvalsService.updateApprovals(
-                approval,
-                securityService
-                        .getLoggedInUser()
-                        .getEmployee()
-        );
+                        Notification.show(
 
-        Notification.show(
-                "Purchase Request Rejected"
-        );
+                                        "Total amount more than the budget cannot approve",
 
-        getUI().ifPresent(ui ->
-                ui.navigate("purchase-request")
-        );
-    }
+                                        3000,
+
+                                        Position.TOP_CENTER);
+
+                        return;
+                }
+
+                approval.setStatus(Status.APPROVED);
+
+                approval.setComments(
+                                comments.getValue());
+
+                approval.setApprovedDate(
+                                LocalDate.now());
+
+                approvalsService.updateApprovals(
+                                approval,
+                                securityService
+                                                .getLoggedInUser()
+                                                .getEmployee());
+
+                Notification.show(
+                                "Purchase Request Approved");
+
+                getUI().ifPresent(ui -> ui.navigate("purchase-request"));
+        }
+
+        // ================= REJECT =================
+
+        private void rejectRequest() {
+
+                approval.setStatus(Status.REJECTED);
+
+                approval.setComments(
+                                comments.getValue());
+
+                approval.setApprovedDate(
+                                LocalDate.now());
+
+                approvalsService.updateApprovals(
+                                approval,
+                                securityService
+                                                .getLoggedInUser()
+                                                .getEmployee());
+
+                Notification.show(
+                                "Purchase Request Rejected");
+
+                getUI().ifPresent(ui -> ui.navigate("purchase-request"));
+        }
 }

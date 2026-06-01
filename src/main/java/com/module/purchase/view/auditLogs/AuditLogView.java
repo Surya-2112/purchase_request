@@ -33,8 +33,6 @@ public class AuditLogView extends VerticalLayout {
     private final Grid<AuditLogs> grid =
             new Grid<>(AuditLogs.class, false);
 
-    // ================= FILTERS =================
-
     private final TextField auditIdFilter =
             new TextField("Audit ID");
 
@@ -53,24 +51,17 @@ public class AuditLogView extends VerticalLayout {
     private final DatePicker dateFilter =
             new DatePicker("Date");
 
-    // ================= PAGINATION =================
-
     private int currentPage = 0;
 
     private int pageSize = 25;
 
-    private final Span pageInfo =
-            new Span();
-
-    // ================= FILTER DATA =================
+    private final Span pageInfo =new Span();
 
     private List<AuditLogs> filteredLogs;
 
-    public AuditLogView(
-            AuditLogsService auditLogService) {
+    public AuditLogView( AuditLogsService auditLogService) {
 
-        this.auditLogService =
-                auditLogService;
+        this.auditLogService = auditLogService;
 
         setSizeFull();
 

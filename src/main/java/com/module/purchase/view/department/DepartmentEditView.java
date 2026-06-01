@@ -26,12 +26,8 @@ public class DepartmentEditView extends VerticalLayout
         implements HasUrlParameter<Long> {
 
     private final DepartmentService departmentService;
-
-   // private final EmployeeService employeeService;
-
     private final SecurityService securityService;
 
-    // FIELDS
     private final TextField departmentNameField = new TextField("Department Name");
 
     private final TextField departmentCodeField = new TextField("Department Code");
@@ -64,14 +60,11 @@ public class DepartmentEditView extends VerticalLayout
     }
 
     @Override
-    public void setParameter(
-            BeforeEvent event,
-            Long departmentId) {
+    public void setParameter(BeforeEvent event, Long departmentId) {
 
         removeAll();
 
-        department = departmentService
-                .getDepartmentById(departmentId)
+        department = departmentService.getDepartmentById(departmentId)
                 .orElse(null);
 
         if (department == null) {
@@ -83,15 +76,12 @@ public class DepartmentEditView extends VerticalLayout
 
         H2 title = new H2("Update Department");
 
-        // SET VALUES
         departmentNameField.setValue(
-                department.getDepartmentName() == null
-                        ? ""
+                department.getDepartmentName() == null ? ""
                         : department.getDepartmentName());
 
         departmentCodeField.setValue(
-                department.getDepartmentCode() == null
-                        ? ""
+                department.getDepartmentCode() == null ? ""
                         : department.getDepartmentCode());
 
         departmentCodeField.setReadOnly(true);
@@ -101,10 +91,8 @@ public class DepartmentEditView extends VerticalLayout
         activeField.setValue(
                 department.getActive() != null
                         && department.getActive()
-                                ? "Active"
-                                : "Inactive");
+                                ? "Active": "Inactive");
 
-        // FORM
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
@@ -140,7 +128,6 @@ public class DepartmentEditView extends VerticalLayout
                 departmentCodeField.setErrorMessage("Department code must be higher then 3");
             }
 
-                // UPDATE VALUES
                 department.setDepartmentName(
                         departmentNameField.getValue());
 
@@ -153,7 +140,6 @@ public class DepartmentEditView extends VerticalLayout
                         activeField.getValue()
                                 .equals("Active"));
 
-                // SAVE
                 departmentService.updateDepartment(department,securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
@@ -177,7 +163,6 @@ public class DepartmentEditView extends VerticalLayout
 
         });
 
-        // CANCEL BUTTON
         Button cancelButton = new Button("Cancel");
 
         cancelButton.addClickListener(clickEvent -> {

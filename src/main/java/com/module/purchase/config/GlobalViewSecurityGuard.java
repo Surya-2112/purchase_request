@@ -18,9 +18,7 @@ public class GlobalViewSecurityGuard implements BeforeEnterListener {
 
     private final ViewPermissionService viewPermissionService;
 
-    public GlobalViewSecurityGuard(
-            SecurityService securityService,
-            ViewPermissionService viewPermissionService) {
+    public GlobalViewSecurityGuard( SecurityService securityService, ViewPermissionService viewPermissionService) {
 
         this.securityService = securityService;
         this.viewPermissionService = viewPermissionService;

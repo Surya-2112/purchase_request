@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
 import com.module.purchase.entity.AssigningConfig;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
@@ -23,6 +24,9 @@ import com.module.purchase.mapper.AssigningConfigMapper;
 import java.util.Optional;
 import java.time.LocalDate;
 import java.util.List;
+
+import com.module.purchase.customException.ResourceAlreadyUsedException;
+import com.module.purchase.customException.ResourceNotFoundException;
 
 @Service
 @Transactional
@@ -46,7 +50,7 @@ public class AssigningConfigService {
         Optional<AssigningConfig> exist=assigningConfigRepository.findByApprovalTypeAndLevel(assigningConfig.getApprovalType(),assigningConfig.getLevel());
         if(exist.isPresent())
         {
-            throw new RuntimeException("AssigningConfig is already have this level for this approval type");
+            throw new ResourceAlreadyUsedException("AssigningConfig is already have this level for this approval type");
         }
 
         assigningConfig=saveAssigningConfig(assigningConfig);
@@ -61,17 +65,14 @@ public class AssigningConfigService {
         return assigningConfig;
     }
 
-    public List<AssigningConfig> getConfigs(
-            ApprovalType approvalType,
-            Double totalAmount) {
-
+    public List<AssigningConfig> getConfigs(ApprovalType approvalType, Double totalAmount) {
         return assigningConfigRepository.findByApprovalTypeAndMinAmountLessThanEqual(approvalType,totalAmount);
     }
 
     public Optional<AssigningConfig> getAssigningConfigById(Long id) {
         Optional<AssigningConfig> existingAssigningConfig = assigningConfigRepository.findById(id);
         if (!existingAssigningConfig.isPresent()) {
-            throw new RuntimeException("Assigning config not found with id: " + id);
+            throw new ResourceNotFoundException("Assigning config not found with id: " + id);
         }
         return existingAssigningConfig;
     }

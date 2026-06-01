@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Vendor;
 import com.module.purchase.entity.Employee;
@@ -45,7 +46,7 @@ public class VendorService {
     public Vendor addVendor(Vendor vendor,Employee employee) {
         Optional<Vendor> existingVendor = vendorRepository.findByVendorEmail(vendor.getVendorEmail());
         if (existingVendor.isPresent()) {
-            throw new RuntimeException("Vendor already exists with email: " + vendor.getVendorEmail());
+            throw new ResourceAlreadyUsedException("Vendor already exists with email: " + vendor.getVendorEmail());
         }
 
         vendor = saveVendor(vendor);
@@ -64,7 +65,7 @@ public class VendorService {
     public Optional<Vendor> getVendorById(Long id) {
         Optional<Vendor> existingVendor = vendorRepository.findById(id);
         if (!existingVendor.isPresent()) {
-            throw new RuntimeException("Vendor not found with id: " + id);
+            throw new ResourceNotFoundException("Vendor not found with id: " + id);
         }
         return existingVendor;
     }

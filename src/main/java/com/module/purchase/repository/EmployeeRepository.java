@@ -22,7 +22,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
                 join r.employeeGroups g
                 where g = :employeeGroup
                 """)
-        List<Employee> findByRoleEmployeeGroup(
-                @Param("employeeGroup") EmployeeGroup employeeGroup);
+        List<Employee> findByRoleEmployeeGroup(@Param("employeeGroup") EmployeeGroup employeeGroup);
     
 }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
@@ -81,7 +82,7 @@ public class EmployeeService {
 
         Optional<Employee> existingEmployee = employeeRepository.findById(id);
         if (!existingEmployee.isPresent()) {
-            throw new RuntimeException("Employee not found with id: " + id);
+            throw new ResourceNotFoundException("Employee not found with id: " + id);
         }
         return existingEmployee;
     }

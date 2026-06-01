@@ -1,6 +1,5 @@
 package com.module.purchase.entity;
 
-//import java.sql.Date;
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

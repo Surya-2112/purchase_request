@@ -59,10 +59,6 @@ public class DashboardView extends VerticalLayout {
         );
     }
 
-    // =========================================================
-    // SUMMARY CARDS
-    // =========================================================
-
     private Component createSummaryCards() {
 
         long totalPR = purchaseRequestService.countAll();

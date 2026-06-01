@@ -12,7 +12,5 @@ public interface AssigningApprovalsMapper {
 
     AssigningApprovalsDTO toAssigningApprovalsDTO(AssigningApprovals assigningApprovals);
 
-   // AssigningApprovals toAssigningApprovaHs(AssigningApprovalsDTO assigningApprovalsDTO);
-
     List<AssigningApprovalsDTO> toAssigningApprovalsDTOList(List<AssigningApprovals> assigningApprovals);
 }

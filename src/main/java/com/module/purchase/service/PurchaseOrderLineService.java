@@ -3,6 +3,7 @@ package com.module.purchase.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.module.purchase.repository.PurchaseOrderLineRepository;
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
 import java.util.Optional;
@@ -21,7 +22,7 @@ public class PurchaseOrderLineService {
     public Optional<PurchaseOrderLine> getPurchaseOrderLineById(Long id) {
         Optional<PurchaseOrderLine> existingPurchaseOrderLine = purchaseOrderLineRepository.findById(id);
         if (!existingPurchaseOrderLine.isPresent()) {
-            throw new RuntimeException("Purchase order line not found with id: " + id);
+            throw new ResourceNotFoundException("Purchase order line not found with id: " + id);
         }
         return existingPurchaseOrderLine;
     }
