@@ -1,8 +1,8 @@
-package com.module.purchase.view.vendorCategory;
+package com.module.purchase.view.Category;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.VendorCategory;
-import com.module.purchase.service.VendorCategoryService;
+import com.module.purchase.entity.Category;
+import com.module.purchase.service.CategoryService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -11,19 +11,19 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 
 
-public class VendorCategoryForm extends Dialog {
+public class CategoryForm extends Dialog {
 
-    private final VendorCategoryService vendorCategoryService;
+    private final CategoryService categoryService;
 
     private final SecurityService securityService;
 
     private final TextField categoryNameField = new TextField("Category Name");
 
-    private VendorCategory category;
+    private Category category;
 
-    public VendorCategoryForm(VendorCategoryService vendorCategoryService,SecurityService securityService) {
+    public CategoryForm(CategoryService categoryService,SecurityService securityService) {
 
-        this.vendorCategoryService = vendorCategoryService;
+        this.categoryService = categoryService;
         this.securityService = securityService; 
 
         setHeaderTitle("Add Vendor Category");
@@ -48,8 +48,7 @@ public class VendorCategoryForm extends Dialog {
         add(formLayout, buttons);
     }
 
-    // OPTIONAL: for EDIT mode reuse
-    public void setCategory(VendorCategory category) {
+    public void setCategory(Category category) {
         this.category = category;
 
         if (category != null) {
@@ -75,12 +74,12 @@ public class VendorCategoryForm extends Dialog {
             }
 
             if (category == null) {
-                category = new VendorCategory();
+                category = new Category();
             }
 
             category.setCategoryName(categoryNameField.getValue());
 
-            vendorCategoryService.addVendorCategory(category,securityService.getLoggedInUser().getEmployee());
+            categoryService.addCategory(category,securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "Vendor Category Saved Successfully",

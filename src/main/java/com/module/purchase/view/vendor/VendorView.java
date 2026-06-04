@@ -3,9 +3,7 @@ package com.module.purchase.view.vendor;
 import org.springframework.data.domain.Page;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.VendorCategory;
 import com.module.purchase.entityDTO.VendorDTO;
-import com.module.purchase.service.VendorCategoryService;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -32,9 +30,6 @@ public class VendorView extends VerticalLayout {
     private final TextField vendorIdField = new TextField("Vendor ID");
     private final TextField vendorNameField = new TextField("Vendor Name");
 
-    private final ComboBox<VendorCategory> vendorCategoryField =
-            new ComboBox<>("Vendor Category");
-
     private final ComboBox<String> activeField =
             new ComboBox<>("Active");
 
@@ -45,18 +40,13 @@ public class VendorView extends VerticalLayout {
 
     private VendorDTO currentFilter = new VendorDTO();
 
-    public VendorView(VendorService vendorService,VendorCategoryService vendorCategoryService,SecurityService securityService) {
+    public VendorView(VendorService vendorService,SecurityService securityService) {
 
         this.vendorService = vendorService;
 
         setSizeFull();
         setPadding(true);
         setSpacing(true);
-
-        vendorCategoryField.setItems(vendorCategoryService.getVendorCategories());
-        vendorCategoryField.setItemLabelGenerator(
-                VendorCategory::getCategoryName
-        );
 
         activeField.setItems("Yes", "No");
 
@@ -65,7 +55,7 @@ public class VendorView extends VerticalLayout {
 
         Button addButton = new Button("Add Vendor");
         addButton.addClickListener(e -> {
-            VendorForm form = new VendorForm(vendorService, vendorCategoryService,securityService);
+            VendorForm form = new VendorForm(vendorService,securityService);
             form.open();
         });
 
@@ -81,7 +71,6 @@ public class VendorView extends VerticalLayout {
         HorizontalLayout filterLayout = new HorizontalLayout(
                 vendorIdField,
                 vendorNameField,
-                vendorCategoryField,
                 activeField,
                 searchButton,
                 clearButton
@@ -96,12 +85,6 @@ public class VendorView extends VerticalLayout {
         vendorGrid.addColumn(VendorDTO::getVendorName)
                 .setHeader("Vendor Name")
                 .setAutoWidth(true);
-
-        vendorGrid.addColumn(vendor ->
-                vendor.getVendorCategory() == null
-                        ? ""
-                        : vendor.getVendorCategory().getCategoryName()
-        ).setHeader("Category");
 
         vendorGrid.addColumn(vendor ->
                 Boolean.TRUE.equals(vendor.getActive()) ? "Yes" : "No"
@@ -185,7 +168,6 @@ public class VendorView extends VerticalLayout {
         currentFilter = new VendorDTO();
         currentFilter.setVendorId(vendorId);
         currentFilter.setVendorName(vendorNameField.getValue());
-        currentFilter.setVendorCategory(vendorCategoryField.getValue());
 
         currentFilter.setActive(
                 activeField.getValue() == null
@@ -201,7 +183,6 @@ public class VendorView extends VerticalLayout {
 
         vendorIdField.clear();
         vendorNameField.clear();
-        vendorCategoryField.clear();
         activeField.clear();
 
         currentFilter = new VendorDTO();

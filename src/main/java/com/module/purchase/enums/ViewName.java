@@ -4,7 +4,6 @@ public enum ViewName {
 
     DASHBOARD(""),
     // LOGIN("login"),
-    // ACCESS_DENIED("access-denied"),
     // VIEW_PERMISSION("view-permission"),
 
     ASSIGNING_CONFIG("assigning-config"),
@@ -39,12 +38,8 @@ public enum ViewName {
     ASSIGNING_APPROVALS_REQUEST_DETAILS("assigning-approvals-details"),
 
     PURCHASE_ORDER("purchase-order"),
-    // PURCHASE_ORDER_FORM("purchase-order-form"),
     PURCHASE_ORDER_DETAILS("purchase-order-details"),
-    // PURCHASE_ORDER_APPROVAL("purchase-order-approval"),
-   //  PURCHASE_ORDER_DRAFT("purchase-order-draft"),
-  //  ASSIGNING_APPROVALS_ORDERS_DETAILS("assigning-approvals-orders-details"),
-
+  
     USER("user"),
     USER_DETAILS("user-details"),
     USER_EDIT("user-edit"),

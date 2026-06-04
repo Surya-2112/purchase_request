@@ -77,8 +77,9 @@ public class EmployeeEditView extends VerticalLayout
                 // LOAD DEPARTMENTS
                 departmentField.setItems(departmentService.getDepartments());
 
-                departmentField.setItemLabelGenerator(
-                                Department::getDepartmentName);
+                departmentField.setItemLabelGenerator(Department::getDepartmentName);
+
+                departmentField.setReadOnly(!securityService.canAccessView("employee-form"));
 
                 // LOAD ROLES
                 roleField.setItems(roleService.getRoles());

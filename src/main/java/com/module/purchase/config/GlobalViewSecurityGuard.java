@@ -34,7 +34,7 @@ public class GlobalViewSecurityGuard implements BeforeEnterListener {
             System.out.println("Checking View Permission : "+ viewName);
 
             if (viewName.isEmpty() || viewName.equals("login")) {
-                return;
+                return ;
             }
 
             Users user = securityService.getLoggedInUser();
@@ -60,11 +60,7 @@ public class GlobalViewSecurityGuard implements BeforeEnterListener {
                     .getRole()
                     .getEmployeeGroups();
 
-            System.out.println("User Groups : "+ userGroups);
-
             List<EmployeeGroup> allowedGroups = viewPermissionService.getGroupsByView(viewName);
-
-            System.out.println( "Allowed Groups : "+ allowedGroups);
 
             if (allowedGroups == null || allowedGroups.isEmpty()) {
 

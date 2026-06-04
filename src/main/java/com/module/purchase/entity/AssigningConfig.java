@@ -3,6 +3,7 @@ package com.module.purchase.entity;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -11,25 +12,41 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
+@Table(
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"approval_type","employee_group"}),
+        @UniqueConstraint(columnNames = {"level","approval_type"})
+    }
+)
 public class AssigningConfig {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private ApprovalType approvalType;
-
-    private Integer level;  
-
-    @Enumerated(EnumType.STRING)
-    private EmployeeGroup employeeGroup;
-
+    @Column(name = "min_amount", nullable = false)
     private Double minAmount;
 
+    @Column(name = "max_amount")
     private Double maxAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "employee_group", nullable = false)
+    private EmployeeGroup employeeGroup;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "approval_type", nullable = false)
+    private ApprovalType approvalType;
+
+    @Column(name = "margin_difference_percentage")
+    private Double marginDifferencePercentage;
+
+    @Column(name = "level")
+    private Integer level;
 
     @ManyToOne
     @JoinColumn(name = "defaultApprover")

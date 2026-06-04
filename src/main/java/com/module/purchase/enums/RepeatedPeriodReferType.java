@@ -1,14 +1,13 @@
 package com.module.purchase.enums;
 
-public enum ApprovalType {
+public enum RepeatedPeriodReferType {
 
-    PURCHASE_REQUEST("Purchase Request"),
-    QUOTATION("Quotation"),
-    PURCHASE_ORDER("Purchase Order");
+    PURCHASE_REQUEST_LINE("Purchase Request Line"),
+    CATEGORY("Category");
 
     private final String displayName;
 
-    ApprovalType(String displayName) {
+    RepeatedPeriodReferType(String displayName) {
         this.displayName = displayName;
     }
 

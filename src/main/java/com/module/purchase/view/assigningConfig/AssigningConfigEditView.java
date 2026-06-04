@@ -5,6 +5,7 @@ import com.module.purchase.entity.AssigningConfig;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.AssigningConfigService;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.view.MainLayout;
@@ -65,11 +66,8 @@ public class AssigningConfigEditView extends VerticalLayout
 
         employeeGroupField.setItems( EmployeeGroup.values());
 
-        // DEFAULT EMPLOYEE
-        defaultEmployeeField.setItemLabelGenerator(
-                Employee::getEmployeeName);
+        defaultEmployeeField.setItemLabelGenerator( Employee::getEmployeeName);
 
-        // LOAD EMPLOYEES BASED ON GROUP
         employeeGroupField.addValueChangeListener(event -> {
 
             EmployeeGroup group = event.getValue();
@@ -90,17 +88,11 @@ public class AssigningConfigEditView extends VerticalLayout
     }
 
     @Override
-    public void setParameter(
-            BeforeEvent event,
-            Long assigningConfigId) {
+    public void setParameter(BeforeEvent event, Long assigningConfigId) {
 
         removeAll();
 
-        assigningConfig =
-                assigningConfigService
-                        .getAssigningConfigById(
-                                assigningConfigId)
-                        .orElse(null);
+        assigningConfig =assigningConfigService.getAssigningConfigById(assigningConfigId).orElse(null);
 
         if (assigningConfig == null) {
 
@@ -113,36 +105,24 @@ public class AssigningConfigEditView extends VerticalLayout
                 new H2("Update Assigning Config");
 
         // SET VALUES
-        approvalTypeField.setValue(
-                assigningConfig.getApprovalType());
+        approvalTypeField.setValue(assigningConfig.getApprovalType());
 
-        levelField.setValue(
-                assigningConfig.getLevel());
+        levelField.setValue(assigningConfig.getLevel());
 
-        employeeGroupField.setValue(
-                assigningConfig.getEmployeeGroup());
+        employeeGroupField.setValue(assigningConfig.getEmployeeGroup());
 
-        minAmountField.setValue(
-                assigningConfig.getMinAmount());
+        minAmountField.setValue(assigningConfig.getMinAmount());
 
-        maxAmountField.setValue(
-                assigningConfig.getMaxAmount());
+        maxAmountField.setValue(assigningConfig.getMaxAmount());
 
-        // LOAD EMPLOYEES FOR CURRENT GROUP
         if (assigningConfig.getEmployeeGroup() != null) {
 
-            defaultEmployeeField.setItems(
-                    employeeService.getEmployeesByEmployeeGroup(
-                            assigningConfig.getEmployeeGroup()));
+            defaultEmployeeField.setItems(employeeService.getEmployeesByEmployeeGroup(assigningConfig.getEmployeeGroup()));
         }
 
-        // SET DEFAULT EMPLOYEE
-        defaultEmployeeField.setValue(
-                assigningConfig.getDefaultApprover());
+        defaultEmployeeField.setValue( assigningConfig.getDefaultApprover());
 
-        // FORM
-        FormLayout formLayout =
-                new FormLayout();
+        FormLayout formLayout = new FormLayout();
 
         formLayout.add(
                 approvalTypeField,
@@ -156,14 +136,12 @@ public class AssigningConfigEditView extends VerticalLayout
                 new FormLayout.ResponsiveStep("0", 2));
 
         // SAVE BUTTON
-        Button saveButton =
-                new Button("Save");
+        Button saveButton = new Button("Save");
 
         saveButton.addClickListener(clickEvent -> {
 
             try {
 
-                // VALIDATION
                 if (approvalTypeField.isEmpty()
                         || levelField.isEmpty()
                         || employeeGroupField.isEmpty()
@@ -184,7 +162,7 @@ public class AssigningConfigEditView extends VerticalLayout
                     levelField.setInvalid(true);
 
                     levelField.setErrorMessage(
-                            "Level must be higher than 0");
+                        "Level must be higher than 0");
 
                     return;
                 }
@@ -243,9 +221,7 @@ public class AssigningConfigEditView extends VerticalLayout
                         Notification.Position.TOP_CENTER);
 
                 getUI().ifPresent(ui ->
-                        ui.navigate(
-                                "assigning-config-details/"
-                                        + assigningConfig.getId()));
+                        ui.navigate(ViewName.ASSIGNING_CONFIG_DETAILS.getRoute()+"/"+ assigningConfig.getId()));
 
             } catch (Exception exception) {
 
@@ -256,17 +232,14 @@ public class AssigningConfigEditView extends VerticalLayout
             }
 
         });
-
-        // CANCEL BUTTON
+        
         Button cancelButton =
                 new Button("Cancel");
 
         cancelButton.addClickListener(clickEvent -> {
 
             getUI().ifPresent(ui ->
-                    ui.navigate(
-                            "assigning-config-details/"
-                                    + assigningConfig.getId()));
+                    ui.navigate(ViewName.ASSIGNING_CONFIG_DETAILS.getRoute()+"/"+ assigningConfig.getId()));
 
         });
 

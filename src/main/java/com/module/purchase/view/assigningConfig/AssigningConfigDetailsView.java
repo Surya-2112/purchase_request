@@ -1,9 +1,8 @@
 package com.module.purchase.view.assigningConfig;
 
-import java.util.Map;
-
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningConfig;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.AssigningConfigService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -82,10 +81,7 @@ public class AssigningConfigDetailsView extends VerticalLayout  implements HasUr
                 Button updateButton = new Button("Update");
 
                 updateButton.addClickListener(clickEvent -> {
-
-                        getUI().ifPresent(ui -> ui.navigate(
-                                        "assigning-config-edit/"
-                                                        + assigningConfig.getId()));
+                        getUI().ifPresent(ui -> ui.navigate( ViewName.ASSIGNING_CONFIG_EDIT.getRoute()+"/"+ assigningConfig.getId()));
                 });
 
                 // DELETE BUTTON
@@ -111,7 +107,7 @@ public class AssigningConfigDetailsView extends VerticalLayout  implements HasUr
 
                                         Notification.show("Assigning Config Deleted Successfully");
 
-                                        getUI().ifPresent(ui -> ui.navigate( "assigning-config"));
+                                        getUI().ifPresent(ui -> ui.navigate( ViewName.ASSIGNING_CONFIG.getRoute()));
 
                                 } catch (Exception exception) {
 

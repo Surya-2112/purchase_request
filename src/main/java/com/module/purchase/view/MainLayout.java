@@ -1,9 +1,11 @@
 package com.module.purchase.view;
 
 import org.springframework.security.core.context.SecurityContextHolder;
-import com.vaadin.flow.component.Component;
+
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Users;
+import com.module.purchase.enums.ViewName;
+import com.module.purchase.view.Category.CategoryView;
 import com.module.purchase.view.assigningConfig.AssigningConfigView;
 import com.module.purchase.view.auditLogs.AuditLogView;
 import com.module.purchase.view.department.DepartmentView;
@@ -15,7 +17,7 @@ import com.module.purchase.view.purchaseRequest.PurchaseRequestView;
 import com.module.purchase.view.role.RoleView;
 import com.module.purchase.view.user.UsersView;
 import com.module.purchase.view.vendor.VendorView;
-import com.module.purchase.view.vendorCategory.VendorCategoryView;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
@@ -46,8 +48,7 @@ public class MainLayout extends AppLayout {
 
                 H2 title = new H2("Purchase Management");
 
-                title.getStyle()
-                                .set("margin", "0");
+                title.getStyle() .set("margin", "0");
 
                 HorizontalLayout header = new HorizontalLayout(title);
 
@@ -55,8 +56,7 @@ public class MainLayout extends AppLayout {
 
                 header.setPadding(true);
 
-                header.setAlignItems(
-                                FlexComponent.Alignment.CENTER);
+                header.setAlignItems(FlexComponent.Alignment.CENTER);
 
                 addToNavbar(header);
 
@@ -89,8 +89,7 @@ public class MainLayout extends AppLayout {
 
                 profileSection.setPadding(true);
 
-                profileSection.getStyle()
-                                .set("cursor", "pointer")
+                profileSection.getStyle().set("cursor", "pointer")
                                 .set("border-bottom",
                                                 "1px solid #e5e5e5");
 
@@ -98,12 +97,8 @@ public class MainLayout extends AppLayout {
 
                         getUI().ifPresent(ui ->
 
-                        ui.navigate(
-                                        "user-details/"
-                                                        + loggedInUser.getUserId()));
+                        ui.navigate(ViewName.USER_DETAILS.getRoute()+"/"+ loggedInUser.getUserId()));
                 });
-
-                // ================= MENU LINKS =================
 
                 VerticalLayout menuLinks = new VerticalLayout();
 
@@ -152,7 +147,7 @@ public class MainLayout extends AppLayout {
                                 menuLinks,
                                 "vendor-category",
                                 "Vendor Category",
-                                VendorCategoryView.class,
+                                CategoryView.class,
                                 securityService);
 
                 addMenuIfAllowed(
@@ -251,19 +246,12 @@ public class MainLayout extends AppLayout {
 
                 drawerLayout.expand(scroller);
 
-                drawerLayout.getStyle()
-                                .set("overflow", "hidden");
+                drawerLayout.getStyle().set("overflow", "hidden");
 
                 addToDrawer(drawerLayout);
 
-                // ================= DRAWER WIDTH =================
-
-                getStyle().set(
-                                "--vaadin-app-layout-drawer-width",
-                                "260px");
+                getStyle().set("--vaadin-app-layout-drawer-width", "260px");
         }
-
-        // ================= CREATE MENU LINK =================
 
         private void addMenuIfAllowed(
 

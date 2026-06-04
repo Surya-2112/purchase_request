@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,6 +12,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Department {
@@ -19,8 +23,14 @@ public class Department {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long departmentId;
 
+    @Column(unique = true, nullable = false, length=100)
+    @Size(max=100)
+    @NotBlank
     private String departmentName;
 
+    @Size(max=20)
+    @NotBlank
+    @Column(unique = true, nullable= false, length=20)
     private String departmentCode;
 
     @OneToOne
@@ -28,7 +38,10 @@ public class Department {
     @JsonIgnoreProperties({"department","role","user","address"})
     private Employee headEmployee;
    
-    private Boolean active;
+    @NotNull
+    @Column(nullable = false)
+    @org.hibernate.annotations.ColumnDefault("true")
+    private Boolean active = true;
 
     @OneToMany(mappedBy = "department")
     @JsonIgnoreProperties({"department"})

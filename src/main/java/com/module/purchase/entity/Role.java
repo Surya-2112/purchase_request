@@ -20,7 +20,7 @@ import jakarta.persistence.OneToMany;
 
 @Entity
 public class Role {
-    
+        
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roleId;

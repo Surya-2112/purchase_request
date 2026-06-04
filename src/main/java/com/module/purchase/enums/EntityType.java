@@ -7,7 +7,7 @@ public enum EntityType {
     ROLE,
     ITEM,
     VENDOR,
-    VENDOR_CATEGORY,
+    CATEGORY,
     PURCHASE_REQUEST,
     PURCHASE_ORDER,
     USER,

@@ -90,9 +90,9 @@ public class DepartmentBudgetService {
     public DepartmentBudget updateDepartmentBudget(DepartmentBudget departmentBudget,Employee employee) {
        
         DepartmentBudget exist=getDepartmentBudgetById(departmentBudget.getDepartmentBudgetId()).get();
-         if(exist.getTotalBudgetAmount()- exist.getRemainingBudgetAmount()!= departmentBudget.getTotalBudgetAmount() - departmentBudget.getRemainingBudgetAmount())
+         if(exist.getTotalBudgetAmount()-(exist.getRemainingBudgetAmount()) != departmentBudget.getTotalBudgetAmount()-(departmentBudget.getRemainingBudgetAmount()))
          {
-            throw new ModificationNotAllowedException("This department budget spended amount is"+(exist.getTotalBudgetAmount()- exist.getRemainingBudgetAmount()));
+            throw new ModificationNotAllowedException("This department budget spended amount is"+(exist.getTotalBudgetAmount()-(exist.getRemainingBudgetAmount())));
          }
         departmentBudget=saveDepartmentBudget(departmentBudget);
         AuditLogs log = new AuditLogs();

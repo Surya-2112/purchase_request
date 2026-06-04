@@ -1,39 +1,51 @@
 package com.module.purchase.entity;
 
-import java.util.List;
+import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Size;
 
 @Entity
+@Table(
+    name = "item",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = "item_name"),
+        @UniqueConstraint(columnNames = "item_code")
+    }
+)
 public class Item {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long itemId;
 
+    @Column(nullable = false, unique = true)
     private String itemName;
 
-    @Size(max = 4)
+    @Size(max = 20)
+    @Column(nullable = false, unique = true,length=20)
     private String itemCode;
 
-    private Double unitPrice;
+    @ManyToOne
+    @JoinColumn(name = "unit_id", nullable = false)
+    private Unit unit;
 
-    private String VATCode;
+    @OneToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @OneToMany(mappedBy = "item")
-    @JsonIgnoreProperties({"item"})
-    private List<PurchaseRequestLine> purchaseRequestLines;
-
-    @OneToMany(mappedBy = "item")
-    @JsonIgnoreProperties({"item"})
-    private List<PurchaseOrderLine> purchaseOrderLines;
+    private Set<ItemVariant> itemVariants;
 
     public Long getItemId() {
         return itemId;
@@ -59,37 +71,28 @@ public class Item {
         this.itemCode = itemCode;
     }
 
-    public List<PurchaseRequestLine> getPurchaseRequestLines() {
-        return purchaseRequestLines;
+    public Category getCategory() {
+        return category;
     }
 
-    public void setPurchaseRequestLines(List<PurchaseRequestLine> purchaseRequestLines) {
-        this.purchaseRequestLines = purchaseRequestLines;
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
-    public List<PurchaseOrderLine> getPurchaseOrderLines() {
-        return purchaseOrderLines;
+    public Unit getUnit() {
+        return unit;
     }
 
-    public void setPurchaseOrderLines(List<PurchaseOrderLine> purchaseOrderLines) {
-        this.purchaseOrderLines = purchaseOrderLines;
+    public void setUnit(Unit unit) {
+        this.unit = unit;
     }
 
-    public Double getUnitPrice() {
-        return unitPrice;
+    public Set<ItemVariant> getItemVariants() {
+        return itemVariants;
     }
 
-    public void setUnitPrice(Double unitPrice) {
-        this.unitPrice = unitPrice;
-    }
-
-    public String getVATCode() {
-        return VATCode;
-    }
-    
-    public void setVATCode(String VATCode) {
-        
-        this.VATCode = VATCode;
+    public void setItemVariants(Set<ItemVariant> itemVariants) {
+        this.itemVariants = itemVariants;
     }
 
 }

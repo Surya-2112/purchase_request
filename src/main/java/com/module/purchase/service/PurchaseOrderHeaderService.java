@@ -1,5 +1,6 @@
 package com.module.purchase.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.List;
@@ -113,8 +114,8 @@ public class PurchaseOrderHeaderService {
         purchaseOrderHeader.setVendor(purchaseRequestHeader.getVendor());
 
         DepartmentBudget departmentBudget=departmentBudgetService.getByDepartmentAndYear(purchaseRequestHeader.getForDepartment(), Year.now());
-        departmentBudget.setRemainingBudgetAmount(departmentBudget.getRemainingBudgetAmount()-purchaseRequestHeader.getTotalAmount());
-        departmentBudgetService.updateDepartmentBudget(departmentBudget,null);
+       departmentBudgetService.updateDepartmentBudget(departmentBudget,null);
+       departmentBudget.setRemainingBudgetAmount(departmentBudget.getRemainingBudgetAmount()-purchaseRequestHeader.getTotalAmount());// TODO :: make change .subtract(purchaseRequestHeader.getTotalAmount())
 
         purchaseOrderHeader = addPurchaseOrderHeader(purchaseOrderHeader,null);
         List<PurchaseRequestLine> lines= purchaseRequestLineService.getPurchaseRequestLineByHeader(purchaseRequestHeader);

@@ -1,14 +1,15 @@
 package com.module.purchase.enums;
 
-public enum ApprovalType {
+public enum RequestForQuotationStatus {
 
-    PURCHASE_REQUEST("Purchase Request"),
-    QUOTATION("Quotation"),
-    PURCHASE_ORDER("Purchase Order");
+    DRAFT("Draft"),
+    OPEN("Open"),
+    CLOSED("Closed"),
+    CANCELLED("Cancelled");
 
     private final String displayName;
 
-    ApprovalType(String displayName) {
+    RequestForQuotationStatus(String displayName) {
         this.displayName = displayName;
     }
 

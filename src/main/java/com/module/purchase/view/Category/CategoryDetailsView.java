@@ -1,8 +1,8 @@
-package com.module.purchase.view.vendorCategory;
+package com.module.purchase.view.Category;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.VendorCategory;
-import com.module.purchase.service.VendorCategoryService;
+import com.module.purchase.entity.Category;
+import com.module.purchase.service.CategoryService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -18,17 +18,17 @@ import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
 
-@Route(value = "vendor-category-details", layout = MainLayout.class)
+@Route(value = "category-details", layout = MainLayout.class)
 @PermitAll
-public class VendorCategoryDetailsView extends VerticalLayout
+public class CategoryDetailsView extends VerticalLayout
                 implements HasUrlParameter<Long> {
 
-        private final VendorCategoryService vendorCategoryService;
+        private final CategoryService categoryService;
 
         private final SecurityService securityService;
 
-        public VendorCategoryDetailsView(VendorCategoryService vendorCategoryService,SecurityService securityService) {
-                this.vendorCategoryService = vendorCategoryService;
+        public CategoryDetailsView(CategoryService categoryService,SecurityService securityService) {
+                this.categoryService = categoryService;
                 this.securityService=securityService;
 
                 setSizeFull();
@@ -41,14 +41,14 @@ public class VendorCategoryDetailsView extends VerticalLayout
 
                 removeAll();
 
-                VendorCategory category = vendorCategoryService.getVendorCategoryById(categoryId).orElse(null);
+                Category category = categoryService.getCategoryById(categoryId).orElse(null);
 
                 if (category == null) {
-                        add(new Span("Vendor Category Not Found"));
+                        add(new Span("Category Not Found"));
                         return;
                 }
 
-                H2 title = new H2("Vendor Category Details");
+                H2 title = new H2("Category Details");
 
                 FormLayout formLayout = new FormLayout();
 
@@ -71,7 +71,7 @@ public class VendorCategoryDetailsView extends VerticalLayout
 
                         ConfirmDialog dialog = new ConfirmDialog();
 
-                        dialog.setHeader("Delete Vendor Category");
+                        dialog.setHeader("Delete Category");
                         dialog.setText("Are you sure you want to delete this category?");
 
                         dialog.setCancelable(true);
@@ -81,10 +81,10 @@ public class VendorCategoryDetailsView extends VerticalLayout
                         dialog.addConfirmListener(confirmEvent -> {
 
                                 try {
-                                        vendorCategoryService.deleteVendorCategoryById(category.getCategoryId(),securityService.getLoggedInUser().getEmployee());
+                                        categoryService.deleteCategoryById(category.getCategoryId(),securityService.getLoggedInUser().getEmployee());
 
                                         Notification.show(
-                                                        "Vendor Category Deleted Successfully",
+                                                        "Category Deleted Successfully",
                                                         3000,
                                                         Notification.Position.TOP_CENTER);
 

@@ -112,7 +112,7 @@ public class ViewPermissionView extends VerticalLayout {
 
                 permission.setEmployeeGroup( employeeGroupField.getValue());
 
-                viewPermissionService.addPermission(permission,securityService.getLoggedInUser().getEmployee());
+                viewPermissionService.addPermission(permission, securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Permission Added",

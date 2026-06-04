@@ -79,7 +79,6 @@ public class VendorService {
         Specification<Vendor> spec = Specification
                 .where(VendorSpecification.hasVendorId(vendorDTO.getVendorId()))
                 .and(VendorSpecification.hasVendorName(vendorDTO.getVendorName()))
-                .and(VendorSpecification.hasVendorCategory(vendorDTO.getVendorCategory()))
                 .and(VendorSpecification.hasActive(vendorDTO.getActive()));
         Pageable pageable = PageRequest.of(page, size);
         Page<Vendor> vendorPage = vendorRepository.findAll(spec, pageable);

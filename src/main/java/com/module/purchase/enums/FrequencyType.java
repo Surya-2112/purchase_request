@@ -1,14 +1,16 @@
 package com.module.purchase.enums;
 
-public enum ApprovalType {
+public enum FrequencyType {
 
-    PURCHASE_REQUEST("Purchase Request"),
-    QUOTATION("Quotation"),
-    PURCHASE_ORDER("Purchase Order");
+    TIME("Time"),
+    DAYS("Days"),
+    WEEKS("Weeks"),
+    MONTHS("Months"),
+    YEARS("Years");
 
     private final String displayName;
 
-    ApprovalType(String displayName) {
+    FrequencyType(String displayName) {
         this.displayName = displayName;
     }
 

@@ -104,11 +104,9 @@ public class DepartmentBudgetEditView extends VerticalLayout
                 departmentField.setValue(
                                 departmentBudget.getDepartment());
 
-                totalBudgetAmountField.setValue(
-                                departmentBudget.getTotalBudgetAmount());
+                totalBudgetAmountField.setValue(departmentBudget.getTotalBudgetAmount());
 
-                remainingBudgetAmountField.setValue(
-                                departmentBudget.getRemainingBudgetAmount());
+                remainingBudgetAmountField.setValue(departmentBudget.getRemainingBudgetAmount());
 
                 yearField.setValue(
                                 departmentBudget.getYear());
@@ -163,7 +161,7 @@ public class DepartmentBudgetEditView extends VerticalLayout
                                                 departmentField.getValue());
 
                                 departmentBudget.setTotalBudgetAmount(
-                                                totalBudgetAmountField.getValue());
+totalBudgetAmountField.getValue());
 
                                 departmentBudget.setRemainingBudgetAmount(
                                                 remainingBudgetAmountField.getValue());

@@ -5,6 +5,7 @@ public enum Action {
     UPDATE,
     DELETE,
     APPROVE,
+    PARTIALLY_APPROVED,
     REJECT,
     CANCEL
 }

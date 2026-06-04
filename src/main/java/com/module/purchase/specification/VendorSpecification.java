@@ -3,7 +3,7 @@ package com.module.purchase.specification;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.module.purchase.entity.Vendor;
-import com.module.purchase.entity.VendorCategory;
+import com.module.purchase.entity.Category;
 
 
 public class VendorSpecification {
@@ -28,13 +28,5 @@ public class VendorSpecification {
         return (root,query,cb) ->
         active==null ?null
         :cb.equal(root.get("active"),active);
-    }
-
-
-    public static Specification<Vendor> hasVendorCategory(VendorCategory vendorCategory)
-    {
-        return (root,query,cb)->
-        vendorCategory == null ? null
-        :cb.equal(root.get("vendorCategory"),vendorCategory); 
     }
 }

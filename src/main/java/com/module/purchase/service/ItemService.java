@@ -104,12 +104,6 @@ public class ItemService {
     public void deleteItemById(Long itemId,Employee employee) {
 
         Item existingItem = getItemById(itemId).get();
-        if (existingItem.getPurchaseRequestLines() != null && !existingItem.getPurchaseRequestLines().isEmpty()) {
-            throw new ResourceAlreadyUsedException("Cannot delete item with associated purchase request lines");
-        }
-        if (existingItem.getPurchaseOrderLines() != null && !existingItem.getPurchaseOrderLines().isEmpty()) {
-            throw new ResourceAlreadyUsedException("Cannot delete item with associated purchase order lines");
-        }
         itemRepository.deleteById(itemId);
         
         AuditLogs log= new AuditLogs();

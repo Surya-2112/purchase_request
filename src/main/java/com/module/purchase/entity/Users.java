@@ -2,7 +2,6 @@ package com.module.purchase.entity;
 
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,8 +20,11 @@ public class Users {
 
     private String userEmail;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user")
     private Employee employee;
+
+    @OneToOne(mappedBy = "user")
+    private Vendor vendor;
 
     private Boolean active;
 
@@ -74,5 +76,11 @@ public class Users {
         this.active = active;
     }
 
-    
+    public Vendor getVendor() {
+        return vendor;
+    }
+
+    public void setVendor(Vendor vendor) {
+        this.vendor = vendor;
+    }
 }

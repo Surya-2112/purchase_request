@@ -70,18 +70,8 @@ public class VendorDetailsView extends VerticalLayout implements HasUrlParameter
         );
 
         formLayout.addFormItem(
-                new Span(vendor.getVendorPhone() == null ? "" : vendor.getVendorPhone()),
+                new Span(vendor.getVendorPhoneNumber() == null ? "" : vendor.getVendorPhoneNumber()),
                 "Phone"
-        );
-
-        // CATEGORY
-        formLayout.addFormItem(
-                new Span(
-                        vendor.getVendorCategory() == null
-                                ? ""
-                                : vendor.getVendorCategory().getCategoryName()
-                ),
-                "Category"
         );
 
         // STATUS

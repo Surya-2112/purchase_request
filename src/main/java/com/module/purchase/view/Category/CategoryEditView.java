@@ -1,8 +1,8 @@
-package com.module.purchase.view.vendorCategory;
+package com.module.purchase.view.Category;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.VendorCategory;
-import com.module.purchase.service.VendorCategoryService;
+import com.module.purchase.entity.Category;
+import com.module.purchase.service.CategoryService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -17,22 +17,22 @@ import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
 
-@Route(value = "vendor-category-edit", layout = MainLayout.class)
+@Route(value = "category-edit", layout = MainLayout.class)
 @PermitAll
-public class VendorCategoryEditView extends VerticalLayout
+public class CategoryEditView extends VerticalLayout
                 implements HasUrlParameter<Long> {
 
-        private final VendorCategoryService vendorCategoryService;
+        private final CategoryService categoryService;
 
         private final SecurityService securityService;
 
         private final TextField categoryNameField = new TextField("Category Name");
 
-        private VendorCategory category;
+        private Category category;
 
-        public VendorCategoryEditView(VendorCategoryService vendorCategoryService,SecurityService securityService) {
+        public CategoryEditView(CategoryService categoryService,SecurityService securityService) {
 
-                this.vendorCategoryService = vendorCategoryService;
+                this.categoryService = categoryService;
                 this.securityService = securityService;
 
                 setSizeFull();
@@ -47,14 +47,14 @@ public class VendorCategoryEditView extends VerticalLayout
 
                 removeAll();
 
-                category = vendorCategoryService.getVendorCategoryById(categoryId).orElse(null);
+                category = categoryService.getCategoryById(categoryId).orElse(null);
 
                 if (category == null) {
-                        add(new H2("Vendor Category Not Found"));
+                        add(new H2("Category Not Found"));
                         return;
                 }
 
-                H2 title = new H2("Update Vendor Category");
+                H2 title = new H2("Update Category");
 
                 // SET VALUES
                 categoryNameField.setValue(
@@ -84,11 +84,11 @@ public class VendorCategoryEditView extends VerticalLayout
 
                                 category.setCategoryName(categoryNameField.getValue());
 
-                                vendorCategoryService.updateVendorCategory(category,
+                                categoryService.updateCategory(category,
                                                 securityService.getLoggedInUser().getEmployee());
 
                                 Notification.show(
-                                                "Vendor Category Updated Successfully",
+                                                "Category Updated Successfully",
                                                 3000,
                                                 Notification.Position.TOP_CENTER);
 

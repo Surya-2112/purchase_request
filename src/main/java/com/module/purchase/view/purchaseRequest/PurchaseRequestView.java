@@ -138,8 +138,7 @@ public class PurchaseRequestView extends VerticalLayout {
 
         headerLayout.setWidthFull();
 
-        headerLayout.setJustifyContentMode(
-                JustifyContentMode.BETWEEN);
+        headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
         headerLayout.setAlignItems(Alignment.CENTER);
 
@@ -173,8 +172,7 @@ public class PurchaseRequestView extends VerticalLayout {
             loadData();
         });
 
-        HorizontalLayout tabs =
-                new HorizontalLayout(
+        HorizontalLayout tabs = new HorizontalLayout(
                         allBtn,
                         assignedBtn,
                         createdBtn);
@@ -190,17 +188,15 @@ public class PurchaseRequestView extends VerticalLayout {
         statusField.setItems(Status.values());
 
 
-        Button search = new Button("Search",
-                        e -> applyFilter());
+        Button search = new Button("Search", e -> applyFilter());
 
-        Button clear = new Button("Clear",
-                        e -> clearFilter());
+        Button clear = new Button("Clear",e -> clearFilter());
 
         prFilters = new HorizontalLayout(
 
                 prIdField,
-                createdByField,
                 departmentField,
+                createdByField,
                 statusField,
                 search,
                 clear);

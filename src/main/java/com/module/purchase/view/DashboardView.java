@@ -8,8 +8,9 @@ import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.entityDTO.PurchaseOrderDTO;
 import com.module.purchase.entityDTO.PurchaseRequestDTO;
 import com.module.purchase.enums.Status;
-import com.module.purchase.service.PurchaseOrderHeaderService;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.DepartmentBudgetService;
+import com.module.purchase.service.PurchaseOrderHeaderService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -23,7 +24,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-
 
 import jakarta.annotation.security.PermitAll;
 
@@ -50,8 +50,7 @@ public class DashboardView extends VerticalLayout {
 
         H2 title = new H2("Dashboard");
 
-        add(
-                title,
+        add(    title,
                 createSummaryCards(),
                 createDepartmentWiseSpending(),
                 createRecentPurchaseRequests(),
@@ -82,28 +81,28 @@ public class DashboardView extends VerticalLayout {
                         "Total PR",
                         String.valueOf(totalPR),
                         VaadinIcon.CLIPBOARD_TEXT.create(),
-                        "purchase-request"
+                        ViewName.PURCHASE_REQUEST.getRoute()
                 ),
 
                 createCard(
                         "Pending Approval",
                         String.valueOf(pendingPR),
                         VaadinIcon.CLOCK.create(),
-                        "purchase-request"
+                        ViewName.PURCHASE_REQUEST.getRoute()
                 ),
 
                 createCard(
                         "Approved",
                         String.valueOf(approvedPR),
                         VaadinIcon.CHECK.create(),
-                        "purchase-request"
+                        ViewName.PURCHASE_REQUEST.getRoute()
                 ),
 
                 createCard(
                         "Rejected",
                         String.valueOf(rejectedPR),
                         VaadinIcon.CLOSE.create(),
-                        "purchase-request"
+                        ViewName.PURCHASE_REQUEST.getRoute()
                 )
         );
 
@@ -180,11 +179,7 @@ public class DashboardView extends VerticalLayout {
 
         return card;
     }
-
-    // =========================================================
-    // DEPARTMENT SPENDING
-    // =========================================================
-
+    
     private Component createDepartmentWiseSpending() {
 
         VerticalLayout layout = new VerticalLayout();
@@ -210,8 +205,7 @@ public class DashboardView extends VerticalLayout {
 
               DepartmentBudget departmentBudget = event.getItem();
 
-                getUI().ifPresent(ui -> ui.navigate("department-budget-details/"
-                                                + departmentBudget.getDepartmentBudgetId()));
+                getUI().ifPresent(ui -> ui.navigate( ViewName.DEPARTMENT_BUDGET_DETAILS.getRoute()+"/"+ departmentBudget.getDepartmentBudgetId()));
         });
 
 
@@ -253,7 +247,7 @@ public class DashboardView extends VerticalLayout {
 
         grid.addItemDoubleClickListener(event -> {
                 PurchaseRequestDTO pr = event.getItem();
-              getUI().ifPresent(ui ->ui.navigate( "purchase-request-details/" + pr.getPurchaseRequestId()));
+              getUI().ifPresent(ui ->ui.navigate(  ViewName.PURCHASE_REQUEST_DETAILS.getRoute()+"/" + pr.getPurchaseRequestId()));
         });
 
         layout.add(title, grid);
@@ -261,11 +255,7 @@ public class DashboardView extends VerticalLayout {
 
         return layout;
     }
-
-    // =========================================================
-    // RECENT PURCHASE ORDERS
-    // =========================================================
-
+    
     private Component createRecentPurchaseOrders() {
 
         VerticalLayout layout = new VerticalLayout();
@@ -297,7 +287,7 @@ public class DashboardView extends VerticalLayout {
 
            PurchaseOrderDTO po=event.getItem();
                getUI().ifPresent(ui ->
-                        ui.navigate("purchase-order-details/"+ po.getPurchaseOrderId()));
+                        ui.navigate( ViewName.PURCHASE_ORDER_DETAILS.getRoute()+"/"+ po.getPurchaseOrderId()));
         });
         layout.add(title, grid);
          grid.setAllRowsVisible(true);

@@ -533,9 +533,7 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 if (itemField.isEmpty()) {
 
-                        Notification.show(
-                                        "Please select item");
-
+                        Notification.show("Please select item");
                         return;
                 }
 
@@ -566,7 +564,6 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 double total = (qty * price) - discount;
 
-                // ================= UPDATE =================
 
                 if (editingLine != null) {
 
@@ -609,23 +606,19 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                                 existingLine.setUnitPrice(price);
 
-                                existingLine.setDiscount(
-                                                existingLine.getDiscount() + discount);
+                                existingLine.setDiscount(existingLine.getDiscount() + discount);
 
-                                double updatedTotal = (newQty * price)
-                                                - existingLine.getDiscount();
+                                double updatedTotal = (newQty * price)- existingLine.getDiscount();
 
                                 existingLine.setTotalPrice(updatedTotal);
 
-                                Notification.show(
-                                                "Existing item quantity updated");
+                                Notification.show("Existing item quantity updated");
 
                         } else {
 
                                 PurchaseRequestLine line = new PurchaseRequestLine();
 
-                                line.setItem(
-                                                itemField.getValue());
+                                line.setItem(itemField.getValue());
 
                                 line.setQuantity(qty);
 
@@ -637,8 +630,7 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                                 lines.add(line);
 
-                                Notification.show(
-                                                "Line added");
+                                Notification.show("Line added");
                         }
                 }
 
@@ -646,8 +638,6 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 clearLine();
         }
-
-        // ================= EDIT =================
 
         private void editLine(
                         PurchaseRequestLine line) {
@@ -662,11 +652,8 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 discountField.setValue(line.getDiscount());
 
-                Notification.show(
-                                "Edit mode enabled");
+                Notification.show( "Edit mode enabled");
         }
-
-        // ================= CLEAR =================
 
         private void clearLine() {
 
@@ -680,8 +667,6 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 editingLine = null;
         }
-
-        // ================= SAVE =================
 
         private void saveAndGoApproval() {
 
@@ -697,47 +682,25 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 try {
 
-                        Employee currentUser =
+                        Employee currentUser = securityService.getLoggedInUser().getEmployee();
 
-                                        securityService
-                                                        .getLoggedInUser()
-                                                        .getEmployee();
-
-                        double total = lines.stream()
-
-                                        .mapToDouble(
-                                                        PurchaseRequestLine::getTotalPrice)
-
-                                        .sum();
+                        double total = lines.stream().mapToDouble(PurchaseRequestLine::getTotalPrice).sum();
 
                         PurchaseRequestHeader saved;
 
-                        // ================= UPDATE =================
-
                         if (editingHeader != null) {
 
-                                editingHeader.setCreatedDate(
+                                editingHeader.setCreatedDate(Date.valueOf(createdDateField.getValue()));
 
-                                                Date.valueOf(
-                                                                createdDateField.getValue()));
+                                editingHeader.setForDepartment(departmentField.getValue());
 
-                                editingHeader.setForDepartment(
-                                                departmentField.getValue());
-
-                                editingHeader.setVendor(
-                                                vendorField.getValue());
+                                editingHeader.setVendor(vendorField.getValue());
 
                                 editingHeader.setTotalAmount(total);
 
-                                saved = headerService.updatePurchaseRequestHeader(
-                                                editingHeader,
-                                                currentUser);
-
-                                // ================= DELETE OLD LINES =================
+                                saved = headerService.updatePurchaseRequestHeader(editingHeader,currentUser);
 
                                 lineService.deleteAllLine(saved);
-
-                                // ================= SAVE NEW LINES =================
 
                                 for (PurchaseRequestLine oldLine : lines) {
 
@@ -745,31 +708,22 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                                         newLine.setPurchaseRequestHeader(saved);
 
-                                        newLine.setItem(
-                                                        oldLine.getItem());
+                                        newLine.setItem(oldLine.getItem());
 
-                                        newLine.setQuantity(
-                                                        oldLine.getQuantity());
+                                        newLine.setQuantity(oldLine.getQuantity());
 
-                                        newLine.setUnitPrice(
-                                                        oldLine.getUnitPrice());
+                                        newLine.setUnitPrice(oldLine.getUnitPrice());
 
-                                        newLine.setDiscount(
-                                                        oldLine.getDiscount());
+                                        newLine.setDiscount(oldLine.getDiscount());
 
-                                        newLine.setTotalPrice(
-                                                        oldLine.getTotalPrice());
+                                        newLine.setTotalPrice(oldLine.getTotalPrice());
 
-                                        lineService.addPurchaseRequestLine(
-                                                        newLine);
+                                        lineService.addPurchaseRequestLine(newLine);
                                 }
 
-                                Notification.show(
-                                                "Purchase Request Updated");
+                                Notification.show("Purchase Request Updated");
 
                         } else {
-
-                                // ================= NEW SAVE =================
 
                                 PurchaseRequestHeader header = new PurchaseRequestHeader();
 
@@ -790,9 +744,7 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                                 header.setTotalAmount(total);
 
-                                saved = headerService.addPurchaseRequestHeader(
-                                                header,
-                                                currentUser);
+                                saved = headerService.addPurchaseRequestHeader( header, currentUser);
 
                                 for (PurchaseRequestLine oldLine : lines) {
 
@@ -800,8 +752,7 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                                         newLine.setPurchaseRequestHeader(saved);
 
-                                        newLine.setItem(
-                                                        oldLine.getItem());
+                                        newLine.setItem(oldLine.getItem());
 
                                         newLine.setQuantity(
                                                         oldLine.getQuantity());
@@ -829,8 +780,7 @@ public class PurchaseRequestFormView extends VerticalLayout
                                 documentService.save(document);
                         }
 
-                        Notification.show(
-                                        "Documents Saved : " + documents.size());
+                        Notification.show("Documents Saved : " + documents.size());
 
                         getUI().ifPresent(ui ->
 

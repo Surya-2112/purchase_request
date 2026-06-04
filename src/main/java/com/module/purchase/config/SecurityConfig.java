@@ -14,8 +14,7 @@ public class SecurityConfig extends VaadinWebSecurity {
 
         setLoginView(http, LoginView.class);
 
-        http.headers(headers -> headers.frameOptions(frameOptions ->
-        frameOptions.sameOrigin()));
+        http.headers(headers -> headers.frameOptions(frameOptions ->frameOptions.sameOrigin()));
 
         super.configure(http);
     }

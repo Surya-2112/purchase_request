@@ -1,10 +1,10 @@
-package com.module.purchase.view.vendorCategory;
+package com.module.purchase.view.Category;
 
 import org.springframework.data.domain.Page;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.VendorCategory;
-import com.module.purchase.service.VendorCategoryService;
+import com.module.purchase.entity.Category;
+import com.module.purchase.service.CategoryService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -19,16 +19,13 @@ import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
 
-@Route(value = "vendor-category", layout = MainLayout.class)
+@Route(value = "category", layout = MainLayout.class)
 @PermitAll
-public class VendorCategoryView extends VerticalLayout {
+public class CategoryView extends VerticalLayout {
 
-    private final VendorCategoryService categoryService;
+    private final CategoryService categoryService;
 
- //   private final SecurityService securityService;
-
-
-    private final Grid<VendorCategory> categoryGrid = new Grid<>(VendorCategory.class, false);
+    private final Grid<Category> categoryGrid = new Grid<>(Category.class, false);
 
     private final TextField categoryIdField = new TextField("Category ID");
 
@@ -39,9 +36,9 @@ public class VendorCategoryView extends VerticalLayout {
 
     private final Span pageInfo = new Span();
 
-    private VendorCategory currentFilter = new VendorCategory();
+    private Category currentFilter = new Category();
 
-    public VendorCategoryView(VendorCategoryService categoryService , SecurityService securityService) {
+    public CategoryView(CategoryService categoryService , SecurityService securityService) {
 
         this.categoryService = categoryService;
  //       this.securityService =securityService;
@@ -54,7 +51,7 @@ public class VendorCategoryView extends VerticalLayout {
 
         Button addButton = new Button("Add Category");
         addButton.addClickListener(event -> {
-           VendorCategoryForm form = new VendorCategoryForm(categoryService,securityService);
+        CategoryForm form = new CategoryForm(categoryService,securityService);
            form.open();
         });
 
@@ -81,9 +78,9 @@ public class VendorCategoryView extends VerticalLayout {
         filterLayout.setAlignItems(Alignment.END);
 
         // GRID
-        categoryGrid.addColumn(VendorCategory::getCategoryId).setHeader("Category ID").setAutoWidth(true);
+        categoryGrid.addColumn(Category::getCategoryId).setHeader("Category ID").setAutoWidth(true);
 
-        categoryGrid.addColumn(VendorCategory::getCategoryName)
+        categoryGrid.addColumn(Category::getCategoryName)
                 .setHeader("Category Name")
                 .setAutoWidth(true);
 
@@ -91,7 +88,7 @@ public class VendorCategoryView extends VerticalLayout {
         categoryGrid.setSizeFull();
 
         categoryGrid.addItemDoubleClickListener(event -> {
-            VendorCategory category = event.getItem();
+                Category category = event.getItem();
                 getUI().ifPresent(ui -> ui.navigate("vendor-category-details/" + category.getCategoryId()));
 
         });
@@ -138,7 +135,7 @@ public class VendorCategoryView extends VerticalLayout {
 
     private void loadCategories() {
 
-        Page<VendorCategory> page = categoryService.getAllVendorCategories(
+        Page<Category> page = categoryService.getAllCategories(
                 currentFilter,
                 currentPage,
                 pageSize
@@ -158,7 +155,7 @@ public class VendorCategoryView extends VerticalLayout {
             id = Long.valueOf(categoryIdField.getValue().trim());
         }
 
-        currentFilter = new VendorCategory();
+        currentFilter = new Category();
         currentFilter.setCategoryId(id);
         currentFilter.setCategoryName(categoryNameField.getValue());
 
@@ -171,7 +168,7 @@ public class VendorCategoryView extends VerticalLayout {
         categoryIdField.clear();
         categoryNameField.clear();
 
-        currentFilter = new VendorCategory();
+        currentFilter = new Category();
         currentPage = 0;
 
         loadCategories();

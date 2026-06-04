@@ -35,7 +35,7 @@ public class SecurityService {
                 .orElseThrow();
     }
 
-    public boolean canAccessView( String viewName) {
+    public boolean canAccessView(String viewName) {
 
         if(viewName.equals(""))
         {
@@ -45,7 +45,6 @@ public class SecurityService {
             Users user = getLoggedInUser();
 
             if (user == null || user.getEmployee() == null || user.getEmployee() .getRole() == null) {
-
                 return false;
             }
 
@@ -55,11 +54,10 @@ public class SecurityService {
 
 
             if ("SUPER_ADMIN".equals(roleName)) {
-
                 return true;
             }
 
-            List<EmployeeGroup> userGroups =user.getEmployee() .getRole().getEmployeeGroups();
+            List<EmployeeGroup> userGroups =user.getEmployee().getRole().getEmployeeGroups();
 
             List<EmployeeGroup> allowedGroups =viewPermissionService.getGroupsByView(viewName);
 

@@ -4,9 +4,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
+import jakarta.validation.constraints.Email;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -14,6 +15,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 public class Employee {
@@ -22,10 +26,18 @@ public class Employee {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long employeeId;
 
+    @NotBlank
+    @Column(nullable = false, length=72)
+    @Size(min=3,max=72)
     private String employeeName;
 
+    @NotBlank
+    @Column(unique = true , nullable = false)
+    @Email
     private String employeeEmail;
 
+    @Column(length=15)
+    @Size(min=10,max=15)
     private String employeePhoneNumber;
 
     @ManyToOne
@@ -33,7 +45,7 @@ public class Employee {
     @JsonIgnoreProperties({ "employees", "headEmployee" })
     private Department department;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "roleId")
     @JsonIgnoreProperties({ "employees" })
     private Role role;
@@ -45,7 +57,10 @@ public class Employee {
     @Embedded
     private Address address;
 
-    private Boolean active;
+    @NotNull
+    @Column(nullable = false)
+    @org.hibernate.annotations.ColumnDefault("true")
+    private Boolean active = true;
 
     @OneToOne
     @JoinColumn(name = "userId")

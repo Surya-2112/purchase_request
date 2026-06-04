@@ -3,11 +3,8 @@ package com.module.purchase.view.vendor;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Address;
 import com.module.purchase.entity.Vendor;
-import com.module.purchase.entity.VendorCategory;
-import com.module.purchase.service.VendorCategoryService;
 import com.module.purchase.service.VendorService;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
@@ -26,10 +23,6 @@ public class VendorForm extends Dialog {
     private final EmailField vendorEmailField = new EmailField("Vendor Email");
     private final TextField vendorPhoneField = new TextField("Vendor Phone");
 
-    // CATEGORY
-    private final ComboBox<VendorCategory> vendorCategoryField =
-            new ComboBox<>("Vendor Category");
-
     // ADDRESS
     private final TextField addressLineField = new TextField("Address Line");
     private final TextField streetField = new TextField("Street");
@@ -38,8 +31,7 @@ public class VendorForm extends Dialog {
     private final TextField countryField = new TextField("Country");
     private final TextField postalCodeField = new TextField("Pincode");
 
-    public VendorForm( VendorService vendorService,
-            VendorCategoryService vendorCategoryService, SecurityService securityService) {
+    public VendorForm( VendorService vendorService, SecurityService securityService) {
 
         this.vendorService = vendorService;
         this.securityService=securityService;
@@ -47,14 +39,9 @@ public class VendorForm extends Dialog {
         setHeaderTitle("Add Vendor");
         setWidth("700px");
 
-        // LOAD CATEGORY
-        vendorCategoryField.setItems(vendorCategoryService.getVendorCategories());
-        vendorCategoryField.setItemLabelGenerator(VendorCategory::getCategoryName);
-
         // REQUIRED
         vendorNameField.setRequired(true);
         vendorEmailField.setRequired(true);
-        vendorCategoryField.setRequired(true);
 
         // FORM
         FormLayout formLayout = new FormLayout();
@@ -63,7 +50,6 @@ public class VendorForm extends Dialog {
                 vendorNameField,
                 vendorEmailField,
                 vendorPhoneField,
-                vendorCategoryField,
                 addressLineField,
                 streetField,
                 cityField,
@@ -94,8 +80,7 @@ public class VendorForm extends Dialog {
 
             // VALIDATION
             if (vendorNameField.isEmpty()
-                    || vendorEmailField.isEmpty()
-                    || vendorCategoryField.isEmpty()) {
+                    || vendorEmailField.isEmpty()) {
 
                 Notification.show(
                         "Please fill all required fields",
@@ -110,8 +95,7 @@ public class VendorForm extends Dialog {
             // BASIC
             vendor.setVendorName(vendorNameField.getValue());
             vendor.setVendorEmail(vendorEmailField.getValue());
-            vendor.setVendorPhone(vendorPhoneField.getValue());
-            vendor.setVendorCategory(vendorCategoryField.getValue());
+            vendor.setVendorPhoneNumber(vendorPhoneField.getValue());
             vendor.setActive(true);
 
             // ADDRESS

@@ -1,24 +1,70 @@
 package com.module.purchase.entity;
 
-// import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import java.util.Set;
 
-// @Entity
+import jakarta.persistence.*;
+
+@Entity
 public class QuotationLine {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long lineId;
+    @Column(name = "quotation_line_id")
+    private Long id;
 
-   // private Quotation
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "quotation_id", nullable = false)
+    private Quotation quotation;
 
-    public Long getLineId() {
-        return lineId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "variant_id", nullable = false)
+    private ItemVariant itemVariant;
+
+    @Column(name = "unit_price", nullable = false)
+    private Double unitPrice;
+
+    @OneToMany(mappedBy = "quotationLine")
+    private Set<DiscountType> discountTypes;
+
+    public Long getId() {
+        return id;
     }
 
-    public void setLineId(Long lineId) {
-        this.lineId = lineId;
+    public void setId(Long id) {
+        this.id = id;
     }
+
+    public Quotation getQuotation() {
+        return quotation;
+    }
+
+    public void setQuotation(Quotation quotation) {
+        this.quotation = quotation;
+    }
+
+    public ItemVariant getItemVariant() {
+        return itemVariant;
+    }
+
+    public void setItemVariant(ItemVariant itemVariant) {
+        this.itemVariant = itemVariant;
+    }
+
+    public Double getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(Double unitPrice) {
+        this.unitPrice = unitPrice;
+    }
+
+    public Set<DiscountType> getDiscountTypes() {
+        return discountTypes;
+    }
+
+    public void setDiscountTypes(Set<DiscountType> discountTypes) {
+        this.discountTypes = discountTypes;
+    }
+
+    
 }

@@ -273,16 +273,11 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                         cancelButton.addClickListener(e -> {
 
-                                header.setStatus(
-                                                Status.CANCELLED);
+                                header.setStatus(Status.CANCELLED);
 
-                                headerService.updatePurchaseRequestHeader(
+                                headerService.updatePurchaseRequestHeader( header,securityService.getLoggedInUser().getEmployee());
 
-                                                header,
-                                                securityService.getLoggedInUser().getEmployee());
-
-                                Notification.show(
-                                                "Purchase Request Cancelled");
+                                Notification.show("Purchase Request Cancelled");
 
                                 bindHeader();
 
@@ -314,8 +309,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout
                                 PurchaseRequestLine::getQuantity)
                                 .setHeader("Quantity");
 
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getUnitPrice)
+                lineGrid.addColumn( PurchaseRequestLine::getUnitPrice)
                                 .setHeader("Unit Price");
 
                 lineGrid.addColumn(line ->
@@ -342,25 +336,16 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
                 a.getApprover() != null
 
-                                ? a.getApprover()
-                                                .getEmployeeName()
-
+                                ? a.getApprover().getEmployeeName()
                                 : "")
-
                                 .setHeader("Approver");
 
                 approvalGrid.addColumn(
                                 AssigningApprovals::getAssignedDate)
                                 .setHeader("Assigned Date");
 
-                approvalGrid.addColumn(a ->
-
-                a.getStatus() != null
-
-                                ? a.getStatus().name()
-
-                                : "")
-
+                approvalGrid.addColumn(a ->a.getStatus() != null
+                                ? a.getStatus().name(): "")
                                 .setHeader("Status");
 
                 approvalGrid.setWidthFull();
