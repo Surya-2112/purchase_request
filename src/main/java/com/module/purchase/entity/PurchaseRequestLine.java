@@ -1,45 +1,86 @@
 package com.module.purchase.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.module.purchase.enums.Status;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
+@Table(
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"purchase_request_id", "item_variant_id"})
+    }
+)
 public class PurchaseRequestLine {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long purchaseRequestLineId;
+    @Column(name = "purchase_request_line_id")
+    private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "purchaseRequestId")
-    @JsonIgnoreProperties({ "purchaseRequestLines","assigningApprovals"})
+    @JoinColumn(name = "purchase_request_id", nullable = false)
     private PurchaseRequestHeader purchaseRequestHeader;
 
     @ManyToOne
-    @JoinColumn(name = "itemId")
-    @JsonIgnoreProperties({"purchaseRequestLines"})
-    private Item item;
+    @JoinColumn(name = "variant_id", nullable = false)
+    private ItemVariant itemVariant;
 
-    private Integer quantity;
+    @Positive
+    private Double itemUnitPrice;
 
-    private Double unitPrice;
+    @Column(name = "description", length = 1000)
+    private String description;
 
-    private Double discount;
+    @NotNull
+    @Positive
+    @Column(name = "requested_quantity", nullable = false)
+    private Double requestedQuantity;
 
-    private Double totalPrice; 
+    @Column(name = "item_total_amount")
+    private Double itemTotalAmount;
 
-    public Long getPurchaseRequestLineId() {
-        return purchaseRequestLineId;
+    @PositiveOrZero
+    @Column(name = "approved_quantity")
+    private  Double approvedQuantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private Status status = Status.DRAFT;
+
+    @PositiveOrZero
+    @Column(name = "ordered_quantity")
+    private Double orderedQuantity;
+
+    @Column(name = "repeatable_id", updatable = false)
+    private Long repeatableId;
+
+    @ManyToOne
+    @JoinColumn(name = "request_for_quotation_id")
+    private RequestForQuotation requestForQuotation;
+
+    @ManyToOne
+    @JoinColumn(name = "purchase_order_line_id")    
+    private PurchaseOrderLine purchaseOrderLine;
+
+    public Long getId() {
+        return id;
     }
 
-    public void setPurchaseRequestLineId(Long purchaseRequestLineId) {
-        this.purchaseRequestLineId = purchaseRequestLineId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public PurchaseRequestHeader getPurchaseRequestHeader() {
@@ -50,45 +91,91 @@ public class PurchaseRequestLine {
         this.purchaseRequestHeader = purchaseRequestHeader;
     }
 
-    public Item getItem() {
-        return item;
+    public ItemVariant getItemVariant() {
+        return itemVariant;
     }
 
-    public void setItem(Item item) {
-        this.item = item;
+    public void setItemVariant(ItemVariant itemVariant) {
+        this.itemVariant = itemVariant;
     }
 
-    public Integer getQuantity() {
-        return quantity;
+    public Double getItemUnitPrice() {
+        return itemUnitPrice;
     }
 
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
+    public void setItemUnitPrice(Double itemUnitPrice) {
+        this.itemUnitPrice = itemUnitPrice;
     }
 
-    public Double getUnitPrice() {
-        return unitPrice;
+    public String getDescription() {
+        return description;
     }
 
-    public void setUnitPrice(Double unitPrice) {
-        this.unitPrice = unitPrice;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public Double getDiscount() {
-        return discount;
+    public Double getRequestedQuantity() {
+        return requestedQuantity;
     }
 
-    public void setDiscount(Double discount) {
-        this.discount = discount;
+    public void setRequestedQuantity(Double requestedQuantity) {
+        this.requestedQuantity = requestedQuantity;
     }
 
-    public Double getTotalPrice() {
-        return totalPrice;
+    public Double getItemTotalAmount() {
+        return itemTotalAmount;
     }
 
-    public void setTotalPrice(Double totalPrice) {
-        this.totalPrice = totalPrice;
+    public void setItemTotalAmount(Double itemTotalAmount) {
+        this.itemTotalAmount = itemTotalAmount;
     }
 
-    
+    public Double getApprovedQuantity() {
+        return approvedQuantity;
+    }
+
+    public void setApprovedQuantity(Double approvedQuantity) {
+        this.approvedQuantity = approvedQuantity;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public Double getOrderedQuantity() {
+        return orderedQuantity;
+    }
+
+    public void setOrderedQuantity(Double orderedQuantity) {
+        this.orderedQuantity = orderedQuantity;
+    }
+
+    public Long getRepeatableId() {
+        return repeatableId;
+    }
+
+    public void setRepeatableId(Long repeatableId) {
+        this.repeatableId = repeatableId;
+    }
+
+    public RequestForQuotation getRequestForQuotation() {
+        return requestForQuotation;
+    }
+
+    public void setRequestForQuotation(RequestForQuotation requestForQuotation) {
+        this.requestForQuotation = requestForQuotation;
+    } 
+
+    public PurchaseOrderLine getPurchaseOrderLine() {
+        return purchaseOrderLine;
+    }
+
+    public void setPurchaseOrderLine(PurchaseOrderLine purchaseOrderLine) {
+        this.purchaseOrderLine = purchaseOrderLine;
+    }
 }

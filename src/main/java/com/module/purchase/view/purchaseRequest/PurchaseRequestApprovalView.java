@@ -163,7 +163,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
 
             if (item.getSource() == ApprovalSource.AUTO) {
                 List<AssigningConfig> configs = configService.getConfigs(
-                        ApprovalType.PURCHASE_REQUEST_APPROVAL,
+                        ApprovalType.PURCHASE_REQUEST,
                         header != null ? header.getTotalAmount() : 0);
 
                 AssigningConfig config = configs.stream()
@@ -217,7 +217,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
         approvals.clear();
 
         List<AssigningConfig> configs = configService.getConfigs(
-                ApprovalType.PURCHASE_REQUEST_APPROVAL,
+                ApprovalType.PURCHASE_REQUEST,
                 header.getTotalAmount());
 
         configs.sort( Comparator.comparing(AssigningConfig::getLevel));
@@ -226,9 +226,8 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
             AssigningApprovals approval = new AssigningApprovals();
             approval.setLevel(config.getLevel());
             approval.setStatus(Status.DRAFT);
-            approval.setApprovalType(ApprovalType.PURCHASE_REQUEST_APPROVAL);
+            approval.setApprovalType(ApprovalType.PURCHASE_REQUEST);
             approval.setSource(ApprovalSource.AUTO);
-            approval.setApprover(config.getDefaultApprover());
             approvals.add(approval);
         }
         grid.setItems(approvals);
@@ -249,7 +248,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
         AssigningApprovals a = new AssigningApprovals();
         a.setLevel(next);
         a.setStatus(Status.DRAFT);
-        a.setApprovalType(ApprovalType.PURCHASE_REQUEST_APPROVAL);
+        a.setApprovalType(ApprovalType.PURCHASE_REQUEST);
         a.setSource(ApprovalSource.MANUAL);
 
         approvals.add(a);

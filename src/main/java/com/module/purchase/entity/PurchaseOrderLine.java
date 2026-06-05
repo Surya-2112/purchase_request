@@ -1,45 +1,62 @@
 package com.module.purchase.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Set;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import org.hibernate.annotations.ColumnDefault;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
+@Table( 
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"purchase_order_id", "item_variant_id"})
+    }
+)
 public class PurchaseOrderLine {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long purchaseOrderLineId;
+    @Column(name = "purchase_order_line_id")
+    private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "purchaseOrderId")
-    @JsonIgnoreProperties({"purchaseOrderLines"})
+    @JoinColumn(name = "purchase_order_id", nullable = false)
     private PurchaseOrderHeader purchaseOrderHeader;
 
     @ManyToOne
-    @JoinColumn(name = "itemId")
-    @JsonIgnoreProperties({"purchaseOrderLines"})
-    private Item item;
+    @JoinColumn(name = "item_variant_id", nullable = false)
+    private ItemVariant itemVariant;
 
-    private Integer quantity;
-
+    @NotNull
+    @Column(nullable = false)
+    @Positive
     private Double unitPrice;
 
-    private Double discount;
+    @NotNull
+    @Column(nullable = false)
+    @Positive
+    private Integer quantity;
 
-    private Double totalPrice;
+    @Column(nullable = false)
+    @Positive
+    private Double totalAmount;
 
-    public Long getPurchaseOrderLineId() {
-        return purchaseOrderLineId;
+    @Column(nullable = false)
+    @ColumnDefault("0.0")
+    @Positive
+    private Double discountAmount;
+
+    @OneToMany(mappedBy = "purchaseOrderLine")
+    private Set<PurchaseRequestLine> purchaseRequestLines;
+
+    public Long getId() {
+        return id;
     }
 
-    public void setPurchaseOrderLineId(Long purchaseOrderLineId) {
-        this.purchaseOrderLineId = purchaseOrderLineId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public PurchaseOrderHeader getPurchaseOrderHeader() {
@@ -50,20 +67,12 @@ public class PurchaseOrderLine {
         this.purchaseOrderHeader = purchaseOrderHeader;
     }
 
-    public Item getItem() {
-        return item;
+    public ItemVariant getItemVariant() {
+        return itemVariant;
     }
 
-    public void setItem(Item item) {
-        this.item = item;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
+    public void setItemVariant(ItemVariant itemVariant) {
+        this.itemVariant = itemVariant;
     }
 
     public Double getUnitPrice() {
@@ -74,19 +83,35 @@ public class PurchaseOrderLine {
         this.unitPrice = unitPrice;
     }
 
-    public Double getDiscount() {
-        return discount;
+    public Integer getQuantity() {
+        return quantity;
     }
 
-    public void setDiscount(Double discount) {
-        this.discount = discount;
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
-    public Double getTotalPrice() {
-        return totalPrice;
+    public Double getTotalAmount() {
+        return totalAmount;
     }
 
-    public void setTotalPrice(Double totalPrice) {
-        this.totalPrice = totalPrice;
+    public void setTotalAmount(Double totalAmount) {
+        this.totalAmount = totalAmount;
     }
+
+    public Double getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(Double discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public Set<PurchaseRequestLine> getPurchaseRequestLines() {
+        return purchaseRequestLines;
+    }
+
+    public void setPurchaseRequestLines(Set<PurchaseRequestLine> purchaseRequestLines) {
+        this.purchaseRequestLines = purchaseRequestLines;
+    }    
 }

@@ -125,9 +125,6 @@ public class ItemView extends VerticalLayout {
                 .setHeader("Item Code")
                 .setAutoWidth(true);
 
-        itemGrid.addColumn(Item::getUnitPrice)
-                .setHeader("Unit Amount");
-
         itemGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         itemGrid.setSizeFull();
 

@@ -1,8 +1,12 @@
 package com.module.purchase.entity;
 
 import java.time.LocalDate;
+
+import org.hibernate.annotations.ColumnDefault;
+
 import com.module.purchase.enums.Status;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -12,6 +16,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
 public class PurchaseOrderHeader {
@@ -25,9 +31,12 @@ public class PurchaseOrderHeader {
     private Employee createdBy;
 
     @OneToOne
-    @JoinColumn(name = "purchaseRequestId")
-    private PurchaseRequestHeader purchaseRequestHeader;
+    @JoinColumn(name = "quotation_id")
+    private Quotation quotation;
 
+    @Positive
+    @NotNull
+    @Column(nullable = false)
     private Double totalAmount;
 
     @ManyToOne
@@ -37,6 +46,9 @@ public class PurchaseOrderHeader {
     private LocalDate createdDate;
 
     @Enumerated(EnumType.STRING)
+    @NotNull
+    @Column(nullable = false)
+    @ColumnDefault("'DRAFT'")
     private Status status;
 
     public Long getPurchaseOrderId() {
@@ -55,12 +67,12 @@ public class PurchaseOrderHeader {
         this.createdBy = createdBy;
     }
 
-    public PurchaseRequestHeader getPurchaseRequestHeader() {
-        return purchaseRequestHeader;
+    public Quotation getQuotation() {
+        return quotation;
     }
 
-    public void setPurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader) {
-        this.purchaseRequestHeader = purchaseRequestHeader;
+    public void setQuotation(Quotation quotation) {
+        this.quotation = quotation;
     }
 
     public Double getTotalAmount() {

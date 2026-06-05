@@ -3,6 +3,7 @@ package com.module.purchase.entity;
 import org.hibernate.annotations.ColumnDefault;
 import java.util.Set; 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 public class ItemVariant {
@@ -13,17 +14,18 @@ public class ItemVariant {
     private Long id;
 
     @ManyToOne
+    @NotNull
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @Column(name = "specification", length = 1000)
+    @Column( length = 1000)
     private String specification;
 
-    @Column(name = "active", nullable = false)
+    @Column(nullable = false)
+    @NotNull
     @ColumnDefault("true")
     private Boolean active = true;
 
-    @Column(name = "estimated_unit_price")
     private Double estimatedUnitPrice;
 
     @OneToMany(mappedBy = "itemVariant")

@@ -113,18 +113,10 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
 
         orderId.setText("PO ID : " + header.getPurchaseOrderId());
 
-        requestId.setText("PR ID : " +
-                (header.getPurchaseRequestHeader() != null
-                        ? header.getPurchaseRequestHeader().getPurchaseRequestId()
-                        : "-"));
-
         createdBy.setText("Created By : " +
                 (header.getCreatedBy() != null
                         ? header.getCreatedBy().getEmployeeName()
                         : "Auto"));
-
-        department.setText("Department : " +
-                header.getPurchaseRequestHeader().getForDepartment().getDepartmentName());
 
         vendor.setText("Vendor : " +
                 (header.getVendor() != null ? header.getVendor().getVendorName() : "-"));
@@ -136,9 +128,6 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
 
     private void configureGrids() {
 
-        lineGrid.addColumn(line ->
-                        line.getItem() != null ? line.getItem().getItemName() : "")
-                .setHeader("Item");
 
         lineGrid.addColumn(PurchaseOrderLine::getQuantity)
                 .setHeader("Quantity");
@@ -146,12 +135,6 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements BeforeEn
         lineGrid.addColumn(PurchaseOrderLine::getUnitPrice)
                 .setHeader("Unit Price");
         
-        lineGrid.addColumn(line -> 
-                line.getItem() == null ? " ":line.getItem().getVATCode()
-        ).setHeader("VAT Code");
-
-        lineGrid.addColumn(PurchaseOrderLine::getTotalPrice)
-                .setHeader("Total");
 
         lineGrid.setWidthFull();
         lineGrid.setAllRowsVisible(true);

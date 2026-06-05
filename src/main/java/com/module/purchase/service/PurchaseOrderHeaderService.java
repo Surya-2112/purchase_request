@@ -107,27 +107,27 @@ public class PurchaseOrderHeaderService {
     public void genratepurchaseOrder(PurchaseRequestHeader purchaseRequestHeader)
     {   
         PurchaseOrderHeader purchaseOrderHeader=new PurchaseOrderHeader();
-        purchaseOrderHeader.setPurchaseRequestHeader(purchaseRequestHeader);
-        purchaseOrderHeader.setStatus(Status.ORDER);
-        purchaseOrderHeader.setTotalAmount(purchaseRequestHeader.getTotalAmount());
-        purchaseOrderHeader.setCreatedDate(LocalDate.now());
-        purchaseOrderHeader.setVendor(purchaseRequestHeader.getVendor());
+    //     purchaseOrderHeader.setPurchaseRequestHeader(purchaseRequestHeader);
+    //     purchaseOrderHeader.setStatus(Status.ORDER);
+    //     purchaseOrderHeader.setTotalAmount(purchaseRequestHeader.getTotalAmount());
+    //     purchaseOrderHeader.setCreatedDate(LocalDate.now());
+    //     purchaseOrderHeader.setVendor(purchaseRequestHeader.getVendor());
 
-        DepartmentBudget departmentBudget=departmentBudgetService.getByDepartmentAndYear(purchaseRequestHeader.getForDepartment(), Year.now());
-       departmentBudgetService.updateDepartmentBudget(departmentBudget,null);
-       departmentBudget.setRemainingBudgetAmount(departmentBudget.getRemainingBudgetAmount()-purchaseRequestHeader.getTotalAmount());// TODO :: make change .subtract(purchaseRequestHeader.getTotalAmount())
+    //     DepartmentBudget departmentBudget=departmentBudgetService.getByDepartmentAndYear(purchaseRequestHeader.getForDepartment(), Year.now());
+    //    departmentBudgetService.updateDepartmentBudget(departmentBudget,null);
+    //    departmentBudget.setRemainingBudgetAmount(departmentBudget.getRemainingBudgetAmount()-purchaseRequestHeader.getTotalAmount());// TODO :: make change .subtract(purchaseRequestHeader.getTotalAmount())
 
-        purchaseOrderHeader = addPurchaseOrderHeader(purchaseOrderHeader,null);
-        List<PurchaseRequestLine> lines= purchaseRequestLineService.getPurchaseRequestLineByHeader(purchaseRequestHeader);
-        for(PurchaseRequestLine line :lines)
-        {    PurchaseOrderLine poline=new PurchaseOrderLine();
-             poline.setItem(line.getItem());
-             poline.setPurchaseOrderHeader(purchaseOrderHeader);
-             poline.setQuantity(line.getQuantity());
-             poline.setUnitPrice(line.getUnitPrice());
-             poline.setTotalPrice(line.getTotalPrice());
-             poline.setDiscount(line.getDiscount());
-            purchaseOrderLineService.addPurchaseOrderLine(poline);
-        }
+    //     purchaseOrderHeader = addPurchaseOrderHeader(purchaseOrderHeader,null);
+    //     List<PurchaseRequestLine> lines= purchaseRequestLineService.getPurchaseRequestLineByHeader(purchaseRequestHeader);
+    //     for(PurchaseRequestLine line :lines)
+    //     {    PurchaseOrderLine poline=new PurchaseOrderLine();
+    //          poline.setItem(line.getItem());
+    //          poline.setPurchaseOrderHeader(purchaseOrderHeader);
+    //          poline.setQuantity(line.getQuantity());
+    //          poline.setUnitPrice(line.getUnitPrice());
+    //          poline.setTotalPrice(line.getTotalPrice());
+    //          poline.setDiscount(line.getDiscount());
+    //         purchaseOrderLineService.addPurchaseOrderLine(poline);
+    //     }
     }
 }

@@ -8,6 +8,7 @@ import org.hibernate.annotations.ColumnDefault;
 import com.module.purchase.enums.RequestForQuotationStatus;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "request_for_quotation")
@@ -19,21 +20,24 @@ public class RequestForQuotation {
     @Column(name = "request_for_quotation_id")
     private Long id;
 
+    @NotNull
     @Column(name = "requested_date", nullable = false)
     private LocalDate requestedDate;
 
+    @NotNull
     @Column(name = "request_end_date", nullable = false)
     private LocalDate requestEndDate;
 
     @Enumerated(EnumType.STRING)
+    @NotNull
     @Column(name = "status", nullable = false)
     @ColumnDefault("DRAFT")
     private RequestForQuotationStatus status = RequestForQuotationStatus.DRAFT;
 
-    @OneToMany(mappedBy = "requestForQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "requestForQuotation")
     private Set<RequestForQuotationLine> requestForQuotationLines;
 
-    @OneToMany(mappedBy = "requestForQuotation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "requestForQuotation")
     private Set<Quotation> quotations;
 
     public Long getId() {

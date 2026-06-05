@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.HashSet;
@@ -22,7 +23,6 @@ import java.util.Set;
 
 import org.hibernate.annotations.ColumnDefault;
 
-
 @Entity
 public class Vendor {
 
@@ -30,33 +30,36 @@ public class Vendor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long vendorId;
 
+    @NotNull
     @Size(max = 100)
-    @Column(nullable = false,length=100)
+    @Column(nullable = false, unique = true, length = 100)
     private String vendorName;
 
+    @NotNull
     @Column(nullable = false, unique = true)
     @Email
     private String vendorEmail;
-    
-    @Size(min = 10 ,max = 15)
-    @Column(length=15)
+
+    @Size(min = 10, max = 15)
+    @Column(length = 15)
     private String vendorPhoneNumber;
 
     @Embedded
     private Address vendorAddress;
 
     @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private Users user;
+    @JoinColumn(name = "user_id")
+    private Users users;
 
     @ManyToMany
-    @JoinTable(name = "vendor_category",  
-    joinColumns = @JoinColumn(name = "vendor_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
-    private Set<Category> categories = new HashSet<>();
+    @JoinTable(name = "vendor_categories", // Force a standard name instead of vendor_categorys
+            joinColumns = @JoinColumn(name = "vendor_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
+    private List<Category> categories;
 
-    @ManyToMany(mappedBy = "vendors")
+    @ManyToMany(mappedBy = "vendor")
     private Set<Quotation> quotations;
 
+    @NotNull
     @Column(nullable = false)
     @ColumnDefault("true")
     private Boolean active;
@@ -112,6 +115,7 @@ public class Vendor {
     public void setVendorAddress(Address vendorAddress) {
         this.vendorAddress = vendorAddress;
     }
+
     public List<PurchaseOrderHeader> getPurchaseOrderHeader() {
         return purchaseOrderHeader;
     }
@@ -120,20 +124,20 @@ public class Vendor {
         this.purchaseOrderHeader = purchaseOrderHeader;
     }
 
-    public Set<Category> getCategories() {
+    public List<Category> getCategories() {
         return categories;
     }
 
-    public void setCategories(Set<Category> categories) {
+    public void setCategories(List<Category> categories) {
         this.categories = categories;
     }
 
-    public Users getUser() {
-        return user;
+    public Users getUsers() {
+        return users;
     }
 
-    public void setUser(Users user) {
-        this.user = user;
+    public void setUsers(Users users) {
+        this.users = users;
     }
 
     public Set<Quotation> getQuotations() {
@@ -143,7 +147,4 @@ public class Vendor {
     public void setQuotations(Set<Quotation> quotations) {
         this.quotations = quotations;
     }
-
-    
-
 }

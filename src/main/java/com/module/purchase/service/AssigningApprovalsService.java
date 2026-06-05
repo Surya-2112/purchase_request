@@ -1,34 +1,31 @@
 package com.module.purchase.service;
 
-import org.springframework.stereotype.Service;
-
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.context.annotation.Lazy;
-
-import com.module.purchase.enums.ApprovalType;
-import com.module.purchase.enums.Status;
-import com.module.purchase.enums.EntityType;
-import com.module.purchase.enums.Action;
-import com.module.purchase.repository.AssigningApprovalsRepository;
-import com.module.purchase.specification.AssigningApprovalsSpecification;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.AuditLogs;
+import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;
-import com.module.purchase.entity.Employee;
+import com.module.purchase.enums.Action;
+import com.module.purchase.enums.ApprovalType;
+import com.module.purchase.enums.EntityType;
+import com.module.purchase.enums.Status;
 import com.module.purchase.mapper.AssigningApprovalsMapper;
-
-import java.time.LocalDate;
-import java.util.List;
+import com.module.purchase.repository.AssigningApprovalsRepository;
+import com.module.purchase.specification.AssigningApprovalsSpecification;
 
 
 @Service
@@ -86,7 +83,7 @@ public class AssigningApprovalsService {
         Specification<AssigningApprovals> spec = Specification
         .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
         .and(AssigningApprovalsSpecification.hasApprover(userService.getUserById(userId).get().getEmployee()))
-        .and(AssigningApprovalsSpecification.hasApprovalType(ApprovalType.PURCHASE_REQUEST_APPROVAL))
+        .and(AssigningApprovalsSpecification.hasApprovalType(ApprovalType.PURCHASE_REQUEST))
         .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
         .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
 
@@ -125,7 +122,7 @@ public class AssigningApprovalsService {
         {   log.setAction(Action.APPROVE);
            if(purchaseRequestHeader.getLevel()> assigningApprovals.getLevel())
            {AssigningApprovals next = getAssigningApprovalByTypeAndReferIdAndLevle(
-                                ApprovalType.PURCHASE_REQUEST_APPROVAL,
+                                ApprovalType.PURCHASE_REQUEST,
                                 purchaseRequestHeader.getPurchaseRequestId(),
                                 assigningApprovals.getLevel()+1);
             next.setStatus(Status.WAITING_APPROVAL);

@@ -74,9 +74,6 @@ public class AssigningConfigDetailsView extends VerticalLayout  implements HasUr
 
                 formLayout.addFormItem(new Span(String.valueOf(assigningConfig.getMaxAmount())),"Max Amount");
 
-                formLayout.addFormItem(new Span(assigningConfig.getDefaultApprover() == null? ""
-                                       : assigningConfig.getDefaultApprover().getEmployeeName()),"Default Employee");
-
                 // UPDATE BUTTON
                 Button updateButton = new Button("Update");
 

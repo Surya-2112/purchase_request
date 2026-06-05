@@ -16,10 +16,13 @@ public class PurchaseRequestDocument {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long documentId;
 
+    @Column(nullable = false)
     private String fileName;
 
+    @Column(nullable = false)
     private String fileType;
 
+    @Column(nullable = false)
     private Long fileSize;
 
     @Column(name = "document_data", columnDefinition = "BYTEA")

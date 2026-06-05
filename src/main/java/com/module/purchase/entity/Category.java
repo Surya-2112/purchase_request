@@ -6,9 +6,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(
-    name = "category",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = "category_name")
+    uniqueConstraints = {@UniqueConstraint(columnNames = "category_name")
     }
 )
 public class Category {
@@ -21,8 +19,8 @@ public class Category {
     @Column(name = "category_name", nullable = false, unique = true)
     private String categoryName;
 
-    @OneToOne(mappedBy = "category")
-    private Item item;
+    @OneToMany(mappedBy = "category")
+    private Set<Item> items;
 
     @ManyToMany(mappedBy = "categories")
     private Set<Vendor> vendors;
@@ -35,12 +33,12 @@ public class Category {
         this.categoryId = categoryId;
     }
 
-    public Item getItem() {
-        return item;
+    public Set<Item> getItems() {
+        return items;
     }
 
-    public void setItem(Item item) {
-        this.item = item;
+    public void setItems(Set<Item> items) {
+        this.items = items;
     }
 
     public Set<Vendor> getVendors() {

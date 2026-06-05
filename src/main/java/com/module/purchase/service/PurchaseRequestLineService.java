@@ -53,7 +53,7 @@ public class PurchaseRequestLineService {
         List<PurchaseRequestLine> lines=getPurchaseRequestLineByHeader(header);
         for(PurchaseRequestLine line:lines)
         {
-            deletePurchaseRequestLineById(line.getPurchaseRequestLineId());
+            deletePurchaseRequestLineById(line.getId());
         }
     }
 }

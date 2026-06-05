@@ -211,11 +211,6 @@ public class AssigningConfigForm extends Dialog {
                     maxAmountField.getValue()
             );
 
-            assigningConfig.setDefaultApprover(
-
-                    defaultEmployeeField.getValue()
-            );
-
             assigningConfigService.addAssigningConfig(
 
                     assigningConfig,

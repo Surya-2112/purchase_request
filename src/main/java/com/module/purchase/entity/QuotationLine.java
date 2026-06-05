@@ -3,8 +3,16 @@ package com.module.purchase.entity;
 import java.util.Set;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
+@Table(
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"quotation_id", "item_variant_id"})
+    }
+)
 public class QuotationLine {
 
     @Id
@@ -12,14 +20,16 @@ public class QuotationLine {
     @Column(name = "quotation_line_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne
     @JoinColumn(name = "quotation_id", nullable = false)
     private Quotation quotation;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne
     @JoinColumn(name = "variant_id", nullable = false)
     private ItemVariant itemVariant;
 
+    @NotNull
+    @Positive
     @Column(name = "unit_price", nullable = false)
     private Double unitPrice;
 

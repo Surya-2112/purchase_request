@@ -88,7 +88,7 @@ public class CategoryDetailsView extends VerticalLayout
                                                         3000,
                                                         Notification.Position.TOP_CENTER);
 
-                                        getUI().ifPresent(ui -> ui.navigate("vendor-category"));
+                                        getUI().ifPresent(ui -> ui.navigate("category"));
 
                                 } catch (Exception exception) {
 

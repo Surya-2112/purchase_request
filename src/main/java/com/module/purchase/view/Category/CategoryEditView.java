@@ -93,7 +93,7 @@ public class CategoryEditView extends VerticalLayout
                                                 Notification.Position.TOP_CENTER);
 
                                 getUI().ifPresent(ui -> ui
-                                                .navigate("vendor-category-details/" + category.getCategoryId()));
+                                                .navigate("category-details/" + category.getCategoryId()));
 
                         } catch (Exception exception) {
 

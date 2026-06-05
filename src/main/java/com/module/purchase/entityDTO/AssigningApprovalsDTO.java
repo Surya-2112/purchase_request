@@ -6,7 +6,7 @@ import com.module.purchase.enums.Status;
 
 public class AssigningApprovalsDTO {
     
-     private Long assigningApprovalsId;
+    private Long assigningApprovalsId;
 
     private Employee approver;
 

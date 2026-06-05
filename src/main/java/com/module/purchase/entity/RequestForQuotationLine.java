@@ -1,9 +1,15 @@
 package com.module.purchase.entity;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
-@Table(name = "request_for_quotation_line")
+@Table(
+    uniqueConstraints = @UniqueConstraint(columnNames = {"request_for_quotation_id", "variant_id"})
+)
 public class RequestForQuotationLine {
 
     @Id
@@ -11,19 +17,19 @@ public class RequestForQuotationLine {
     @Column(name = "request_for_quotation_line_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne
     @JoinColumn(name = "request_for_quotation_id", nullable = false)
     private RequestForQuotation requestForQuotation;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @NotNull
+    @ManyToOne
     @JoinColumn(name = "variant_id", nullable = false)
     private ItemVariant itemVariant;
 
-    @Column(name = "discount_amount")
-    private Double discountAmount;
-
     @Column(name = "requested_quantity", nullable = false)
-    private Double requestedQuantity;
+    @Positive
+    @ColumnDefault("1.0")
+    private Double requestedQuantity=1.0;
 
     public Long getId() {
         return id;
@@ -49,14 +55,6 @@ public class RequestForQuotationLine {
         this.itemVariant = itemVariant;
     }
 
-    public Double getDiscountAmount() {
-        return discountAmount;
-    }
-
-    public void setDiscountAmount(Double discountAmount) {
-        this.discountAmount = discountAmount;
-    }
-
     public Double getRequestedQuantity() {
         return requestedQuantity;
     }
@@ -65,5 +63,4 @@ public class RequestForQuotationLine {
         this.requestedQuantity = requestedQuantity;
     }
 
-    
 }

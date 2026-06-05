@@ -7,17 +7,17 @@ import org.springframework.stereotype.Service;
 
 import com.module.purchase.entity.Users;
 import com.module.purchase.enums.EmployeeGroup;
-import com.module.purchase.repository.UserRepository;
+import com.module.purchase.repository.UsersRepository;
 import com.module.purchase.service.ViewPermissionService;
 
 @Service
 public class SecurityService {
 
-    private final UserRepository userRepository;
+    private final UsersRepository userRepository;
 
     private final ViewPermissionService viewPermissionService;
 
-    public SecurityService(UserRepository userRepository, ViewPermissionService viewPermissionService ) {
+    public SecurityService(UsersRepository userRepository, ViewPermissionService viewPermissionService ) {
 
         this.userRepository = userRepository;
 
@@ -66,7 +66,7 @@ public class SecurityService {
                 return false;
             }
 
-            return userGroups.stream().anyMatch(allowedGroups::contains);
+            return allowedGroups.stream().allMatch(userGroups::contains);
 
         } catch (Exception exception) {
 

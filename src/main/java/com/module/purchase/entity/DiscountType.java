@@ -1,6 +1,11 @@
 package com.module.purchase.entity;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
 @Table(name = "discount_type")
@@ -11,18 +16,26 @@ public class DiscountType {
     @Column(name = "discount_type_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne
+    @NotNull
     @JoinColumn(name = "quotation_line_id", nullable = false)
     private QuotationLine quotationLine;
 
-    @Column(name = "from_quantity", nullable = false)
+    @Column( nullable = false)
+    @NotNull
+    @Positive
     private Double fromQuantity;
 
-    @Column(name = "to_quantity", nullable = false)
+    @Column(nullable = false)
+    @Positive
+    @NotNull
     private Double toQuantity;
 
-    @Column(name = "percentage_discount", nullable = false)
-    private Integer percentageDiscount;
+    @Column( nullable = false)
+    @PositiveOrZero
+    @NotNull
+    @ColumnDefault("0.0")
+    private Double discountPercentage;
 
     public Long getId() {
         return id;
@@ -56,12 +69,12 @@ public class DiscountType {
         this.toQuantity = toQuantity;
     }
 
-    public Integer getPercentageDiscount() {
-        return percentageDiscount;
+    public Double getDiscountPercentage() {
+        return discountPercentage;
     }
 
-    public void setPercentageDiscount(Integer percentageDiscount) {
-        this.percentageDiscount = percentageDiscount;
+    public void setDiscountPercentage(Double discountPercentage) {
+        this.discountPercentage = discountPercentage;
     }
     
 }

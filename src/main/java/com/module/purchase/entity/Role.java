@@ -17,6 +17,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Role {
@@ -25,6 +27,9 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roleId;
 
+    @NotNull
+    @Size(max=50)
+    @Column(unique = true, nullable = false, length=50)
     private String roleName;
 
     @CollectionTable(

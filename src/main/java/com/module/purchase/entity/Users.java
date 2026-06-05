@@ -1,29 +1,39 @@
 package com.module.purchase.entity;
 
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
+@Table(name = "users")
 public class Users {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) 
     private Long userId;
 
+    @NotNull
+    @Column(nullable = false, unique = true)
     private String userName;
 
+    @NotNull
+    @Column(nullable = false)
     private String password;
 
+    @NotNull
+    @Column(nullable = false, unique = true)
     private String userEmail;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "users")
     private Employee employee;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "users")
     private Vendor vendor;
 
     private Boolean active;

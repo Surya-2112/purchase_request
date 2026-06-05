@@ -141,7 +141,7 @@ public List<PurchaseRequestDTO> getRecentPurchaseRequests(PageRequest pageReques
 
         if(purchaseRequestHeader.getStatus().equals(Status.CANCELLED))
         {  log.setAction(Action.CANCEL);
-            List<AssigningApprovals> lines = assigningApprovalsService.getAssigningApprovalByTypeAndReferId(ApprovalType.PURCHASE_REQUEST_APPROVAL,purchaseRequestHeader.getPurchaseRequestId());
+            List<AssigningApprovals> lines = assigningApprovalsService.getAssigningApprovalByTypeAndReferId(ApprovalType.PURCHASE_REQUEST,purchaseRequestHeader.getPurchaseRequestId());
 
             for(AssigningApprovals line:lines)
             {

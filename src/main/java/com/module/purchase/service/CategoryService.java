@@ -99,10 +99,10 @@ public class CategoryService {
 
     public void deleteCategoryById(Long categoryId,Employee employee)
     {  Category  existingCategory =  getCategoryById(categoryId).get();
-        if(existingCategory.getVendors()!=null && !existingCategory.getVendors().isEmpty())
-        {
-             throw new ResourceAlreadyUsedException("Cannot delete vendor category with associated vendors");
-        }
+        // if(existingCategory.getVendors()!=null && !existingCategory.getVendors().isEmpty())
+        // {
+        //      throw new ResourceAlreadyUsedException("Cannot delete vendor category with associated vendors");
+        // }
         
         categoryRepository.deleteById(categoryId);
 

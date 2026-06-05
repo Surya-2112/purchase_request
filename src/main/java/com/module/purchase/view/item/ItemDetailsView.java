@@ -68,14 +68,6 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
                 new Span(item.getItemCode() == null ? "" : item.getItemCode()),
                 "Item Code"
         );
-
-        formLayout.addFormItem(
-            new Span(item.getUnitPrice() == null ? "" : item.getUnitPrice().toString())
-            , "Unit Price");
-
-        formLayout.addFormItem(
-            new Span(item.getVATCode() == null ? "" : item.getVATCode())
-            , "VAT Code");
     
 
         // UPDATE BUTTON

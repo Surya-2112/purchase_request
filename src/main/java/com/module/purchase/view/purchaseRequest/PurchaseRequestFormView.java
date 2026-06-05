@@ -166,9 +166,9 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                         Item item = event.getValue();
 
-                        unitPriceField.setValue(item == null? 0.0: item.getUnitPrice());
+                       // unitPriceField.setValue(item == null? 0.0: item.getUnitPrice());
 
-                        VATCodeField.setValue( item == null? "" : item.getVATCode());
+                        // VATCodeField.setValue( item == null? "" : item.getVATCode());
                 });
 
                 configureGrid();
@@ -418,8 +418,7 @@ public class PurchaseRequestFormView extends VerticalLayout
                 departmentField.setValue(
                                 editingHeader.getForDepartment());
 
-                vendorField.setValue(
-                                editingHeader.getVendor());
+             //   vendorField.setValue(editingHeader.getVendor());
 
                 lines.clear();
 
@@ -449,49 +448,49 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 lineGrid.removeAllColumns();
 
-                lineGrid.addColumn(line ->
+                // lineGrid.addColumn(line ->
 
-                line.getItem() != null
+                // line.getItem() != null
 
-                                ? line.getItem()
-                                                .getItemName()
+                //                 ? line.getItem()
+                //                                 .getItemName()
 
-                                : "")
+                //                 : "")
 
-                                .setHeader("Item")
-                                .setWidth("120px")
-                                .setFlexGrow(1);
+                //                 .setHeader("Item")
+                //                 .setWidth("120px")
+                //                 .setFlexGrow(1);
 
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getQuantity)
-                                .setHeader("Quantity")
-                                .setWidth("120px");
+                // lineGrid.addColumn(
+                //                 PurchaseRequestLine::getQuantity)
+                //                 .setHeader("Quantity")
+                //                 .setWidth("120px");
 
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getUnitPrice)
-                                .setHeader("Unit Price")
-                                .setWidth("150px");
+                // lineGrid.addColumn(
+                //                 PurchaseRequestLine::getUnitPrice)
+                //                 .setHeader("Unit Price")
+                //                 .setWidth("150px");
 
-                lineGrid.addColumn(line ->
+                // lineGrid.addColumn(line ->
 
-                line.getItem() == null
+                // line.getItem() == null
 
-                                ? ""
+                //                 ? ""
 
-                                : line.getItem().getVATCode()
+                //                 : line.getItem().getVATCode()
 
-                ).setHeader("VAT Code")
-                                .setWidth("140px");
+                // ).setHeader("VAT Code")
+                //                 .setWidth("140px");
 
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getDiscount)
-                                .setHeader("Discount")
-                                .setWidth("130px");
+                // lineGrid.addColumn(
+                //                 PurchaseRequestLine::getDiscount)
+                //                 .setHeader("Discount")
+                //                 .setWidth("130px");
 
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getTotalPrice)
-                                .setHeader("Total")
-                                .setWidth("150px");
+                // lineGrid.addColumn(
+                //                 PurchaseRequestLine::getTotalPrice)
+                //                 .setHeader("Total")
+                //                 .setWidth("150px");
 
                 lineGrid.addComponentColumn(line -> {
 
@@ -567,17 +566,6 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 if (editingLine != null) {
 
-                        editingLine.setItem(
-                                        itemField.getValue());
-
-                        editingLine.setQuantity(qty);
-
-                        editingLine.setUnitPrice(price);
-
-                        editingLine.setDiscount(discount);
-
-                        editingLine.setTotalPrice(total);
-
                         Notification.show(
                                         "Line updated");
 
@@ -587,30 +575,9 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                         PurchaseRequestLine existingLine = null;
 
-                        for (PurchaseRequestLine line : lines) {
 
-                                if (line.getItem() != null && line.getItem().getItemId()
-                                                .equals(itemField.getValue().getItemId())) {
-
-                                        existingLine = line;
-
-                                        break;
-                                }
-                        }
 
                         if (existingLine != null) {
-
-                                int newQty = existingLine.getQuantity() + qty;
-
-                                existingLine.setQuantity(newQty);
-
-                                existingLine.setUnitPrice(price);
-
-                                existingLine.setDiscount(existingLine.getDiscount() + discount);
-
-                                double updatedTotal = (newQty * price)- existingLine.getDiscount();
-
-                                existingLine.setTotalPrice(updatedTotal);
 
                                 Notification.show("Existing item quantity updated");
 
@@ -618,16 +585,7 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                                 PurchaseRequestLine line = new PurchaseRequestLine();
 
-                                line.setItem(itemField.getValue());
-
-                                line.setQuantity(qty);
-
-                                line.setUnitPrice(price);
-
-                                line.setDiscount(discount);
-
-                                line.setTotalPrice(total);
-
+                              
                                 lines.add(line);
 
                                 Notification.show("Line added");
@@ -644,13 +602,13 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                 editingLine = line;
 
-                itemField.setValue( line.getItem());
+                // itemField.setValue( line.getItem());
 
-                quantityField.setValue(line.getQuantity());
+                // quantityField.setValue(line.getQuantity());
 
-                unitPriceField.setValue(line.getUnitPrice());
+                // unitPriceField.setValue(line.getUnitPrice());
 
-                discountField.setValue(line.getDiscount());
+                // discountField.setValue(line.getDiscount());
 
                 Notification.show( "Edit mode enabled");
         }
@@ -684,7 +642,7 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                         Employee currentUser = securityService.getLoggedInUser().getEmployee();
 
-                        double total = lines.stream().mapToDouble(PurchaseRequestLine::getTotalPrice).sum();
+              //          double total = lines.stream().mapToDouble(PurchaseRequestLine::getTotalPrice).sum();
 
                         PurchaseRequestHeader saved;
 
@@ -694,9 +652,9 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                                 editingHeader.setForDepartment(departmentField.getValue());
 
-                                editingHeader.setVendor(vendorField.getValue());
+                             //   editingHeader.setVendor(vendorField.getValue());
 
-                                editingHeader.setTotalAmount(total);
+                         //       editingHeader.setTotalAmount(total);
 
                                 saved = headerService.updatePurchaseRequestHeader(editingHeader,currentUser);
 
@@ -708,15 +666,15 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                                         newLine.setPurchaseRequestHeader(saved);
 
-                                        newLine.setItem(oldLine.getItem());
+                                        // newLine.setItem(oldLine.getItem());
 
-                                        newLine.setQuantity(oldLine.getQuantity());
+                                        // newLine.setQuantity(oldLine.getQuantity());
 
-                                        newLine.setUnitPrice(oldLine.getUnitPrice());
+                                        // newLine.setUnitPrice(oldLine.getUnitPrice());
 
-                                        newLine.setDiscount(oldLine.getDiscount());
+                                        // newLine.setDiscount(oldLine.getDiscount());
 
-                                        newLine.setTotalPrice(oldLine.getTotalPrice());
+                                        // newLine.setTotalPrice(oldLine.getTotalPrice());
 
                                         lineService.addPurchaseRequestLine(newLine);
                                 }
@@ -735,14 +693,13 @@ public class PurchaseRequestFormView extends VerticalLayout
                                 header.setForDepartment(
                                                 departmentField.getValue());
 
-                                header.setVendor(
-                                                vendorField.getValue());
+                            //    header.setVendor( vendorField.getValue());
 
                                 header.setStatus(Status.DRAFT);
 
                                 header.setCreatedBy(currentUser);
 
-                                header.setTotalAmount(total);
+                             //   header.setTotalAmount(total);
 
                                 saved = headerService.addPurchaseRequestHeader( header, currentUser);
 
@@ -752,19 +709,18 @@ public class PurchaseRequestFormView extends VerticalLayout
 
                                         newLine.setPurchaseRequestHeader(saved);
 
-                                        newLine.setItem(oldLine.getItem());
+                                        // newLine.setItem(oldLine.getItem());
 
-                                        newLine.setQuantity(
-                                                        oldLine.getQuantity());
+                                        // newLine.setQuantity(
+                                        //                 oldLine.getQuantity());
 
-                                        newLine.setUnitPrice(
-                                                        oldLine.getUnitPrice());
+                                        // newLine.setUnitPrice(
+                                        //                 oldLine.getUnitPrice());
 
-                                        newLine.setDiscount(
-                                                        oldLine.getDiscount());
+                                        // newLine.setDiscount(
+                                        //                 oldLine.getDiscount());
 
-                                        newLine.setTotalPrice(
-                                                        oldLine.getTotalPrice());
+                                       // newLine.setTotalPrice(oldLine.getTotalPrice());
 
                                         lineService.addPurchaseRequestLine(
                                                         newLine);

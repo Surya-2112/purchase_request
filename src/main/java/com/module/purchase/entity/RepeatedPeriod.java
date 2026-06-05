@@ -6,9 +6,9 @@ import com.module.purchase.enums.FrequencyType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "repeated_period")
 public class RepeatedPeriod {
 
     @Id
@@ -16,20 +16,25 @@ public class RepeatedPeriod {
     @Column(name = "repeated_period_id")
     private Long id;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "refer_type", nullable = false)
     private RepeatedPeriodReferType referType;
 
+    @NotNull
     @Column(name = "refer_id", nullable = false)
     private Long referId;
 
+    @NotNull
     @Column(name = "frequency_period", nullable = false)
     private Integer frequencyPeriod;
 
     @Enumerated(EnumType.STRING)
+    @NotNull
     @Column(name = "frequency_type", nullable = false)
     private FrequencyType frequencyType;
 
+    @NotNull
     @Column(name = "from_date", nullable = false)
     private LocalDate fromDate;
 

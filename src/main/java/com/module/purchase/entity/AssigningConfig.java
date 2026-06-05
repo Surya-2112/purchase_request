@@ -10,8 +10,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -42,15 +40,11 @@ public class AssigningConfig {
     @Column(name = "approval_type", nullable = false)
     private ApprovalType approvalType;
 
-    @Column(name = "margin_difference_percentage")
+    @Column(name = "margin_difference_percentage", nullable = false)
     private Double marginDifferencePercentage;
 
-    @Column(name = "level")
+    @Column(name = "level",nullable = false)
     private Integer level;
-
-    @ManyToOne
-    @JoinColumn(name = "defaultApprover")
-    private Employee defaultApprover;
     
     public Long getId() {
         return id;
@@ -99,13 +93,13 @@ public class AssigningConfig {
     public void setMaxAmount(Double maxAmount) {
         this.maxAmount = maxAmount;
     }
-
-    public Employee getDefaultApprover() {
-        return defaultApprover;
+    
+    public Double getMarginDifferencePercentage() {
+        return marginDifferencePercentage;
     }
 
-    public void setDefaultApprover(Employee defaultApprover) {
-        this.defaultApprover = defaultApprover;
+    public void setMarginDifferencePercentage(Double marginDifferencePercentage) {
+        this.marginDifferencePercentage = marginDifferencePercentage;
     }
 
 }

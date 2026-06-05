@@ -65,10 +65,6 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
         itemNameField.setValue( item.getItemName() == null ? "" : item.getItemName());
 
         itemCodeField.setValue(item.getItemCode() == null ? "" : item.getItemCode() );
-
-        unitPriceField.setValue(item.getUnitPrice() == null ? 0.0 : item.getUnitPrice());
-        
-        VATCodeField.setValue(item.getVATCode() == null ? "": item.getVATCode());
         
 
         // FORM
@@ -107,8 +103,6 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
                 // UPDATE VALUES
                 item.setItemName(itemNameField.getValue());
                 item.setItemCode(itemCodeField.getValue());
-                item.setUnitPrice(unitPriceField.getValue());
-                item.setVATCode(VATCodeField.getValue());
 
                 // UPDATE
                 itemService.updateItem(item,securityService.getLoggedInUser().getEmployee());

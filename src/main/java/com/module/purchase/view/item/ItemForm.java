@@ -85,8 +85,6 @@ public class ItemForm extends Dialog {
 
             item.setItemName(itemNameField.getValue());
             item.setItemCode(itemCodeField.getValue());
-            item.setUnitPrice(unitAmountField.getValue());
-            item.setVATCode(VATCodeField.getValue());
 
             itemService.addItem(item,securityService.getLoggedInUser().getEmployee());
 

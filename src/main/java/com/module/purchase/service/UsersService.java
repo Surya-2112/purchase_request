@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import com.module.purchase.repository.UserRepository;
+import com.module.purchase.repository.UsersRepository;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Users;
@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsersService {
 
     @Autowired
-    private UserRepository userRepository;
+    private UsersRepository userRepository;
 
     @Autowired
     private EmployeeService employeeService;
@@ -59,7 +59,7 @@ public class UsersService {
         }
 
         Employee employee = employeeService.getEmployeeById(user.getEmployee().getEmployeeId()).get();
-        if (employee.getUser() != null) {
+        if (employee.getUsers() != null) {
             throw new ResourceAlreadyUsedException("This Employee as another user");
         }
 
@@ -69,7 +69,7 @@ public class UsersService {
         }
         
         user = saveUsers(user);
-        employee.setUser(user);
+        employee.setUsers(user);
 
         AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.USER);

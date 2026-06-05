@@ -371,31 +371,6 @@ public class AssigningApprovalsDetailsView extends VerticalLayout
 
                 lineGrid.setWidthFull();
 
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getPurchaseRequestLineId).setHeader("Line ID");
-
-                lineGrid.addColumn(line ->
-
-                line.getItem() != null
-
-                                ? line.getItem().getItemName()
-
-                                : ""
-
-                ).setHeader("Item Name");
-
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getQuantity).setHeader("Quantity");
-
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getUnitPrice).setHeader("Unit Price");
-
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getDiscount).setHeader("Discount");
-
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getTotalPrice).setHeader("Total Price");
-
                 lineGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
                 lineGrid.setAllRowsVisible(true);
         }

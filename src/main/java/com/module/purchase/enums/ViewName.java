@@ -55,10 +55,10 @@ public enum ViewName {
     VENDOR_EDIT("vendor-edit"),
     VENDOR_FORM("vendor-form"),
 
-    VENDOR_CATEGORY("vendor-category"),
-    VENDOR_CATEGORY_DETAILS("vendor-category-details"),
-    VENDOR_CATEGORY_EDIT("vendor-category-edit"),
-    VENDOR_CATEGORY_FORM("vendor-category-form"),
+    CATEGORY("category"),
+    CATEGORY_DETAILS("category-details"),
+    CATEGORY_EDIT("category-edit"),
+    CATEGORY_FORM("category-form"),
     
     AUDIT_LOGS("audit-logs");
 

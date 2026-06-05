@@ -10,37 +10,32 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(
-    name = "item",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = "item_name"),
-        @UniqueConstraint(columnNames = "item_code")
-    }
-)
 public class Item {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long itemId;
 
+    @NotNull
     @Column(nullable = false, unique = true)
     private String itemName;
 
+    @NotNull
     @Size(max = 20)
     @Column(nullable = false, unique = true,length=20)
     private String itemCode;
 
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "unit_id", nullable = false)
     private Unit unit;
 
-    @OneToOne
+    @NotNull
+    @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 

@@ -290,42 +290,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout
 
         private void configureGrids() {
 
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getPurchaseRequestLineId)
-                                .setHeader("Line ID");
-
-                lineGrid.addColumn(line ->
-
-                line.getItem() != null
-
-                                ? line.getItem()
-                                                .getItemName()
-
-                                : "")
-
-                                .setHeader("Item Name");
-
-                lineGrid.addColumn(
-                                PurchaseRequestLine::getQuantity)
-                                .setHeader("Quantity");
-
-                lineGrid.addColumn( PurchaseRequestLine::getUnitPrice)
-                                .setHeader("Unit Price");
-
-                lineGrid.addColumn(line ->
-
-                line.getItem() == null
-
-                                ? " "
-
-                                : line.getItem().getVATCode()
-
-                ).setHeader("VAT Code");
-
-                lineGrid.addColumn(PurchaseRequestLine::getDiscount).setHeader("Discount");
-
-                lineGrid.addColumn(PurchaseRequestLine::getTotalPrice).setHeader("Total Price");
-
                 lineGrid.setWidthFull();
 
                 lineGrid.setAllRowsVisible(true);
@@ -435,7 +399,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout
                 lineGrid.setItems(purchaseRequestLineService.getPurchaseRequestLineByHeader(header));
 
                 approvalGrid.setItems(assigningApprovalsService.getAssigningApprovalByTypeAndReferId(
-                                ApprovalType.PURCHASE_REQUEST_APPROVAL,
+                                ApprovalType.PURCHASE_REQUEST,
                                 header.getPurchaseRequestId()));
         }
 

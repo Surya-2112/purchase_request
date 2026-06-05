@@ -13,13 +13,13 @@ import com.module.purchase.entity.Users;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.repository.EmployeeRepository;
 import com.module.purchase.repository.RoleRepository;
-import com.module.purchase.repository.UserRepository;
+import com.module.purchase.repository.UsersRepository;
 
 @Configuration
 public class DefaultAdminConfig {
 
     @Bean
-    CommandLineRunner createDefaultAdmin(UserRepository userRepository, EmployeeRepository employeeRepository, RoleRepository roleRepository,
+    CommandLineRunner createDefaultAdmin(UsersRepository userRepository, EmployeeRepository employeeRepository, RoleRepository roleRepository,
             PasswordEncoder passwordEncoder) {
 
         return args -> {
@@ -56,7 +56,7 @@ public class DefaultAdminConfig {
 
                 employee.setRole(role);
 
-                employee.setUser(user);
+                employee.setUsers(user);
 
                 employeeRepository.save(employee);
             }

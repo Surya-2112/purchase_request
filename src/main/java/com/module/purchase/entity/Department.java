@@ -1,6 +1,8 @@
 package com.module.purchase.entity;
 
-import java.util.List;
+import java.util.Set;
+
+import org.hibernate.annotations.ColumnDefault;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -40,20 +42,20 @@ public class Department {
    
     @NotNull
     @Column(nullable = false)
-    @org.hibernate.annotations.ColumnDefault("true")
+    @ColumnDefault("true")
     private Boolean active = true;
 
     @OneToMany(mappedBy = "department")
     @JsonIgnoreProperties({"department"})
-    private List<Employee> employees;
+    private Set<Employee> employees;
 
     @OneToMany(mappedBy = "department")
     @JsonIgnoreProperties({"department"})
-    private List<DepartmentBudget> departmentBudgets;
+    private Set<DepartmentBudget> departmentBudgets;
 
     @OneToMany(mappedBy = "forDepartment")
     @JsonIgnoreProperties({"forDepartment"})
-    private List<PurchaseRequestHeader> purchaseRequestHeaders;
+    private Set<PurchaseRequestHeader> purchaseRequestHeaders;
 
     public Long getDepartmentId() {
         return departmentId;
@@ -95,26 +97,26 @@ public class Department {
         this.active = active;
     }
 
-    public List<Employee> getEmployees() {
+    public Set<Employee> getEmployees() {
         return employees;
     }
 
-    public void setEmployees(List<Employee> employees) {
+    public void setEmployees(Set<Employee> employees) {
         this.employees = employees;
     }
-    public List<DepartmentBudget> getDepartmentBudgets() {
+    public Set<DepartmentBudget> getDepartmentBudgets() {
         return departmentBudgets;
     }
 
-    public void setDepartmentBudgets(List<DepartmentBudget> departmentBudgets) {
+    public void setDepartmentBudgets(Set<DepartmentBudget> departmentBudgets) {
         this.departmentBudgets = departmentBudgets;
     }
 
-    public List<PurchaseRequestHeader> getPurchaseRequestHeaders() {
+    public Set<PurchaseRequestHeader> getPurchaseRequestHeaders() {
         return purchaseRequestHeaders;
     }
 
-    public void setPurchaseRequestHeaders(List<PurchaseRequestHeader> purchaseRequestHeaders) {
+    public void setPurchaseRequestHeaders(Set<PurchaseRequestHeader> purchaseRequestHeaders) {
         this.purchaseRequestHeaders = purchaseRequestHeaders;
     }
 

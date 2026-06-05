@@ -120,7 +120,6 @@ public class AssigningConfigEditView extends VerticalLayout
             defaultEmployeeField.setItems(employeeService.getEmployeesByEmployeeGroup(assigningConfig.getEmployeeGroup()));
         }
 
-        defaultEmployeeField.setValue( assigningConfig.getDefaultApprover());
 
         FormLayout formLayout = new FormLayout();
 
@@ -204,9 +203,6 @@ public class AssigningConfigEditView extends VerticalLayout
 
                 assigningConfig.setMaxAmount(
                         maxAmountField.getValue());
-
-                assigningConfig.setDefaultApprover(
-                        defaultEmployeeField.getValue());
 
                 // UPDATE
                 assigningConfigService.updateAssigningConfig(

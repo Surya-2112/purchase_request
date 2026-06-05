@@ -131,9 +131,6 @@ public class EmployeeService {
 
     public void deleteEmployeeById(Long employeeId,Employee deleted) {
         Employee existingEmployee = getEmployeeById(employeeId).get();
-        if (existingEmployee.getAssignedApprovals() != null && !existingEmployee.getAssignedApprovals().isEmpty()) {
-            throw new ResourceAlreadyUsedException("Cannot delete Employee with associated assingned approvals");
-        }
         if (existingEmployee.getAuditLogs() != null && !existingEmployee.getAuditLogs().isEmpty()) {
             throw new ResourceAlreadyUsedException("Cannot delete Employee with associated audit logs");
         }

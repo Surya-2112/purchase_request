@@ -6,6 +6,8 @@ import java.util.Set;
 import com.module.purchase.enums.Status;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 
 @Entity
@@ -16,25 +18,29 @@ public class Quotation {
     @Column(name = "quotation_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne
     @JoinColumn(name = "request_for_quotation_id", nullable = false)
     private RequestForQuotation requestForQuotation;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne
     @JoinColumn(name = "vendor_id", nullable = false)
     private Vendor vendor;
 
-    @Column(name = "total_amount")
+    @NotNull
+    @Positive
+    @Column(nullable= false)
     private Double totalAmount;
 
+    @NotNull
     @Column(name = "quotation_date", nullable = false)
     private LocalDate quotationDate;
 
     @Enumerated(EnumType.STRING)
+    @NotNull
     @Column(name = "status", nullable = false)
     private Status status;
 
-    @OneToMany(mappedBy = "quotation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "quotation")
     private Set<QuotationLine> quotationLines;
 
     public Long getId() {

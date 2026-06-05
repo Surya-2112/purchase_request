@@ -2,12 +2,13 @@ package com.module.purchase.entity;
 
 import java.util.List;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.validation.constraints.Email;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -15,9 +16,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Employee {
@@ -50,22 +52,18 @@ public class Employee {
     @JsonIgnoreProperties({ "employees" })
     private Role role;
 
-    @OneToMany(mappedBy = "defaultApprover")
-    @JsonIgnoreProperties({ "defaultApprover" })
-    private List<AssigningConfig> assigningConfigs;
-
     @Embedded
     private Address address;
 
     @NotNull
     @Column(nullable = false)
-    @org.hibernate.annotations.ColumnDefault("true")
+    @ColumnDefault("true")
     private Boolean active = true;
 
     @OneToOne
     @JoinColumn(name = "userId")
     @JsonIgnoreProperties({ "employee" })
-    private Users user;
+    private Users users;
 
     @OneToMany(mappedBy = "createdBy")
     @JsonIgnoreProperties({ "createdBy" })
@@ -151,12 +149,12 @@ public class Employee {
         this.active = active;
     }
 
-    public Users getUser() {
-        return user;
+    public Users getUsers() {
+        return users;
     }
 
-    public void setUser(Users user) {
-        this.user = user;
+    public void setUsers(Users users) {
+        this.users = users;
     }
 
     public List<PurchaseRequestHeader> getPurchaseRequestHeaders() {
@@ -205,13 +203,5 @@ public class Employee {
                 + employeeEmail + ", employeePhoneNumber=" + employeePhoneNumber + ", address=" + address + ", active="
                 + active + "]";
     }
-
-    public List<AssigningConfig> getAssigningConfig() {
-        return assigningConfigs;
-    }
-
-    public void setAssigningConfig(List<AssigningConfig> assigningConfigs) {
-        this.assigningConfigs = assigningConfigs;
-    }
-
+    
 }

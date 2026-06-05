@@ -1,12 +1,12 @@
 package com.module.purchase.entity;
 
-
 import java.sql.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.module.purchase.enums.Status;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 public class PurchaseRequestHeader {
@@ -25,28 +26,32 @@ public class PurchaseRequestHeader {
     private Long purchaseRequestId;
 
     @ManyToOne
-    @JoinColumn(name = "employeeId")
+    @JoinColumn(name = "requester_id")
     @JsonIgnoreProperties({"purchaseRequests"})
     private Employee createdBy;
 
+    @NotNull
+    @Column( nullable = false)
     private Double totalAmount;
-
+    
+    @NotNull
+    @Column(nullable = false)
     private Date createdDate;
 
+    @NotNull
+    @Column(nullable = false)
     private Integer level;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Status status;
-
-    @ManyToOne
-    @JoinColumn(name = "vendorId")
-    private Vendor vendor;
 
     @OneToMany(mappedBy = "purchaseRequestHeader")
     private List<PurchaseRequestDocument> documents;
 
     @ManyToOne
-    @JoinColumn(name = "department")
+    @JoinColumn(name = "department",nullable = false)
     @JsonIgnoreProperties("purchaseRequestHeaders")
     private Department forDepartment;
 
@@ -128,14 +133,6 @@ public class PurchaseRequestHeader {
 
     public void setAssigningApprovals(List<AssigningApprovals> assigningApprovals) {
         this.assigningApprovals = assigningApprovals;
-    }
-
-    public Vendor getVendor() {
-        return vendor;
-    }
-
-    public void setVendor(Vendor vendor) {
-        this.vendor = vendor;
     }
 
     public List<PurchaseRequestDocument> getDocuments() {
