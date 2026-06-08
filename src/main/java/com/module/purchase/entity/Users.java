@@ -9,17 +9,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Email;
 
 @Entity
 @Table(name = "users")
 public class Users {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id") 
     private Long userId;
 
     @NotNull
-    @Column(nullable = false, unique = true)
+    @Column(name = "user_name", nullable = false, unique = true)
     private String userName;
 
     @NotNull
@@ -27,7 +29,8 @@ public class Users {
     private String password;
 
     @NotNull
-    @Column(nullable = false, unique = true)
+    @Email
+    @Column(name = "user_email", nullable = false, unique = true)
     private String userEmail;
 
     @OneToOne(mappedBy = "users")

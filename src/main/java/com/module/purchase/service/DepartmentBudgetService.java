@@ -1,9 +1,8 @@
 package com.module.purchase.service;
 
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,21 +10,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
-import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
+import com.module.purchase.entity.Employee;
 import com.module.purchase.entityDTO.DepartmentBudgetDTO;
+import com.module.purchase.enums.Action;
+import com.module.purchase.enums.EntityType;
 import com.module.purchase.mapper.DepartmentBudgetMapper;
 import com.module.purchase.repository.DepartmentBudgetRepository;
 import com.module.purchase.specification.DepartmentBudgetSpecification;
-import java.util.List;
-import com.module.purchase.enums.EntityType;
-import com.module.purchase.enums.Action;
 
 @Service
 public class DepartmentBudgetService {
@@ -44,10 +43,13 @@ public class DepartmentBudgetService {
     }
 
     public DepartmentBudget addDepartmentBudget(DepartmentBudget departmentBudget,Employee employee) {
-        Optional<DepartmentBudget> existingDepartmentBudget = departmentBudgetRepository
-                .findByDepartmentAndYear(departmentBudget.getDepartment(), departmentBudget.getYear());
+        Optional<DepartmentBudget> existingDepartmentBudget = departmentBudgetRepository.findByDepartmentAndYear(departmentBudget.getDepartment(), departmentBudget.getYear());
         if (existingDepartmentBudget.isPresent()) {
             throw new ResourceAlreadyUsedException("Department budget for the given department and year already exists.");
+        }
+        if(departmentBudget.getRemainingBudgetAmount()>departmentBudget.getTotalBudgetAmount())
+        {
+            throw new RuntimeException("Department Budget not valid");
         }
         departmentBudget=saveDepartmentBudget(departmentBudget);
 

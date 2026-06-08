@@ -1,11 +1,22 @@
 package com.module.purchase.entity;
 
+import java.util.Set;
+
 import org.hibernate.annotations.ColumnDefault;
-import java.util.Set; 
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
+@Table(name = "item_variant")
 public class ItemVariant {
 
     @Id
@@ -33,6 +44,12 @@ public class ItemVariant {
 
     @OneToMany(mappedBy = "itemVariant")
     private Set<QuotationLine> quotationLines;
+
+    @OneToMany(mappedBy = "itemVariant")
+    private Set<PurchaseRequestLine> purchaseRequestLines;
+
+      @OneToMany(mappedBy = "itemVariant")
+    private Set<PurchaseOrderLine> purchaseOrderLines;
 
     public Long getId() {
         return id;
@@ -88,5 +105,21 @@ public class ItemVariant {
 
     public void setQuotationLines(Set<QuotationLine> quotationLines) {
         this.quotationLines = quotationLines;
+    }
+
+    public Set<PurchaseRequestLine> getPurchaseRequestLines() {
+        return purchaseRequestLines;
+    }
+
+    public void setPurchaseRequestLines(Set<PurchaseRequestLine> purchaseRequestLines) {
+        this.purchaseRequestLines = purchaseRequestLines;
+    }
+
+    public Set<PurchaseOrderLine> getPurchaseOrderLines() {
+        return purchaseOrderLines;
+    }
+
+    public void setPurchaseOrderLines(Set<PurchaseOrderLine> purchaseOrderLines) {
+        this.purchaseOrderLines = purchaseOrderLines;
     }
 }

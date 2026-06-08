@@ -1,5 +1,8 @@
 package com.module.purchase.entityDTO;
 
+import java.util.List;
+import com.module.purchase.entity.Category;
+
 public class VendorDTO {
     
     private Long vendorId;
@@ -7,6 +10,8 @@ public class VendorDTO {
     private String vendorName;
 
     private Boolean active;
+
+   private List<Category> categories;
 
     public Long getVendorId() {
         return vendorId;
@@ -30,6 +35,16 @@ public class VendorDTO {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public void setCategories(List<Category> categories)
+    {
+        this.categories=categories;
+    } 
+
+    public List<Category> getCategories()
+    {  
+        return categories;
     }
 
 }

@@ -105,6 +105,12 @@ public class EmployeeService {
         return employeeRepository.findAll();
     }
 
+    public List<Employee> getEmplyeesWithoutUsers()
+    {
+        return employeeRepository.findEmployeesWithoutUser();
+    }
+
+
     public Employee updateEmployee(Employee employee,Employee updated) {
         Employee existingEmployee = getEmployeeById(employee.getEmployeeId()).get();
         if (!existingEmployee.getEmployeeEmail().equals(employee.getEmployeeEmail())) {

@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Positive;
 @Entity
 @Table(
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"quotation_id", "item_variant_id"})
+        @UniqueConstraint(columnNames = {"quotation_id", "variant_id"})
     }
 )
 public class QuotationLine {

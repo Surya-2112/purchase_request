@@ -25,7 +25,10 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
     private final UsersService usersService;
     private final SecurityService securityService;
 
-    public UsersDetailsView(UsersService usersService,SecurityService securityService) {
+    public UsersDetailsView(
+            UsersService usersService,
+            SecurityService securityService) {
+
         this.usersService = usersService;
         this.securityService = securityService;
 
@@ -39,7 +42,8 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
 
         removeAll();
 
-        Users user = usersService.getUserById(userId)
+        Users user = usersService
+                .getUserById(userId)
                 .orElse(null);
 
         if (user == null) {
@@ -53,37 +57,55 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
 
         formLayout.addFormItem(
                 new Span(String.valueOf(user.getUserId())),
-                "User ID"
-        );
+                "User ID");
 
         formLayout.addFormItem(
                 new Span(user.getUserName()),
-                "User Name"
-        );
+                "User Name");
 
         formLayout.addFormItem(
                 new Span(user.getUserEmail()),
-                "Email"
-        );
+                "Email");
+
+        // User Type
+        String userType = "";
+
+        if (user.getEmployee() != null) {
+            userType = "Employee";
+        } else if (user.getVendor() != null) {
+            userType = "Vendor";
+        }
 
         formLayout.addFormItem(
-                new Span(user.getEmployee() == null
-                        ? ""
-                        : user.getEmployee().getEmployeeName()),
-                "Employee"
-        );
+                new Span(userType),
+                "User Type");
+
+        // Linked To
+        String linkedTo = "";
+
+        if (user.getEmployee() != null) {
+            linkedTo = user.getEmployee().getEmployeeName();
+        } else if (user.getVendor() != null) {
+            linkedTo = user.getVendor().getVendorName();
+        }
 
         formLayout.addFormItem(
-                new Span(Boolean.TRUE.equals(user.getActive()) ? "Active" : "Inactive"),
-                "Status"
-        );
+                new Span(linkedTo),
+                "Linked To");
+
+        formLayout.addFormItem(
+                new Span(
+                        Boolean.TRUE.equals(user.getActive())
+                                ? "Active"
+                                : "Inactive"),
+                "Status");
 
         Button updateButton = new Button("Update");
+
         updateButton.addClickListener(e ->
                 getUI().ifPresent(ui ->
-                        ui.navigate("user-edit/" + user.getUserId())
-                )
-        );
+                        ui.navigate(
+                                "user-edit/" + user.getUserId())));
 
         Button deleteButton = new Button("Delete");
 
@@ -92,41 +114,59 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
             ConfirmDialog dialog = new ConfirmDialog();
 
             dialog.setHeader("Delete User");
-            dialog.setText("Are you sure you want to delete this user?");
+
+            dialog.setText(
+                    "Are you sure you want to delete this user?");
 
             dialog.setCancelable(true);
+
             dialog.setConfirmText("Delete");
-            dialog.setConfirmButtonTheme("error primary");
+
+            dialog.setConfirmButtonTheme(
+                    "error primary");
 
             dialog.addConfirmListener(confirmEvent -> {
+
                 try {
 
-                    usersService.deleteUsersById(user.getUserId(),securityService.getLoggedInUser().getEmployee());
+                    usersService.deleteUsersById(
+                            user.getUserId(),
+                            securityService
+                                    .getLoggedInUser()
+                                    .getEmployee());
 
-                    Notification.show("User deleted successfully");
+                    Notification.show(
+                            "User deleted successfully");
 
-                    getUI().ifPresent(ui -> ui.navigate("user"));
+                    getUI().ifPresent(ui ->
+                            ui.navigate("user"));
 
                 } catch (Exception ex) {
 
                     Notification.show(
                             ex.getMessage(),
                             5000,
-                            Notification.Position.TOP_CENTER
-                    );
+                            Notification.Position.TOP_CENTER);
                 }
             });
 
             dialog.open();
         });
 
-        updateButton.setVisible( securityService.canAccessView("user-edit"));
+        updateButton.setVisible(
+                securityService.canAccessView("user-edit"));
 
-        deleteButton.setVisible(securityService.canAccessView("user-form"));
-        
+        deleteButton.setVisible(
+                securityService.canAccessView("user-form"));
 
-        HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
+        HorizontalLayout buttons =
+                new HorizontalLayout(
+                        updateButton,
+                        deleteButton);
 
-        add(title, formLayout, buttons);
+        add(
+                title,
+                formLayout,
+                buttons);
     }
 }

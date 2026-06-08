@@ -1,11 +1,16 @@
 package com.module.purchase.view.vendor;
 
+import java.util.List;
+
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Address;
+import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Vendor;
+import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -25,16 +30,20 @@ import jakarta.annotation.security.PermitAll;
 public class VendorEditView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final VendorService vendorService;
+    private final CategoryService categoryService;
     private final SecurityService securityService;
 
-    // BASIC DETAILS
+    // BASIC
     private final TextField vendorNameField = new TextField("Vendor Name");
     private final EmailField vendorEmailField = new EmailField("Vendor Email");
     private final TextField vendorPhoneField = new TextField("Vendor Phone");
 
-    // ACTIVE
-    private final ComboBox<String> activeField =
-            new ComboBox<>("Status");
+    // STATUS
+    private final ComboBox<String> activeField = new ComboBox<>("Status");
+
+    // CATEGORIES (NEW)
+    private final MultiSelectComboBox<Category> categoryField =
+            new MultiSelectComboBox<>("Categories");
 
     // ADDRESS
     private final TextField addressLineField = new TextField("Address Line");
@@ -46,16 +55,22 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
 
     private Vendor vendor;
 
-    public VendorEditView(VendorService vendorService, SecurityService securityService) {
+    public VendorEditView(
+            VendorService vendorService,
+            CategoryService categoryService,
+            SecurityService securityService) {
 
         this.vendorService = vendorService;
-        this.securityService=securityService;
+        this.categoryService = categoryService;
+        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
 
-        // ACTIVE FIELD
         activeField.setItems("Active", "Inactive");
+
+        categoryField.setItems(categoryService.getCategories());
+        categoryField.setItemLabelGenerator(Category::getCategoryName);
     }
 
     @Override
@@ -72,56 +87,30 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
 
         H2 title = new H2("Update Vendor");
 
-        // SET VALUES
-        vendorNameField.setValue(
-                vendor.getVendorName() == null ? "" : vendor.getVendorName()
-        );
-
-        vendorEmailField.setValue(
-                vendor.getVendorEmail() == null ? "" : vendor.getVendorEmail()
-        );
+        // BASIC
+        vendorNameField.setValue(vendor.getVendorName() == null ? "" : vendor.getVendorName());
+        vendorEmailField.setValue(vendor.getVendorEmail() == null ? "" : vendor.getVendorEmail());
         vendorEmailField.setReadOnly(true);
 
-        vendorPhoneField.setValue(
-                vendor.getVendorPhoneNumber() == null ? "" : vendor.getVendorPhoneNumber()
-        );
+        vendorPhoneField.setValue(vendor.getVendorPhoneNumber() == null ? "" : vendor.getVendorPhoneNumber());
 
-        activeField.setValue(
-                vendor.getActive() != null && vendor.getActive()
-                        ? "Active"
-                        : "Inactive"
-        );
+        activeField.setValue(Boolean.TRUE.equals(vendor.getActive()) ? "Active" : "Inactive");
 
-        activeField.setReadOnly(!securityService.canAccessView("vendor-form"));
+        // CATEGORIES SET
+        if (vendor.getCategories() != null) {
+            categoryField.setValue(vendor.getCategories());
+        }
 
         // ADDRESS
         Address address = vendor.getVendorAddress();
-
         if (address != null) {
 
-            addressLineField.setValue(
-                    address.getAddressLine() == null ? "" : address.getAddressLine()
-            );
-
-            streetField.setValue(
-                    address.getStreet() == null ? "" : address.getStreet()
-            );
-
-            cityField.setValue(
-                    address.getCity() == null ? "" : address.getCity()
-            );
-
-            stateField.setValue(
-                    address.getState() == null ? "" : address.getState()
-            );
-
-            countryField.setValue(
-                    address.getCountry() == null ? "" : address.getCountry()
-            );
-
-            postalCodeField.setValue(
-                    address.getPostalCode() == null ? "" : address.getPostalCode()
-            );
+            addressLineField.setValue(address.getAddressLine() == null ? "" : address.getAddressLine());
+            streetField.setValue(address.getStreet() == null ? "" : address.getStreet());
+            cityField.setValue(address.getCity() == null ? "" : address.getCity());
+            stateField.setValue(address.getState() == null ? "" : address.getState());
+            countryField.setValue(address.getCountry() == null ? "" : address.getCountry());
+            postalCodeField.setValue(address.getPostalCode() == null ? "" : address.getPostalCode());
         }
 
         // FORM
@@ -132,6 +121,7 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
                 vendorEmailField,
                 vendorPhoneField,
                 activeField,
+                categoryField,
                 addressLineField,
                 streetField,
                 cityField,
@@ -144,17 +134,17 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
                 new FormLayout.ResponsiveStep("0", 2)
         );
 
-        // SAVE BUTTON
-        Button saveButton = new Button("Save");
-
-        saveButton.addClickListener(e -> {
+        // SAVE
+        Button saveButton = new Button("Save", e -> {
 
             try {
 
                 vendor.setVendorName(vendorNameField.getValue());
-                vendor.setVendorEmail(vendorEmailField.getValue());
                 vendor.setVendorPhoneNumber(vendorPhoneField.getValue());
-                vendor.setActive(activeField.getValue().equals("Active"));
+                vendor.setActive("Active".equals(activeField.getValue()));
+
+                // CATEGORIES UPDATE
+                vendor.setCategories(List.copyOf(categoryField.getValue()));
 
                 Address updatedAddress = vendor.getVendorAddress();
 
@@ -171,7 +161,10 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
 
                 vendor.setVendorAddress(updatedAddress);
 
-                vendorService.updateVendor(vendor,securityService.getLoggedInUser().getEmployee());
+                vendorService.updateVendor(
+                        vendor,
+                        securityService.getLoggedInUser().getEmployee()
+                );
 
                 Notification.show(
                         "Vendor Updated Successfully",
@@ -193,10 +186,7 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
             }
         });
 
-        // CANCEL BUTTON
-        Button cancelButton = new Button("Cancel");
-
-        cancelButton.addClickListener(e ->
+        Button cancelButton = new Button("Cancel", e ->
                 getUI().ifPresent(ui ->
                         ui.navigate("vendor-details/" + vendor.getVendorId())
                 )

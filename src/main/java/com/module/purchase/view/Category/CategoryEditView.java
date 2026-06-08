@@ -1,4 +1,4 @@
-package com.module.purchase.view.Category;
+package com.module.purchase.view.category;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Category;
@@ -19,8 +19,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "category-edit", layout = MainLayout.class)
 @PermitAll
-public class CategoryEditView extends VerticalLayout
-                implements HasUrlParameter<Long> {
+public class CategoryEditView extends VerticalLayout implements HasUrlParameter<Long> {
 
         private final CategoryService categoryService;
 
@@ -56,7 +55,6 @@ public class CategoryEditView extends VerticalLayout
 
                 H2 title = new H2("Update Category");
 
-                // SET VALUES
                 categoryNameField.setValue(
                                 category.getCategoryName() == null
                                                 ? ""
@@ -67,13 +65,11 @@ public class CategoryEditView extends VerticalLayout
                 formLayout.setResponsiveSteps(
                                 new FormLayout.ResponsiveStep("0", 1));
 
-                // SAVE BUTTON
                 Button saveButton = new Button("Save");
 
                 saveButton.addClickListener(e -> {
 
                         try {
-
                                 if (categoryNameField.isEmpty()) {
                                         Notification.show(
                                                         "Category Name is required",
@@ -108,7 +104,7 @@ public class CategoryEditView extends VerticalLayout
                 Button cancelButton = new Button("Cancel");
 
                 cancelButton.addClickListener(e -> getUI()
-                                .ifPresent(ui -> ui.navigate("vendor-category-details/" + category.getCategoryId())));
+                                .ifPresent(ui -> ui.navigate("category-details/" + category.getCategoryId())));
 
                 HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
 

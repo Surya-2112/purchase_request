@@ -1,76 +1,97 @@
 package com.module.purchase.view.item;
 
 import com.module.purchase.config.SecurityService;
+import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Item;
+import com.module.purchase.entity.Unit;
+import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.ItemService;
+import com.module.purchase.service.UnitService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 
 public class ItemForm extends Dialog {
 
     private final ItemService itemService;
-
     private final SecurityService securityService;
 
-    // FIELDS
-    private final TextField itemNameField = new TextField("Item Name");
+    private final TextField itemNameField =
+            new TextField("Item Name");
 
-    private final TextField itemCodeField = new TextField("Item Code");
+    private final TextField itemCodeField =
+            new TextField("Item Code");
 
-    private final NumberField unitAmountField= new NumberField("Unit Price");
+    private final ComboBox<Category> categoryField =
+            new ComboBox<>("Category");
 
-    private final TextField VATCodeField= new TextField("VAT Code");
+    private final ComboBox<Unit> unitField =
+            new ComboBox<>("Unit");
 
-    public ItemForm(ItemService itemService,SecurityService securityService) {
+    public ItemForm(
+            ItemService itemService,
+            CategoryService categoryService,
+            UnitService unitService,
+            SecurityService securityService) {
 
         this.itemService = itemService;
-        this.securityService=securityService;
+        this.securityService = securityService;
 
         setHeaderTitle("Add Item");
-        setWidth("600px");
+        setWidth("700px");
 
-        // REQUIRED
-        itemNameField.setRequiredIndicatorVisible(true);
-        itemCodeField.setRequiredIndicatorVisible(true);
+        itemNameField.setRequired(true);
+        itemCodeField.setRequired(true);
 
-        // FORM
+        categoryField.setItems(categoryService.getCategories());
+        categoryField.setItemLabelGenerator(
+                Category::getCategoryName);
+        categoryField.setRequired(true);
+
+        unitField.setItems(unitService.getAllUnits());
+        unitField.setItemLabelGenerator(Unit::getName);
+        unitField.setRequired(true);
+
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
                 itemNameField,
                 itemCodeField,
-                unitAmountField,
-                VATCodeField
+                categoryField,
+                unitField
         );
 
         formLayout.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 2)
         );
 
-        // BUTTONS
         Button saveButton = new Button("Save");
         Button cancelButton = new Button("Cancel");
 
         saveButton.addClickListener(e -> saveItem());
         cancelButton.addClickListener(e -> close());
 
-        HorizontalLayout buttonLayout = new HorizontalLayout(
-                saveButton,
-                cancelButton
-        );
+        HorizontalLayout buttons =
+                new HorizontalLayout(
+                        saveButton,
+                        cancelButton
+                );
 
-        add(formLayout, buttonLayout);
+        add(formLayout, buttons);
     }
 
     private void saveItem() {
 
         try {
-            if (itemNameField.isEmpty() || itemCodeField.isEmpty()) {
+
+            if (itemNameField.isEmpty()
+                    || itemCodeField.isEmpty()
+                    || categoryField.isEmpty()
+                    || unitField.isEmpty()) {
 
                 Notification.show(
                         "Please fill all required fields",
@@ -83,10 +104,24 @@ public class ItemForm extends Dialog {
 
             Item item = new Item();
 
-            item.setItemName(itemNameField.getValue());
-            item.setItemCode(itemCodeField.getValue());
+            item.setItemName(
+                    itemNameField.getValue().trim());
 
-            itemService.addItem(item,securityService.getLoggedInUser().getEmployee());
+            item.setItemCode(
+                    itemCodeField.getValue().trim());
+
+            item.setCategory(
+                    categoryField.getValue());
+
+            item.setUnit(
+                    unitField.getValue());
+
+            itemService.addItem(
+                    item,
+                    securityService
+                            .getLoggedInUser()
+                            .getEmployee()
+            );
 
             Notification.show(
                     "Item Saved Successfully",
@@ -96,10 +131,10 @@ public class ItemForm extends Dialog {
 
             close();
 
-        } catch (Exception e) {
+        } catch (Exception ex) {
 
             Notification.show(
-                    "Error: " + e.getMessage(),
+                    ex.getMessage(),
                     5000,
                     Notification.Position.TOP_CENTER
             );

@@ -3,8 +3,10 @@ package com.module.purchase.view.user;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Users;
+import com.module.purchase.entity.Vendor;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.UsersService;
+import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -28,24 +30,38 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
     private final UsersService usersService;
     private final EmployeeService employeeService;
+    private final VendorService vendorService;
     private final SecurityService securityService;
-
 
     private Users user;
 
     private final TextField userNameField = new TextField("User Name");
     private final EmailField userEmailField = new EmailField("User Email");
 
-    private final PasswordField passwordField = new PasswordField("New Password (optional)");
+    private final PasswordField passwordField =
+            new PasswordField("New Password (optional)");
 
-    private final ComboBox<Employee> employeeField = new ComboBox<>("Employee");
+    private final ComboBox<String> userTypeField =
+            new ComboBox<>("User Type");
 
-    private final ComboBox<String> activeField = new ComboBox<>("Status");
+    private final ComboBox<Employee> employeeField =
+            new ComboBox<>("Employee");
 
-    public UsersEditView(UsersService usersService, EmployeeService employeeServices, SecurityService securityService) {
+    private final ComboBox<Vendor> vendorField =
+            new ComboBox<>("Vendor");
+
+    private final ComboBox<String> activeField =
+            new ComboBox<>("Status");
+
+    public UsersEditView(
+            UsersService usersService,
+            EmployeeService employeeService,
+            VendorService vendorService,
+            SecurityService securityService) {
 
         this.usersService = usersService;
-        this.employeeService = employeeServices;
+        this.employeeService = employeeService;
+        this.vendorService = vendorService;
         this.securityService = securityService;
 
         setSizeFull();
@@ -53,6 +69,11 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
         employeeField.setItems(employeeService.getEmployees());
         employeeField.setItemLabelGenerator(Employee::getEmployeeName);
+
+        vendorField.setItems(vendorService.getVendors());
+        vendorField.setItemLabelGenerator(Vendor::getVendorName);
+
+        userTypeField.setItems("Employee", "Vendor");
 
         activeField.setItems("Active", "Inactive");
     }
@@ -71,23 +92,52 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
         H2 title = new H2("Update User");
 
-        userNameField.setValue(user.getUserName() == null ? "" : user.getUserName());
-        userEmailField.setValue(user.getUserEmail() == null ? "" : user.getUserEmail());
+        userNameField.setValue(
+                user.getUserName() == null ? "" : user.getUserName());
+
+        userEmailField.setValue(
+                user.getUserEmail() == null ? "" : user.getUserEmail());
+
         userEmailField.setReadOnly(true);
 
-        employeeField.setValue(user.getEmployee());
+        if (user.getEmployee() != null) {
+
+            userTypeField.setValue("Employee");
+            employeeField.setValue(user.getEmployee());
+
+            employeeField.setVisible(true);
+            vendorField.setVisible(false);
+
+        } else if (user.getVendor() != null) {
+
+            userTypeField.setValue("Vendor");
+            vendorField.setValue(user.getVendor());
+
+            employeeField.setVisible(false);
+            vendorField.setVisible(true);
+        }
+
+        userTypeField.setReadOnly(true);
         employeeField.setReadOnly(true);
+        vendorField.setReadOnly(true);
 
-        activeField.setValue(Boolean.TRUE.equals(user.getActive()) ? "Active" : "Inactive");
+        activeField.setValue(
+                Boolean.TRUE.equals(user.getActive())
+                        ? "Active"
+                        : "Inactive");
 
-        activeField.setReadOnly(!securityService.canAccessView("user-form"));
+        activeField.setReadOnly(
+                !securityService.canAccessView("user-form"));
+
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
                 userNameField,
                 userEmailField,
                 passwordField,
+                userTypeField,
                 employeeField,
+                vendorField,
                 activeField
         );
 
@@ -102,19 +152,19 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
             try {
 
                 user.setUserName(userNameField.getValue());
-                user.setUserEmail(userEmailField.getValue());
 
-                user.setEmployee(employeeField.getValue());
-
-                user.setActive(activeField.getValue() != null && activeField.getValue().equals("Active"));
+                user.setActive(
+                        "Active".equals(activeField.getValue()));
 
                 if (!passwordField.isEmpty()) {
                     user.setPassword(passwordField.getValue());
-                }else{
+                } else {
                     user.setPassword(null);
                 }
 
-                usersService.updateUser(user,securityService.getLoggedInUser().getEmployee());
+                usersService.updateUser(
+                        user,
+                        securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "User Updated Successfully",
@@ -123,8 +173,8 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
                 );
 
                 getUI().ifPresent(ui ->
-                        ui.navigate("user-details/" + user.getUserId())
-                );
+                        ui.navigate(
+                                "user-details/" + user.getUserId()));
 
             } catch (Exception ex) {
 
@@ -136,16 +186,15 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
             }
         });
 
-        // CANCEL
         Button cancelButton = new Button("Cancel");
 
         cancelButton.addClickListener(e ->
                 getUI().ifPresent(ui ->
-                        ui.navigate("user-details/" + user.getUserId())
-                )
+                        ui.navigate("user-details/" + user.getUserId()))
         );
 
-        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
+        HorizontalLayout buttons =
+                new HorizontalLayout(saveButton, cancelButton);
 
         add(title, formLayout, buttons);
     }

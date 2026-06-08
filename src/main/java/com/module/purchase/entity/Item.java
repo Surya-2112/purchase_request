@@ -10,23 +10,26 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
+@Table(name = "item")
 public class Item {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "item_id")
     private Long itemId;
 
     @NotNull
-    @Column(nullable = false, unique = true)
+    @Column(name = "item_name", nullable = false, unique = true)
     private String itemName;
 
     @NotNull
     @Size(max = 20)
-    @Column(nullable = false, unique = true,length=20)
+    @Column(name = "item_code", nullable = false, unique = true, length = 20)
     private String itemCode;
 
     @NotNull

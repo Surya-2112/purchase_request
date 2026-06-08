@@ -1,4 +1,4 @@
-package com.module.purchase.view.Category;
+package com.module.purchase.view.category;
 
 import org.springframework.data.domain.Page;
 
@@ -47,7 +47,7 @@ public class CategoryView extends VerticalLayout {
         setSpacing(true);
 
         // HEADER
-        H2 title = new H2("Vendor Category List");
+        H2 title = new H2("Category List");
 
         Button addButton = new Button("Add Category");
         addButton.addClickListener(event -> {
@@ -55,7 +55,7 @@ public class CategoryView extends VerticalLayout {
            form.open();
         });
 
-        addButton.setVisible(securityService.canAccessView("vendor-category-form"));
+        addButton.setVisible(securityService.canAccessView("category-form"));
 
         HorizontalLayout headerLayout =
                 new HorizontalLayout(title, addButton);
@@ -89,7 +89,7 @@ public class CategoryView extends VerticalLayout {
 
         categoryGrid.addItemDoubleClickListener(event -> {
                 Category category = event.getItem();
-                getUI().ifPresent(ui -> ui.navigate("vendor-category-details/" + category.getCategoryId()));
+                getUI().ifPresent(ui -> ui.navigate("category-details/" + category.getCategoryId()));
 
         });
 

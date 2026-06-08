@@ -1,5 +1,7 @@
 package com.module.purchase.view.vendor;
 
+import java.util.stream.Collectors;
+
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Vendor;
 import com.module.purchase.service.VendorService;
@@ -23,14 +25,11 @@ import jakarta.annotation.security.PermitAll;
 public class VendorDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final VendorService vendorService;
-
     private final SecurityService securityService;
 
-
-    public VendorDetailsView(VendorService vendorService,SecurityService securityService) {
-
+    public VendorDetailsView(VendorService vendorService, SecurityService securityService) {
         this.vendorService = vendorService;
-        this.securityService=securityService;
+        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
@@ -60,70 +59,78 @@ public class VendorDetailsView extends VerticalLayout implements HasUrlParameter
         );
 
         formLayout.addFormItem(
-                new Span(vendor.getVendorName() == null ? "" : vendor.getVendorName()),
+                new Span(String.valueOf(vendor.getVendorName())),
                 "Vendor Name"
         );
 
         formLayout.addFormItem(
-                new Span(vendor.getVendorEmail() == null ? "" : vendor.getVendorEmail()),
+                new Span(String.valueOf(vendor.getVendorEmail())),
                 "Email"
         );
 
         formLayout.addFormItem(
-                new Span(vendor.getVendorPhoneNumber() == null ? "" : vendor.getVendorPhoneNumber()),
+                new Span(String.valueOf(vendor.getVendorPhoneNumber())),
                 "Phone"
         );
 
-        // STATUS
+        formLayout.addFormItem(
+                new Span(Boolean.TRUE.equals(vendor.getActive()) ? "Active" : "Inactive"),
+                "Status"
+        );
+
+        // CATEGORIES (NEW)
         formLayout.addFormItem(
                 new Span(
-                        Boolean.TRUE.equals(vendor.getActive()) ? "Active" : "Inactive"
+                        vendor.getCategories() == null
+                                ? ""
+                                : vendor.getCategories()
+                                        .stream()
+                                        .map(c -> c.getCategoryName())
+                                        .collect(Collectors.joining(", "))
                 ),
-                "Status"
+                "Categories"
         );
 
         // ADDRESS
         if (vendor.getVendorAddress() != null) {
 
             formLayout.addFormItem(
-                    new Span(vendor.getVendorAddress().getAddressLine()),
+                    new Span(String.valueOf(vendor.getVendorAddress().getAddressLine())),
                     "Address Line"
             );
 
             formLayout.addFormItem(
-                    new Span(vendor.getVendorAddress().getStreet()),
+                    new Span(String.valueOf(vendor.getVendorAddress().getStreet())),
                     "Street"
             );
 
             formLayout.addFormItem(
-                    new Span(vendor.getVendorAddress().getCity()),
+                    new Span(String.valueOf(vendor.getVendorAddress().getCity())),
                     "City"
             );
 
             formLayout.addFormItem(
-                    new Span(vendor.getVendorAddress().getState()),
+                    new Span(String.valueOf(vendor.getVendorAddress().getState())),
                     "State"
             );
 
             formLayout.addFormItem(
-                    new Span(vendor.getVendorAddress().getCountry()),
+                    new Span(String.valueOf(vendor.getVendorAddress().getCountry())),
                     "Country"
             );
 
             formLayout.addFormItem(
-                    new Span(vendor.getVendorAddress().getPostalCode()),
+                    new Span(String.valueOf(vendor.getVendorAddress().getPostalCode())),
                     "Pincode"
             );
         }
 
         // UPDATE BUTTON
-        Button updateButton = new Button("Update");
-
-        updateButton.addClickListener(e -> {
-            getUI().ifPresent(ui ->
-                    ui.navigate("vendor-edit/" + vendor.getVendorId())
-            );
-        });
+        Button updateButton = new Button("Update", e ->
+                getUI().ifPresent(ui ->
+                        ui.navigate("vendor-edit/" + vendor.getVendorId())
+                )
+        );
 
         // DELETE BUTTON
         Button deleteButton = new Button("Delete");
@@ -143,7 +150,10 @@ public class VendorDetailsView extends VerticalLayout implements HasUrlParameter
 
                 try {
 
-                    vendorService.deleteVendorById(vendor.getVendorId(),securityService.getLoggedInUser().getEmployee());
+                    vendorService.deleteVendorById(
+                            vendor.getVendorId(),
+                            securityService.getLoggedInUser().getEmployee()
+                    );
 
                     Notification.show(
                             "Vendor Deleted Successfully",

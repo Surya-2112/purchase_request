@@ -26,9 +26,10 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(
+    name = "assigning_approvals",
     uniqueConstraints = {   
-    @UniqueConstraint(columnNames = {"employeeGroup", "approvalType", "referenceId"}),
-    @UniqueConstraint(columnNames = {"level", "approvalType", "referenceId"}) }
+    @UniqueConstraint(columnNames = {"employee_group", "approval_type", "reference_id"}),
+    @UniqueConstraint(columnNames = {"approval_level", "approval_type", "reference_id"}) }
 )
 public class AssigningApprovals {
 
@@ -37,31 +38,31 @@ public class AssigningApprovals {
     private Long assigningApprovalsId;
 
     @ManyToOne
-    @JoinColumn(name = "approverId")
+    @JoinColumn(name = "approver_id") 
     @JsonIgnoreProperties({ "department","role","user"})
     private Employee approver;
 
     @ManyToOne
-    @JoinColumn(name = "assignedById")
+    @JoinColumn(name = "assigned_by_id") 
     @JsonIgnoreProperties({ "department","role","user"})
     private Employee assignedBy;
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(nullable = false)
+    @Column(name="employee_group",nullable = false)
     private EmployeeGroup employeeGroup;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name="approval_level",nullable = false)
     private Integer level;
 
     @Enumerated(EnumType.STRING)
      @NotNull
-    @Column(nullable = false)
+    @Column(name="approval_type",nullable = false)
     private ApprovalType approvalType;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name="reference_id",nullable = false)
     private Long referenceId;
 
     @NotNull
@@ -77,13 +78,13 @@ public class AssigningApprovals {
     @Enumerated(EnumType.STRING)
     @NotNull
     @Column(nullable = false)
-    @ColumnDefault("DRAFT")
+    @ColumnDefault("'DRAFT'")
     private Status status;
 
     @Enumerated(EnumType.STRING)
     @NotNull
     @Column(nullable = false)
-    @ColumnDefault("AUTO")
+    @ColumnDefault("'AUTO'")
     private ApprovalSource source;
 
     public ApprovalSource getSource() {

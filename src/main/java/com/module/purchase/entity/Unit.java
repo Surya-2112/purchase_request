@@ -8,16 +8,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(
-    name = "unit",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = "unit_name"),
-        @UniqueConstraint(columnNames = "unit_code")
-    }
-)
+@Table(name = "unit")
 public class Unit {
 
     @Id

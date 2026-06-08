@@ -3,8 +3,10 @@ package com.module.purchase.view.user;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Users;
+import com.module.purchase.entity.Vendor;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.UsersService;
+import com.module.purchase.service.VendorService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -18,7 +20,6 @@ import com.vaadin.flow.component.textfield.TextField;
 public class UsersForm extends Dialog {
 
     private final UsersService usersService;
-
     private final SecurityService securityService;
 
     private final TextField userNameField = new TextField("User Name");
@@ -27,10 +28,16 @@ public class UsersForm extends Dialog {
     private final PasswordField passwordField = new PasswordField("Password");
     private final PasswordField confirmPasswordField = new PasswordField("Confirm Password");
 
+    private final ComboBox<String> userTypeField = new ComboBox<>("User Type");
+
     private final ComboBox<Employee> employeeField = new ComboBox<>("Employee");
+    private final ComboBox<Vendor> vendorField = new ComboBox<>("Vendor");
 
-
-    public UsersForm(UsersService usersService, EmployeeService employeeService,SecurityService securityService ) {
+    public UsersForm(
+            UsersService usersService,
+            EmployeeService employeeService,
+            VendorService vendorService,
+            SecurityService securityService) {
 
         this.usersService = usersService;
         this.securityService = securityService;
@@ -38,14 +45,42 @@ public class UsersForm extends Dialog {
         setHeaderTitle("Add User");
         setWidth("600px");
 
-        employeeField.setItems(employeeService.getEmployees());
+        // User Type
+        userTypeField.setItems("Employee", "Vendor");
+        userTypeField.setRequired(true);
+
+        // Employee
+        employeeField.setItems(employeeService.getEmplyeesWithoutUsers());
         employeeField.setItemLabelGenerator(Employee::getEmployeeName);
+        employeeField.setVisible(false);
+
+        // Vendor
+        vendorField.setItems(vendorService.getVendorsWithoutUser());
+        vendorField.setItemLabelGenerator(Vendor::getVendorName);
+        vendorField.setVisible(false);
+
+        // Toggle Employee/Vendor field
+        userTypeField.addValueChangeListener(event -> {
+
+            employeeField.clear();
+            vendorField.clear();
+
+            if("Employee".equals(event.getValue())) {
+                employeeField.setVisible(true);
+                vendorField.setVisible(false);
+            } else if ("Vendor".equals(event.getValue())) {
+                employeeField.setVisible(false);
+                vendorField.setVisible(true);
+            } else {
+                employeeField.setVisible(false);
+                vendorField.setVisible(false);
+            }
+        });
 
         userNameField.setRequired(true);
         userEmailField.setRequired(true);
         passwordField.setRequired(true);
         confirmPasswordField.setRequired(true);
-        employeeField.setRequired(true);
 
         FormLayout formLayout = new FormLayout();
 
@@ -54,7 +89,9 @@ public class UsersForm extends Dialog {
                 userEmailField,
                 passwordField,
                 confirmPasswordField,
-                employeeField
+                userTypeField,
+                employeeField,
+                vendorField
         );
 
         formLayout.setResponsiveSteps(
@@ -62,9 +99,11 @@ public class UsersForm extends Dialog {
         );
 
         Button saveButton = new Button("Save", e -> saveUser());
+
         Button cancelButton = new Button("Cancel", e -> close());
 
-        HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
+        HorizontalLayout buttonLayout =
+                new HorizontalLayout(saveButton, cancelButton);
 
         add(formLayout, buttonLayout);
     }
@@ -77,33 +116,71 @@ public class UsersForm extends Dialog {
                     || userEmailField.isEmpty()
                     || passwordField.isEmpty()
                     || confirmPasswordField.isEmpty()
-                    || employeeField.isEmpty()) {
+                    || userTypeField.isEmpty()) {
 
-                Notification.show("Please fill all required fields");
+                Notification.show(
+                        "Please fill all required fields",
+                        3000,
+                        Notification.Position.TOP_CENTER);
+
                 return;
             }
 
-            if (!passwordField.getValue().equals(confirmPasswordField.getValue())) {
-                Notification.show("Password and Confirm Password do not match");
+            if (!passwordField.getValue()
+                    .equals(confirmPasswordField.getValue())) {
+
+                Notification.show(
+                        "Password and Confirm Password do not match",
+                        3000,
+                        Notification.Position.TOP_CENTER);
+
                 return;
             }
 
             Users user = new Users();
 
-            user.setUserName(userNameField.getValue());
-            user.setUserEmail(userEmailField.getValue());
-            user.setEmployee(employeeField.getValue());
+            user.setUserName(userNameField.getValue().trim());
+            user.setUserEmail(userEmailField.getValue().trim());
+            user.setPassword(passwordField.getValue());
             user.setActive(true);
 
-            user.setPassword(passwordField.getValue());
+            if ("Employee".equals(userTypeField.getValue())) {
 
-            usersService.addUsers(user,securityService.getLoggedInUser().getEmployee());
+                if (employeeField.isEmpty()) {
+
+                    Notification.show(
+                            "Please select an employee",
+                            3000,
+                            Notification.Position.TOP_CENTER);
+
+                    return;
+                }
+
+                user.setEmployee(employeeField.getValue());
+
+            } else if ("Vendor".equals(userTypeField.getValue())) {
+
+                if (vendorField.isEmpty()) {
+
+                    Notification.show(
+                            "Please select a vendor",
+                            3000,
+                            Notification.Position.TOP_CENTER);
+
+                    return;
+                }
+
+                user.setVendor(vendorField.getValue());
+            }
+
+            usersService.addUsers(
+                    user,
+                    securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "User Created Successfully",
                     3000,
-                    Notification.Position.TOP_CENTER
-            );
+                    Notification.Position.TOP_CENTER);
 
             close();
 
@@ -112,8 +189,7 @@ public class UsersForm extends Dialog {
             Notification.show(
                     "Error: " + e.getMessage(),
                     5000,
-                    Notification.Position.TOP_CENTER
-            );
+                    Notification.Position.TOP_CENTER);
         }
     }
 }

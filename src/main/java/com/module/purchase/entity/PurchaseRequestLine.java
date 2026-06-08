@@ -19,13 +19,14 @@ import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
 @Table(
+     name = "purchase_request_line",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"purchase_request_id", "item_variant_id"})
+        @UniqueConstraint(columnNames = {"purchase_request_id", "variant_id"})
     }
 )
 public class PurchaseRequestLine {
 
-    @Id
+   @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "purchase_request_line_id")
     private Long id;
@@ -35,10 +36,11 @@ public class PurchaseRequestLine {
     private PurchaseRequestHeader purchaseRequestHeader;
 
     @ManyToOne
-    @JoinColumn(name = "variant_id", nullable = false)
+    @JoinColumn(name = "variant_id", nullable = false) 
     private ItemVariant itemVariant;
 
     @Positive
+    @Column(name = "item_unit_price") 
     private Double itemUnitPrice;
 
     @Column(name = "description", length = 1000)

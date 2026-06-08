@@ -5,16 +5,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Users;
 import com.module.purchase.enums.ViewName;
-import com.module.purchase.view.Category.CategoryView;
 import com.module.purchase.view.assigningConfig.AssigningConfigView;
 import com.module.purchase.view.auditLogs.AuditLogView;
+import com.module.purchase.view.category.CategoryView;
 import com.module.purchase.view.department.DepartmentView;
 import com.module.purchase.view.departmentBudget.DepartmentBudgetView;
 import com.module.purchase.view.employee.EmployeeView;
 import com.module.purchase.view.item.ItemView;
+import com.module.purchase.view.itemvariant.ItemVariantView;
 import com.module.purchase.view.purchaseOrder.PurchaseOrderView;
 import com.module.purchase.view.purchaseRequest.PurchaseRequestView;
 import com.module.purchase.view.role.RoleView;
+import com.module.purchase.view.unit.UnitView;
 import com.module.purchase.view.user.UsersView;
 import com.module.purchase.view.vendor.VendorView;
 import com.vaadin.flow.component.Component;
@@ -124,6 +126,20 @@ public class MainLayout extends AppLayout {
 
                 addMenuIfAllowed(
                                 menuLinks,
+                                "item Variant",
+                                "Item Variant",
+                                ItemVariantView.class,
+                                securityService);
+
+                 addMenuIfAllowed(
+                                menuLinks,
+                                "unit",
+                                "Unit",
+                                UnitView.class,
+                                securityService);
+                
+                addMenuIfAllowed(
+                                menuLinks,
                                 "purchase-request",
                                 "Purchase Request",
                                 PurchaseRequestView.class,
@@ -145,8 +161,8 @@ public class MainLayout extends AppLayout {
 
                 addMenuIfAllowed(
                                 menuLinks,
-                                "vendor-category",
-                                "Vendor Category",
+                                "category",
+                                "Category",
                                 CategoryView.class,
                                 securityService);
 

@@ -1,4 +1,4 @@
-package com.module.purchase.view.Category;
+package com.module.purchase.view.category;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Category;
@@ -62,7 +62,7 @@ public class CategoryDetailsView extends VerticalLayout
                 Button updateButton = new Button("Update");
 
                 updateButton.addClickListener(e -> getUI()
-                                .ifPresent(ui -> ui.navigate("vendor-category-edit/" + category.getCategoryId())));
+                                .ifPresent(ui -> ui.navigate("category-edit/" + category.getCategoryId())));
 
                 // DELETE BUTTON
                 Button deleteButton = new Button("Delete");
@@ -101,8 +101,8 @@ public class CategoryDetailsView extends VerticalLayout
 
                         dialog.open();
                 });
-                updateButton.setVisible(securityService.canAccessView("vendor-category-edit"));
-                deleteButton.setVisible(securityService.canAccessView("vendor-category-form"));
+                updateButton.setVisible(securityService.canAccessView("category-edit"));
+                deleteButton.setVisible(securityService.canAccessView("category-form"));
 
                 HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 

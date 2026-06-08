@@ -74,6 +74,11 @@ public class VendorService {
         return vendorRepository.findAll();
     }
 
+    public List<Vendor> getVendorsWithoutUser()
+    {
+        return vendorRepository.findVendorsWithoutUser();
+    }
+
     public Page<VendorDTO> getAllVendors(VendorDTO vendorDTO, int page, int size) {
 
         Specification<Vendor> spec = Specification

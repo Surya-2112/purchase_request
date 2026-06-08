@@ -16,39 +16,42 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
+@Table(name = "employee") 
 public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "employee_id")
     private Long employeeId;
 
     @NotBlank
-    @Column(nullable = false, length=72)
+    @Column(name = "employee_name", nullable = false, length=72)
     @Size(min=3,max=72)
     private String employeeName;
 
     @NotBlank
-    @Column(unique = true , nullable = false)
+    @Column(name = "employee_email", unique = true , nullable = false)
     @Email
     private String employeeEmail;
 
-    @Column(length=15)
+   @Column(name = "employee_phone_number", length=15)
     @Size(min=10,max=15)
     private String employeePhoneNumber;
 
     @ManyToOne
-    @JoinColumn(name = "departmentId")
+     @JoinColumn(name = "department_id")
     @JsonIgnoreProperties({ "employees", "headEmployee" })
     private Department department;
 
     @ManyToOne
-    @JoinColumn(name = "roleId")
+    @JoinColumn(name = "role_id", referencedColumnName = "role_id")
     @JsonIgnoreProperties({ "employees" })
     private Role role;
 

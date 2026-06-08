@@ -18,20 +18,20 @@ public class DiscountType {
 
     @ManyToOne
     @NotNull
-    @JoinColumn(name = "quotation_line_id", nullable = false)
+    @JoinColumn(name = "quotation_line_id", referencedColumnName = "quotation_line_id", nullable = false)
     private QuotationLine quotationLine;
 
-    @Column( nullable = false)
+    @Column(name = "from_quantity", nullable = false)
     @NotNull
     @Positive
     private Double fromQuantity;
 
-    @Column(nullable = false)
+    @Column(name = "to_quantity", nullable = false)
     @Positive
     @NotNull
     private Double toQuantity;
 
-    @Column( nullable = false)
+    @Column(name = "discount_percentage", nullable = false)
     @PositiveOrZero
     @NotNull
     @ColumnDefault("0.0")

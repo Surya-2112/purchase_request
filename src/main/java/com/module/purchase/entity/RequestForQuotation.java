@@ -7,7 +7,15 @@ import org.hibernate.annotations.ColumnDefault;
 
 import com.module.purchase.enums.RequestForQuotationStatus;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
@@ -31,14 +39,14 @@ public class RequestForQuotation {
     @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "status", nullable = false)
-    @ColumnDefault("DRAFT")
+    @ColumnDefault("'DRAFT'")
     private RequestForQuotationStatus status = RequestForQuotationStatus.DRAFT;
 
     @OneToMany(mappedBy = "requestForQuotation")
     private Set<RequestForQuotationLine> requestForQuotationLines;
 
     @OneToMany(mappedBy = "requestForQuotation")
-    private Set<Quotation> quotations;
+    private Set<Quotation> quotations; 
 
     public Long getId() {
         return id;

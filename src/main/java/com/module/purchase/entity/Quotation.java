@@ -5,12 +5,22 @@ import java.util.Set;
 
 import com.module.purchase.enums.Status;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-
 @Entity
+@Table(name = "quotation")
 public class Quotation {
 
     @Id
@@ -19,16 +29,16 @@ public class Quotation {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "request_for_quotation_id", nullable = false)
+    @JoinColumn(name = "request_for_quotation_id", referencedColumnName = "request_for_quotation_id", nullable = false)
     private RequestForQuotation requestForQuotation;
 
     @ManyToOne
-    @JoinColumn(name = "vendor_id", nullable = false)
+    @JoinColumn(name = "vendor_id", referencedColumnName = "vendor_id", nullable = false)
     private Vendor vendor;
 
     @NotNull
     @Positive
-    @Column(nullable= false)
+    @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
 
     @NotNull

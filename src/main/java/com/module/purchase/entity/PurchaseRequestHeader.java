@@ -16,17 +16,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
+@Table(name = "purchase_request_header")
 public class PurchaseRequestHeader {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+     @Column(name = "purchase_request_id")
     private Long purchaseRequestId;
 
     @ManyToOne
-    @JoinColumn(name = "requester_id")
+     @JoinColumn(name = "requester_id", referencedColumnName = "employee_id")
     @JsonIgnoreProperties({"purchaseRequests"})
     private Employee createdBy;
 
@@ -39,7 +42,7 @@ public class PurchaseRequestHeader {
     private Date createdDate;
 
     @NotNull
-    @Column(nullable = false)
+   @Column(name = "approval_level", nullable = false)
     private Integer level;
 
     @NotNull
@@ -51,17 +54,13 @@ public class PurchaseRequestHeader {
     private List<PurchaseRequestDocument> documents;
 
     @ManyToOne
-    @JoinColumn(name = "department",nullable = false)
+    @JoinColumn(name = "department_id", nullable = false)
     @JsonIgnoreProperties("purchaseRequestHeaders")
     private Department forDepartment;
 
     @OneToMany(mappedBy = "purchaseRequestHeader")
     @JsonIgnoreProperties({"purchaseRequestHeader"})
     private List<PurchaseRequestLine> purchaseRequestLines;
-
-    @OneToMany(mappedBy = "referenceId")
-    @JsonIgnoreProperties({"approver", "assignedBy"})
-    private List<AssigningApprovals> assigningApprovals;
 
     public Long getPurchaseRequestId() {
         return purchaseRequestId;
@@ -125,14 +124,6 @@ public class PurchaseRequestHeader {
 
     public void setPurchaseRequestLines(List<PurchaseRequestLine> purchaseRequestLines) {
         this.purchaseRequestLines = purchaseRequestLines;
-    }
-
-    public List<AssigningApprovals> getAssigningApprovals() {
-        return assigningApprovals;
-    }
-
-    public void setAssigningApprovals(List<AssigningApprovals> assigningApprovals) {
-        this.assigningApprovals = assigningApprovals;
     }
 
     public List<PurchaseRequestDocument> getDocuments() {

@@ -16,33 +16,37 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 @Entity
+@Table(name = "purchase_order_header") 
 public class PurchaseOrderHeader {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "purchase_order_id")
     private Long purchaseOrderId;
 
     @ManyToOne
-    @JoinColumn(name = "employeeId")
+    @JoinColumn(name = "requester_id", referencedColumnName = "employee_id")
     private Employee createdBy;
 
     @OneToOne
-    @JoinColumn(name = "quotation_id")
+    @JoinColumn(name = "quotation_id", referencedColumnName = "quotation_id")
     private Quotation quotation;
 
     @Positive
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
 
     @ManyToOne
-    @JoinColumn(name = "vendorId")
+    @JoinColumn(name = "vendor_id", referencedColumnName = "vendor_id")
     private Vendor vendor;
 
+    @Column(name = "created_date")
     private LocalDate createdDate;
 
     @Enumerated(EnumType.STRING)

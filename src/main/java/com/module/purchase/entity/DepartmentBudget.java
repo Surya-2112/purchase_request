@@ -16,30 +16,32 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"departmentId", "year"}))
+@Table( name = "department_budget",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"department_id", "budget_year"}))
 public class DepartmentBudget {
   
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "department_budget_id")
     private Long departmentBudgetId;
     
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "departmentId",nullable = false)
+     @JoinColumn(name = "department_id", referencedColumnName = "department_id", nullable = false)
     private Department department;
 
     @NotNull
-    @Column(nullable=false)
+    @Column(name = "total_budget_amount", nullable = false)
     @Positive
     private Double TotalBudgetAmount;
 
     @NotNull
-    @Column(nullable=false)
+    @Column(name = "remaining_budget_amount", nullable = false)
     @PositiveOrZero
     private Double RemainingBudgetAmount;
 
     @NotNull
-    @Column(nullable=false)
+    @Column(name = "budget_year", nullable = false)
     private Year year;
 
     public Long getDepartmentBudgetId() {

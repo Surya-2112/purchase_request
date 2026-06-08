@@ -1,6 +1,7 @@
 package com.module.purchase.entityDTO;
 
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Vendor;
 
 public class UsersDTO {
     
@@ -13,6 +14,8 @@ public class UsersDTO {
     private Employee employee;
 
     private Boolean active;
+
+    private Vendor vendor;
 
     public Long getUserId() {
         return userId;
@@ -54,4 +57,13 @@ public class UsersDTO {
         this.active = active;
     }
 
+    public Vendor getVendor()
+    {
+        return vendor;
+    }
+
+    public void setVendor(Vendor vendor)
+    {
+        this.vendor=vendor;
+    }
 }

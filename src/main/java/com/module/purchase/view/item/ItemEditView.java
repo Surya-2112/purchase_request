@@ -1,16 +1,20 @@
 package com.module.purchase.view.item;
 
 import com.module.purchase.config.SecurityService;
+import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Item;
+import com.module.purchase.entity.Unit;
+import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.ItemService;
+import com.module.purchase.service.UnitService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -23,20 +27,30 @@ import jakarta.annotation.security.PermitAll;
 public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final ItemService itemService;
-
+    private final CategoryService categoryService;
+    private final UnitService unitService;
     private final SecurityService securityService;
 
-    // FIELDS
     private final TextField itemNameField = new TextField("Item Name");
     private final TextField itemCodeField = new TextField("Item Code");
-    private final NumberField unitPriceField = new NumberField("Unit Price");
-    private final TextField VATCodeField = new TextField("VAT code");
+
+    private final ComboBox<Category> categoryField =
+            new ComboBox<>("Category");
+
+    private final ComboBox<Unit> unitField =
+            new ComboBox<>("Unit");
 
     private Item item;
 
-    public ItemEditView(ItemService itemService, SecurityService securityService) {
+    public ItemEditView(
+            ItemService itemService,
+            CategoryService categoryService,
+            UnitService unitService,
+            SecurityService securityService) {
 
         this.itemService = itemService;
+        this.categoryService = categoryService;
+        this.unitService = unitService;
         this.securityService = securityService;
 
         setSizeFull();
@@ -45,6 +59,12 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
         itemNameField.setRequired(true);
         itemCodeField.setRequired(true);
         itemCodeField.setReadOnly(true);
+
+        categoryField.setItems(categoryService.getCategories());
+        categoryField.setItemLabelGenerator(Category::getCategoryName);
+
+        unitField.setItems(unitService.getAllUnits());
+        unitField.setItemLabelGenerator(Unit::getName);
     }
 
     @Override
@@ -61,35 +81,38 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
 
         H2 title = new H2("Update Item");
 
-        // SET VALUES
-        itemNameField.setValue( item.getItemName() == null ? "" : item.getItemName());
+        itemNameField.setValue(
+                item.getItemName() == null ? "" : item.getItemName());
 
-        itemCodeField.setValue(item.getItemCode() == null ? "" : item.getItemCode() );
-        
+        itemCodeField.setValue(
+                item.getItemCode() == null ? "" : item.getItemCode());
 
-        // FORM
+        categoryField.setValue(item.getCategory());
+        unitField.setValue(item.getUnit());
+
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
                 itemNameField,
                 itemCodeField,
-                unitPriceField,
-                VATCodeField
+                categoryField,
+                unitField
         );
 
         formLayout.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 2)
         );
 
-        // SAVE BUTTON
         Button saveButton = new Button("Save");
 
         saveButton.addClickListener(e -> {
 
             try {
 
-                // VALIDATION
-                if (itemNameField.isEmpty() || itemCodeField.isEmpty()) {
+                if (itemNameField.isEmpty()
+                        || itemCodeField.isEmpty()
+                        || categoryField.isEmpty()
+                        || unitField.isEmpty()) {
 
                     Notification.show(
                             "Please fill all required fields",
@@ -100,12 +123,15 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
                     return;
                 }
 
-                // UPDATE VALUES
                 item.setItemName(itemNameField.getValue());
                 item.setItemCode(itemCodeField.getValue());
+                item.setCategory(categoryField.getValue());
+                item.setUnit(unitField.getValue());
 
-                // UPDATE
-                itemService.updateItem(item,securityService.getLoggedInUser().getEmployee());
+                itemService.updateItem(
+                        item,
+                        securityService.getLoggedInUser().getEmployee()
+                );
 
                 Notification.show(
                         "Item Updated Successfully",
@@ -127,7 +153,6 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
             }
         });
 
-        // CANCEL BUTTON
         Button cancelButton = new Button("Cancel");
 
         cancelButton.addClickListener(e ->
@@ -136,7 +161,8 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
                 )
         );
 
-        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
+        HorizontalLayout buttons =
+                new HorizontalLayout(saveButton, cancelButton);
 
         add(title, formLayout, buttons);
     }

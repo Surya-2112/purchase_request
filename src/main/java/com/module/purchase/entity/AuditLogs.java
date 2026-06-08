@@ -14,35 +14,38 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
+@Table(name = "audit_logs")
 public class AuditLogs {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "audit_log_id")
     private Long auditLogId;
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "entity_type", nullable = false)
     private EntityType entityType;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "entity_id", nullable = false)
     private Long entityId;
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "performed_action", nullable = false)
     private Action action;
 
     @ManyToOne
-    @JoinColumn(name = "performed_by_id")
+   @JoinColumn(name = "performed_by_id", referencedColumnName = "employee_id")
     private Employee performedBy;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "log_timestamp", nullable = false)
     private LocalDate timestamp;
 
     public Long getAuditLogId() {

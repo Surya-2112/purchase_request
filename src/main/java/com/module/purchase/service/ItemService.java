@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
@@ -16,12 +17,10 @@ import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Item;
+import com.module.purchase.enums.Action;
+import com.module.purchase.enums.EntityType;
 import com.module.purchase.repository.ItemRepository;
 import com.module.purchase.specification.ItemSpecification;
-import com.module.purchase.enums.EntityType;
-import com.module.purchase.enums.Action;
-
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -89,10 +88,12 @@ public class ItemService {
 
     public Page<Item> getAllItems(Item item,int page,int size) {
         
-        Specification<Item> spec= Specification
+        Specification<Item> spec = Specification
         .where(ItemSpecification.hasItemId(item.getItemId()))
         .and(ItemSpecification.hasItemCode(item.getItemCode()))
-        .and(ItemSpecification.hasItemName(item.getItemName()));
+        .and(ItemSpecification.hasItemName(item.getItemName()))
+        .and(ItemSpecification.hasCategory(item.getCategory()))
+        .and(ItemSpecification.hasUnit(item.getUnit()));
         
         PageRequest pageable= PageRequest.of(page, size);
 

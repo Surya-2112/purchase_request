@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -17,46 +18,50 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.ColumnDefault;
 
+import jakarta.persistence.Table;
+
 @Entity
+@Table(name = "vendor")
 public class Vendor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "vendor_id")
     private Long vendorId;
 
     @NotNull
     @Size(max = 100)
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "vendor_name", nullable = false, unique = true, length = 100)
     private String vendorName;
 
     @NotNull
-    @Column(nullable = false, unique = true)
+     @Column(name = "vendor_email", nullable = false, unique = true)
     @Email
     private String vendorEmail;
 
     @Size(min = 10, max = 15)
-    @Column(length = 15)
+     @Column(name = "vendor_phone_number", length = 15)
     private String vendorPhoneNumber;
 
     @Embedded
     private Address vendorAddress;
 
     @OneToOne
-    @JoinColumn(name = "user_id")
+     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private Users users;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "vendor_categories", // Force a standard name instead of vendor_categorys
             joinColumns = @JoinColumn(name = "vendor_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
     private List<Category> categories;
 
-    @ManyToMany(mappedBy = "vendor")
+    @OneToMany(mappedBy = "vendor")
+    @JsonIgnoreProperties("vendor")
     private Set<Quotation> quotations;
 
     @NotNull

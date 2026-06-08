@@ -17,19 +17,22 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
+@Table(name = "role")
 public class Role {
         
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "role_id")
     private Long roleId;
 
     @NotNull
     @Size(max=50)
-    @Column(unique = true, nullable = false, length=50)
+    @Column(name = "role_name", unique = true, nullable = false, length=50)
     private String roleName;
 
     @CollectionTable(

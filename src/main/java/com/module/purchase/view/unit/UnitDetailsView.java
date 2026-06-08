@@ -1,8 +1,8 @@
-package com.module.purchase.view.item;
+package com.module.purchase.view.unit;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.Item;
-import com.module.purchase.service.ItemService;
+import com.module.purchase.entity.Unit;
+import com.module.purchase.service.UnitService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -18,18 +18,19 @@ import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
 
-@Route(value = "item-details", layout = MainLayout.class)
+@Route(value = "unit-details", layout = MainLayout.class)
 @PermitAll
-public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class UnitDetailsView extends VerticalLayout
+        implements HasUrlParameter<Integer> {
 
-    private final ItemService itemService;
+    private final UnitService unitService;
     private final SecurityService securityService;
 
-    public ItemDetailsView(
-            ItemService itemService,
+    public UnitDetailsView(
+            UnitService unitService,
             SecurityService securityService) {
 
-        this.itemService = itemService;
+        this.unitService = unitService;
         this.securityService = securityService;
 
         setSizeFull();
@@ -38,68 +39,41 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Long itemId) {
+    public void setParameter(BeforeEvent event, Integer unitId) {
 
         removeAll();
 
-        Item item = itemService.getItemById(itemId).orElse(null);
+        Unit unit = unitService.getUnitById(unitId).orElse(null);
 
-        if (item == null) {
-            add(new Span("Item Not Found"));
+        if (unit == null) {
+            add(new Span("Unit not found"));
             return;
         }
 
-        H2 title = new H2("Item Details");
+        H2 title = new H2("Unit Details");
 
         FormLayout formLayout = new FormLayout();
 
         formLayout.addFormItem(
-                new Span(String.valueOf(item.getItemId())),
-                "Item ID"
+                new Span(String.valueOf(unit.getId())),
+                "Unit ID"
         );
 
         formLayout.addFormItem(
-                new Span(
-                        item.getItemName() == null
-                                ? ""
-                                : item.getItemName()
-                ),
-                "Item Name"
+                new Span(unit.getName() == null ? "" : unit.getName()),
+                "Unit Name"
         );
 
         formLayout.addFormItem(
-                new Span(
-                        item.getItemCode() == null
-                                ? ""
-                                : item.getItemCode()
-                ),
-                "Item Code"
-        );
-
-        formLayout.addFormItem(
-                new Span(
-                        item.getCategory() == null
-                                ? ""
-                                : item.getCategory().getCategoryName()
-                ),
-                "Category"
-        );
-
-        formLayout.addFormItem(
-                new Span(
-                        item.getUnit() == null
-                                ? ""
-                                : item.getUnit().getName()
-                ),
-                "Unit"
+                new Span(unit.getCode() == null ? "" : unit.getCode()),
+                "Unit Code"
         );
 
         Button updateButton = new Button("Update");
 
         updateButton.addClickListener(e ->
                 getUI().ifPresent(ui ->
-                        ui.navigate("item-edit/" + item.getItemId())
-                )
+                        ui.navigate("unit-edit/" + unit.getId()))
         );
 
         Button deleteButton = new Button("Delete");
@@ -108,8 +82,8 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
 
             ConfirmDialog dialog = new ConfirmDialog();
 
-            dialog.setHeader("Delete Item");
-            dialog.setText("Are you sure you want to delete this item?");
+            dialog.setHeader("Delete Unit");
+            dialog.setText("Are you sure you want to delete this unit?");
 
             dialog.setCancelable(true);
             dialog.setConfirmText("Delete");
@@ -119,18 +93,18 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
 
                 try {
 
-                    itemService.deleteItemById(
-                            item.getItemId(),
+                    unitService.deleteUnitById(
+                            unit.getId(),
                             securityService.getLoggedInUser().getEmployee()
                     );
 
                     Notification.show(
-                            "Item Deleted Successfully",
+                            "Unit deleted successfully",
                             3000,
                             Notification.Position.TOP_CENTER
                     );
 
-                    getUI().ifPresent(ui -> ui.navigate("item"));
+                    getUI().ifPresent(ui -> ui.navigate("unit"));
 
                 } catch (Exception ex) {
 
@@ -146,12 +120,10 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
         });
 
         updateButton.setVisible(
-                securityService.canAccessView("item-edit")
-        );
+                securityService.canAccessView("unit-edit"));
 
         deleteButton.setVisible(
-                securityService.canAccessView("item-form")
-        );
+                securityService.canAccessView("unit-form"));
 
         HorizontalLayout buttons =
                 new HorizontalLayout(updateButton, deleteButton);

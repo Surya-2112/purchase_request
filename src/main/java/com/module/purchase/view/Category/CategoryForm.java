@@ -1,4 +1,4 @@
-package com.module.purchase.view.Category;
+package com.module.purchase.view.category;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Category;
@@ -26,7 +26,7 @@ public class CategoryForm extends Dialog {
         this.categoryService = categoryService;
         this.securityService = securityService; 
 
-        setHeaderTitle("Add Vendor Category");
+        setHeaderTitle("Add Category");
         setWidth("500px");
 
         categoryNameField.setRequiredIndicatorVisible(true);
@@ -56,7 +56,7 @@ public class CategoryForm extends Dialog {
                     category.getCategoryName() == null ? "" : category.getCategoryName()
             );
 
-            setHeaderTitle("Update Vendor Category");
+            setHeaderTitle("Update Category");
         }
     }
 
@@ -82,7 +82,7 @@ public class CategoryForm extends Dialog {
             categoryService.addCategory(category,securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
-                    "Vendor Category Saved Successfully",
+                    "Category Saved Successfully",
                     3000,
                     Notification.Position.TOP_CENTER
             );

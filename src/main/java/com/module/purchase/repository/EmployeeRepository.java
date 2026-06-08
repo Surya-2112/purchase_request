@@ -15,7 +15,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
 
     Optional<Employee> findByEmployeeEmail(String email);
 
-        @Query("""
+        @Query(""" 
                 select e
                 from Employee e
                 join e.role r
@@ -23,5 +23,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
                 where g = :employeeGroup
                 """)
         List<Employee> findByRoleEmployeeGroup(@Param("employeeGroup") EmployeeGroup employeeGroup);
+
+        @Query("""
+                 SELECT e FROM Employee e WHERE e.users IS NULL """)
+        List<Employee> findEmployeesWithoutUser();
     
 }

@@ -14,16 +14,17 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(
+@Table(name = "assigning_config",
     uniqueConstraints = {
         @UniqueConstraint(columnNames = {"approval_type","employee_group"}),
-        @UniqueConstraint(columnNames = {"level","approval_type"})
+        @UniqueConstraint(columnNames = {"approval_level","approval_type"})
     }
 )
 public class AssigningConfig {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "assigning_config_id")
     private Long id;
 
     @Column(name = "min_amount", nullable = false)
@@ -43,7 +44,7 @@ public class AssigningConfig {
     @Column(name = "margin_difference_percentage", nullable = false)
     private Double marginDifferencePercentage;
 
-    @Column(name = "level",nullable = false)
+    @Column(name = "approval_level",nullable = false)
     private Integer level;
     
     public Long getId() {

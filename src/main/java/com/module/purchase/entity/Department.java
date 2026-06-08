@@ -14,29 +14,32 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
+@Table(name = "department")
 public class Department {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "department_id")
     private Long departmentId;
 
-    @Column(unique = true, nullable = false, length=100)
+    @Column(name = "department_name", unique = true, nullable = false, length=100)
     @Size(max=100)
     @NotBlank
     private String departmentName;
 
     @Size(max=20)
     @NotBlank
-    @Column(unique = true, nullable= false, length=20)
+     @Column(name = "department_code", unique = true, nullable= false, length=20)
     private String departmentCode;
 
     @OneToOne
-    @JoinColumn(name = "headEmployeeId")
+    @JoinColumn(name = "head_employee_id")
     @JsonIgnoreProperties({"department","role","user","address"})
     private Employee headEmployee;
    

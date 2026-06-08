@@ -10,8 +10,9 @@ import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table( 
+     name = "purchase_order_line",
     uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"purchase_order_id", "item_variant_id"})
+       @UniqueConstraint(columnNames = {"purchase_order_id", "variant_id"})
     }
 )
 public class PurchaseOrderLine {
@@ -26,11 +27,11 @@ public class PurchaseOrderLine {
     private PurchaseOrderHeader purchaseOrderHeader;
 
     @ManyToOne
-    @JoinColumn(name = "item_variant_id", nullable = false)
+    @JoinColumn(name = "variant_id", referencedColumnName = "variant_id", nullable = false)
     private ItemVariant itemVariant;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "unit_price", nullable = false)
     @Positive
     private Double unitPrice;
 
@@ -39,11 +40,11 @@ public class PurchaseOrderLine {
     @Positive
     private Integer quantity;
 
-    @Column(nullable = false)
+     @Column(name = "total_amount", nullable = false)
     @Positive
     private Double totalAmount;
 
-    @Column(nullable = false)
+    @Column(name = "discount_amount", nullable = false)
     @ColumnDefault("0.0")
     @Positive
     private Double discountAmount;

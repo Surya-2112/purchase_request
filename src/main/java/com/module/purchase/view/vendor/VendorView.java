@@ -1,9 +1,13 @@
 package com.module.purchase.view.vendor;
 
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 
 import com.module.purchase.config.SecurityService;
+import com.module.purchase.entity.Category;
 import com.module.purchase.entityDTO.VendorDTO;
+import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -16,6 +20,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
+import java.util.List;
 
 import jakarta.annotation.security.PermitAll;
 
@@ -30,6 +35,9 @@ public class VendorView extends VerticalLayout {
     private final TextField vendorIdField = new TextField("Vendor ID");
     private final TextField vendorNameField = new TextField("Vendor Name");
 
+    private final ComboBox<Category> categoryField =
+            new ComboBox<>("Category");
+
     private final ComboBox<String> activeField =
             new ComboBox<>("Active");
 
@@ -40,7 +48,10 @@ public class VendorView extends VerticalLayout {
 
     private VendorDTO currentFilter = new VendorDTO();
 
-    public VendorView(VendorService vendorService,SecurityService securityService) {
+    public VendorView(
+            VendorService vendorService,
+            CategoryService categoryService,
+            SecurityService securityService) {
 
         this.vendorService = vendorService;
 
@@ -48,29 +59,45 @@ public class VendorView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
+        // ACTIVE
         activeField.setItems("Yes", "No");
+
+        // CATEGORY
+        categoryField.setItems(categoryService.getCategories());
+        categoryField.setItemLabelGenerator(Category::getCategoryName);
+        categoryField.setClearButtonVisible(true);
 
         // HEADER
         H2 title = new H2("Vendor List");
 
-        Button addButton = new Button("Add Vendor");
-        addButton.addClickListener(e -> {
-            VendorForm form = new VendorForm(vendorService,securityService);
+        Button addButton = new Button("Add Vendor", e -> {
+            VendorForm form = new VendorForm(
+                    vendorService,
+                    categoryService,
+                    securityService
+            );
             form.open();
         });
 
-        addButton.setVisible(securityService.canAccessView("vendor-form"));
+        addButton.setVisible(
+                securityService.canAccessView("vendor-form"));
 
-        HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
+        HorizontalLayout headerLayout =
+                new HorizontalLayout(title, addButton);
+
         headerLayout.setWidthFull();
-        headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
+        headerLayout.setJustifyContentMode(
+                JustifyContentMode.BETWEEN);
 
+        // FILTER BUTTONS
         Button searchButton = new Button("Search", e -> applyFilter());
         Button clearButton = new Button("Clear", e -> clearFilter());
 
+        // FILTER LAYOUT
         HorizontalLayout filterLayout = new HorizontalLayout(
                 vendorIdField,
                 vendorNameField,
+                categoryField,
                 activeField,
                 searchButton,
                 clearButton
@@ -79,15 +106,27 @@ public class VendorView extends VerticalLayout {
         filterLayout.setWidthFull();
         filterLayout.setAlignItems(Alignment.END);
 
-       
-        vendorGrid.addColumn(VendorDTO::getVendorId).setHeader("Vendor ID").setAutoWidth(true);
+        // GRID COLUMNS
+        vendorGrid.addColumn(VendorDTO::getVendorId)
+                .setHeader("Vendor ID")
+                .setAutoWidth(true);
 
         vendorGrid.addColumn(VendorDTO::getVendorName)
                 .setHeader("Vendor Name")
                 .setAutoWidth(true);
 
+        vendorGrid.addColumn(vendor -> vendor.getCategories() == null
+                        ? ""
+                        : vendor.getCategories()
+                        .stream()
+                        .map(Category::getCategoryName)
+                        .collect(Collectors.joining(", "))
+        ).setHeader("Categories");
+
         vendorGrid.addColumn(vendor ->
-                Boolean.TRUE.equals(vendor.getActive()) ? "Yes" : "No"
+                Boolean.TRUE.equals(vendor.getActive())
+                        ? "Yes"
+                        : "No"
         ).setHeader("Active");
 
         vendorGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
@@ -95,11 +134,12 @@ public class VendorView extends VerticalLayout {
 
         vendorGrid.addItemDoubleClickListener(event -> {
             VendorDTO vendor = event.getItem();
-           getUI().ifPresent(ui ->
-                        ui.navigate("vendor-details/" + vendor.getVendorId())
-                );
+            getUI().ifPresent(ui ->
+                    ui.navigate("vendor-details/" + vendor.getVendorId())
+            );
         });
 
+        // PAGE SIZE
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);
@@ -110,6 +150,7 @@ public class VendorView extends VerticalLayout {
             loadVendors();
         });
 
+        // PAGINATION BUTTONS
         Button previousButton = new Button("Previous", e -> {
             if (currentPage > 0) {
                 currentPage--;
@@ -131,10 +172,10 @@ public class VendorView extends VerticalLayout {
         );
 
         paginationLayout.setWidthFull();
-        paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        paginationLayout.setJustifyContentMode(
+                JustifyContentMode.CENTER);
         paginationLayout.setAlignItems(Alignment.CENTER);
 
-        // LOAD
         loadVendors();
 
         add(headerLayout, filterLayout, vendorGrid, paginationLayout);
@@ -169,6 +210,14 @@ public class VendorView extends VerticalLayout {
         currentFilter.setVendorId(vendorId);
         currentFilter.setVendorName(vendorNameField.getValue());
 
+       if (categoryField.getValue() != null) {
+    currentFilter.setCategories(
+            List.of(categoryField.getValue())
+    );
+} else {
+    currentFilter.setCategories(null);
+}
+
         currentFilter.setActive(
                 activeField.getValue() == null
                         ? null
@@ -183,6 +232,7 @@ public class VendorView extends VerticalLayout {
 
         vendorIdField.clear();
         vendorNameField.clear();
+        categoryField.clear();
         activeField.clear();
 
         currentFilter = new VendorDTO();

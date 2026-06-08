@@ -1,14 +1,10 @@
 package com.module.purchase.view.assigningConfig;
 
-import java.util.Collections;
-
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningConfig;
-import com.module.purchase.entity.Employee;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.AssigningConfigService;
-import com.module.purchase.service.EmployeeService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -21,112 +17,71 @@ import com.vaadin.flow.component.textfield.NumberField;
 public class AssigningConfigForm extends Dialog {
 
     private final AssigningConfigService assigningConfigService;
-
     private final SecurityService securityService;
 
-    private final ComboBox<ApprovalType> approvalTypeField = new ComboBox<>("Approval Type");
+    private final ComboBox<ApprovalType> approvalTypeField =
+            new ComboBox<>("Approval Type");
 
-    private final IntegerField levelField = new IntegerField("Level");
+    private final IntegerField levelField =
+            new IntegerField("Approval Level");
 
-    private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Role Group");
+    private final ComboBox<EmployeeGroup> employeeGroupField =
+            new ComboBox<>("Employee Group");
 
-    private final NumberField minAmountField = new NumberField("Min Amount");
+    private final NumberField minAmountField =
+            new NumberField("Minimum Amount");
 
-    private final NumberField maxAmountField = new NumberField("Max Amount");
+    private final NumberField maxAmountField =
+            new NumberField("Maximum Amount");
 
-    private final ComboBox<Employee> defaultEmployeeField = new ComboBox<>("Default Employee");
+    private final NumberField marginDifferenceField =
+            new NumberField("Margin Difference %");
 
     public AssigningConfigForm(
-
             AssigningConfigService assigningConfigService,
-
-            EmployeeService employeeService,
-
-            SecurityService securityService
-    ) {
+            SecurityService securityService) {
 
         this.assigningConfigService = assigningConfigService;
-
-
         this.securityService = securityService;
 
-        setHeaderTitle( "Add Assigning Config");
-
+        setHeaderTitle("Add Assigning Configuration");
         setWidth("700px");
 
-        approvalTypeField.setRequired(true);
-
+        // REQUIRED
         approvalTypeField.setRequiredIndicatorVisible(true);
-
         levelField.setRequiredIndicatorVisible(true);
-
-        employeeGroupField.setRequired(true);
-
         employeeGroupField.setRequiredIndicatorVisible(true);
-
         minAmountField.setRequiredIndicatorVisible(true);
-
         maxAmountField.setRequiredIndicatorVisible(true);
+        marginDifferenceField.setRequiredIndicatorVisible(true);
 
-        defaultEmployeeField.setRequiredIndicatorVisible(true);
-
-        approvalTypeField.setItems( ApprovalType.values());
-
+        // DATA
+        approvalTypeField.setItems(ApprovalType.values());
         employeeGroupField.setItems(EmployeeGroup.values());
-
-        defaultEmployeeField.setItemLabelGenerator(Employee::getEmployeeName);
-
-        employeeGroupField.addValueChangeListener(event -> {
-
-            EmployeeGroup selectedGroup = event.getValue();
-
-            if (selectedGroup != null) {
-
-                defaultEmployeeField.setItems( employeeService.getEmployeesByEmployeeGroup(selectedGroup));
-
-            } else {
-
-                defaultEmployeeField.clear();
-
-                defaultEmployeeField.setItems(Collections.emptyList());
-            }
-        });
 
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
-
                 approvalTypeField,
-
                 levelField,
-
                 employeeGroupField,
-
                 minAmountField,
-
                 maxAmountField,
-
-                defaultEmployeeField
+                marginDifferenceField
         );
 
         formLayout.setResponsiveSteps(
-
-                new FormLayout.ResponsiveStep(
-                        "0",
-                        2
-                )
+                new FormLayout.ResponsiveStep("0", 2)
         );
 
-
         Button saveButton = new Button("Save");
-
         Button cancelButton = new Button("Cancel");
 
         saveButton.addClickListener(event -> saveAssigningConfig());
-
         cancelButton.addClickListener(event -> close());
 
-        HorizontalLayout buttonLayout = new HorizontalLayout(
+        HorizontalLayout buttonLayout =
+                new HorizontalLayout(
                         saveButton,
                         cancelButton
                 );
@@ -140,19 +95,17 @@ public class AssigningConfigForm extends Dialog {
     private void saveAssigningConfig() {
 
         try {
+
             if (approvalTypeField.isEmpty()
                     || levelField.isEmpty()
                     || employeeGroupField.isEmpty()
                     || minAmountField.isEmpty()
                     || maxAmountField.isEmpty()
-                    || defaultEmployeeField.isEmpty()) {
+                    || marginDifferenceField.isEmpty()) {
 
                 Notification.show(
-
                         "Please fill all required fields",
-
                         3000,
-
                         Notification.Position.TOP_CENTER
                 );
 
@@ -162,70 +115,74 @@ public class AssigningConfigForm extends Dialog {
             if (levelField.getValue() < 1) {
 
                 levelField.setInvalid(true);
-
                 levelField.setErrorMessage(
-                        "Level must be higher than 0"
+                        "Level must be greater than 0"
                 );
 
                 return;
             }
 
-            if (minAmountField.getValue() < 1.0) {
+            if (minAmountField.getValue() < 0) {
 
                 minAmountField.setInvalid(true);
-
                 minAmountField.setErrorMessage(
-                        "Minimum amount must be higher than 0"
+                        "Minimum amount cannot be negative"
                 );
 
                 return;
             }
 
-            if (maxAmountField.getValue() < 1.0 || maxAmountField.getValue() <= minAmountField.getValue()) {
+            if (maxAmountField.getValue() <= minAmountField.getValue()) {
 
                 maxAmountField.setInvalid(true);
-
                 maxAmountField.setErrorMessage(
-
-                        "Maximum amount must be higher than minimum amount"
+                        "Maximum amount must be greater than minimum amount"
                 );
 
                 return;
             }
 
-            AssigningConfig assigningConfig = new AssigningConfig();
+            if (marginDifferenceField.getValue() < 0) {
 
-            assigningConfig.setApprovalType(approvalTypeField.getValue());
+                marginDifferenceField.setInvalid(true);
+                marginDifferenceField.setErrorMessage(
+                        "Margin difference cannot be negative"
+                );
 
-            assigningConfig.setLevel(levelField.getValue());
+                return;
+            }
+
+            AssigningConfig assigningConfig =
+                    new AssigningConfig();
+
+            assigningConfig.setApprovalType(
+                    approvalTypeField.getValue());
+
+            assigningConfig.setLevel(
+                    levelField.getValue());
 
             assigningConfig.setEmployeeGroup(
+                    employeeGroupField.getValue());
 
-                    employeeGroupField.getValue()
-            );
-
-            assigningConfig.setMinAmount( minAmountField.getValue() );
+            assigningConfig.setMinAmount(
+                    minAmountField.getValue());
 
             assigningConfig.setMaxAmount(
+                    maxAmountField.getValue());
 
-                    maxAmountField.getValue()
-            );
+            assigningConfig.setMarginDifferencePercentage(
+                    marginDifferenceField.getValue());
 
             assigningConfigService.addAssigningConfig(
-
                     assigningConfig,
-
                     securityService
                             .getLoggedInUser()
                             .getEmployee()
             );
 
             Notification.show(
-
-                    "Assigning Config Saved Successfully",
-
+                    "Assigning Configuration Saved Successfully",
                     3000,
-
                     Notification.Position.TOP_CENTER
             );
 
@@ -233,10 +190,9 @@ public class AssigningConfigForm extends Dialog {
 
         } catch (Exception exception) {
 
-            exception.printStackTrace();
-
-            Notification.show( 
-                "Error : "+ exception.getMessage(),5000,
+            Notification.show(
+                    exception.getMessage(),
+                    5000,
                     Notification.Position.TOP_CENTER
             );
         }

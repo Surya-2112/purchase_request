@@ -1,15 +1,21 @@
 package com.module.purchase.view.employee;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.*;
-import com.module.purchase.service.*;
+import com.module.purchase.entity.Address;
+import com.module.purchase.entity.Department;
+import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Role;
+import com.module.purchase.service.DepartmentService;
+import com.module.purchase.service.EmployeeService;
+import com.module.purchase.service.RoleService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.*;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -143,11 +149,9 @@ public class EmployeeForm extends VerticalLayout {
             employee.setEmployeeName(
                     employeeNameField.getValue());
 
-            employee.setEmployeeEmail(
-                    employeeEmailField.getValue());
+            employee.setEmployeeEmail(employeeEmailField.getValue());
 
-            employee.setEmployeePhoneNumber(
-                    phoneNumberField.getValue());
+            employee.setEmployeePhoneNumber(phoneNumberField.getValue().trim().equals("")?null:phoneNumberField.getValue());
 
             employee.setDepartment(
                     departmentField.getValue());
