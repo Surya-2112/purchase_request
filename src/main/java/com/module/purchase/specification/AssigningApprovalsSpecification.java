@@ -5,6 +5,7 @@ import org.springframework.data.jpa.domain.Specification;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.enums.ApprovalType;
+import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
 
 public class AssigningApprovalsSpecification {
@@ -43,5 +44,14 @@ public class AssigningApprovalsSpecification {
          status == null
          ?null
          : cb.equal(root.get("status"),status);
+    }
+
+    public static Specification<AssigningApprovals> hasEmployeeGroup(EmployeeGroup group) {
+        return (root, query, cb) -> {
+            if (group == null) {
+                return null;
+            }
+            return cb.equal(root.get("employeeGroup"), group);
+        };
     }
 }

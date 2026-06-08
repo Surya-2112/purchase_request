@@ -17,5 +17,6 @@ public enum EntityType {
     AUDIT_LOGS,
     VIEW_PERMISSION,
     UNIT,
-    ITEM_VARIANT
+    ITEM_VARIANT,
+    REPEATED_PERIOD
 }

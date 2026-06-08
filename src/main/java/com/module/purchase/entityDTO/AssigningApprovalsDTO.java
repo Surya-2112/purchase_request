@@ -2,6 +2,7 @@ package com.module.purchase.entityDTO;
 
 import com.module.purchase.entity.Employee;
 import com.module.purchase.enums.ApprovalType;
+import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
 
 public class AssigningApprovalsDTO {
@@ -9,6 +10,8 @@ public class AssigningApprovalsDTO {
     private Long assigningApprovalsId;
 
     private Employee approver;
+
+    private EmployeeGroup employeeGroup;
 
     private ApprovalType approvalType;
 
@@ -64,6 +67,14 @@ public class AssigningApprovalsDTO {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public EmployeeGroup getEmployeeGroup() {
+        return employeeGroup;
+    }
+
+    public void setEmployeeGroup(EmployeeGroup employeeGroup) {
+        this.employeeGroup = employeeGroup;
     }
 }
 

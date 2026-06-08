@@ -15,6 +15,7 @@ import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Item;
 import com.module.purchase.entity.ItemVariant;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EntityType;
@@ -71,6 +72,11 @@ public class ItemVariantService {
     // LIST ALL
     public List<ItemVariant> getItemVariants() {
         return itemVariantRepository.findAll();
+    }
+
+     public List<ItemVariant> getItemVariantsByItem(Item item) {
+
+        return itemVariantRepository.findByItem(item);
     }
 
     // PAGINATION + FILTER

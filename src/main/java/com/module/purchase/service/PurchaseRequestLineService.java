@@ -35,6 +35,11 @@ public class PurchaseRequestLineService {
         return purchaseRequestLineRepository.findByPurchaseRequestHeader(header);
     }
 
+    public PurchaseRequestLine updatePurchaseRequestLine(PurchaseRequestLine purchaseRequestLine) {
+        System.out.println(purchaseRequestLine.getRepeatableId());
+        return savePurchaseRequestLine(purchaseRequestLine);
+    }
+
     public PurchaseRequestLine addPurchaseRequestLine(PurchaseRequestLine purchaseRequestLine) {
         return savePurchaseRequestLine(purchaseRequestLine);
     }

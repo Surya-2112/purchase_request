@@ -74,7 +74,9 @@ public class CategoryService {
     {  
         Specification<Category> spec= Specification
         .where(CategorySpecification.hasCategoryId(category.getCategoryId()))
-        .and(CategorySpecification.hasCategoryName(category.getCategoryName()));
+        .and(CategorySpecification.hasCategoryName(category.getCategoryName()))
+        .and(CategorySpecification.isRepeatable(category.isRepeatable()))
+        .and(CategorySpecification.isAutoRfq(category.isAutoRfq()));
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Category> categoryPage = categoryRepository.findAll(spec, pageable);

@@ -62,11 +62,10 @@ public class AssigningConfigView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
-        approvalTypeField.setItems(
-                ApprovalType.values());
+        approvalTypeField.setItems(ApprovalType.values());
 
-        employeeGroupField.setItems(
-                EmployeeGroup.values());
+        employeeGroupField.setItems(EmployeeGroup.getApprovalGroups());
+        employeeGroupField.setItemLabelGenerator(EmployeeGroup::getDisplayName);
 
         // HEADER
         H2 title = new H2("Assigning Config List");
@@ -149,22 +148,7 @@ public class AssigningConfigView extends VerticalLayout {
                         : config.getEmployeeGroup().name())
                 .setHeader("Employee Group")
                 .setAutoWidth(true);
-
-        assigningConfigGrid.addColumn(
-                AssigningConfigDTO::getMinAmount)
-                .setHeader("Min Amount")
-                .setAutoWidth(true);
-
-        assigningConfigGrid.addColumn(
-                AssigningConfigDTO::getMaxAmount)
-                .setHeader("Max Amount")
-                .setAutoWidth(true);
-
-        assigningConfigGrid.addColumn(
-                AssigningConfigDTO::getMarginDifferencePercentage)
-                .setHeader("Margin %")
-                .setAutoWidth(true);
-
+                
         assigningConfigGrid.addThemeVariants(
                 GridVariant.LUMO_ROW_STRIPES);
 

@@ -66,7 +66,7 @@ public class PurchaseRequestLine {
     @Column(name = "ordered_quantity")
     private Double orderedQuantity;
 
-    @Column(name = "repeatable_id", updatable = false)
+    @Column(name = "repeatable_id")
     private Long repeatableId;
 
     @ManyToOne

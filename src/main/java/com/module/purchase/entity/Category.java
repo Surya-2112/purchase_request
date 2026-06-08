@@ -16,6 +16,13 @@ public class Category {
     @Column(name = "category_name", nullable = false, unique = true)
     private String categoryName;
 
+    @Column(name = "is_repeatable", nullable = false)
+    private Boolean repeatable = false;
+
+    // Added to check if automation should instantly send out RFQs to matched vendors
+    @Column(name = "auto_rfq", nullable = false)
+    private Boolean autoRfq = false;
+
     @OneToMany(mappedBy = "category")
     private Set<Item> items;
 
@@ -53,4 +60,28 @@ public class Category {
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName;
     }
+
+    public Boolean isRepeatable() {
+        return repeatable;
+    }
+
+    public void setRepeatable(Boolean repeatable) {
+        this.repeatable = repeatable;
+    }
+
+    public Boolean isAutoRfq() {
+        return autoRfq;
+    }
+
+    public void setAutoRfq(Boolean autoRfq) {
+        this.autoRfq = autoRfq;
+    }
+
+    @Override
+    public String toString() {
+        return "Category [categoryId=" + categoryId + ", categoryName=" + categoryName + ", repeatable=" + repeatable
+                + ", autoRfq=" + autoRfq + "]";
+    }
+
+    
 }

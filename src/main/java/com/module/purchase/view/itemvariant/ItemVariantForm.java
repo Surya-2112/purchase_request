@@ -51,6 +51,7 @@ public class ItemVariantForm extends Dialog {
         // SPECIFICATION
         specificationField.setWidthFull();
         specificationField.setMinHeight("120px");
+        specificationField.setRequired(true);
 
         // PRICE
         estimatedPriceField.setMin(0);

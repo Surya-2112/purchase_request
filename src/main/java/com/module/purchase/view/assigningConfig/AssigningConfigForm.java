@@ -57,7 +57,8 @@ public class AssigningConfigForm extends Dialog {
 
         // DATA
         approvalTypeField.setItems(ApprovalType.values());
-        employeeGroupField.setItems(EmployeeGroup.values());
+        employeeGroupField.setItems(EmployeeGroup.getApprovalGroups());
+        employeeGroupField.setItemLabelGenerator(EmployeeGroup::getDisplayName);
 
         FormLayout formLayout = new FormLayout();
 

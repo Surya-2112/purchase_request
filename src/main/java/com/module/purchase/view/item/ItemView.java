@@ -8,6 +8,7 @@ import com.module.purchase.entity.Item;
 import com.module.purchase.entity.Unit;
 import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.ItemService;
+import com.module.purchase.service.ItemVariantService;
 import com.module.purchase.service.UnitService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -50,6 +51,7 @@ public class ItemView extends VerticalLayout {
 
     public ItemView(
             ItemService itemService,
+            ItemVariantService itemVariantService,
             CategoryService categoryService,
             UnitService unitService,
             SecurityService securityService) {
@@ -66,8 +68,7 @@ public class ItemView extends VerticalLayout {
         Button addButton = new Button("Add Item");
 
         addButton.addClickListener(e -> {
-            ItemForm form
-                    = new ItemForm(itemService, categoryService, unitService, securityService);
+            ItemForm form = new ItemForm(itemService,itemVariantService, categoryService, unitService, securityService);
             form.open();
         });
 

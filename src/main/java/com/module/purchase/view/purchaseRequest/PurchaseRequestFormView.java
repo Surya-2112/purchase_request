@@ -2,39 +2,43 @@ package com.module.purchase.view.purchaseRequest;
 
 import java.io.IOException;
 import java.sql.Date;
-import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Item;
+import com.module.purchase.entity.ItemVariant;
 import com.module.purchase.entity.PurchaseRequestDocument;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
-import com.module.purchase.entity.Vendor;
+import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.ItemService;
+import com.module.purchase.service.ItemVariantService;
 import com.module.purchase.service.PurchaseRequestDocumentService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.service.PurchaseRequestLineService;
-import com.module.purchase.service.VendorService;
+import com.module.purchase.service.RepeatedPeriodService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
@@ -47,712 +51,550 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "purchase-request-form/:id?", layout = MainLayout.class)
 @PermitAll
-public class PurchaseRequestFormView extends VerticalLayout
-                implements BeforeEnterObserver {
+public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnterObserver {
 
         private final PurchaseRequestHeaderService headerService;
-
         private final PurchaseRequestLineService lineService;
-
         private final PurchaseRequestDocumentService documentService;
-
+        private final ItemVariantService itemVariantService;
         private final SecurityService securityService;
+        private final RepeatedPeriodService repeatedPeriodService;
 
-        private final DatePicker createdDateField = new DatePicker("Created Date");
-
+        // ================= UI INPUT FIELDS =================
         private final ComboBox<Department> departmentField = new ComboBox<>("Department");
-
-        private final ComboBox<Vendor> vendorField = new ComboBox<>("Vendor");
-
         private final ComboBox<Item> itemField = new ComboBox<>("Item");
+        private final ComboBox<ItemVariant> variantField = new ComboBox<>("Specification");
+        private final TextField unitField = new TextField("Unit");
+        private final NumberField quantityField = new NumberField("Quantity");
+        private final TextField descriptionField = new TextField("Description");
 
-        private final IntegerField quantityField = new IntegerField("Quantity");
-
-        private final NumberField unitPriceField = new NumberField("Unit Price");
-
-        private final NumberField discountField = new NumberField("Discount");
-
-        private final TextField VATCodeField = new TextField("VAT Code");
-
+        // ================= DOCUMENTS, LINES & SCHEDULES COMPONENTS =================
         private final List<PurchaseRequestDocument> documents = new ArrayList<>();
-
         private final Grid<PurchaseRequestDocument> documentGrid = new Grid<>(PurchaseRequestDocument.class, false);
-
         private final MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
-
         private final Upload upload = new Upload(buffer);
 
         private final List<PurchaseRequestLine> lines = new ArrayList<>();
-
         private PurchaseRequestHeader editingHeader = null;
-
         private PurchaseRequestLine editingLine = null;
-
+        
+        // DUAL GRID MANAGEMENT INTERACTION DESIGN PATTERN
         private final Grid<PurchaseRequestLine> lineGrid = new Grid<>(PurchaseRequestLine.class, false);
+        private final VerticalLayout recurringScheduleSection = new VerticalLayout();
+        private final Grid<PurchaseRequestLine> scheduleGrid = new Grid<>(PurchaseRequestLine.class, false);
 
         private final Button saveButton = new Button("Save & Go To Approval");
 
-        public PurchaseRequestFormView(
+        // Tracking map linking row memory instances to targeted background rules
+        private final Map<PurchaseRequestLine, RepeatedPeriod> pendingLineSchedulesMap = new HashMap<>();
+        private RepeatedPeriod runtimeCachedSchedule = null;
 
+        public PurchaseRequestFormView(
                         PurchaseRequestHeaderService headerService,
                         DepartmentService departmentService,
                         ItemService itemService,
+                        ItemVariantService itemVariantService,
                         SecurityService securityService,
                         PurchaseRequestLineService lineService,
-                        VendorService vendorService,
-                        PurchaseRequestDocumentService documentService
-
+                        PurchaseRequestDocumentService documentService,
+                        RepeatedPeriodService repeatedPeriodService
         ) {
-
                 this.headerService = headerService;
-
-                this.securityService = securityService;
-
                 this.lineService = lineService;
-
                 this.documentService = documentService;
-
-                // ================= MAIN VIEW =================
+                this.itemVariantService = itemVariantService;
+                this.securityService = securityService;
+                this.repeatedPeriodService = repeatedPeriodService;
 
                 setSizeFull();
-
                 setPadding(true);
-
                 setSpacing(true);
-
                 getStyle().set("overflow", "auto");
 
-
                 departmentField.setItems(departmentService.getDepartments());
-
                 departmentField.setItemLabelGenerator(Department::getDepartmentName);
-
                 departmentField.setWidth("300px");
 
-
-                vendorField.setItems(vendorService.getVendors());
-
-                vendorField.setItemLabelGenerator(Vendor::getVendorName);
-
-                vendorField.setWidth("300px");
-
-                // ================= ITEM =================
-
                 itemField.setItems(itemService.getItems());
-
                 itemField.setItemLabelGenerator(Item::getItemName);
-
                 itemField.setWidth("250px");
 
-                // ================= DEFAULT VALUES =================
-
-                createdDateField.setValue(LocalDate.now());
-
-                quantityField.setValue(1);
-
-                quantityField.setWidth("120px");
-
-                discountField.setValue(0.0);
-
-                discountField.setWidth("120px");
-
-                unitPriceField.setWidth("150px");
-
-                VATCodeField.setWidth("150px");
-
-                VATCodeField.setReadOnly(true);
+                variantField.setWidth("250px");
+                variantField.setItemLabelGenerator(variant -> variant.getSpecification() != null ? variant.getSpecification() : "Default / No Spec");
 
                 itemField.addValueChangeListener(event -> {
-
-                        Item item = event.getValue();
-
-                       // unitPriceField.setValue(item == null? 0.0: item.getUnitPrice());
-
-                        // VATCodeField.setValue( item == null? "" : item.getVATCode());
+                        Item selectedItem = event.getValue();
+                        if (selectedItem != null) {
+                                variantField.setItems(itemVariantService.getItemVariantsByItem(selectedItem));
+                        } else {
+                                variantField.clear();
+                                variantField.setItems(new ArrayList<>());
+                        }
                 });
 
+                variantField.addValueChangeListener(event -> {
+                        ItemVariant variant = event.getValue();
+                        if (variant != null && variant.getItem() != null && variant.getItem().getUnit() != null) {
+                                unitField.setValue(variant.getItem().getUnit().getCode());
+                        } else {
+                                unitField.clear();
+                        }
+                });
+
+                unitField.setReadOnly(true);
+                unitField.setWidth("100px");
+
+                quantityField.setValue(1.0);
+                quantityField.setWidth("120px");
+
+                descriptionField.setWidth("300px");
+
                 configureGrid();
-
+                configureScheduleGrid(); 
                 configureDocumentGrid();
-
                 configureUpload();
 
-                Button addLineButton = new Button(
-                                "Add / Update Line",
-                                e -> addLine());
-
-                saveButton.addClickListener(
-                                e -> saveAndGoApproval());
+                Button addLineButton = new Button("Add / Update Line", e -> addLine());
+                saveButton.addClickListener(e -> saveAndGoApproval());
 
                 HorizontalLayout lineInput = new HorizontalLayout(
-
                                 itemField,
-
+                                variantField,
                                 quantityField,
-
-                                unitPriceField,
-
-                                VATCodeField,
-
-                                discountField,
-
-                                addLineButton);
-
+                                unitField,
+                                descriptionField,
+                                addLineButton
+                );
                 lineInput.setWidthFull();
-
-                lineInput.setAlignItems(
-                                Alignment.END);
-
+                lineInput.setAlignItems(Alignment.END);
                 lineInput.setFlexGrow(1, itemField);
 
-                HorizontalLayout headerLayout = new HorizontalLayout(departmentField, vendorField);
-
+                HorizontalLayout headerLayout = new HorizontalLayout(departmentField);
+                headerLayout.setAlignItems(Alignment.END);
                 headerLayout.setWidthFull();
 
-                // ================= CONTENT =================
+                recurringScheduleSection.add(new H3("Active Recurring Sourcing Routines"), scheduleGrid);
+                recurringScheduleSection.setPadding(false);
+                recurringScheduleSection.setSpacing(true);
+                recurringScheduleSection.setVisible(false); 
 
                 VerticalLayout contentLayout = new VerticalLayout(
-
                                 new H2("Purchase Request Form"),
-
-                                createdDateField,
-
                                 headerLayout,
-
                                 new H3("Purchase Request Lines"),
-
                                 lineInput,
-
                                 lineGrid,
-
+                                recurringScheduleSection, 
                                 new H3("Upload Documents"),
-
                                 upload,
-
                                 documentGrid,
-
-                                saveButton);
-
+                                saveButton
+                );
                 contentLayout.setWidthFull();
-
                 contentLayout.setSpacing(true);
 
-                // ================= SCROLLER =================
-
                 Scroller scroller = new Scroller(contentLayout);
-
                 scroller.setSizeFull();
-
                 add(scroller);
         }
 
-        // ================= DOCUMENT GRID =================
-
         private void configureDocumentGrid() {
-
                 documentGrid.removeAllColumns();
-
-                documentGrid.addColumn(
-                                PurchaseRequestDocument::getFileName)
-                                .setHeader("File Name")
-                                .setAutoWidth(true);
-
-                documentGrid.addColumn(
-                                PurchaseRequestDocument::getFileType)
-                                .setHeader("Type")
-                                .setAutoWidth(true);
-
+                documentGrid.addColumn(PurchaseRequestDocument::getFileName).setHeader("File Name").setAutoWidth(true);
+                documentGrid.addColumn(PurchaseRequestDocument::getFileType).setHeader("Type").setAutoWidth(true);
                 documentGrid.addColumn(document -> {
-
-                        if (document.getFileSize() == null) {
-                                return "0 KB";
-                        }
-
+                        if (document.getFileSize() == null) return "0 KB";
                         return (document.getFileSize() / 1024) + " KB";
-
                 }).setHeader("Size");
 
                 documentGrid.addComponentColumn(document -> {
-
                         Button removeButton = new Button("Remove");
-
                         removeButton.addClickListener(event -> {
-
                                 try {
-
-                                        // REMOVE FROM DATABASE IF SAVED
                                         if (document.getDocumentId() != null) {
-
                                                 documentService.delete(document);
                                         }
-
-                                        // REMOVE FROM UI LIST
                                         documents.remove(document);
-
-                                        documentGrid.getDataProvider()
-                                                        .refreshAll();
-
+                                        documentGrid.getDataProvider().refreshAll();
                                         if (documents.isEmpty()) {
-
                                                 documentGrid.setVisible(false);
                                         }
-
-                                        Notification.show(
-                                                        "Document removed");
-
+                                        Notification.show("Document removed");
                                 } catch (Exception ex) {
-
                                         ex.printStackTrace();
-
-                                        Notification.show(
-                                                        "Failed to remove document");
+                                        Notification.show("Failed to remove document");
                                 }
                         });
-
                         return removeButton;
-
                 }).setHeader("Action");
 
                 documentGrid.setItems(documents);
-
                 documentGrid.setWidthFull();
-
                 documentGrid.setAllRowsVisible(true);
-
                 documentGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-
-                // Hide initially
                 documentGrid.setVisible(false);
         }
 
-        // ================= UPLOAD =================
-
         private void configureUpload() {
-
                 upload.setWidthFull();
-
                 upload.setMaxFiles(10);
-
-                upload.setDropLabel(new com.vaadin.flow.component.html.Span("Drop files here or click to upload"));
-
-                upload.setAcceptedFileTypes(
-
-                                ".pdf",
-                                ".doc",
-                                ".docx",
-                                ".xls",
-                                ".xlsx",
-                                ".png",
-                                ".jpg",
-                                ".jpeg");
+                upload.setDropLabel(new Span("Drop files here or click to upload"));
+                upload.setAcceptedFileTypes(".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg");
 
                 upload.addSucceededListener(event -> {
-
                         try {
-
                                 String fileName = event.getFileName();
-
                                 byte[] data = buffer.getInputStream(fileName).readAllBytes();
 
                                 PurchaseRequestDocument document = new PurchaseRequestDocument();
-
                                 document.setFileName(fileName);
-
                                 document.setFileType(event.getMIMEType());
-
                                 document.setFileSize((long) data.length);
-
                                 document.setDocumentData(data);
 
                                 documents.add(document);
-
-                                // SHOW GRID ONLY AFTER FILE ADDED
                                 documentGrid.setVisible(true);
-
-                                documentGrid.getDataProvider()
-                                                .refreshAll();
+                                documentGrid.getDataProvider().refreshAll();
 
                                 Notification.show(fileName + " uploaded successfully");
-
                         } catch (IOException exception) {
-
-                                Notification.show(
-                                                "File upload failed");
+                                Notification.show("File upload failed");
                         }
                 });
         }
 
-        // ================= ROUTE =================
-
         @Override
         public void beforeEnter(BeforeEnterEvent event) {
-
                 Optional<String> parameter = event.getRouteParameters().get("id");
-
                 if (parameter.isPresent()) {
-
                         Long id = Long.parseLong(parameter.get());
-
-                        editingHeader = headerService
-                                        .getPurchaseRequestHeaderById(id)
-                                        .orElse(null);
+                        editingHeader = headerService.getPurchaseRequestHeaderById(id).orElse(null);
 
                         if (editingHeader == null) {
-
-                                Notification.show( "Purchase Request Not Found");
+                                Notification.show("Purchase Request Not Found");
                                 return;
                         }
-
                         loadEditData();
                 }
         }
 
         private void loadEditData() {
-
-                createdDateField.setValue(
-
-                                editingHeader
-                                                .getCreatedDate()
-                                                .toLocalDate());
-
-                departmentField.setValue(
-                                editingHeader.getForDepartment());
-
-             //   vendorField.setValue(editingHeader.getVendor());
+                departmentField.setValue(editingHeader.getForDepartment());
 
                 lines.clear();
-
-                lines.addAll(
-
-                                lineService
-                                                .getPurchaseRequestLineByHeader(
-                                                                editingHeader));
-
-                lineGrid.getDataProvider()
-                                .refreshAll();
-
-                documents.clear();
-
-                documents.addAll(documentService.getByPurchaseRequestHeader(editingHeader));
-
-                documentGrid.setVisible(!documents.isEmpty());
-
-                documentGrid.getDataProvider().refreshAll();
-                saveButton.setText(
-                                "Update & Go To Approval");
+                pendingLineSchedulesMap.clear();
+                
+                List<PurchaseRequestLine> dbLines = lineService.getPurchaseRequestLineByHeader(editingHeader);
+                for (PurchaseRequestLine line : dbLines) {
+                        lines.add(line);
+                        if (line.getRepeatableId() != null) {
+                                repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId())
+                                        .ifPresent(period -> pendingLineSchedulesMap.put(line, period));
+                        }
+                }
+                
+                refreshGridDataProviders();
+                saveButton.setText("Update & Go To Approval");
         }
 
-        // ================= LINE GRID =================
-
         private void configureGrid() {
-
                 lineGrid.removeAllColumns();
 
-                // lineGrid.addColumn(line ->
+                lineGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
+                                ? line.getItemVariant().getItem().getItemName() : "")
+                                .setHeader("Item").setAutoWidth(true);
 
-                // line.getItem() != null
+                lineGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
+                                .setHeader("Specification").setAutoWidth(true);
 
-                //                 ? line.getItem()
-                //                                 .getItemName()
+                lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Quantity").setWidth("120px");
 
-                //                 : "")
+                lineGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
+                                && line.getItemVariant().getItem().getUnit() != null 
+                                ? line.getItemVariant().getItem().getUnit().getCode() : "")
+                                .setHeader("Unit").setWidth("100px");
 
-                //                 .setHeader("Item")
-                //                 .setWidth("120px")
-                //                 .setFlexGrow(1);
-
-                // lineGrid.addColumn(
-                //                 PurchaseRequestLine::getQuantity)
-                //                 .setHeader("Quantity")
-                //                 .setWidth("120px");
-
-                // lineGrid.addColumn(
-                //                 PurchaseRequestLine::getUnitPrice)
-                //                 .setHeader("Unit Price")
-                //                 .setWidth("150px");
-
-                // lineGrid.addColumn(line ->
-
-                // line.getItem() == null
-
-                //                 ? ""
-
-                //                 : line.getItem().getVATCode()
-
-                // ).setHeader("VAT Code")
-                //                 .setWidth("140px");
-
-                // lineGrid.addColumn(
-                //                 PurchaseRequestLine::getDiscount)
-                //                 .setHeader("Discount")
-                //                 .setWidth("130px");
-
-                // lineGrid.addColumn(
-                //                 PurchaseRequestLine::getTotalPrice)
-                //                 .setHeader("Total")
-                //                 .setWidth("150px");
+                lineGrid.addColumn(PurchaseRequestLine::getDescription).setHeader("Description").setAutoWidth(true);
 
                 lineGrid.addComponentColumn(line -> {
-
                         Button editButton = new Button("Edit");
-
-                        editButton.addClickListener(
-                                        e -> editLine(line));
+                        editButton.addClickListener(e -> editLine(line));
 
                         Button deleteButton = new Button("Delete");
-
                         deleteButton.addClickListener(e -> {
-
                                 lines.remove(line);
-
-                                lineGrid.getDataProvider()
-                                                .refreshAll();
-
+                                pendingLineSchedulesMap.remove(line);
+                                refreshGridDataProviders();
                                 Notification.show("Line deleted");
                         });
 
-                        return new HorizontalLayout(
-                                        editButton,
-                                        deleteButton);
-
-                }).setHeader("Actions")
-                                .setWidth("220px");
+                        return new HorizontalLayout(editButton, deleteButton);
+                }).setHeader("Actions").setWidth("220px");
 
                 lineGrid.setItems(lines);
-
                 lineGrid.setWidthFull();
-
                 lineGrid.setAllRowsVisible(true);
-
                 lineGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         }
 
+        private void configureScheduleGrid() {
+                scheduleGrid.removeAllColumns();
+
+                scheduleGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
+                                ? line.getItemVariant().getItem().getItemName() : "")
+                                .setHeader("Scheduled Item").setAutoWidth(true);
+
+                scheduleGrid.addColumn(line -> {
+                        RepeatedPeriod p = pendingLineSchedulesMap.get(line);
+                        if (p == null) return "No Schedule Mapped";
+                        return "Every " + p.getFrequencyPeriod() + " " + (p.getFrequencyType() != null ? p.getFrequencyType().name() : "");
+                }).setHeader("Recurrence Interval").setAutoWidth(true);
+
+                scheduleGrid.addColumn(line -> {
+                        RepeatedPeriod p = pendingLineSchedulesMap.get(line);
+                        return (p != null && p.getFromDate() != null) ? p.getFromDate().toString() : "-";
+                }).setHeader("Start Date").setWidth("140px");
+
+                scheduleGrid.addColumn(line -> {
+                        RepeatedPeriod p = pendingLineSchedulesMap.get(line);
+                        return (p != null && p.getToDate() != null) ? p.getToDate().toString() : "Indefinite";
+                }).setHeader("End Date").setWidth("140px");
+
+                scheduleGrid.addComponentColumn(line -> {
+                        Button modifyScheduleBtn = new Button("Modify Schedule", e -> {
+                                RepeatedPeriod currentPeriod = pendingLineSchedulesMap.get(line);
+                                AutoRfqScheduleDialog dialog = new AutoRfqScheduleDialog(updatedPeriod -> {
+                                        pendingLineSchedulesMap.put(line, updatedPeriod);
+                                        refreshGridDataProviders();
+                                        Notification.show("Repetition parameters updated.");
+                                });
+                                dialog.open();
+                        });
+                        
+                        Button clearScheduleBtn = new Button("Remove Loop", e -> {
+                                pendingLineSchedulesMap.remove(line);
+                                line.setRepeatableId(null);
+                                refreshGridDataProviders();
+                                Notification.show("Recurrence cycle detached from this item.");
+                        });
+                        clearScheduleBtn.addThemeName("error layout");
+
+                        return new HorizontalLayout(modifyScheduleBtn, clearScheduleBtn);
+                }).setHeader("Scheduling Maintenance").setWidth("320px");
+
+                scheduleGrid.setWidthFull();
+                scheduleGrid.setAllRowsVisible(true);
+                scheduleGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        }
+
+        private void refreshGridDataProviders() {
+                lineGrid.getDataProvider().refreshAll();
+                List<PurchaseRequestLine> repeatableLines = lines.stream()
+                                .filter(pendingLineSchedulesMap::containsKey)
+                                .toList();
+                
+                scheduleGrid.setItems(repeatableLines);
+                scheduleGrid.getDataProvider().refreshAll();
+                recurringScheduleSection.setVisible(!repeatableLines.isEmpty());
+        }
 
         private void addLine() {
-
                 if (itemField.isEmpty()) {
-
-                        Notification.show("Please select item");
+                        Notification.show("Please select an item");
+                        return;
+                }
+                if(variantField.isEmpty()) {
+                        Notification.show("Please select a specification");
+                        return;
+                }
+                if (quantityField.isEmpty() || quantityField.getValue() <= 0) {
+                        Notification.show("Quantity must be greater than 0");
                         return;
                 }
 
-                if(quantityField.getValue()<=0)
-                {   Notification.show(" Quantity must be greater than 0");
-                        return;
-                }
-                if(unitPriceField.getValue()<=0)
-                {   Notification.show(" Unit price must be greater than 0");
-                        return;
-                }
-                if(discountField.getValue()<0)
-                {Notification.show("Discount must be postive");
-                        return;
-                }
+                ItemVariant selectedVariant = variantField.getValue();
+                double enteredQuantity = quantityField.getValue();
+                String enteredDescription = descriptionField.getValue() != null ? descriptionField.getValue() : "";
 
-                Integer qtyValue = quantityField.getValue();
+                if (editingLine == null && selectedVariant.getItem() != null && 
+                    selectedVariant.getItem().getCategory() != null && 
+                    selectedVariant.getItem().getCategory().isRepeatable()) {
 
-                Double priceValue = unitPriceField.getValue();
+                        ConfirmDialog confirmDialog = new ConfirmDialog();
+                        confirmDialog.setHeader("Repeatable Category Detected");
+                        confirmDialog.setText("This item belongs to a repeatable category. Do you want to configure a recurring schedule for this line item?");
+                        
+                        confirmDialog.setCancelable(true);
+                        confirmDialog.setCancelText("No, Single Order");
+                        confirmDialog.setConfirmText("Yes, Setup Schedule");
 
-                Double discountValue = discountField.getValue();
+                        confirmDialog.addConfirmListener(event -> {
+                                AutoRfqScheduleDialog scheduleDialog = new AutoRfqScheduleDialog(generatedPeriod -> {
+                                        this.runtimeCachedSchedule = generatedPeriod;
+                                        commitLineItemData(selectedVariant, enteredQuantity, enteredDescription);
+                                });
+                                scheduleDialog.open();
+                        });
 
-                int qty = qtyValue == null ? 0 : qtyValue;
+                        confirmDialog.addCancelListener(event -> {
+                                this.runtimeCachedSchedule = null;
+                                commitLineItemData(selectedVariant, enteredQuantity, enteredDescription);
+                        });
 
-                double price = priceValue == null ? 0 : priceValue;
-
-                double discount = discountValue == null ? 0 : discountValue;
-
-                double total = (qty * price) - discount;
-
-
-                if (editingLine != null) {
-
-                        Notification.show(
-                                        "Line updated");
-
-                        editingLine = null;
-
+                        confirmDialog.open();
                 } else {
+                        commitLineItemData(selectedVariant, enteredQuantity, enteredDescription);
+                }
+        }
 
-                        PurchaseRequestLine existingLine = null;
-
-
-
-                        if (existingLine != null) {
-
-                                Notification.show("Existing item quantity updated");
-
+        private void commitLineItemData(ItemVariant selectedVariant, double enteredQuantity, String enteredDescription) {
+                if (editingLine != null) {
+                        editingLine.setItemVariant(selectedVariant);
+                        editingLine.setRequestedQuantity(enteredQuantity);
+                        editingLine.setDescription(enteredDescription);
+                        
+                        if (this.runtimeCachedSchedule != null) {
+                                pendingLineSchedulesMap.put(editingLine, this.runtimeCachedSchedule);
                         } else {
+                                pendingLineSchedulesMap.remove(editingLine);
+                                editingLine.setRepeatableId(null);
+                        }
+                        
+                        Notification.show("Line updated");
+                        editingLine = null;
+                } else {
+                        Optional<PurchaseRequestLine> existingLineOpt = lines.stream()
+                                        .filter(line -> line.getItemVariant() != null && 
+                                                        line.getItemVariant().getId().equals(selectedVariant.getId()))
+                                        .findFirst();
 
-                                PurchaseRequestLine line = new PurchaseRequestLine();
-
-                              
-                                lines.add(line);
-
+                        PurchaseRequestLine targetedLine;
+                        if (existingLineOpt.isPresent()) {
+                                targetedLine = existingLineOpt.get();
+                                targetedLine.setRequestedQuantity(targetedLine.getRequestedQuantity() + enteredQuantity);
+                                
+                                if (!enteredDescription.isEmpty()) {
+                                        if (targetedLine.getDescription() == null || targetedLine.getDescription().isEmpty()) {
+                                                targetedLine.setDescription(enteredDescription);
+                                        } else if (!targetedLine.getDescription().contains(enteredDescription)) {
+                                                targetedLine.setDescription(targetedLine.getDescription() + " | " + enteredDescription);
+                                        }
+                                }
+                                Notification.show("Quantity updated for existing line item");
+                        } else {
+                                targetedLine = new PurchaseRequestLine();
+                                targetedLine.setItemVariant(selectedVariant);
+                                targetedLine.setRequestedQuantity(enteredQuantity);
+                                targetedLine.setDescription(enteredDescription);
+                                targetedLine.setStatus(Status.DRAFT);
+                                lines.add(targetedLine);
                                 Notification.show("Line added");
+                        }
+
+                        if (this.runtimeCachedSchedule != null) {
+                                pendingLineSchedulesMap.put(targetedLine, this.runtimeCachedSchedule);
                         }
                 }
 
-                lineGrid.getDataProvider() .refreshAll();
-
+                refreshGridDataProviders();
                 clearLine();
         }
 
-        private void editLine(
-                        PurchaseRequestLine line) {
-
+        private void editLine(PurchaseRequestLine line) {
                 editingLine = line;
-
-                // itemField.setValue( line.getItem());
-
-                // quantityField.setValue(line.getQuantity());
-
-                // unitPriceField.setValue(line.getUnitPrice());
-
-                // discountField.setValue(line.getDiscount());
-
-                Notification.show( "Edit mode enabled");
+                if (line.getItemVariant() != null) {
+                        itemField.setValue(line.getItemVariant().getItem());
+                        variantField.setValue(line.getItemVariant());
+                }
+                quantityField.setValue(line.getRequestedQuantity());
+                descriptionField.setValue(line.getDescription() != null ? line.getDescription() : "");
+                
+                this.runtimeCachedSchedule = pendingLineSchedulesMap.get(line);
+                Notification.show("Edit mode enabled");
         }
 
         private void clearLine() {
-
                 itemField.clear();
-
-                quantityField.setValue(1);
-
-                unitPriceField.setValue(0.0);
-
-                discountField.setValue(0.0);
-
+                variantField.clear();
+                unitField.clear();
+                quantityField.setValue(1.0);
+                descriptionField.clear();
                 editingLine = null;
+                this.runtimeCachedSchedule = null;
         }
 
+        // ================= CASCADING DATABASE OPERATION SAVES =================
         private void saveAndGoApproval() {
-
-                if (departmentField.isEmpty()
-                                || vendorField.isEmpty()
-                                || lines.isEmpty()) {
-
-                        Notification.show(
-                                        "Department, Vendor and Lines required");
-
+                if (departmentField.isEmpty() || lines.isEmpty()) {
+                        Notification.show("Department and at least one Line are required");
                         return;
                 }
 
                 try {
-
                         Employee currentUser = securityService.getLoggedInUser().getEmployee();
+                        PurchaseRequestHeader savedHeader;
 
-              //          double total = lines.stream().mapToDouble(PurchaseRequestLine::getTotalPrice).sum();
-
-                        PurchaseRequestHeader saved;
+                        // Calculate dynamic global total in background from memory collection logs arrays
+                        double calculatedGlobalTotal = 0.0;
+                        for (PurchaseRequestLine prLine : lines) {
+                                double unitPrice = (prLine.getItemVariant() != null && prLine.getItemVariant().getEstimatedUnitPrice() != null)
+                                                ? prLine.getItemVariant().getEstimatedUnitPrice() : 0.0;
+                                double requestedQty = prLine.getRequestedQuantity() != null ? prLine.getRequestedQuantity() : 0.0;
+                                calculatedGlobalTotal += (unitPrice * requestedQty);
+                        }
 
                         if (editingHeader != null) {
-
-                                editingHeader.setCreatedDate(Date.valueOf(createdDateField.getValue()));
-
                                 editingHeader.setForDepartment(departmentField.getValue());
-
-                             //   editingHeader.setVendor(vendorField.getValue());
-
-                         //       editingHeader.setTotalAmount(total);
-
-                                saved = headerService.updatePurchaseRequestHeader(editingHeader,currentUser);
-
-                                lineService.deleteAllLine(saved);
-
-                                for (PurchaseRequestLine oldLine : lines) {
-
-                                        PurchaseRequestLine newLine = new PurchaseRequestLine();
-
-                                        newLine.setPurchaseRequestHeader(saved);
-
-                                        // newLine.setItem(oldLine.getItem());
-
-                                        // newLine.setQuantity(oldLine.getQuantity());
-
-                                        // newLine.setUnitPrice(oldLine.getUnitPrice());
-
-                                        // newLine.setDiscount(oldLine.getDiscount());
-
-                                        // newLine.setTotalPrice(oldLine.getTotalPrice());
-
-                                        lineService.addPurchaseRequestLine(newLine);
-                                }
-
-                                Notification.show("Purchase Request Updated");
-
+                                editingHeader.setTotalAmount(calculatedGlobalTotal); // Injected quietly to ledger row
+                                savedHeader = headerService.updatePurchaseRequestHeader(editingHeader, currentUser);
+                                lineService.deleteAllLine(savedHeader);
                         } else {
-
                                 PurchaseRequestHeader header = new PurchaseRequestHeader();
-
-                                header.setCreatedDate(
-
-                                                Date.valueOf(
-                                                                createdDateField.getValue()));
-
-                                header.setForDepartment(
-                                                departmentField.getValue());
-
-                            //    header.setVendor( vendorField.getValue());
-
+                                header.setCreatedDate(new java.sql.Date(System.currentTimeMillis()));
+                                header.setForDepartment(departmentField.getValue());
                                 header.setStatus(Status.DRAFT);
-
                                 header.setCreatedBy(currentUser);
+                                header.setLevel(1);
+                                header.setTotalAmount(calculatedGlobalTotal); // Persisted transparently to DB schema
+                                savedHeader = headerService.addPurchaseRequestHeader(header, currentUser);
+                        }
 
-                             //   header.setTotalAmount(total);
+                        for (PurchaseRequestLine memoryLine : lines) {
+                                PurchaseRequestLine dbLine = new PurchaseRequestLine();
+                                dbLine.setPurchaseRequestHeader(savedHeader);
+                                dbLine.setItemVariant(memoryLine.getItemVariant());
+                                dbLine.setRequestedQuantity(memoryLine.getRequestedQuantity());
+                                dbLine.setDescription(memoryLine.getDescription());
+                                dbLine.setStatus(Status.DRAFT);
+                                
+                                double unitPrice = (memoryLine.getItemVariant() != null && memoryLine.getItemVariant().getEstimatedUnitPrice() != null)
+                                                ? memoryLine.getItemVariant().getEstimatedUnitPrice() : 0.0;
+                                dbLine.setItemUnitPrice(unitPrice);
+                                dbLine.setItemTotalAmount(unitPrice * memoryLine.getRequestedQuantity());
 
-                                saved = headerService.addPurchaseRequestHeader( header, currentUser);
+                                dbLine = lineService.addPurchaseRequestLine(dbLine);
 
-                                for (PurchaseRequestLine oldLine : lines) {
-
-                                        PurchaseRequestLine newLine = new PurchaseRequestLine();
-
-                                        newLine.setPurchaseRequestHeader(saved);
-
-                                        // newLine.setItem(oldLine.getItem());
-
-                                        // newLine.setQuantity(
-                                        //                 oldLine.getQuantity());
-
-                                        // newLine.setUnitPrice(
-                                        //                 oldLine.getUnitPrice());
-
-                                        // newLine.setDiscount(
-                                        //                 oldLine.getDiscount());
-
-                                       // newLine.setTotalPrice(oldLine.getTotalPrice());
-
-                                        lineService.addPurchaseRequestLine(
-                                                        newLine);
+                                if (pendingLineSchedulesMap.containsKey(memoryLine)) {
+                                        RepeatedPeriod rawSchedule = pendingLineSchedulesMap.get(memoryLine);
+                                        rawSchedule.setReferType(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE);
+                                        rawSchedule.setReferId(dbLine.getId());     
+                                        RepeatedPeriod savedSchedule = repeatedPeriodService.addRepeatedPeriod(rawSchedule, currentUser);
+                                        dbLine.setRepeatableId(savedSchedule.getId());
                                 }
-
-                                Notification.show(
-                                                "Purchase Request Saved");
+                                lineService.updatePurchaseRequestLine(dbLine);
                         }
 
                         for (PurchaseRequestDocument document : documents) {
-
-                                document.setPurchaseRequestHeader(saved);
+                                document.setPurchaseRequestHeader(savedHeader);
                                 documentService.save(document);
                         }
 
-                        Notification.show("Documents Saved : " + documents.size());
-
-                        getUI().ifPresent(ui ->
-
-                        ui.navigate(
-
-                                        "purchase-request-approval/"
-                                                        + saved.getPurchaseRequestId()));
+                        Notification.show("Purchase Request and scheduling configurations saved successfully.");
+                        getUI().ifPresent(ui -> ui.navigate("purchase-request-approval/" + savedHeader.getPurchaseRequestId()));
 
                 } catch (Exception exception) {
-
                         exception.printStackTrace();
-
-                        Notification.show(
-                                        "Error : " + exception.getMessage(),
-                                        5000,
-                                        Notification.Position.MIDDLE);
+                        Notification.show("Error: " + exception.getMessage(), 5000, Notification.Position.MIDDLE);
                 }
         }
 }

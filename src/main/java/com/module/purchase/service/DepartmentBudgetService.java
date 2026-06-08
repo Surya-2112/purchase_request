@@ -85,8 +85,8 @@ public class DepartmentBudgetService {
     }
 
     public DepartmentBudget getByDepartmentAndYear(Department department, Year year) {
-        DepartmentBudget exist = departmentBudgetRepository.findByDepartmentAndYear(department, year).get();
-        return exist;
+        Optional<DepartmentBudget> exist = departmentBudgetRepository.findByDepartmentAndYear(department, year);
+        return exist.orElse(null);
     }
 
     public DepartmentBudget updateDepartmentBudget(DepartmentBudget departmentBudget,Employee employee) {
@@ -111,7 +111,7 @@ public class DepartmentBudgetService {
     public void deleteDepartmentBudgetById(Long departmentBudgetId,Employee employee) {
 
         DepartmentBudget exist=getDepartmentBudgetById(departmentBudgetId).get();
-        if(exist.getRemainingBudgetAmount()!= exist.getTotalBudgetAmount())
+        if(!exist.getRemainingBudgetAmount().equals(exist.getTotalBudgetAmount()))
         {
             throw new ResourceAlreadyUsedException("This department budget is already in use do cannot delete");
         }

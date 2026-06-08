@@ -9,6 +9,8 @@ import com.module.purchase.entity.PurchaseRequestDocument;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.repository.PurchaseRequestDocumentRepositor;
 
+import org.springframework.transaction.annotation.Transactional;;
+
 @Service
 public class PurchaseRequestDocumentService {
 
@@ -25,9 +27,17 @@ public class PurchaseRequestDocumentService {
         return repository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public List<PurchaseRequestDocument> getByPurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader)
     {
-        return repository.findAllByPurchaseRequestHeader(purchaseRequestHeader);
+         List<PurchaseRequestDocument> docs = repository.findAllByPurchaseRequestHeader(purchaseRequestHeader);
+
+        for (PurchaseRequestDocument doc : docs) {
+            if (doc.getDocumentData() != null) {
+                int length = doc.getDocumentData().length; 
+            }
+        }
+        return docs;
     }
 
     public void delete(PurchaseRequestDocument document)

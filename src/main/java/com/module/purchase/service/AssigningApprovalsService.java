@@ -21,12 +21,12 @@ import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.ApprovalType;
+import com.module.purchase.enums.EmployeeGroup; // Ensure this is imported
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.Status;
 import com.module.purchase.mapper.AssigningApprovalsMapper;
 import com.module.purchase.repository.AssigningApprovalsRepository;
 import com.module.purchase.specification.AssigningApprovalsSpecification;
-
 
 @Service
 @Transactional
@@ -63,29 +63,32 @@ public class AssigningApprovalsService {
         return existingApproval;
     }
 
-    public List<AssigningApprovals>getAssigningApprovalByTypeAndReferId(ApprovalType approvalType,Long referenceId)
-    {
-        return assigningApprovalsRepository.findByApprovalTypeAndReferenceId(approvalType,referenceId);
+    public List<AssigningApprovals> getAssigningApprovalByTypeAndReferId(ApprovalType approvalType, Long referenceId) {
+        return assigningApprovalsRepository.findByApprovalTypeAndReferenceId(approvalType, referenceId);
     }
 
     public List<AssigningApprovals> getAllApprovals() {
         return assigningApprovalsRepository.findAll();
     }
     
-    public AssigningApprovals getAssigningApprovalByTypeAndReferIdAndLevle(ApprovalType approvalType,Long referenceId,Integer level)
-    {
-     Optional<AssigningApprovals> exist=assigningApprovalsRepository.findByApprovalTypeAndReferenceIdAndLevel(approvalType,referenceId,level);
-     return exist.get();
+    public AssigningApprovals getAssigningApprovalByTypeAndReferIdAndLevle(ApprovalType approvalType, Long referenceId, Integer level) {
+         Optional<AssigningApprovals> exist = assigningApprovalsRepository.findByApprovalTypeAndReferenceIdAndLevel(approvalType, referenceId, level);
+         return exist.get();
     }   
 
-    public Page<AssigningApprovalsDTO> getPurchaseRequestApprovalsForMe(AssigningApprovalsDTO assigningApprovalsDTO,Long userId,int page, int size) {
+    // REFACTORED: Now filters contextually by EmployeeGroup instead of explicitly testing Employee IDs
+    public Page<AssigningApprovalsDTO> getPurchaseRequestApprovalsForMyGroup(
+            AssigningApprovalsDTO assigningApprovalsDTO, 
+            EmployeeGroup group, // Changed from Long userId
+            int page, 
+            int size) {
 
         Specification<AssigningApprovals> spec = Specification
-        .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
-        .and(AssigningApprovalsSpecification.hasApprover(userService.getUserById(userId).get().getEmployee()))
-        .and(AssigningApprovalsSpecification.hasApprovalType(ApprovalType.PURCHASE_REQUEST))
-        .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
-        .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
+            .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
+            .and(AssigningApprovalsSpecification.hasEmployeeGroup(group)) // CHANGED: Replaced personal approver with group criteria
+            .and(AssigningApprovalsSpecification.hasApprovalType(ApprovalType.PURCHASE_REQUEST))
+            .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
+            .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
 
         Pageable pageable = PageRequest.of(page, size);
 
@@ -94,15 +97,13 @@ public class AssigningApprovalsService {
         return approvalsPage.map(assigningApprovalsMapper::toAssigningApprovalsDTO);
     }
 
-     public AssigningApprovals addApprovals(AssigningApprovals assigningApproval,Employee employee) {
-        
-        if(assigningApproval.getLevel()==1)
-        {
+    public AssigningApprovals addApprovals(AssigningApprovals assigningApproval, Employee employee) {
+        if (assigningApproval.getLevel() == 1) {
             assigningApproval.setStatus(Status.WAITING_APPROVAL);
         }
-        assigningApproval=assigningApprovalsRepository.save(assigningApproval);
+        assigningApproval = assigningApprovalsRepository.save(assigningApproval);
 
-        AuditLogs log= new AuditLogs();
+        AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.ASSIGNING_APPROVAL);
         log.setEntityId(assigningApproval.getAssigningApprovalsId());
         log.setAction(Action.CREATE);
@@ -112,33 +113,31 @@ public class AssigningApprovalsService {
         return assigningApproval;
     }
 
-    public AssigningApprovals updateApprovals(AssigningApprovals assigningApprovals,Employee employee)
-    {   
+    public AssigningApprovals updateApprovals(AssigningApprovals assigningApprovals, Employee employee) {   
         AuditLogs log = new AuditLogs();
         AssigningApprovals exist = getAssigningApprovalById(assigningApprovals.getAssigningApprovalsId()).get();
       
-        PurchaseRequestHeader purchaseRequestHeader=purchaseRequestHeaderService.getPurchaseRequestHeaderById(exist.getReferenceId()).get();
-        if(assigningApprovals.getStatus()==Status.APPROVED)
-        {   log.setAction(Action.APPROVE);
-           if(purchaseRequestHeader.getLevel()> assigningApprovals.getLevel())
-           {AssigningApprovals next = getAssigningApprovalByTypeAndReferIdAndLevle(
+        PurchaseRequestHeader purchaseRequestHeader = purchaseRequestHeaderService.getPurchaseRequestHeaderById(exist.getReferenceId()).get();
+        if (assigningApprovals.getStatus() == Status.APPROVED) { 
+            log.setAction(Action.APPROVE);
+            if (purchaseRequestHeader.getLevel() > assigningApprovals.getLevel()) {
+                AssigningApprovals next = getAssigningApprovalByTypeAndReferIdAndLevle(
                                 ApprovalType.PURCHASE_REQUEST,
                                 purchaseRequestHeader.getPurchaseRequestId(),
-                                assigningApprovals.getLevel()+1);
-            next.setStatus(Status.WAITING_APPROVAL);
-            saveAssigningApproval(next);
-           }else{
+                                assigningApprovals.getLevel() + 1);
+                next.setStatus(Status.WAITING_APPROVAL);
+                saveAssigningApproval(next);
+            } else {
                 purchaseOrderHeaderService.genratepurchaseOrder(purchaseRequestHeader);
                 purchaseRequestHeader.setStatus(Status.APPROVED);
-                purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader,null);
-           }
-        }else if(assigningApprovals.getStatus()==Status.REJECTED){
+                purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader, null);
+            }
+        } else if (assigningApprovals.getStatus() == Status.REJECTED) {
             log.setAction(Action.REJECT);
             purchaseRequestHeader.setStatus(Status.REJECTED);
-            purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader,null);
+            purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader, null);
         }
-        if(assigningApprovals.getStatus()==Status.CANCELLED)
-        {
+        if (assigningApprovals.getStatus() == Status.CANCELLED) {
             log.setAction(Action.CANCEL);
         }
         log.setEntityType(EntityType.ASSIGNING_APPROVAL);
@@ -148,5 +147,4 @@ public class AssigningApprovalsService {
         auditLogsService.addAuditLog(log);
         return saveAssigningApproval(assigningApprovals);
     }
-
 }

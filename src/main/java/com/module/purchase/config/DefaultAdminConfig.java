@@ -30,7 +30,7 @@ public class DefaultAdminConfig {
 
                 role.setRoleName("SUPER_ADMIN");
 
-                role.setEmployeeGroups(Arrays.asList(EmployeeGroup.values()));
+                role.setEmployeeGroups(Arrays.asList(EmployeeGroup.SUPER_ADMIN));
 
                 role = roleRepository.save(role);
 
