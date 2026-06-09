@@ -44,6 +44,12 @@ public class SecurityService {
         try {
             Users user = getLoggedInUser();
 
+            if(user == null || user.getVendor() != null)
+            {
+               // return viewPermissionService.getGroupsByView(viewName).contains(EmployeeGroup.VENDOR);
+               return true;
+            }
+
             if (user == null || user.getEmployee() == null || user.getEmployee() .getRole() == null) {
                 return false;
             }

@@ -15,7 +15,9 @@ import com.module.purchase.view.item.ItemView;
 import com.module.purchase.view.itemvariant.ItemVariantView;
 import com.module.purchase.view.purchaseOrder.PurchaseOrderView;
 import com.module.purchase.view.purchaseRequest.PurchaseRequestView;
+import com.module.purchase.view.quotation.QuotationView;
 import com.module.purchase.view.repeatedPeriod.RepeatedPeriodView;
+import com.module.purchase.view.requestForQuotation.RequestForQuotationView;
 import com.module.purchase.view.role.RoleView;
 import com.module.purchase.view.unit.UnitView;
 import com.module.purchase.view.user.UsersView;
@@ -144,6 +146,19 @@ public class MainLayout extends AppLayout {
                                 "purchase-request",
                                 "Purchase Request",
                                 PurchaseRequestView.class,
+                                securityService);
+                addMenuIfAllowed(
+                                menuLinks,
+                                "request-for-quotation",
+                                "Request For Quotation",
+                                RequestForQuotationView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
+                                "quotations",
+                                "Quotation",
+                                QuotationView.class,
                                 securityService);
 
                 addMenuIfAllowed(

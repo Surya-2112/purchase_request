@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.module.purchase.repository.UsersRepository;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Vendor;
 import com.module.purchase.entity.Users;
 import com.module.purchase.entityDTO.UsersDTO;
 
@@ -39,6 +40,9 @@ public class UsersService {
     private EmployeeService employeeService;
 
     @Autowired
+    private  VendorService vendorService;
+
+    @Autowired
     private UsersMapper usersMapper;
 
     @Autowired
@@ -58,18 +62,32 @@ public class UsersService {
             throw new ResourceAlreadyUsedException("User already exists with email: " + user.getUserEmail());
         }
 
-        Employee employee = employeeService.getEmployeeById(user.getEmployee().getEmployeeId()).get();
+        if(user.getEmployee()==null)
+        {
+        Vendor vendor = vendorService.getVendorById(user.getVendor().getVendorId()).get();
+        if (vendor.getUsers() != null) {
+            throw new ResourceAlreadyUsedException("This Vendor as another user");
+        }
+        vendorService.updateVendor(vendor, created);
+        if (user.getUserId() == null) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        user = saveUsers(user);
+        vendor.setUsers(user);
+        }else{
+
+             Employee employee = employeeService.getEmployeeById(user.getEmployee().getEmployeeId()).get();
         if (employee.getUsers() != null) {
             throw new ResourceAlreadyUsedException("This Employee as another user");
         }
-
         employeeService.updateEmployee(employee, created);
         if (user.getUserId() == null) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
-        
         user = saveUsers(user);
         employee.setUsers(user);
+
+        }
 
         AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.USER);

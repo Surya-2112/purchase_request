@@ -173,9 +173,7 @@ public class UsersForm extends Dialog {
                 user.setVendor(vendorField.getValue());
             }
 
-            usersService.addUsers(
-                    user,
-                    securityService.getLoggedInUser().getEmployee());
+            usersService.addUsers( user, securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "User Created Successfully",

@@ -32,12 +32,31 @@ public class GlobalViewSecurityGuard implements BeforeEnterListener {
             String viewName = event.getLocation().getFirstSegment();
 
             System.out.println("Checking View Permission : "+ viewName);
+            
 
             if (viewName.isEmpty() || viewName.equals("login")) {
                 return ;
             }
 
             Users user = securityService.getLoggedInUser();
+
+            List<EmployeeGroup> allowedGroups = viewPermissionService.getGroupsByView(viewName);
+
+            if(user.getVendor()!=null)
+            {
+                // if(!allowedGroups.contains(EmployeeGroup.VENDOR))
+                // { event.forwardTo("");
+
+                // event.getUI().access(() -> {
+
+                //     Notification.show(
+                //             "Access Denied",
+                //             3000,
+                //             Notification.Position.MIDDLE);
+                // });
+                //}
+                return;
+            }
 
             if (user == null|| user.getEmployee() == null || user.getEmployee().getRole() == null) {
 
@@ -60,7 +79,7 @@ public class GlobalViewSecurityGuard implements BeforeEnterListener {
                     .getRole()
                     .getEmployeeGroups();
 
-            List<EmployeeGroup> allowedGroups = viewPermissionService.getGroupsByView(viewName);
+        
 
             if (allowedGroups == null || allowedGroups.isEmpty()) {
 

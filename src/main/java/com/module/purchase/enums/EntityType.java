@@ -18,5 +18,6 @@ public enum EntityType {
     VIEW_PERMISSION,
     UNIT,
     ITEM_VARIANT,
-    REPEATED_PERIOD
+    REPEATED_PERIOD,
+    REQUEST_FOR_QUOTATION
 }

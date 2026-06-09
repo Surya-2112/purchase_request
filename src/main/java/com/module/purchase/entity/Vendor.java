@@ -152,4 +152,11 @@ public class Vendor {
     public void setQuotations(Set<Quotation> quotations) {
         this.quotations = quotations;
     }
+
+    @Override
+    public String toString() {
+        return "Vendor [vendorId=" + vendorId + ", vendorName=" + vendorName + ", vendorEmail=" + vendorEmail
+                + ", vendorPhoneNumber=" + vendorPhoneNumber + ", vendorAddress=" + vendorAddress + ", active=" + active
+                + "]";
+    }
 }
