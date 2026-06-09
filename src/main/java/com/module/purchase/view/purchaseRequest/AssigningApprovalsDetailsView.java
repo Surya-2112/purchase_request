@@ -4,7 +4,9 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.module.purchase.config.SecurityService;
@@ -15,13 +17,16 @@ import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseRequestDocument;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
+import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.enums.EmployeeGroup;
+import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.service.PurchaseRequestDocumentService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.service.PurchaseRequestLineService;
+import com.module.purchase.service.RepeatedPeriodService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -54,6 +59,7 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
         private final DepartmentBudgetService departmentBudgetService;
         private final PurchaseRequestDocumentService documentService;
         private final SecurityService securityService;
+        private final RepeatedPeriodService repeatedPeriodService;
 
         private PurchaseRequestHeader header;
         private AssigningApprovals approval;
@@ -83,8 +89,14 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
         // UI grids
         private final Grid<PurchaseRequestLine> lineGrid = new Grid<>(PurchaseRequestLine.class, false);
         private final Grid<PurchaseRequestDocument> documentGrid = new Grid<>(PurchaseRequestDocument.class, false);
+        
+        // SOURCING PATTERNS DETACHED SECTION MAPPINGS
+        private final VerticalLayout recurringScheduleSection = new VerticalLayout();
+        private final Grid<PurchaseRequestLine> scheduleGrid = new Grid<>(PurchaseRequestLine.class, false);
+        private final Map<PurchaseRequestLine, RepeatedPeriod> workingSchedulesMap = new HashMap<>();
 
         private final List<PurchaseRequestLine> workingLinesList = new ArrayList<>();
+        private boolean canUserModifyData = false;
 
         public AssigningApprovalsDetailsView(
                         PurchaseRequestHeaderService headerService,
@@ -92,7 +104,8 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                         AssigningApprovalsService approvalsService,
                         DepartmentBudgetService departmentBudgetService,
                         PurchaseRequestDocumentService documentService,
-                        SecurityService securityService) {
+                        SecurityService securityService,
+                        RepeatedPeriodService repeatedPeriodService) {
 
                 this.headerService = headerService;
                 this.lineService = lineService;
@@ -100,6 +113,7 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                 this.departmentBudgetService = departmentBudgetService;
                 this.documentService = documentService;
                 this.securityService = securityService;
+                this.repeatedPeriodService = repeatedPeriodService;
 
                 setSizeFull();
                 setPadding(false);
@@ -110,6 +124,7 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                 comments.setPlaceholder("Enter reasons for partial approval modifications or rejections here...");
 
                 configureLineGrid();
+                configureScheduleGrid(); 
                 configureDocumentGrid();
 
                 approveBtn.addThemeName("primary success");
@@ -121,12 +136,18 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                 HorizontalLayout buttonLayout = new HorizontalLayout(approveBtn, rejectBtn);
                 buttonLayout.setSpacing(true);
 
+                recurringScheduleSection.add(new H3("Associated Sourcing Patterns (Editable by Approver)"), scheduleGrid);
+                recurringScheduleSection.setPadding(false);
+                recurringScheduleSection.setSpacing(true);
+                recurringScheduleSection.setVisible(false);
+
                 VerticalLayout content = new VerticalLayout(
                                 new H2("Purchase Request Approval Console"),
                                 buildHeaderSection(),
                                 buildBudgetSection(),
                                 new H3("Line Items Sourcing Management (Partial Approval Allowed)"),
                                 lineGrid,
+                                recurringScheduleSection,
                                 new H3("Verification Documents"),
                                 documentGrid,
                                 comments,
@@ -151,11 +172,11 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                 header = headerService.getPurchaseRequestHeaderById(approval.getReferenceId())
                                 .orElseThrow(() -> new RuntimeException("Associated Purchase Request not found"));
 
+                evaluateGroupAccessControlPermissions();
                 bindHeaderData();
                 loadDepartmentBudget();
-                loadLinesData();
+                loadLinesData(); // This loads and runs real-time calculation loop on start up
                 loadDocuments();
-                evaluateGroupAccessControlPermissions();
         }
 
         private VerticalLayout buildHeaderSection() {
@@ -187,12 +208,14 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
         private void evaluateGroupAccessControlPermissions() {
                 Employee currentEmployee = securityService.getLoggedInUser().getEmployee();
                 EmployeeGroup assignedGroupRequirement = approval.getEmployeeGroup();
-                EmployeeGroup currentUserGroup = currentEmployee.getRole().getEmployeeGroups().iterator().next();
+                List<EmployeeGroup> currentUserGroup = currentEmployee.getRole().getEmployeeGroups();
 
                 boolean isTaskPending = approval.getStatus().equals(Status.WAITING_APPROVAL);
-                boolean isUserInAssignedGroup = (currentUserGroup == assignedGroupRequirement || currentUserGroup == EmployeeGroup.SUPER_ADMIN);
+                boolean isUserInAssignedGroup = currentUserGroup.contains(assignedGroupRequirement) || currentUserGroup.contains(EmployeeGroup.SUPER_ADMIN);
 
-                if (isTaskPending && isUserInAssignedGroup) {
+                this.canUserModifyData = isTaskPending && isUserInAssignedGroup;
+
+                if (canUserModifyData) {
                         approveBtn.setVisible(true);
                         rejectBtn.setVisible(true);
                         comments.setReadOnly(false);
@@ -236,6 +259,8 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                 remainingBudgetAmount.setText("Available Balance before processing : " + budget.getRemainingBudgetAmount());
                 remainingBudget = budget.getRemainingBudgetAmount();
                 isBudgetConfigured = true; 
+                
+                evaluateGroupAccessControlPermissions();
         }
 
         private void configureLineGrid() {
@@ -247,7 +272,6 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                 lineGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                                 .setHeader("Specification").setAutoWidth(true);
 
-                // FIXED: Direct relational mapping value lookup off the linked ItemVariant entity record configuration parameters
                 lineGrid.addColumn(line -> (line.getItemVariant() != null && line.getItemVariant().getEstimatedUnitPrice() != null) 
                                 ? line.getItemVariant().getEstimatedUnitPrice() : 0.0)
                                 .setHeader("Est. Unit Price").setWidth("130px");
@@ -262,6 +286,7 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                         NumberField approvedQtyField = new NumberField();
                         approvedQtyField.setWidth("140px");
 
+                        // DEFAULT INITIALIZATION MATRICES FOR TOTAL SECURITY
                         if (line.getApprovedQuantity() == null) {
                                 line.setApprovedQuantity(line.getRequestedQuantity());
                         }
@@ -270,15 +295,7 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                         approvedQtyField.setMin(0.0);
                         approvedQtyField.setMax(line.getRequestedQuantity());
                         approvedQtyField.setStepButtonsVisible(true);
-
-                        Employee currentEmployee = securityService.getLoggedInUser().getEmployee();
-                        EmployeeGroup currentUserGroup = currentEmployee.getRole().getEmployeeGroups().iterator().next();
-                        
-                        boolean canModify = approval.getStatus().equals(Status.WAITING_APPROVAL) &&
-                                        (currentUserGroup == approval.getEmployeeGroup() || currentUserGroup == EmployeeGroup.SUPER_ADMIN) &&
-                                        isBudgetConfigured; 
-
-                        approvedQtyField.setReadOnly(!canModify);
+                        approvedQtyField.setReadOnly(!canUserModifyData || !isBudgetConfigured);
 
                         approvedQtyField.addValueChangeListener(e -> {
                                 if (e.getValue() != null) {
@@ -290,6 +307,7 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                                                 line.setApprovedQuantity(e.getValue());
                                         }
                                         recalculateTotalApprovalEvaluationAmount();
+                                        scheduleGrid.getDataProvider().refreshAll(); 
                                 }
                         });
 
@@ -297,10 +315,60 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                 }).setHeader("Approved Qty").setWidth("160px");
 
                 lineGrid.addColumn(PurchaseRequestLine::getItemTotalAmount).setHeader("Line Total (Est.)").setWidth("140px");
-
                 lineGrid.addColumn(PurchaseRequestLine::getDescription).setHeader("Description").setAutoWidth(true);
                 lineGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
                 lineGrid.setAllRowsVisible(true);
+        }
+
+        private void configureScheduleGrid() {
+                scheduleGrid.removeAllColumns();
+
+                scheduleGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
+                                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Scheduled Item").setAutoWidth(true);
+
+                scheduleGrid.addColumn(line -> {
+                        RepeatedPeriod p = workingSchedulesMap.get(line);
+                        if (p == null) return "No Schedule Active";
+                        return "Every " + p.getFrequencyPeriod() + " " + (p.getFrequencyType() != null ? p.getFrequencyType().name() : "");
+                }).setHeader("Recurrence Interval").setAutoWidth(true);
+
+                scheduleGrid.addColumn(line -> {
+                        RepeatedPeriod p = workingSchedulesMap.get(line);
+                        return (p != null && p.getFromDate() != null) ? p.getFromDate().toString() : "-";
+                }).setHeader("Start Date").setWidth("140px");
+
+                scheduleGrid.addColumn(line -> {
+                        RepeatedPeriod p = workingSchedulesMap.get(line);
+                        return (p != null && p.getToDate() != null) ? p.getToDate().toString() : "Indefinite";
+                }).setHeader("End Date").setWidth("140px");
+
+                scheduleGrid.addComponentColumn(line -> {
+                        Button modifyScheduleBtn = new Button("Modify Schedule", e -> {
+                                RepeatedPeriod currentPeriod = workingSchedulesMap.get(line);
+                                AutoRfqScheduleDialog dialog = new AutoRfqScheduleDialog(updatedPeriod -> {
+                                        workingSchedulesMap.put(line, updatedPeriod);
+                                        scheduleGrid.getDataProvider().refreshAll();
+                                        Notification.show("Sourcing loop intervals updated successfully.");
+                                });
+                                dialog.open();
+                        });
+                        modifyScheduleBtn.addThemeName("small primary");
+                        modifyScheduleBtn.setEnabled(canUserModifyData);
+
+                        Button clearScheduleBtn = new Button("Remove Loop", e -> {
+                                workingSchedulesMap.remove(line);
+                                scheduleGrid.getDataProvider().refreshAll();
+                                recurringScheduleSection.setVisible(!workingSchedulesMap.isEmpty());
+                                Notification.show("Recurrence loop removed from this specific item row.");
+                        });
+                        clearScheduleBtn.addThemeName("small error");
+                        clearScheduleBtn.setEnabled(canUserModifyData);
+
+                        return new HorizontalLayout(modifyScheduleBtn, clearScheduleBtn);
+                }).setHeader("Scheduling Maintenance Actions").setWidth("320px");
+
+                scheduleGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+                scheduleGrid.setAllRowsVisible(true);
         }
 
         private void configureDocumentGrid() {
@@ -322,8 +390,37 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
 
         private void loadLinesData() {
                 workingLinesList.clear();
-                workingLinesList.addAll(lineService.getPurchaseRequestLineByHeader(header));
+                workingSchedulesMap.clear();
+                
+                List<PurchaseRequestLine> dbLines = lineService.getPurchaseRequestLineByHeader(header);
+                workingLinesList.addAll(dbLines);
                 lineGrid.setItems(workingLinesList);
+
+                List<PurchaseRequestLine> repeatableLines = new ArrayList<>();
+                for (PurchaseRequestLine line : dbLines) {
+                        // FORCED INITIALIZATION DEFAULT FALLBACK BOUNDARIES:
+                        // If approved qty is untouched, default it completely to requested limits safely
+                        if (line.getApprovedQuantity() == null) {
+                                line.setApprovedQuantity(line.getRequestedQuantity());
+                        }
+
+                        if (line.getRepeatableId() != null) {
+                                Optional<RepeatedPeriod> periodOpt = repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId());
+                                if (periodOpt.isPresent()) {
+                                        workingSchedulesMap.put(line, periodOpt.get());
+                                        repeatableLines.add(line);
+                                }
+                        }
+                }
+
+                if (!repeatableLines.isEmpty()) {
+                        scheduleGrid.setItems(repeatableLines);
+                        recurringScheduleSection.setVisible(true);
+                } else {
+                        recurringScheduleSection.setVisible(false);
+                }
+
+                // Hydrate live totals right away on view rendering initialization
                 recalculateTotalApprovalEvaluationAmount();
         }
 
@@ -336,15 +433,18 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                 double liveRequestedTotal = 0.0;
 
                 for (PurchaseRequestLine line : workingLinesList) {
-                        // Get unit price straight from the ItemVariant entity model mapping
                         double price = (line.getItemVariant() != null && line.getItemVariant().getEstimatedUnitPrice() != null) 
                                         ? line.getItemVariant().getEstimatedUnitPrice() : 0.0;
                         
                         double requestedQty = line.getRequestedQuantity() != null ? line.getRequestedQuantity() : 0.0;
-                        double approvedQty = line.getApprovedQuantity() != null ? line.getApprovedQuantity() : 0.0;
+                        
+                        // Default fallback mapping inside calculation steps loops
+                        if (line.getApprovedQuantity() == null) {
+                                line.setApprovedQuantity(requestedQty);
+                        }
+                        double approvedQty = line.getApprovedQuantity();
 
                         line.setItemUnitPrice(price);
-                        
                         line.setItemTotalAmount(price * approvedQty);
                    
                         liveAdjustedTotal += line.getItemTotalAmount();
@@ -356,7 +456,6 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                 requestedTotalAmount.setText("Total Amount Requested (Original Snapshot): " + liveRequestedTotal);
                 approvedTotalAmount.setText("Total Amount Evaluated (Live Approved Quantities): " + liveAdjustedTotal);
                 
-                // Live visual warning indicator badge if total breaches remaining budget boundaries
                 if (remainingBudget < liveAdjustedTotal) {
                         approvedTotalAmount.getStyle().set("color", "#d32f2f").set("font-weight", "bold");
                 } else {
@@ -376,10 +475,12 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                         return;
                 }
 
+                // Re-verify exact live computed totals dynamically right before execution mapping saves
+                recalculateTotalApprovalEvaluationAmount();
                 double finalAmount = getFinalCalculatedTotal();
 
                 if (remainingBudget < finalAmount) {
-                        Notification.show("Compliance Block: Adjusted total amount exceeds available Department Budget parameters.", 4000, Position.TOP_CENTER);
+                        Notification.show("Compliance Block: Total evaluated amount of " + finalAmount + " exceeds available Department Budget balance of " + remainingBudget + "!", 5000, Position.TOP_CENTER);
                         return;
                 }
 
@@ -394,6 +495,18 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
                                 } else {
                                         approvedLine.setStatus(Status.APPROVED);
                                 }
+
+                                if (workingSchedulesMap.containsKey(approvedLine)) {
+                                        RepeatedPeriod activeSchedule = workingSchedulesMap.get(approvedLine);
+                                        activeSchedule.setReferType(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE);
+                                        activeSchedule.setReferId(approvedLine.getId());
+                                        
+                                        RepeatedPeriod savedPeriod = repeatedPeriodService.addRepeatedPeriod(activeSchedule, actingEmployeeGroupMember);
+                                        approvedLine.setRepeatableId(savedPeriod.getId());
+                                } else {
+                                        approvedLine.setRepeatableId(null); 
+                                }
+
                                 lineService.updatePurchaseRequestLine(approvedLine);
                         }
 

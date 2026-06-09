@@ -86,16 +86,15 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 setSpacing(false);
 
                 configureGrids();
-                configureRepeatedPeriodsGrid(); // Build out the distinct layout parameters
+                configureRepeatedPeriodsGrid(); 
 
                 VerticalLayout headerSection = buildHeaderSection();
                 headerSection.setWidthFull();
 
-                // Structural wrapping container for the standalone scheduling view grid panel
                 repeatedPeriodsSection.add(new H3("Associated Active Recurring Task Schedules"), repeatedPeriodsGrid);
                 repeatedPeriodsSection.setPadding(false);
                 repeatedPeriodsSection.setSpacing(true);
-                repeatedPeriodsSection.setVisible(false); // Managed conditionally based on dataset discovery rules
+                repeatedPeriodsSection.setVisible(false); 
 
                 VerticalLayout content = new VerticalLayout(
                                 new H2("Purchase Request Details"),
@@ -103,7 +102,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                 actionLayout,
                                 new H3("Line Items"),
                                 lineGrid,
-                                repeatedPeriodsSection, // Injected neatly underneath lines dashboard panel
+                                repeatedPeriodsSection, 
                                 new H3("Approval Flow"),
                                 approvalGrid,
                                 new H3("Documents"),
@@ -215,7 +214,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 }
         }
 
-      private void configureGrids() {
+        private void configureGrids() {
                 lineGrid.removeAllColumns();
                 
                 lineGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
@@ -230,7 +229,12 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                 ? line.getItemVariant().getItem().getUnit().getCode() : "")
                                 .setHeader("Unit").setWidth("100px");
 
-                lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Quantity").setWidth("120px");
+                // FIXED: Explicit split layout mapping of Order Quantity and Approved Quantity columns
+                lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Requested Qty").setWidth("120px");
+                
+                lineGrid.addColumn(line -> line.getApprovedQuantity() != null ? line.getApprovedQuantity() : "-")
+                                .setHeader("Approved Qty").setWidth("130px");
+
                 lineGrid.addColumn(PurchaseRequestLine::getDescription).setHeader("Description").setAutoWidth(true);
 
                 lineGrid.setWidthFull();
@@ -254,13 +258,12 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 approvalGrid.setAllRowsVisible(true);
                 approvalGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
-                // ================= REFACTORED DOCUMENT GRID WITH ACTION BUTTONS =================
+                // Document Grid Configuration
                 documentGrid.removeAllColumns();
                 documentGrid.addColumn(PurchaseRequestDocument::getFileName).setHeader("File Name").setAutoWidth(true);
                 documentGrid.addColumn(PurchaseRequestDocument::getFileType).setHeader("Type").setWidth("150px");
                 documentGrid.addColumn(doc -> doc.getFileSize() != null ? (doc.getFileSize() / 1024) + " KB" : "0 KB").setHeader("Size").setWidth("120px");
 
-                // Adding an explicit action column is much safer and more responsive than double-click listeners in Vaadin
                 documentGrid.addComponentColumn(document -> {
                         Button viewButton = new Button("View / Download");
                         viewButton.addThemeName("small primary");
@@ -273,7 +276,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
                                         resource.setContentType(document.getFileType());
                                         
-                                        // Dynamic session resource registration
                                         var registration = ui.getSession().getResourceRegistry().registerResource(resource);
                                         String url = registration.getResourceUri().toString();
 
@@ -295,7 +297,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                                 image.getStyle().set("max-width", "100%").set("max-height", "70vh").set("object-fit", "contain");
                                                 dialogContent.add(closeButton, image);
                                         } else if ("application/pdf".equals(fileType)) {
-                                                // Clean embed using standardized object container elements
                                                 com.vaadin.flow.component.Html pdfViewer = new com.vaadin.flow.component.Html(
                                                                 "<object data='" + url + "' type='application/pdf' width='100%' height='100%' style='min-height:70vh;'></object>");
                                                 dialogContent.add(closeButton, pdfViewer);
@@ -323,7 +324,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 documentGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         }
 
-        
         private void configureRepeatedPeriodsGrid() {
                 repeatedPeriodsGrid.removeAllColumns();
 
@@ -368,7 +368,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 List<PurchaseRequestLine> prLines = purchaseRequestLineService.getPurchaseRequestLineByHeader(header);
                 lineGrid.setItems(prLines);
 
-                // FIXED: Filter out lines that have a valid repeatableId assignment to load the separate grid
                 List<PurchaseRequestLine> repeatableLines = new ArrayList<>();
                 for (PurchaseRequestLine line : prLines) {
                         if (line.getRepeatableId() != null) {
@@ -376,7 +375,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                         }
                 }
 
-                // If repeatable tasks exist, populate and display the distinct grid layout segment
                 if (!repeatableLines.isEmpty()) {
                         repeatedPeriodsGrid.setItems(repeatableLines);
                         repeatedPeriodsSection.setVisible(true);

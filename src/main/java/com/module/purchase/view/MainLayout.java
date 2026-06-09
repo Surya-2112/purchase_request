@@ -15,6 +15,7 @@ import com.module.purchase.view.item.ItemView;
 import com.module.purchase.view.itemvariant.ItemVariantView;
 import com.module.purchase.view.purchaseOrder.PurchaseOrderView;
 import com.module.purchase.view.purchaseRequest.PurchaseRequestView;
+import com.module.purchase.view.repeatedPeriod.RepeatedPeriodView;
 import com.module.purchase.view.role.RoleView;
 import com.module.purchase.view.unit.UnitView;
 import com.module.purchase.view.user.UsersView;
@@ -185,6 +186,13 @@ public class MainLayout extends AppLayout {
                                 "department-budget",
                                 "Department Budget",
                                 DepartmentBudgetView.class,
+                                securityService);
+                
+                addMenuIfAllowed(
+                                menuLinks,
+                                "repeated-periods",
+                                "Repeated Period",
+                                RepeatedPeriodView.class,
                                 securityService);
 
                 addMenuIfAllowed(

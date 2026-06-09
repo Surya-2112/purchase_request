@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +19,7 @@ import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.repository.RepeatedPeriodRepository;
+import com.module.purchase.specification.RepeatedPeriodSpecification;
 
 @Service
 @Transactional
@@ -71,6 +75,22 @@ public class RepeatedPeriodService {
         }
 
         return period;
+    }
+
+    public Page<RepeatedPeriod> getAllRepeatedPeriodsPaged(RepeatedPeriod filter, Pageable pageable) {
+        
+        if (filter == null) {
+            filter = new RepeatedPeriod();
+        }
+
+        Specification<RepeatedPeriod> spec = Specification
+                .where(RepeatedPeriodSpecification.hasId(filter.getId()))
+                .and(RepeatedPeriodSpecification.hasReferType(filter.getReferType()))
+                .and(RepeatedPeriodSpecification.hasReferId(filter.getReferId()))
+                .and(RepeatedPeriodSpecification.hasFrequencyType(filter.getFrequencyType()))
+                .and(RepeatedPeriodSpecification.hasNextDate(filter.getNextDate()));
+
+        return repeatedPeriodRepository.findAll(spec, pageable);
     }
 
     // UPDATE WITH AUDIT LOGGING
