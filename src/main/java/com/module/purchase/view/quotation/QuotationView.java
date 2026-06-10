@@ -1,11 +1,12 @@
 package com.module.purchase.view.quotation;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.Employee;
-import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.Vendor;
+import com.module.purchase.entity.Users;
+import com.module.purchase.entity.RequestForQuotation;
+import com.module.purchase.entityDTO.QuotationDTO;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.QuotationService;
 import com.module.purchase.view.MainLayout;
@@ -15,10 +16,9 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
@@ -30,11 +30,37 @@ public class QuotationView extends VerticalLayout {
     private final QuotationService quotationService;
     private final SecurityService securityService;
 
-    private final Grid<Quotation> quotationGrid = new Grid<>(Quotation.class, false);
-    private final ComboBox<Status> statusFilter = new ComboBox<>("Filter by Status");
-    
+    // ================= GRIDS =================
+    private final Grid<QuotationDTO> quotationGrid = new Grid<>(QuotationDTO.class, false);
+
+    // ================= PAGINATION =================
+    private int currentPage = 0;
+    private int pageSize = 25;
+    private int totalPages = 1;
+    private final Span pageInfo = new Span();
+
+    // ================= VIEW MODE =================
+    private String viewMode = "ALL"; 
+
+    // ================= SECURITY CONTEXT =================
     private boolean isVendorUser = false;
     private Vendor loggedInVendor;
+
+    // ================= FILTER DTOs =================
+    private QuotationDTO qFilter = new QuotationDTO();
+
+    // ================= FILTERS SPECIFICATIONS =================
+    private final TextField quoteIdField = new TextField("Quote ID");
+    private final TextField rfqIdField = new TextField("Source RFQ ID");
+    private final TextField supplierField = new TextField("Supplier Name");
+    private final ComboBox<Status> statusField = new ComboBox<>("Status");
+
+    // ================= FILTER LAYOUTS =================
+    private HorizontalLayout filterBar;
+    private final HorizontalLayout tabsContainer = new HorizontalLayout();
+    private final Button allBtn = new Button("All Quotations");
+    private final Button draftBtn = new Button("My Draft Bids"); 
+    private final HorizontalLayout paginationLayout = new HorizontalLayout();
 
     public QuotationView(QuotationService quotationService, SecurityService securityService) {
         this.quotationService = quotationService;
@@ -46,68 +72,116 @@ public class QuotationView extends VerticalLayout {
 
         evaluateUserRoleContext();
         buildUI();
-        loadFilteredQuotationsData();
+        determineDefaultViewModeAndTabVisibility();
+        loadData();
     }
 
-    /**
-     * CONTEXT EVALUATOR: Identifies if session belongs to internal employee or external supplier
-     */
     private void evaluateUserRoleContext() {
-        // Safe structural fallback validation parsing check
-        if (securityService.getLoggedInUser().getVendor() != null) {
+        Users user = securityService.getLoggedInUser();
+        if (user.getVendor() != null) {
             this.isVendorUser = true;
-            this.loggedInVendor = securityService.getLoggedInUser().getVendor();
+            this.loggedInVendor = user.getVendor();
         }
     }
 
     private void buildUI() {
-        H2 title = new H2(isVendorUser ? "My Submitted Quotations" : "Supplier Quotations Ledger");
-        Span subtitle = new Span(isVendorUser 
-            ? "Track and manage your submitted pricing proposals and bid drafts."
-            : "Review, evaluate, and process price quotes submitted by verified contractors.");
-        subtitle.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        H2 title = new H2("Supplier Quotations Matrix");
 
-        // 1. Setup Search Filters Toolbars Layout Panel
-        statusFilter.setItems(Status.values());
-        statusFilter.setClearButtonVisible(true);
-        statusFilter.setPlaceholder("All Statuses");
-        statusFilter.addValueChangeListener(e -> loadFilteredQuotationsData());
+        Button addButton = new Button("New Quotation Submission");
+        addButton.addClickListener(event -> getUI().ifPresent(ui -> ui.navigate("quotation-form")));
+        addButton.setVisible(isVendorUser); 
 
-        Button refreshBtn = new Button("Refresh", VaadinIcon.REFRESH.create(), e -> loadFilteredQuotationsData());
-        
-        HorizontalLayout filterBar = new HorizontalLayout(statusFilter, refreshBtn);
+        HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
+        headerLayout.setWidthFull();
+        headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
+        headerLayout.setAlignItems(Alignment.CENTER);
+
+        // Tab click actions
+        allBtn.addClickListener(event -> {
+            viewMode = "ALL";
+            currentPage = 0;
+            loadData();
+        });
+
+        draftBtn.addClickListener(event -> {
+            viewMode = "DRAFTS";
+            currentPage = 0;
+            loadData();
+        });
+
+        tabsContainer.add(allBtn, draftBtn);
+        tabsContainer.setSpacing(true);
+
+        // Configure Input Filters
+        statusField.setItems(Status.values());
+
+        Button searchBtn = new Button("Search", e -> applyFilter());
+        Button clearBtn = new Button("Clear", e -> clearFilter());
+
+        filterBar = new HorizontalLayout(quoteIdField, rfqIdField);
+        if (!isVendorUser) {
+            filterBar.add(supplierField);
+        }
+        filterBar.add(statusField, searchBtn, clearBtn);
         filterBar.setAlignItems(Alignment.END);
 
-        // 2. Configure Columns Mapping Architecture Grid
-        quotationGrid.addColumn(Quotation::getId).setHeader("Quote ID").setWidth("100px").setFlexGrow(0);
+        // Configure Columns Grid
+        quotationGrid.addColumn(QuotationDTO::getId).setHeader("Quote ID").setWidth("100px").setFlexGrow(0);
+        
         quotationGrid.addColumn(q -> q.getRequestForQuotation() != null ? "RFQ-" + q.getRequestForQuotation().getId() : "-")
                 .setHeader("Source RFQ ID").setAutoWidth(true);
         
-        // Conditional Column Display: Employees need to see Supplier names, Vendors already know who they are!
         if (!isVendorUser) {
             quotationGrid.addColumn(q -> q.getVendor() != null ? q.getVendor().getVendorName() : "-")
                     .setHeader("Supplier Name").setAutoWidth(true);
         }
+
+        mapStatusBadgeColumn();
 
         quotationGrid.addColumn(q -> q.getQuotationDate() != null ? q.getQuotationDate().toString() : "-")
                 .setHeader("Submission Date").setAutoWidth(true);
         
         quotationGrid.addColumn(q -> String.format("%.2f INR", q.getTotalAmount())).setHeader("Gross Total Cost Offer").setAutoWidth(true);
 
-        // Inject dynamic color status badges mapping rules matrix
-        mapStatusBadgeColumn();
-
+        quotationGrid.setWidthFull();
+        quotationGrid.setHeightFull();
         quotationGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        quotationGrid.setSizeFull();
-
-        // 3. Drill-down details view routing loop interactions mappings
+        
         quotationGrid.addItemDoubleClickListener(event -> {
-            Quotation selectedQuote = event.getItem();
-            // Navigates down to item sheet summaries layout (Shared or dedicated detail targets)
-            getUI().ifPresent(ui -> ui.navigate("quotation-details/" + selectedQuote.getId()));
+            QuotationDTO q = event.getItem();
+            getUI().ifPresent(ui -> ui.navigate("quotation-details/" + q.getId()));
         });
 
-        add(title, subtitle, filterBar, quotationGrid);
+        // Pagination Configuration
+        Button prev = new Button("Prev", event -> {
+            if (currentPage > 0) {
+                currentPage--;
+                loadData();
+            }
+        });
+
+        Button next = new Button("Next", event -> {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadData();
+            }
+        });
+
+        ComboBox<Integer> pageSizeField = new ComboBox<>();
+        pageSizeField.setItems(10, 25, 50, 100);
+        pageSizeField.setValue(25);
+        pageSizeField.addValueChangeListener(event -> {
+            pageSize = event.getValue();
+            currentPage = 0;
+            loadData();
+        });
+
+        paginationLayout.add(prev, pageInfo, next, new Span("Page Size"), pageSizeField);
+        paginationLayout.setWidthFull();
+        paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        paginationLayout.setAlignItems(Alignment.CENTER);
+
+        add(headerLayout, tabsContainer, filterBar, quotationGrid, paginationLayout);
         expand(quotationGrid);
     }
 
@@ -123,44 +197,80 @@ public class QuotationView extends VerticalLayout {
             if (q.getStatus() == Status.DRAFT) {
                 badge.getStyle().set("background-color", "#f1f5f9").set("color", "#475569");
             } else if (q.getStatus() == Status.APPROVED) {
-                badge.getStyle().set("background-color", "#dcfce7").set("color", "#15803d"); // Green for active submissions bids
+                badge.getStyle().set("background-color", "#dcfce7").set("color", "#15803d");
             } else if (q.getStatus() == Status.REJECTED) {
                 badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
             } else {
-                badge.getStyle().set("background-color", "#fef9c3").set("color", "#a16207"); // Pending/Under Review states
+                badge.getStyle().set("background-color", "#fef9c3").set("color", "#a16207");
             }
             return badge;
         }).setHeader("Status").setWidth("130px").setFlexGrow(0);
     }
 
-    /**
-     * CORE LOADING LOGIC SYSTEM: Implements strict multi-tenant filtering profiles
-     */
-    private void loadFilteredQuotationsData() {
-        List<Quotation> loadedDataset;
-
+    private void determineDefaultViewModeAndTabVisibility() {
         if (isVendorUser) {
-            // VENDOR RULES: Strict isolation. Can only fetch records tied directly to their profile id block
-            List<Quotation> vendorAllQuotes = quotationService.getQuotationsByVendor(loggedInVendor);
-            
-            if (!statusFilter.isEmpty()) {
-                loadedDataset = vendorAllQuotes.stream()
-                        .filter(q -> q.getStatus() == statusFilter.getValue())
-                        .toList();
-            } else {
-                loadedDataset = vendorAllQuotes;
-            }
+            allBtn.setText("All Submissions");
+            draftBtn.setVisible(true);
+            tabsContainer.setVisible(true);
         } else {
-            // EMPLOYEE RULES: Global access visibility across all records for procurement analysis
-            if (!statusFilter.isEmpty()) {
-                loadedDataset = quotationService.getAllQuotations().stream()
-                        .filter(q -> q.getStatus() == statusFilter.getValue())
-                        .toList();
-            } else {
-                loadedDataset = quotationService.getAllQuotations();
+            // Employees have no tab segment separations needed right now
+            tabsContainer.setVisible(false); 
+        }
+        viewMode = "ALL";
+    }
+
+    private void loadData() {
+        if (isVendorUser) {
+            qFilter.setVendor(loggedInVendor);
+            if ("DRAFTS".equals(viewMode)) {
+                qFilter.setStatus(Status.DRAFT);
             }
         }
 
-        quotationGrid.setItems(loadedDataset);
+        Page<QuotationDTO> page = quotationService.getAllQuotations(qFilter, currentPage, pageSize);
+
+        quotationGrid.setItems(page.getContent());
+        this.totalPages = page.getTotalPages() > 0 ? page.getTotalPages() : 1;
+        pageInfo.setText("Page " + (currentPage + 1) + " of " + totalPages);
+    }
+
+    private void applyFilter() {
+        qFilter = new QuotationDTO();
+        
+        if (!quoteIdField.isEmpty()) {
+            qFilter.setId(Long.valueOf(quoteIdField.getValue().trim()));
+        }
+        if (!rfqIdField.isEmpty()) {
+            RequestForQuotation rfq = new RequestForQuotation();
+            rfq.setId(Long.valueOf(rfqIdField.getValue().trim()));
+            qFilter.setRequestForQuotation(rfq);
+        }
+        if (!isVendorUser && !supplierField.isEmpty()) {
+            Vendor searchVendor = new Vendor();
+            searchVendor.setVendorName(supplierField.getValue().trim());
+            qFilter.setVendor(searchVendor);
+        }
+        
+        if (isVendorUser && "DRAFTS".equals(viewMode)) {
+            qFilter.setStatus(Status.DRAFT);
+        } else {
+            qFilter.setStatus(statusField.getValue());
+        }
+
+        currentPage = 0;
+        loadData();
+    }
+
+    private void clearFilter() {
+        quoteIdField.clear();
+        rfqIdField.clear();
+        statusField.clear();
+        if (!isVendorUser) {
+            supplierField.clear();
+        }
+
+        qFilter = new QuotationDTO();
+        currentPage = 0;
+        loadData();
     }
 }

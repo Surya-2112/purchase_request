@@ -33,7 +33,7 @@ public class QuotationLine {
     @Column(name = "unit_price", nullable = false)
     private Double unitPrice;
 
-    @OneToMany(mappedBy = "quotationLine")
+    @OneToMany(mappedBy = "quotationLine",fetch = FetchType.EAGER)
     private Set<DiscountType> discountTypes;
 
     public Long getId() {

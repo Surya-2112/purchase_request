@@ -2,7 +2,10 @@ package com.module.purchase.view.quotation;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.DiscountType;
@@ -52,7 +55,7 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
     private RequestForQuotation targetRfq;
     private Vendor selectedVendorContext;
     private boolean isVendorUser = false;
-    private QuotationLineWrapper activeSelectedLine; // Track row clicks for discount mapping
+    private QuotationLine activeSelectedLine; 
 
     // Master Header Form Layout Mappings
     private final TextField rfqIdField = new TextField("Target RFQ Reference");
@@ -61,13 +64,16 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
     private final NumberField totalAmountField = new NumberField("Calculated Gross Total Amount");
 
     // Live Master Bidding Worksheet Grid Layout
-    private final Grid<QuotationLineWrapper> biddingGrid = new Grid<>();
-    private final List<QuotationLineWrapper> biddingDataset = new ArrayList<>();
+    private final Grid<QuotationLine> biddingGrid = new Grid<>();
+    private final List<QuotationLine> biddingDataset = new ArrayList<>();
+    
+    // Auxiliary tracking container to safely preserve requested volumes for calculations
+    private final List<Double> requestedQuantitiesTracker = new ArrayList<>();
 
     // Live Detail Slab Discount Pricing Matrix Layout components
     private final VerticalLayout discountSubPanel = new VerticalLayout();
     private final Span discountPanelHeader = new Span("Select an item above to map tiered volume break discounts.");
-    private final Grid<DiscountWrapper> discountMatrixGrid = new Grid<>();
+    private final Grid<DiscountType> discountMatrixGrid = new Grid<>();
     private final Button addSlabRowBtn = new Button("Add Discount Slab Tier Row");
 
     // Action Row Buttons
@@ -133,20 +139,27 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         summaryFormLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 4));
 
         // 1. CONFIGURE WORKSHEET BASE PRICING GRID
-        biddingGrid.addColumn(w -> w.getRfqLine().getItemVariant() != null && w.getRfqLine().getItemVariant().getItem() != null
-                ? w.getRfqLine().getItemVariant().getItem().getItemName() : "").setHeader("Item Name").setAutoWidth(true);
-        biddingGrid.addColumn(w -> w.getRfqLine().getItemVariant() != null ? w.getRfqLine().getItemVariant().getSpecification() : "")
+        biddingGrid.addColumn(ql -> ql.getItemVariant() != null && ql.getItemVariant().getItem() != null
+                ? ql.getItemVariant().getItem().getItemName() : "").setHeader("Item Name").setAutoWidth(true);
+        
+        biddingGrid.addColumn(ql -> ql.getItemVariant() != null ? ql.getItemVariant().getSpecification() : "")
                 .setHeader("Specification Requirement").setAutoWidth(true);
-        biddingGrid.addColumn(w -> w.getRfqLine().getRequestedQuantity()).setHeader("Quantity Needed").setWidth("140px");
+        
+        // FIXED: Retrieve row sequence quantities using list indices safely
+        biddingGrid.addColumn(ql -> {
+            int index = biddingDataset.indexOf(ql);
+            return (index >= 0 && index < requestedQuantitiesTracker.size()) ? requestedQuantitiesTracker.get(index) : 0;
+        }).setHeader("Quantity Needed").setWidth("140px");
 
-        biddingGrid.addComponentColumn(w -> {
+        biddingGrid.addComponentColumn(ql -> {
             NumberField unitPriceInput = new NumberField();
-            unitPriceInput.setValue(w.getUnitPrice());
+            Double currentPrice = ql.getUnitPrice();
+            unitPriceInput.setValue(currentPrice != null ? currentPrice : 0.0);
             unitPriceInput.setMin(0.01);
             unitPriceInput.setPlaceholder("Enter Base Price...");
             unitPriceInput.setWidth("160px");
             unitPriceInput.addValueChangeListener(change -> {
-                w.setUnitPrice(change.getValue() != null ? change.getValue() : 0.0);
+                ql.setUnitPrice(change.getValue() != null ? change.getValue() : 0.0);
                 recalculateGrossTotalAmount(); 
             });
             return unitPriceInput;
@@ -156,7 +169,6 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         biddingGrid.setWidthFull();
         biddingGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
-        // INTERACTIVE ROW SELECTION CHAIN: Populates sub-slabs matrix grid instantly on row selection click
         biddingGrid.addSelectionListener(selection -> {
             if (selection.getFirstSelectedItem().isPresent()) {
                 populateDiscountSubPanel(selection.getFirstSelectedItem().get());
@@ -170,7 +182,8 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         
         discountMatrixGrid.addComponentColumn(d -> {
             NumberField fromQtyInput = new NumberField();
-            fromQtyInput.setValue(d.getFromQuantity());
+            Double fromQty = d.getFromQuantity();
+            fromQtyInput.setValue(fromQty != null ? fromQty : 0.0);
             fromQtyInput.setMin(0.0);
             fromQtyInput.setPlaceholder("Min Qty...");
             fromQtyInput.addValueChangeListener(c -> d.setFromQuantity(c.getValue() != null ? c.getValue() : 0.0));
@@ -179,7 +192,8 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
 
         discountMatrixGrid.addComponentColumn(d -> {
             NumberField toQtyInput = new NumberField();
-            toQtyInput.setValue(d.getToQuantity());
+            Double toQty = d.getToQuantity();
+            toQtyInput.setValue(toQty != null ? toQty : 0.0);
             toQtyInput.setMin(0.1);
             toQtyInput.setPlaceholder("Max Qty...");
             toQtyInput.addValueChangeListener(c -> d.setToQuantity(c.getValue() != null ? c.getValue() : 0.0));
@@ -188,7 +202,8 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
 
         discountMatrixGrid.addComponentColumn(d -> {
             NumberField pctInput = new NumberField();
-            pctInput.setValue(d.getDiscountPercentage());
+            Double pct = d.getDiscountPercentage();
+            pctInput.setValue(pct != null ? pct : 0.0);
             pctInput.setMin(0.0);
             pctInput.setMax(100.0);
             pctInput.setSuffixComponent(new Span("%"));
@@ -200,8 +215,8 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
             Button rowTrashBtn = new Button(VaadinIcon.TRASH.create());
             rowTrashBtn.addThemeName("error small tertiary");
             rowTrashBtn.addClickListener(click -> {
-                if (activeSelectedLine != null) {
-                    activeSelectedLine.getDiscountSlabs().remove(d);
+                if (activeSelectedLine != null && activeSelectedLine.getDiscountTypes() != null) {
+                    activeSelectedLine.getDiscountTypes().remove(d);
                     discountMatrixGrid.getDataProvider().refreshAll();
                 }
             });
@@ -219,7 +234,7 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         discountSubPanel.setWidthFull();
         discountSubPanel.setPadding(false);
         discountSubPanel.add(discountPanelHeader, discountMatrixGrid, addSlabRowBtn);
-        discountSubPanel.setVisible(false); // Hide until main row mapping gets targeted active indicators
+        discountSubPanel.setVisible(false);
 
         // 3. ACTION COMMITS
         saveDraftBtn.addThemeName("secondary contrast");
@@ -227,7 +242,7 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
 
         submitBidBtn.addThemeName("primary success");
         submitBidBtn.setIcon(VaadinIcon.PAPERPLANE.create());
-        submitBidBtn.addClickListener(e -> processTransactionCommit(Status.APPROVED));
+        submitBidBtn.addClickListener(e -> processTransactionCommit(Status.WAITING_APPROVAL));
 
         cancelBtn.addThemeName("tertiary error");
         cancelBtn.addClickListener(e -> backToDashboard());
@@ -245,11 +260,16 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         add(viewScroller);
     }
 
-    private void populateDiscountSubPanel(QuotationLineWrapper wrapper) {
-        this.activeSelectedLine = wrapper;
+    private void populateDiscountSubPanel(QuotationLine line) {
+        this.activeSelectedLine = line;
+        // FIXED: Initializing with HashSet to accommodate your entity signature property structure
+        if (line.getDiscountTypes() == null) {
+            line.setDiscountTypes(new HashSet<>());
+        }
+        
         discountPanelHeader.setText("Configuring tiered discount matrix parameters matching row variant: " + 
-                (wrapper.getRfqLine().getItemVariant() != null ? wrapper.getRfqLine().getItemVariant().getItem().getItemName() : ""));
-        discountMatrixGrid.setItems(wrapper.getDiscountSlabs());
+                (line.getItemVariant() != null ? line.getItemVariant().getItem().getItemName() : ""));
+        discountMatrixGrid.setItems(line.getDiscountTypes());
         discountSubPanel.setVisible(true);
     }
 
@@ -260,7 +280,12 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
 
     private void addBlankDiscountSlabRowEntry() {
         if (activeSelectedLine != null) {
-            activeSelectedLine.getDiscountSlabs().add(new DiscountWrapper());
+            if (activeSelectedLine.getDiscountTypes() == null) {
+                activeSelectedLine.setDiscountTypes(new HashSet<>());
+            }
+            DiscountType emptySlab = new DiscountType();
+            emptySlab.setQuotationLine(activeSelectedLine); 
+            activeSelectedLine.getDiscountTypes().add(emptySlab);
             discountMatrixGrid.getDataProvider().refreshAll();
         }
     }
@@ -285,9 +310,19 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                 }
 
                 biddingDataset.clear();
+                requestedQuantitiesTracker.clear();
+                
                 List<RequestForQuotationLine> requiredLines = rfqService.getLinesByRfqId(rfq.getId());
                 for (RequestForQuotationLine rfqLine : requiredLines) {
-                    biddingDataset.add(new QuotationLineWrapper(rfqLine));
+                    QuotationLine line = new QuotationLine();
+                    line.setItemVariant(rfqLine.getItemVariant());
+                    line.setUnitPrice(0.0);
+                    line.setDiscountTypes(new HashSet<>()); // FIXED
+                    
+                    biddingDataset.add(line);
+                    // Tracking quantities out-of-band to decouple from entity schemas safely
+                    Double reqQty = rfqLine.getRequestedQuantity();
+                    requestedQuantitiesTracker.add(reqQty != null ? reqQty : 0);
                 }
                 biddingGrid.setItems(biddingDataset);
                 clearDiscountSubPanel();
@@ -318,9 +353,11 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
 
     private void recalculateGrossTotalAmount() {
         double currentRunningSum = 0.0;
-        for (QuotationLineWrapper lineWrapper : biddingDataset) {
-            double qty = lineWrapper.getRfqLine().getRequestedQuantity();
-            currentRunningSum += (qty * lineWrapper.getUnitPrice());
+        for (int i = 0; i < biddingDataset.size(); i++) {
+            QuotationLine line = biddingDataset.get(i);
+            double qty = (i < requestedQuantitiesTracker.size()) ? requestedQuantitiesTracker.get(i) : 0.0;
+            Double unitPrice = line.getUnitPrice();
+            currentRunningSum += (qty * (unitPrice != null ? unitPrice : 0.0));
         }
         totalAmountField.setValue(currentRunningSum);
     }
@@ -337,16 +374,20 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         }
 
         // Validate basic pricing bounds
-        for (QuotationLineWrapper w : biddingDataset) {
-            if (w.getUnitPrice() <= 0) {
+        for (QuotationLine ql : biddingDataset) {
+            Double price = ql.getUnitPrice();
+            if (price == null || price <= 0) {
                 Notification.show("Validation Fault: Every requested item variant line requires a valid, positive base price.", 4000, Position.MIDDLE);
                 return;
             }
-            // Validate attached discount slab tiers logic bounds parameters
-            for (DiscountWrapper d : w.getDiscountSlabs()) {
-                if (d.getFromQuantity() >= d.getToQuantity()) {
-                    Notification.show("Validation Fault: Volume slab start boundary must sit strictly below end limits.", 4000, Position.MIDDLE);
-                    return;
+            if (ql.getDiscountTypes() != null) {
+                for (DiscountType d : ql.getDiscountTypes()) {
+                    Double fromQty = d.getFromQuantity();
+                    Double toQty = d.getToQuantity();
+                    if (fromQty != null && toQty != null && fromQty >= toQty) {
+                        Notification.show("Validation Fault: Volume slab start boundary must sit strictly below end limits.", 4000, Position.MIDDLE);
+                        return;
+                    }
                 }
             }
         }
@@ -363,23 +404,15 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
             masterProposal = quotationService.saveQuotation(masterProposal);
 
             // 2. Persist downstream child proposal item details lines
-            for (QuotationLineWrapper lineWrapper : biddingDataset) {
-                QuotationLine detailRow = new QuotationLine();
-                detailRow.setQuotation(masterProposal);
-                detailRow.setItemVariant(lineWrapper.getRfqLine().getItemVariant());
-                detailRow.setUnitPrice(lineWrapper.getUnitPrice());
-
-                detailRow = quotationService.saveQuotationLine(detailRow);
-
-                // 3. Persist nested cascading multi-tier volume break slab discounts mappings logs
-                for (DiscountWrapper slab : lineWrapper.getDiscountSlabs()) {
-                    DiscountType slabRow = new DiscountType();
-                    slabRow.setQuotationLine(detailRow);
-                    slabRow.setFromQuantity(slab.getFromQuantity());
-                    slabRow.setToQuantity(slab.getToQuantity());
-                    slabRow.setDiscountPercentage(slab.getDiscountPercentage());
-
-                    quotationService.saveDiscountType(slabRow);
+            for (QuotationLine line : biddingDataset) {
+                line.setQuotation(masterProposal);
+                QuotationLine savedLine = quotationService.saveQuotationLine(line);
+                
+                if (line.getDiscountTypes() != null) {
+                    for (DiscountType slab : line.getDiscountTypes()) {
+                        slab.setQuotationLine(savedLine);
+                        quotationService.saveDiscountType(slab);
+                    }
                 }
             }
 
@@ -397,36 +430,5 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         } else {
             getUI().ifPresent(ui -> ui.navigate("request-for-quotation"));
         }
-    }
-
-    // =========================================================================
-    // WRAPPER WRAPPERS DTO ENTITIES LOGIC FOR TRANSIENT VALUE CAPTURE TRACKING
-    // =========================================================================
-    public static class QuotationLineWrapper {
-        private final RequestForQuotationLine rfqLine;
-        private double unitPrice = 0.0;
-        private final List<DiscountWrapper> discountSlabs = new ArrayList<>();
-
-        public QuotationLineWrapper(RequestForQuotationLine rfqLine) {
-            this.rfqLine = rfqLine;
-        }
-
-        public RequestForQuotationLine getRfqLine() { return rfqLine; }
-        public double getUnitPrice() { return unitPrice; }
-        public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
-        public List<DiscountWrapper> getDiscountSlabs() { return discountSlabs; }
-    }
-
-    public static class DiscountWrapper {
-        private double fromQuantity = 0.0;
-        private double toQuantity = 0.0;
-        private double discountPercentage = 0.0;
-
-        public double getFromQuantity() { return fromQuantity; }
-        public void setFromQuantity(double fromQuantity) { this.fromQuantity = fromQuantity; }
-        public double getToQuantity() { return toQuantity; }
-        public void setToQuantity(double toQuantity) { this.toQuantity = toQuantity; }
-        public double getDiscountPercentage() { return discountPercentage; }
-        public void setDiscountPercentage(double discountPercentage) { this.discountPercentage = discountPercentage; }
     }
 }

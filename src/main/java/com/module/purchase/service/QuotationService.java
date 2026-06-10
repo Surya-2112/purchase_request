@@ -4,6 +4,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,27 +17,31 @@ import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.Vendor;
+import com.module.purchase.entityDTO.QuotationDTO;
 import com.module.purchase.enums.Status;
+import com.module.purchase.mapper.QuotationMapper;
 import com.module.purchase.repository.DiscountTypeRepository;
 import com.module.purchase.repository.QuotationLineRepository;
 import com.module.purchase.repository.QuotationRepository;
+import com.module.purchase.specification.QuotationSpecification;
 
 @Service
 @Transactional(readOnly = true)
 public class QuotationService {
 
-    private final QuotationRepository quotationRepository;
-    private final QuotationLineRepository quotationLineRepository;
-    private final DiscountTypeRepository discountTypeRepository;
+    @Autowired
+    private  QuotationRepository quotationRepository;
 
-    public QuotationService(QuotationRepository quotationRepository,
-                            QuotationLineRepository quotationLineRepository,
-                            
-                            DiscountTypeRepository discountTypeRepository) {
-        this.quotationRepository = quotationRepository;
-        this.quotationLineRepository = quotationLineRepository;
-        this.discountTypeRepository = discountTypeRepository;
-    }
+    @Autowired
+    private  QuotationLineRepository quotationLineRepository;
+
+    @Autowired
+    private  DiscountTypeRepository discountTypeRepository;
+
+    @Autowired
+    private  QuotationMapper quotationMapper;
+
+
     public Optional<Quotation> getQuotationById(Long id) {
         return quotationRepository.findById(id);
     }
@@ -41,8 +50,7 @@ public class QuotationService {
         return quotationRepository.findAll();
     }
 
-    public Integer getCountByRFQ(RequestForQuotation rfq)
-    {
+    public Integer getCountByRFQ(RequestForQuotation rfq) {
         return getQuotationsByRfq(rfq).size();
     }
 
@@ -58,9 +66,6 @@ public class QuotationService {
         return !quotationRepository.findByRfqAndVendor(rfqId, vendorId).isEmpty();
     }
 
-    /**
-     * Commits a completely new Quotation Document to the database system along with timestamp markers.
-     */
     @Transactional
     public Quotation saveQuotation(Quotation quotation) {
         if (quotation.getQuotationDate() == null) {
@@ -69,10 +74,6 @@ public class QuotationService {
         return quotationRepository.save(quotation);
     }
 
-    /**
-     * Completely removes a draft quotation along with its cascade children components 
-     * to prevent orphaned foreign keys.
-     */
     @Transactional
     public void deleteQuotation(Long id) {
         quotationRepository.findById(id).ifPresent(quotation -> {
@@ -126,9 +127,25 @@ public class QuotationService {
     }
 
     public boolean isDuplicateSubmission(Long rfqId, Long vendorId) {
-    if (rfqId == null || vendorId == null) {
-        return false;
+        if (rfqId == null || vendorId == null) {
+            return false;
+        }
+        return !quotationRepository.findByRfqAndVendor(rfqId, vendorId).isEmpty();
     }
-    return !quotationRepository.findByRfqAndVendor(rfqId, vendorId).isEmpty();
-}
+
+    public Page<QuotationDTO> getAllQuotations(QuotationDTO quotationDTO, int page, int size) {
+
+        Specification<Quotation> spec = Specification
+                .where(QuotationSpecification.hasQuotationId(quotationDTO.getId()))
+                .and(QuotationSpecification.hasRequestForQuotationId(
+                        quotationDTO.getRequestForQuotation() != null ? quotationDTO.getRequestForQuotation().getId() : null))
+                .and(QuotationSpecification.hasVendor(quotationDTO.getVendor()))
+                .and(QuotationSpecification.hasStatus(quotationDTO.getStatus()));
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Quotation> quotationPage = quotationRepository.findAll(spec, pageable);
+
+        // Using your mapper to transform the entities into DTOs cleanly
+        return quotationPage.map(quotationMapper::toQuotationDTO);
+    }
 }

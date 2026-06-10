@@ -15,6 +15,7 @@ import com.module.purchase.view.item.ItemView;
 import com.module.purchase.view.itemvariant.ItemVariantView;
 import com.module.purchase.view.purchaseOrder.PurchaseOrderView;
 import com.module.purchase.view.purchaseRequest.PurchaseRequestView;
+import com.module.purchase.view.quotation.QuotationComparisonView;
 import com.module.purchase.view.quotation.QuotationView;
 import com.module.purchase.view.repeatedPeriod.RepeatedPeriodView;
 import com.module.purchase.view.requestForQuotation.RequestForQuotationView;
@@ -159,6 +160,12 @@ public class MainLayout extends AppLayout {
                                 "quotations",
                                 "Quotation",
                                 QuotationView.class,
+                                securityService);
+                addMenuIfAllowed(
+                                menuLinks,
+                                "quotation-comparison",
+                                "Quotation Comparison",
+                                QuotationComparisonView.class,
                                 securityService);
 
                 addMenuIfAllowed(
