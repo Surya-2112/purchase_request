@@ -7,11 +7,14 @@ import java.util.List;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseRequestLine;
+import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.entity.Vendor;
 import com.module.purchase.enums.RequestForQuotationStatus;
+import com.module.purchase.enums.Status; 
 import com.module.purchase.service.PurchaseRequestLineService;
+import com.module.purchase.service.QuotationService; 
 import com.module.purchase.service.RequestForQuotationService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -43,6 +46,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
 
     private final RequestForQuotationService rfqService;
     private final PurchaseRequestLineService prLineService;
+    private final QuotationService quotationService; 
     private final SecurityService securityService;
 
     private RequestForQuotation currentRfq;
@@ -65,15 +69,18 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
     // Action Row Buttons
     private final Button backBtn = new Button("Back to Dashboard");
     private final Button editBtn = new Button("Edit Draft Layout");
+    private final Button closeRfqBtn = new Button("Close RFQ"); // ADDED: Manual operational timeline lock-in
     private final Button cancelRfqBtn = new Button("Cancel RFQ"); 
-    private final Button addQuotationBtn = new Button("Add Quotation Bid"); // ADDED: For Employee Administrative Overrides
-    private final Button createQuotationBtn = new Button("Submit Quotation Bid"); // For Vendor Portal View
+    private final Button addQuotationBtn = new Button("Add Quotation Bid"); 
+    private final Button createQuotationBtn = new Button("Submit Quotation Bid"); 
 
     public RequestForQuotationDetailsView(RequestForQuotationService rfqService, 
                                          PurchaseRequestLineService prLineService,
+                                         QuotationService quotationService,
                                          SecurityService securityService) {
         this.rfqService = rfqService;
         this.prLineService = prLineService;
+        this.quotationService = quotationService;
         this.securityService = securityService;
 
         setSizeFull();
@@ -107,7 +114,6 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         FormLayout headerLayout = new FormLayout(rfqIdField, requestedDateField, requestEndDateField);
         headerLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 3));
 
-        // Employee Date Adjustment Controls
         updateDateBtn.addThemeName("primary small");
         updateDateBtn.setIcon(VaadinIcon.CHECK.create());
         updateDateBtn.setVisible(false); 
@@ -123,44 +129,43 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         // Setup Demanded Line Items Grid Columns
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
                 ? line.getItemVariant().getItem().getItemName() : "").setHeader("Sourced Material Item").setAutoWidth(true);
-        
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                 .setHeader("Specification Detail").setAutoWidth(true);
-        
         detailsLinesGrid.addColumn(RequestForQuotationLine::getRequestedQuantity).setHeader("Quantity Demanded").setWidth("160px");
 
         detailsLinesGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         detailsLinesGrid.setAllRowsVisible(true);
         detailsLinesGrid.setWidthFull();
 
-        // Configure Navigation and Workspace Footers
         backBtn.setIcon(VaadinIcon.ARROW_LEFT.create());
         backBtn.addClickListener(e -> backToDashboard());
 
-        // Employee: Modify Drafts action button parameters
         editBtn.addThemeName("primary warning");
         editBtn.setIcon(VaadinIcon.EDIT.create());
         editBtn.setVisible(false); 
 
-        // Employee: Cancel Open RFQ action button parameters
+        // Employee: Close RFQ Button Parameters configuration
+        closeRfqBtn.addThemeName("primary success");
+        closeRfqBtn.setIcon(VaadinIcon.LOCK.create());
+        closeRfqBtn.setVisible(false);
+        closeRfqBtn.addClickListener(e -> executeCloseRfqRoutine());
+
         cancelRfqBtn.addThemeName("error primary");
         cancelRfqBtn.setIcon(VaadinIcon.CLOSE.create());
         cancelRfqBtn.setVisible(false);
         cancelRfqBtn.addClickListener(e -> executeCancelRfqRoutine());
 
-        // Employee: Add Quotation Bid manual override action button parameters
         addQuotationBtn.addThemeName("primary success");
         addQuotationBtn.setIcon(VaadinIcon.PLUS.create());
         addQuotationBtn.setVisible(false);
         addQuotationBtn.addClickListener(e -> navigateToQuotationForm());
 
-        // Vendor: Create Quotation Bid action button parameters
         createQuotationBtn.addThemeName("primary success");
         createQuotationBtn.setIcon(VaadinIcon.PENCIL.create());
         createQuotationBtn.setVisible(false);
         createQuotationBtn.addClickListener(e -> navigateToQuotationForm());
 
-        HorizontalLayout actionsLayout = new HorizontalLayout(backBtn, editBtn, cancelRfqBtn, addQuotationBtn, createQuotationBtn);
+        HorizontalLayout actionsLayout = new HorizontalLayout(backBtn, editBtn, closeRfqBtn, cancelRfqBtn, addQuotationBtn, createQuotationBtn);
         actionsLayout.setSpacing(true);
 
         scrollContent.add(pageTitle, headerLayout, dateAdjustmentRow, statusSection, new Hr(), 
@@ -191,9 +196,9 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
             linesDataset.addAll(rfqService.getLinesByRfqId(rfq.getId()));
             detailsLinesGrid.setItems(linesDataset);
 
-            // DYNAMIC ROLE SEGREGATION MATRIX
             if (isVendorUser) {
                 editBtn.setVisible(false);
+                closeRfqBtn.setVisible(false);
                 cancelRfqBtn.setVisible(false);
                 addQuotationBtn.setVisible(false);
                 updateDateBtn.setVisible(false);
@@ -207,6 +212,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
                     case DRAFT -> {
                         editBtn.setVisible(true);
                         editBtn.addClickListener(click -> getUI().ifPresent(ui -> ui.navigate("rfq-form/" + rfq.getId())));
+                        closeRfqBtn.setVisible(false);
                         cancelRfqBtn.setVisible(false);
                         addQuotationBtn.setVisible(false);
                         requestEndDateField.setReadOnly(true);
@@ -214,13 +220,15 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
                     }
                     case OPEN -> {
                         editBtn.setVisible(false);
+                        closeRfqBtn.setVisible(true);   // Expose Close operation safely when live
                         cancelRfqBtn.setVisible(true); 
-                        addQuotationBtn.setVisible(true); // Expose manual override selection layout tools to buyers
+                        addQuotationBtn.setVisible(true); 
                         requestEndDateField.setReadOnly(false); 
                         updateDateBtn.setVisible(true);
                     }
-                    default -> { 
+                    default -> { // Handles CLOSED, CANCELLED
                         editBtn.setVisible(false);
+                        closeRfqBtn.setVisible(false);
                         cancelRfqBtn.setVisible(false);
                         addQuotationBtn.setVisible(false);
                         requestEndDateField.setReadOnly(true);
@@ -258,6 +266,30 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         }
     }
 
+    /**
+     * CLOSING ROUTINE: Immediately terminates active vendor bidding timelines by snapping
+     * the end date parameter to today and upgrading document state variables to CLOSED.
+     */
+    private void executeCloseRfqRoutine() {
+        if (this.currentRfq == null || this.currentRfq.getId() == null) return;
+
+        try {
+            Employee actor = securityService.getLoggedInUser().getEmployee();
+
+            // Freeze the bidding deadline parameter structurally to today's timestamp execution baseline
+            currentRfq.setRequestEndDate(LocalDate.now());
+            currentRfq.setStatus(RequestForQuotationStatus.CLOSED);
+            
+            rfqService.updateRequestForQuotation(currentRfq, actor);
+
+            Notification.show("RFQ Timeline frozen. Document has been securely marked as CLOSED.", 4000, Position.TOP_CENTER);
+            backToDashboard();
+
+        } catch (Exception ex) {
+            Notification.show("Closing pipeline routine hit an issue: " + ex.getMessage(), 5000, Position.MIDDLE);
+        }
+    }
+    
     private void executeCancelRfqRoutine() {
         if (this.currentRfq == null || this.currentRfq.getId() == null) return;
 
@@ -268,6 +300,14 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
             for (PurchaseRequestLine prLine : connectedPrLines) {
                 prLine.setRequestForQuotation(null);
                 prLineService.updatePurchaseRequestLine(prLine);
+            }
+
+            List<Quotation> associatedQuotations = quotationService.getQuotationsByRfq(currentRfq);
+            for (Quotation quotation : associatedQuotations) {
+                if (quotation.getStatus() != Status.REJECTED) {
+                    quotation.setStatus(Status.CANCELLED); 
+                    quotationService.updateQuotation(quotation); 
+                }
             }
 
             currentRfq.setStatus(RequestForQuotationStatus.CANCELLED);

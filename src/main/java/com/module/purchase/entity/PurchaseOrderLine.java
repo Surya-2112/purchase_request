@@ -38,7 +38,7 @@ public class PurchaseOrderLine {
     @NotNull
     @Column(nullable = false)
     @Positive
-    private Integer quantity;
+    private Double quantity;
 
      @Column(name = "total_amount", nullable = false)
     @Positive
@@ -84,11 +84,11 @@ public class PurchaseOrderLine {
         this.unitPrice = unitPrice;
     }
 
-    public Integer getQuantity() {
+    public Double getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(Double quantity) {
         this.quantity = quantity;
     }
 

@@ -1,32 +1,29 @@
 package com.module.purchase.view.quotation;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import com.module.purchase.entity.DiscountType;
 import com.module.purchase.entity.Quotation;
-import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.entity.RequestForQuotation;
-import com.module.purchase.entity.RequestForQuotationLine;
-import com.module.purchase.entityDTO.QuotationDTO;
+import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.QuotationService;
 import com.module.purchase.service.RequestForQuotationService;
 import com.module.purchase.view.MainLayout;
-import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Hr;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
@@ -38,11 +35,22 @@ public class QuotationComparisonView extends VerticalLayout {
     private final RequestForQuotationService rfqService;
     private final QuotationService quotationService;
 
-    private final ComboBox<RequestForQuotation> rfqSelector = new ComboBox<>("Select RFQ to Compare Bids");
-    private final HorizontalLayout summaryCardsLayout = new HorizontalLayout();
-    private final Grid<ComparisonRow> comparisonGrid = new Grid<>();
-    
-    private List<Quotation> activeQuotationsForRfq = new ArrayList<>();
+    // Filter Fields for Unassigned Matrix Tab
+    private final TextField filterUnassignedRfqId = new TextField();
+    private final DatePicker filterUnassignedDate = new DatePicker();
+    private final TextField filterUnassignedQuoteCount = new TextField();
+
+    // Filter Fields for Assigned Matrix Tab
+    private final TextField filterAssignedRfqId = new TextField();
+    private final DatePicker filterAssignedDate = new DatePicker();
+    private final TextField filterAssignedQuoteCount = new TextField();
+
+    // Structural Display Grids
+    private final Grid<RequestForQuotation> unassignedGrid = new Grid<>(RequestForQuotation.class, false);
+    private final Grid<RequestForQuotation> assignedGrid = new Grid<>(RequestForQuotation.class, false);
+
+    private final List<RequestForQuotation> masterUnassignedList = new ArrayList<>();
+    private final List<RequestForQuotation> masterAssignedList = new ArrayList<>();
 
     public QuotationComparisonView(RequestForQuotationService rfqService, QuotationService quotationService) {
         this.rfqService = rfqService;
@@ -52,214 +60,172 @@ public class QuotationComparisonView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
-        setupHeaderSelector();
-        setupComparisonGridBaseStructure();
+        H2 viewTitle = new H2("Quotations Evaluation & Comparison Center");
 
-        add(
-            new H2("Quotations Evaluation & Comparison Matrix"),
-            rfqSelector,
-            new H3("Gross Bid Summaries Overview"),
-            summaryCardsLayout,
-            new Hr(),
-            new H3("Detailed Item-by-Item Price Matrix Breakdown"),
-            comparisonGrid
-        );
-        expand(comparisonGrid);
-    }
+        // Initialize and assemble the structural view frameworks
+        configureGridsBaseLayouts();
+        buildLiveFilteringBars();
 
-    private void setupHeaderSelector() {
-        rfqSelector.setItems(rfqService.getAllRequestsForQuotation()); 
-        // FIXED: Removed undefined getDepartment() dependency reference hook
-        rfqSelector.setItemLabelGenerator(rfq -> "RFQ REFERENCE #" + rfq.getId());
-        rfqSelector.setPlaceholder("Choose an RFQ tracking thread...");
-        rfqSelector.setWidth("350px");
-        rfqSelector.addValueChangeListener(e -> {
-            if (e.getValue() != null) {
-                executeComparisonMatrixPipeline(e.getValue());
-            } else {
-                clearComparisonMatrixView();
-            }
+        // Setup Tabbed Navigation Workspace
+        Tab unassignedTab = new Tab("Pending Evaluation (Unassigned Closed RFQs)");
+        Tab assignedTab = new Tab("Finalized Records (Assigned RFQs)");
+        Tabs navigationTabs = new Tabs(unassignedTab, assignedTab);
+        navigationTabs.setWidthFull();
+
+        VerticalLayout unassignedTabContent = new VerticalLayout(
+                createFilterHeaderRow(filterUnassignedRfqId, filterUnassignedDate, filterUnassignedQuoteCount),
+                unassignedGrid);
+        unassignedTabContent.setSizeFull();
+        unassignedTabContent.setPadding(false);
+
+        VerticalLayout assignedTabContent = new VerticalLayout(
+                createFilterHeaderRow(filterAssignedRfqId, filterAssignedDate, filterAssignedQuoteCount), assignedGrid);
+        assignedTabContent.setSizeFull();
+        assignedTabContent.setPadding(false);
+        assignedTabContent.setVisible(false); // Hidden by default snapshot on view init
+
+        // Toggle layout modules view visibility states on Tab click transitions
+        navigationTabs.addSelectedChangeListener(event -> {
+            boolean isUnassignedActive = event.getSelectedTab().equals(unassignedTab);
+            unassignedTabContent.setVisible(isUnassignedActive);
+            assignedTabContent.setVisible(!isUnassignedActive);
         });
+
+        add(viewTitle, new Hr(), navigationTabs, unassignedTabContent, assignedTabContent);
+
+        // Seed initial data arrays rows downstream from service registries layers
+        refreshWorkspaceDatasets();
     }
 
-    private void setupComparisonGridBaseStructure() {
-        comparisonGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COLUMN_BORDERS);
-        comparisonGrid.setWidthFull();
-        
-        comparisonGrid.addColumn(ComparisonRow::getItemName).setHeader("Material / Variant Name").setAutoWidth(true).setFrozen(true);
-        comparisonGrid.addColumn(ComparisonRow::getSpecification).setHeader("Sourcing Specification").setAutoWidth(true);
-        
-        // Formatted cleanly to support fractional quantities representation maps
-        comparisonGrid.addColumn(row -> String.format("%.2f", row.getRequestedQuantity())).setHeader("Qty Needed").setWidth("120px").setFlexGrow(0);
+    private void configureGridsBaseLayouts() {
+        // 1. CONFIGURE UNASSIGNED RFQ GRID
+        setupGridColumnsTemplate(unassignedGrid);
+        unassignedGrid.addComponentColumn(rfq -> {
+            Button analyzeBtn = new Button("Compare Bids Matrix", VaadinIcon.BAR_CHART.create());
+            analyzeBtn.addThemeName("primary small");
+            // Reroutes back to the legacy column matrix analysis profile workspace layout
+            // canvas
+            analyzeBtn.addClickListener(
+                    e -> getUI().ifPresent(ui -> ui.navigate("quotation-evaluation-matrix/" + rfq.getId())));
+            return analyzeBtn;
+        }).setHeader("Evaluation Action").setAutoWidth(true);
+
+        setupGridColumnsTemplate(assignedGrid);
+        assignedGrid.addComponentColumn(rfq -> {
+            Button reviewBtn = new Button("Review RFQ Records", VaadinIcon.EYE.create());
+            reviewBtn.addThemeName("secondary small");
+            reviewBtn.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("rfq-finalized-view/" + rfq.getId())));
+            return reviewBtn;
+        }).setHeader("Review Action").setAutoWidth(true);
     }
 
-    private void executeComparisonMatrixPipeline(RequestForQuotation rfq) {
-        clearComparisonMatrixView();
+    private void setupGridColumnsTemplate(Grid<RequestForQuotation> grid) {
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COLUMN_BORDERS);
+        grid.setSizeFull();
 
-        // FIXED: Fetch quotes using your standard query parameter engine strategies
-        QuotationDTO criteria = new QuotationDTO();
-        criteria.setRequestForQuotation(rfq);
-        
-        // Fetch a large page breakdown chunk to guarantee matrix mapping hits
-        activeQuotationsForRfq = quotationService.getAllQuotations(criteria, 0, 500).getContent().stream()
-                .map(dto -> {
-                    // Reconstruct thin wrapper entities safely for rendering layers
-                    Quotation q = new Quotation();
-                    q.setId(dto.getId());
-                    q.setVendor(dto.getVendor());
-                    q.setTotalAmount(dto.getTotalAmount());
-                    q.setStatus(dto.getStatus());
-                    q.setRequestForQuotation(dto.getRequestForQuotation());
-                    q.setQuotationDate(dto.getQuotationDate());
-                    return q;
-                })
-                .filter(q -> q.getStatus() != Status.DRAFT)
-                .collect(Collectors.toList());
+        grid.addColumn(rfq -> "RFQ-" + rfq.getId()).setHeader("RFQ Reference ID").setAutoWidth(true).setSortable(true);
+        grid.addColumn(rfq -> rfq.getRequestedDate() != null ? rfq.getRequestedDate().toString() : "-")
+                .setHeader("Requested Date").setAutoWidth(true).setSortable(true);
+        grid.addColumn(rfq -> rfq.getRequestEndDate() != null ? rfq.getRequestEndDate().toString() : "-")
+                .setHeader("Closing / End Date").setAutoWidth(true);
 
-        if (activeQuotationsForRfq.isEmpty()) {
-            summaryCardsLayout.add(new Span("No final bids have been submitted yet for this RFQ reference."));
-            return;
-        }
+        // Counts total submitted quotes currently locked under this tracking thread
+        // record key indices parameter
+        grid.addColumn(rfq -> quotationService.getQuotationsByRfq(rfq).size()).setHeader("Quotations Received")
+                .setAutoWidth(true).setSortable(true);
+    }
 
-        double lowestTotal = activeQuotationsForRfq.stream()
-                .mapToDouble(q -> q.getTotalAmount() != null ? q.getTotalAmount() : 0.0)
-                .min().orElse(0.0);
+    private HorizontalLayout createFilterHeaderRow(TextField idField, DatePicker dateField, TextField countField) {
+        idField.setPlaceholder("Filter by RFQ ID...");
+        idField.setValueChangeMode(ValueChangeMode.EAGER);
+        idField.setClearButtonVisible(true);
 
-        for (Quotation quote : activeQuotationsForRfq) {
-            boolean isLowest = (quote.getTotalAmount() != null) && (quote.getTotalAmount() == lowestTotal);
-            summaryCardsLayout.add(createVendorSummaryCard(quote, isLowest));
-        }
+        dateField.setPlaceholder("Filter by Date...");
+        dateField.setClearButtonVisible(true);
 
-        List<RequestForQuotationLine> rfqLines = rfqService.getLinesByRfqId(rfq.getId());
-        List<ComparisonRow> rows = new ArrayList<>();
+        countField.setPlaceholder("Filter by Quote Count...");
+        countField.setValueChangeMode(ValueChangeMode.EAGER);
+        countField.setClearButtonVisible(true);
 
-        for (RequestForQuotationLine rfqLine : rfqLines) {
-            // FIXED: Evaluates numeric bounds safely using Double type signatures
-            Double qty = rfqLine.getRequestedQuantity();
-            ComparisonRow row = new ComparisonRow(
-                rfqLine.getItemVariant().getItem().getItemName(),
-                rfqLine.getItemVariant().getSpecification(),
-                qty != null ? qty : 0.0
-            );
+        HorizontalLayout bar = new HorizontalLayout(idField, dateField, countField);
+        bar.setWidthFull();
+        bar.setSpacing(true);
+        return bar;
+    }
 
-            // Cross-reference what price each vendor quoted for this exact variant item segment
-            for (Quotation quote : activeQuotationsForRfq) {
-                // FIXED: Pull lines safely from database using fallback entity collections parameters
-                Quotation persistentQuote = quotationService.getQuotationById(quote.getId()).orElse(null);
-                if (persistentQuote != null && persistentQuote.getQuotationLines() != null) {
-                    for (QuotationLine ql : persistentQuote.getQuotationLines()) {
-                        if (ql.getItemVariant().getId().equals(rfqLine.getItemVariant().getId())) {
-                            row.addVendorPrice(quote.getVendor().getVendorId(), ql.getUnitPrice());
-                            row.addVendorSlabs(quote.getVendor().getVendorId(), ql.getDiscountTypes());
-                        }
-                    }
-                }
+    private void buildLiveFilteringBars() {
+        // Bind real-time change events directly to local sub-list evaluations
+        filterUnassignedRfqId.addValueChangeListener(e -> executeUnassignedGridFilterPipeline());
+        filterUnassignedDate.addValueChangeListener(e -> executeUnassignedGridFilterPipeline());
+        filterUnassignedQuoteCount.addValueChangeListener(e -> executeUnassignedGridFilterPipeline());
+
+        filterAssignedRfqId.addValueChangeListener(e -> executeAssignedGridFilterPipeline());
+        filterAssignedDate.addValueChangeListener(e -> executeAssignedGridFilterPipeline());
+        filterAssignedQuoteCount.addValueChangeListener(e -> executeAssignedGridFilterPipeline());
+    }
+
+    private void refreshWorkspaceDatasets() {
+        masterUnassignedList.clear();
+        masterAssignedList.clear();
+
+        List<RequestForQuotation> closedRfqs = rfqService.getAllRequestsForQuotation().stream()
+                .filter(rfq -> rfq.getStatus() == RequestForQuotationStatus.CLOSED)
+                .toList();
+
+        for (RequestForQuotation rfq : closedRfqs) {
+            List<Quotation> associatedQuotes = quotationService.getQuotationsByRfq(rfq);
+
+            boolean hasApprovedWinner = associatedQuotes.stream()
+                    .anyMatch(quote -> quote.getStatus() == Status.APPROVED);
+
+            if (hasApprovedWinner) {
+                masterAssignedList.add(rfq);
+            } else {
+                masterUnassignedList.add(rfq);
             }
-            rows.add(row);
         }
 
-        // Dynamically append horizontal price layout matrices lanes
-        for (Quotation quote : activeQuotationsForRfq) {
-            Long vendorId = quote.getVendor().getVendorId();
-            String columnName = quote.getVendor().getVendorName();
-
-            comparisonGrid.addComponentColumn(row -> {
-                Double unitPrice = row.getPriceForVendor(vendorId);
-                Set<DiscountType> slabs = row.getSlabsForVendor(vendorId);
-                
-                VerticalLayout cellLayout = new VerticalLayout();
-                cellLayout.setPadding(false);
-                cellLayout.setSpacing(false);
-
-                if (unitPrice != null) {
-                    Span priceSpan = new Span(String.format("%.2f INR", unitPrice));
-                    priceSpan.getStyle().set("font-weight", "bold");
-                    cellLayout.add(priceSpan);
-
-                    if (slabs != null && !slabs.isEmpty()) {
-                        Span slabBadge = new Span(slabs.size() + " Tiered Slabs");
-                        slabBadge.getElement().getThemeList().add("badge success small");
-                        slabBadge.getStyle().set("font-size", "10px");
-                        cellLayout.add(slabBadge);
-                    }
-                } else {
-                    cellLayout.add(new Span("-"));
-                }
-                return cellLayout;
-            }).setHeader(columnName).setAutoWidth(true);
-        }
-
-        comparisonGrid.setItems(rows);
+        unassignedGrid.setItems(new ArrayList<>(masterUnassignedList));
+        assignedGrid.setItems(new ArrayList<>(masterAssignedList));
     }
 
-    private Div createVendorSummaryCard(Quotation quote, boolean isLowestBidder) {
-        Div card = new Div();
-        card.getStyle()
-            .set("border", "1px solid var(--lumo-contrast-20pct)")
-            .set("border-radius", "8px")
-            .set("padding", "16px")
-            .set("background-color", isLowestBidder ? "#f0fdf4" : "var(--lumo-base-color)")
-            .set("box-shadow", "var(--lumo-box-shadow-xs)")
-            .set("min-width", "220px");
+    private void executeUnassignedGridFilterPipeline() {
+        String idSearch = filterUnassignedRfqId.getValue().trim().toLowerCase();
+        LocalDate dateSearch = filterUnassignedDate.getValue();
+        String countSearch = filterUnassignedQuoteCount.getValue().trim();
 
-        VerticalLayout cardContent = new VerticalLayout();
-        cardContent.setPadding(false);
-        cardContent.setSpacing(false);
+        List<RequestForQuotation> filtered = masterUnassignedList.stream().filter(rfq -> {
+            boolean matchesId = idSearch.isEmpty() || String.valueOf(rfq.getId()).contains(idSearch)
+                    || ("rfq-" + rfq.getId()).contains(idSearch);
+            boolean matchesDate = dateSearch == null
+                    || (rfq.getRequestedDate() != null && rfq.getRequestedDate().equals(dateSearch));
 
-        Span name = new Span(quote.getVendor() != null ? quote.getVendor().getVendorName() : "Unknown Vendor");
-        name.getStyle().set("font-weight", "bold").set("font-size", "16px");
+            int quotesReceivedCount = quotationService.getQuotationsByRfq(rfq).size();
+            boolean matchesCount = countSearch.isEmpty() || String.valueOf(quotesReceivedCount).equals(countSearch);
 
-        Double totalAmt = quote.getTotalAmount();
-        Span total = new Span(String.format("%.2f INR", totalAmt != null ? totalAmt : 0.0));
-        total.getStyle().set("font-size", "20px").set("font-weight", "bold");
-        if (isLowestBidder) {
-            total.getStyle().set("color", "#15803d");
-        }
+            return matchesId && matchesDate && matchesCount;
+        }).toList();
 
-        cardContent.add(name, total);
-
-        if (isLowestBidder) {
-            Span bestBadge = new Span(VaadinIcon.TROPHY.create());
-            bestBadge.add(new Span(" Lowest Offer"));
-            bestBadge.getElement().getThemeList().add("badge success primary");
-            cardContent.add(bestBadge);
-        }
-
-        card.add(cardContent);
-        return card;
+        unassignedGrid.setItems(filtered);
     }
 
-    private void clearComparisonMatrixView() {
-        summaryCardsLayout.removeAll();
-        comparisonGrid.getColumns().stream()
-                .filter(col -> col.getHeaderText() != null && !col.getHeaderText().equals("Material / Variant Name") 
-                        && !col.getHeaderText().equals("Sourcing Specification") && !col.getHeaderText().equals("Qty Needed"))
-                .forEach(comparisonGrid::removeColumn);
-        comparisonGrid.setItems(new ArrayList<>());
-    }
+    private void executeAssignedGridFilterPipeline() {
+        String idSearch = filterAssignedRfqId.getValue().trim().toLowerCase();
+        LocalDate dateSearch = filterAssignedDate.getValue();
+        String countSearch = filterAssignedQuoteCount.getValue().trim();
 
-    // ================= CUSTOM MATRIX TRANSFORMATION POJO ROUTINE =================
-    public static class ComparisonRow {
-        private final String itemName;
-        private final String specification;
-        private final Double requestedQuantity; // FIXED: Double representation mapping matching entities
-        private final Map<Long, Double> vendorPrices = new java.util.HashMap<>();
-        private final Map<Long, Set<DiscountType>> vendorSlabs = new java.util.HashMap<>();
+        List<RequestForQuotation> filtered = masterAssignedList.stream().filter(rfq -> {
+            boolean matchesId = idSearch.isEmpty() || String.valueOf(rfq.getId()).contains(idSearch)
+                    || ("rfq-" + rfq.getId()).contains(idSearch);
+            boolean matchesDate = dateSearch == null
+                    || (rfq.getRequestedDate() != null && rfq.getRequestedDate().equals(dateSearch));
 
-        public ComparisonRow(String itemName, String specification, Double requestedQuantity) {
-            this.itemName = itemName;
-            this.specification = specification;
-            this.requestedQuantity = requestedQuantity;
-        }
+            int quotesReceivedCount = quotationService.getQuotationsByRfq(rfq).size();
+            boolean matchesCount = countSearch.isEmpty() || String.valueOf(quotesReceivedCount).equals(countSearch);
 
-        public String getItemName() { return itemName; }
-        public String getSpecification() { return specification; }
-        public Double getRequestedQuantity() { return requestedQuantity; }
+            return matchesId && matchesDate && matchesCount;
+        }).toList();
 
-        public void addVendorPrice(Long vendorId, Double price) { vendorPrices.put(vendorId, price); }
-        public Double getPriceForVendor(Long vendorId) { return vendorPrices.get(vendorId); }
-
-        public void addVendorSlabs(Long vendorId, Set<DiscountType> slabs) { vendorSlabs.put(vendorId, slabs); }
-        public Set<DiscountType> getSlabsForVendor(Long vendorId) { return vendorSlabs.get(vendorId); }
+        assignedGrid.setItems(filtered);
     }
 }

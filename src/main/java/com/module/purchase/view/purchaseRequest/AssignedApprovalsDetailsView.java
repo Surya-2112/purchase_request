@@ -49,9 +49,9 @@ import com.vaadin.flow.server.StreamResource;
 
 import jakarta.annotation.security.PermitAll;
 
-@Route(value = "assigning-approvals-details/:id", layout = MainLayout.class)
+@Route(value = "assigned-approvals-details/:id", layout = MainLayout.class)
 @PermitAll
-public class AssigningApprovalsDetailsView extends VerticalLayout implements BeforeEnterObserver {
+public class AssignedApprovalsDetailsView extends VerticalLayout implements BeforeEnterObserver {
 
         private final PurchaseRequestHeaderService headerService;
         private final PurchaseRequestLineService lineService;
@@ -98,7 +98,7 @@ public class AssigningApprovalsDetailsView extends VerticalLayout implements Bef
         private final List<PurchaseRequestLine> workingLinesList = new ArrayList<>();
         private boolean canUserModifyData = false;
 
-        public AssigningApprovalsDetailsView(
+        public AssignedApprovalsDetailsView(
                         PurchaseRequestHeaderService headerService,
                         PurchaseRequestLineService lineService,
                         AssigningApprovalsService approvalsService,

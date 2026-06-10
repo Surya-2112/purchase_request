@@ -123,6 +123,27 @@ public class MainLayout extends AppLayout {
 
                 addMenuIfAllowed(
                                 menuLinks,
+                                "category",
+                                "Category",
+                                CategoryView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
+                                "vendor",
+                                "Vendor",
+                                VendorView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
+                                "unit",
+                                "Unit",
+                                UnitView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
                                 "item",
                                 "Item",
                                 ItemView.class,
@@ -130,24 +151,18 @@ public class MainLayout extends AppLayout {
 
                 addMenuIfAllowed(
                                 menuLinks,
-                                "item Variant",
+                                "item-variant",
                                 "Item Variant",
                                 ItemVariantView.class,
                                 securityService);
 
-                 addMenuIfAllowed(
-                                menuLinks,
-                                "unit",
-                                "Unit",
-                                UnitView.class,
-                                securityService);
-                
                 addMenuIfAllowed(
                                 menuLinks,
                                 "purchase-request",
                                 "Purchase Request",
                                 PurchaseRequestView.class,
                                 securityService);
+
                 addMenuIfAllowed(
                                 menuLinks,
                                 "request-for-quotation",
@@ -161,6 +176,7 @@ public class MainLayout extends AppLayout {
                                 "Quotation",
                                 QuotationView.class,
                                 securityService);
+
                 addMenuIfAllowed(
                                 menuLinks,
                                 "quotation-comparison",
@@ -177,16 +193,15 @@ public class MainLayout extends AppLayout {
 
                 addMenuIfAllowed(
                                 menuLinks,
-                                "vendor",
-                                "Vendor",
-                                VendorView.class,
+                                "department",
+                                "Department",
+                                DepartmentView.class,
                                 securityService);
-
                 addMenuIfAllowed(
                                 menuLinks,
-                                "category",
-                                "Category",
-                                CategoryView.class,
+                                "department-budget",
+                                "Department Budget",
+                                DepartmentBudgetView.class,
                                 securityService);
 
                 addMenuIfAllowed(
@@ -195,28 +210,7 @@ public class MainLayout extends AppLayout {
                                 "Employee",
                                 EmployeeView.class,
                                 securityService);
-
-                addMenuIfAllowed(
-                                menuLinks,
-                                "department",
-                                "Department",
-                                DepartmentView.class,
-                                securityService);
-
-                addMenuIfAllowed(
-                                menuLinks,
-                                "department-budget",
-                                "Department Budget",
-                                DepartmentBudgetView.class,
-                                securityService);
-                
-                addMenuIfAllowed(
-                                menuLinks,
-                                "repeated-periods",
-                                "Repeated Period",
-                                RepeatedPeriodView.class,
-                                securityService);
-
+        
                 addMenuIfAllowed(
                                 menuLinks,
                                 "role",
@@ -236,6 +230,13 @@ public class MainLayout extends AppLayout {
                                 "assigning-config",
                                 "Assigning Config",
                                 AssigningConfigView.class,
+                                securityService);
+
+                addMenuIfAllowed(
+                                menuLinks,
+                                "repeated-periods",
+                                "Repeated Period",
+                                RepeatedPeriodView.class,
                                 securityService);
 
                 addMenuIfAllowed(

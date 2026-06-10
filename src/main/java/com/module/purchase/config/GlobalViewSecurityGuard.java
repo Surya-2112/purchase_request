@@ -44,17 +44,17 @@ public class GlobalViewSecurityGuard implements BeforeEnterListener {
 
             if(user.getVendor()!=null)
             {
-                // if(!allowedGroups.contains(EmployeeGroup.VENDOR))
-                // { event.forwardTo("");
+                if(!allowedGroups.contains(EmployeeGroup.VENDOR))
+                { event.forwardTo("");
 
-                // event.getUI().access(() -> {
+                event.getUI().access(() -> {
 
-                //     Notification.show(
-                //             "Access Denied",
-                //             3000,
-                //             Notification.Position.MIDDLE);
-                // });
-                //}
+                    Notification.show(
+                            "Access Denied",
+                            3000,
+                            Notification.Position.MIDDLE);
+                });
+                }
                 return;
             }
 

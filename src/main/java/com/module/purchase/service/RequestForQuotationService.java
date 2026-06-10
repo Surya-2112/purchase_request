@@ -68,7 +68,6 @@ public class RequestForQuotationService {
         return rfq;
     }
 
-    // GET BY ID WITH EXPLICIT NOT-FOUND CHECK PROTECTION BLOCK
     public Optional<RequestForQuotation> getRequestForQuotationById(Long id) {
         Optional<RequestForQuotation> rfq = rfqRepository.findById(id);
 
@@ -79,10 +78,11 @@ public class RequestForQuotationService {
         return rfq;
     }
 
-    // GET ALL UNFILTERED ROWS LIST
     public List<RequestForQuotation> getAllRequestsForQuotation() {
         return rfqRepository.findAll();
     }
+
+   
 
     public Page<RequestForQuotation> getRequestsForQuotationPaged(RequestForQuotation filter, Pageable pageable) {
         if (filter == null) {
@@ -99,7 +99,6 @@ public class RequestForQuotationService {
 
     // UPDATE RFQ HEADER ENTITY
     public RequestForQuotation updateRequestForQuotation(RequestForQuotation rfq, Employee employee) {
-        // Enforce boundary verification checks first
         getRequestForQuotationById(rfq.getId());
 
         rfq = saveRequestForQuotation(rfq);
@@ -155,7 +154,7 @@ public class RequestForQuotationService {
     }
 
     public List<RequestForQuotationLine> getLinesByRfqId(Long rfqId) {
-        RequestForQuotation rfq = rfqRepository.findById(rfqId)
+        RequestForQuotation rfq = getRequestForQuotationById(rfqId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cannot load lines, RFQ master not found with id: " + rfqId));
         return rfqLineRepository.findByRequestForQuotation(rfq);

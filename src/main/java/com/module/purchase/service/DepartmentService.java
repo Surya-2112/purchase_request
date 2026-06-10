@@ -58,6 +58,10 @@ public class DepartmentService {
         if (existingDepartment.isPresent()) {
             throw new ResourceAlreadyUsedException("Department with code " + department.getDepartmentCode() + " already exists.");
         }
+        Optional<Department> existingDepartmentname = departmentRepository.findByDepartmentName(department.getDepartmentName());
+        if (existingDepartmentname.isPresent()) {
+            throw new ResourceAlreadyUsedException("Department with Name " + department.getDepartmentName() + " already exists.");
+        }
         saveDepartment(department);
 
         AuditLogs log = new AuditLogs();

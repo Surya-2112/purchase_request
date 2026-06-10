@@ -10,21 +10,21 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
-import com.module.purchase.entity.Vendor;
+import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Vendor;
 import com.module.purchase.entityDTO.VendorDTO;
-import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.Action;
+import com.module.purchase.enums.EntityType;
 import com.module.purchase.mapper.VendorMapper;
 import com.module.purchase.repository.VendorRepository;
 import com.module.purchase.specification.VendorSpecification;
-
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -72,6 +72,11 @@ public class VendorService {
 
     public List<Vendor> getVendors() {
         return vendorRepository.findAll();
+    }
+
+    public List<Vendor> getVendorsByCategory(Category category)
+    {
+        return vendorRepository.findByCategoriesContaining(category);
     }
 
     public List<Vendor> getVendorsWithoutUser()

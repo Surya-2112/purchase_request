@@ -1,6 +1,6 @@
 package com.module.purchase.entityDTO;
 
-import java.time.LocalDate; // or LocalDateTime depending on your Quotation entity setup
+import java.time.LocalDate;
 
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.Vendor;

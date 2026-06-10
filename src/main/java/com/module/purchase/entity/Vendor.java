@@ -56,7 +56,7 @@ public class Vendor {
     private Users users;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "vendor_categories", // Force a standard name instead of vendor_categorys
+    @JoinTable(name = "vendor_categories", 
             joinColumns = @JoinColumn(name = "vendor_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
     private List<Category> categories;
 

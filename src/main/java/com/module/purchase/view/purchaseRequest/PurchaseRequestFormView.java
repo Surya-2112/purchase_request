@@ -1,7 +1,6 @@
 package com.module.purchase.view.purchaseRequest;
 
 import java.io.IOException;
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +16,7 @@ import com.module.purchase.entity.PurchaseRequestDocument;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
+import com.module.purchase.entity.Users;
 import com.module.purchase.enums.Status;
 import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.service.DepartmentService;
@@ -26,15 +26,18 @@ import com.module.purchase.service.PurchaseRequestDocumentService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.RepeatedPeriodService;
+import com.module.purchase.service.NeedsService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
@@ -59,6 +62,7 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
         private final ItemVariantService itemVariantService;
         private final SecurityService securityService;
         private final RepeatedPeriodService repeatedPeriodService;
+        private final NeedsService needsService;
 
         // ================= UI INPUT FIELDS =================
         private final ComboBox<Department> departmentField = new ComboBox<>("Department");
@@ -78,14 +82,12 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
         private PurchaseRequestHeader editingHeader = null;
         private PurchaseRequestLine editingLine = null;
         
-        // DUAL GRID MANAGEMENT INTERACTION DESIGN PATTERN
         private final Grid<PurchaseRequestLine> lineGrid = new Grid<>(PurchaseRequestLine.class, false);
         private final VerticalLayout recurringScheduleSection = new VerticalLayout();
         private final Grid<PurchaseRequestLine> scheduleGrid = new Grid<>(PurchaseRequestLine.class, false);
 
         private final Button saveButton = new Button("Save & Go To Approval");
 
-        // Tracking map linking row memory instances to targeted background rules
         private final Map<PurchaseRequestLine, RepeatedPeriod> pendingLineSchedulesMap = new HashMap<>();
         private RepeatedPeriod runtimeCachedSchedule = null;
 
@@ -97,7 +99,8 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                         SecurityService securityService,
                         PurchaseRequestLineService lineService,
                         PurchaseRequestDocumentService documentService,
-                        RepeatedPeriodService repeatedPeriodService
+                        RepeatedPeriodService repeatedPeriodService,
+                        NeedsService needsService
         ) {
                 this.headerService = headerService;
                 this.lineService = lineService;
@@ -105,6 +108,7 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                 this.itemVariantService = itemVariantService;
                 this.securityService = securityService;
                 this.repeatedPeriodService = repeatedPeriodService;
+                this.needsService = needsService;
 
                 setSizeFull();
                 setPadding(true);
@@ -114,6 +118,9 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                 departmentField.setItems(departmentService.getDepartments());
                 departmentField.setItemLabelGenerator(Department::getDepartmentName);
                 departmentField.setWidth("300px");
+
+                // Execute custom access gating logic for departmental selections
+                evaluateDepartmentAccessControl();
 
                 itemField.setItems(itemService.getItems());
                 itemField.setItemLabelGenerator(Item::getItemName);
@@ -155,6 +162,11 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                 configureUpload();
 
                 Button addLineButton = new Button("Add / Update Line", e -> addLine());
+                
+                // Add Unlisted Item Pop-up Button Trigger
+                Button addUnlistedItemBtn = new Button("Add Unlisted Item", e -> openUnlistedItemRequestFormModal());
+                addUnlistedItemBtn.addThemeName("primary warning small");
+
                 saveButton.addClickListener(e -> saveAndGoApproval());
 
                 HorizontalLayout lineInput = new HorizontalLayout(
@@ -183,6 +195,7 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                 headerLayout,
                                 new H3("Purchase Request Lines"),
                                 lineInput,
+                        addUnlistedItemBtn,
                                 lineGrid,
                                 recurringScheduleSection, 
                                 new H3("Upload Documents"),
@@ -196,6 +209,76 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                 Scroller scroller = new Scroller(contentLayout);
                 scroller.setSizeFull();
                 add(scroller);
+        }
+
+        private void evaluateDepartmentAccessControl() {
+                try {
+                        Users activeUser = securityService.getLoggedInUser();
+                        boolean scaleAccessAllowed = securityService.canAccessView("purchase-request-department");
+
+                        if (!scaleAccessAllowed) {
+                                departmentField.setReadOnly(true);
+                                if (activeUser != null && activeUser.getEmployee() != null && activeUser.getEmployee().getDepartment() != null) {
+                                        departmentField.setValue(activeUser.getEmployee().getDepartment());
+                                }
+                        }
+                } catch (Exception ex) {
+                        departmentField.setReadOnly(true);
+                        ex.printStackTrace();
+                }
+        }
+
+        private void openUnlistedItemRequestFormModal() {
+                Dialog requestModal = new Dialog();
+                requestModal.setHeaderTitle("Request Unlisted Material Specification");
+                requestModal.setWidth("450px");
+
+                TextField unlistedName = new TextField("Suggested Item Name");
+                TextField unlistedSpec = new TextField("Detailed Specification (Size, GSM, etc.)");
+                NumberField unlistedQty = new NumberField("Quantity Needed");
+                
+                unlistedName.setRequired(true);
+                unlistedQty.setValue(1.0);
+                unlistedQty.setMin(1.0);
+                unlistedQty.setWidthFull();
+                unlistedName.setWidthFull();
+                unlistedSpec.setWidthFull();
+
+                VerticalLayout modalFormLayout = new VerticalLayout(unlistedName, unlistedSpec, unlistedQty);
+                modalFormLayout.setPadding(false);
+                modalFormLayout.setSpacing(true);
+
+                Button commitDraftBtn = new Button("Add to Request Drafts", VaadinIcon.FILE_ADD.create());
+                commitDraftBtn.addThemeName("primary success");
+                commitDraftBtn.addClickListener(clickEvent -> {
+                        if (unlistedName.isEmpty() || unlistedQty.isEmpty() || unlistedQty.getValue() <= 0) {
+                                Notification.show("Item Name and a valid Quantity are required.", 3000, Notification.Position.MIDDLE);
+                                return;
+                        }
+
+                        String serializedNeedPayload = String.format("Name: %s | Spec: %s | Qty: %.2f", 
+                                        unlistedName.getValue().trim(), 
+                                        unlistedSpec.getValue().isEmpty() ? "No Spec Provided" : unlistedSpec.getValue().trim(),
+                                        unlistedQty.getValue());
+
+                        PurchaseRequestLine temporaryAdHocLine = new PurchaseRequestLine();
+                        temporaryAdHocLine.setStatus(Status.DRAFT);
+                        temporaryAdHocLine.setDescription( serializedNeedPayload);
+                        temporaryAdHocLine.setRequestedQuantity(unlistedQty.getValue());
+
+                        lines.add(temporaryAdHocLine);
+                        refreshGridDataProviders();
+                        
+                        requestModal.close();
+                        Notification.show("new item added in drafts.");
+                });
+
+                Button closeBtn = new Button("Discard", e -> requestModal.close());
+                closeBtn.addThemeName("tertiary error");
+
+                requestModal.getFooter().add(closeBtn, commitDraftBtn);
+                requestModal.add(modalFormLayout);
+                requestModal.open();
         }
 
         private void configureDocumentGrid() {
@@ -274,6 +357,7 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                 Notification.show("Purchase Request Not Found");
                                 return;
                         }
+                        departmentField.setReadOnly(true); 
                         loadEditData();
                 }
         }
@@ -300,36 +384,62 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
         private void configureGrid() {
                 lineGrid.removeAllColumns();
 
-                lineGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
-                                ? line.getItemVariant().getItem().getItemName() : "")
-                                .setHeader("Item").setAutoWidth(true);
+                lineGrid.addColumn(line -> {
+                                if (line.getDescription() != null && line.getDescription().contains(" [UNLISTED CATALOG ITEM]")) {
+                                        return " Custom Ad-Hoc Request";
+                                }
+                                return line.getItemVariant() != null && line.getItemVariant().getItem() != null
+                                                ? line.getItemVariant().getItem().getItemName() : "";
+                        })
+                        .setHeader("Item").setAutoWidth(true);
 
-                lineGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
-                                .setHeader("Specification").setAutoWidth(true);
+                lineGrid.addColumn(line -> {
+                                if (line.getDescription() != null && line.getDescription().contains("⚠️ [UNLISTED CATALOG ITEM]")) {
+                                        return "See Raw Parameters Log Below";
+                                }
+                                return line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "";
+                        })
+                        .setHeader("Specification").setAutoWidth(true);
 
                 lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Quantity").setWidth("120px");
 
                 lineGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
                                 && line.getItemVariant().getItem().getUnit() != null 
-                                ? line.getItemVariant().getItem().getUnit().getCode() : "")
+                                ? line.getItemVariant().getItem().getUnit().getCode() : "-")
                                 .setHeader("Unit").setWidth("100px");
 
-                lineGrid.addColumn(PurchaseRequestLine::getDescription).setHeader("Description").setAutoWidth(true);
+                lineGrid.addColumn(PurchaseRequestLine::getDescription).setHeader("Description Details / Specifications").setAutoWidth(true);
 
                 lineGrid.addComponentColumn(line -> {
-                        Button editButton = new Button("Edit");
-                        editButton.addClickListener(e -> editLine(line));
+                        HorizontalLayout rowContextActions = new HorizontalLayout();
 
-                        Button deleteButton = new Button("Delete");
-                        deleteButton.addClickListener(e -> {
-                                lines.remove(line);
-                                pendingLineSchedulesMap.remove(line);
-                                refreshGridDataProviders();
-                                Notification.show("Line deleted");
-                        });
+                        if (line.getItemVariant() == null) {
+                                 Button deleteButton = new Button("Delete");
+                                deleteButton.addThemeName("small error");
+                                deleteButton.addClickListener(e -> {
+                                        lines.remove(line);
+                                        pendingLineSchedulesMap.remove(line);
+                                        refreshGridDataProviders();
+                                        Notification.show("Line item deleted.");
+                                });
+                                        rowContextActions.add(deleteButton);
+                                } else {
+                                Button editButton = new Button("Edit");
+                                editButton.addThemeName("small primary warning");
+                                editButton.addClickListener(e -> editLine(line));
 
-                        return new HorizontalLayout(editButton, deleteButton);
-                }).setHeader("Actions").setWidth("220px");
+                                Button deleteButton = new Button("Delete");
+                                deleteButton.addThemeName("small error");
+                                deleteButton.addClickListener(e -> {
+                                        lines.remove(line);
+                                        pendingLineSchedulesMap.remove(line);
+                                        refreshGridDataProviders();
+                                        Notification.show("Line item deleted.");
+                                });
+                                rowContextActions.add(editButton, deleteButton);
+                        }
+                        return rowContextActions;
+                }).setHeader("Actions / Governance").setWidth("280px");
 
                 lineGrid.setItems(lines);
                 lineGrid.setWidthFull();
@@ -362,7 +472,6 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
 
                 scheduleGrid.addComponentColumn(line -> {
                         Button modifyScheduleBtn = new Button("Modify Schedule", e -> {
-                                RepeatedPeriod currentPeriod = pendingLineSchedulesMap.get(line);
                                 AutoRfqScheduleDialog dialog = new AutoRfqScheduleDialog(updatedPeriod -> {
                                         pendingLineSchedulesMap.put(line, updatedPeriod);
                                         refreshGridDataProviders();
@@ -523,43 +632,59 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                 this.runtimeCachedSchedule = null;
         }
 
-        // ================= CASCADING DATABASE OPERATION SAVES =================
         private void saveAndGoApproval() {
-                if (departmentField.isEmpty() || lines.isEmpty()) {
-                        Notification.show("Department and at least one Line are required");
-                        return;
-                }
+        if (departmentField.isEmpty() || lines.isEmpty()) {
+                Notification.show("Department and at least one Line are required");
+                return;
+        }
 
-                try {
-                        Employee currentUser = securityService.getLoggedInUser().getEmployee();
-                        PurchaseRequestHeader savedHeader;
-
-                        // Calculate dynamic global total in background from memory collection logs arrays
-                        double calculatedGlobalTotal = 0.0;
-                        for (PurchaseRequestLine prLine : lines) {
-                                double unitPrice = (prLine.getItemVariant() != null && prLine.getItemVariant().getEstimatedUnitPrice() != null)
-                                                ? prLine.getItemVariant().getEstimatedUnitPrice() : 0.0;
+        try {
+                Employee currentUser = securityService.getLoggedInUser().getEmployee();
+                PurchaseRequestHeader savedHeader;
+                
+                double calculatedGlobalTotal = 0.0;
+                for (PurchaseRequestLine prLine : lines) {
+                        if (prLine.getItemVariant() != null && prLine.getItemVariant().getEstimatedUnitPrice() != null) {
+                                double unitPrice = prLine.getItemVariant().getEstimatedUnitPrice();
                                 double requestedQty = prLine.getRequestedQuantity() != null ? prLine.getRequestedQuantity() : 0.0;
                                 calculatedGlobalTotal += (unitPrice * requestedQty);
                         }
+                }
 
-                        if (editingHeader != null) {
-                                editingHeader.setForDepartment(departmentField.getValue());
-                                editingHeader.setTotalAmount(calculatedGlobalTotal); // Injected quietly to ledger row
-                                savedHeader = headerService.updatePurchaseRequestHeader(editingHeader, currentUser);
-                                lineService.deleteAllLine(savedHeader);
-                        } else {
-                                PurchaseRequestHeader header = new PurchaseRequestHeader();
-                                header.setCreatedDate(new java.sql.Date(System.currentTimeMillis()));
-                                header.setForDepartment(departmentField.getValue());
-                                header.setStatus(Status.DRAFT);
-                                header.setCreatedBy(currentUser);
-                                header.setLevel(1);
-                                header.setTotalAmount(calculatedGlobalTotal); // Persisted transparently to DB schema
-                                savedHeader = headerService.addPurchaseRequestHeader(header, currentUser);
-                        }
+                if (editingHeader != null) {
+                        editingHeader.setForDepartment(departmentField.getValue());
+                        editingHeader.setTotalAmount(calculatedGlobalTotal); 
+                        savedHeader = headerService.updatePurchaseRequestHeader(editingHeader, currentUser);
+                        
+                        lineService.deleteAllLine(savedHeader);
+                        needsService.resolveAndClearCompletedNeed(com.module.purchase.enums.EntityType.ITEM, savedHeader.getPurchaseRequestId());
+                } else {
+                        PurchaseRequestHeader header = new PurchaseRequestHeader();
+                        header.setCreatedDate(new java.sql.Date(System.currentTimeMillis()));
+                        header.setForDepartment(departmentField.getValue());
+                        header.setStatus(Status.DRAFT); // Parent document saved as DRAFT context
+                        header.setCreatedBy(currentUser);
+                        header.setLevel(1);
+                        header.setTotalAmount(calculatedGlobalTotal); 
+                        savedHeader = headerService.addPurchaseRequestHeader(header, currentUser);
+                }
 
-                        for (PurchaseRequestLine memoryLine : lines) {
+                // 3. Split processing loop for the memory data array
+                for (PurchaseRequestLine memoryLine : lines) {
+                        
+                        // CASE A: The item is unlisted (No ItemVariant attached)
+                        if (memoryLine.getItemVariant() == null && memoryLine.getDescription() != null) {
+                                String cleanPayloadText = memoryLine.getDescription().replace("⚠️ [UNLISTED CATALOG ITEM] - ", "");
+                                
+                                // Store directly inside the generic Needs table, linking it to the Header ID!
+                                needsService.registerNewCatalogNeed(
+                                        cleanPayloadText, 
+                                        com.module.purchase.enums.EntityType.ITEM, 
+                                        savedHeader.getPurchaseRequestId() // Tied to Header ID directly
+                                );
+                        } 
+                        // CASE B: Standard verified catalog material SKU entry
+                        else if (memoryLine.getItemVariant() != null) {
                                 PurchaseRequestLine dbLine = new PurchaseRequestLine();
                                 dbLine.setPurchaseRequestHeader(savedHeader);
                                 dbLine.setItemVariant(memoryLine.getItemVariant());
@@ -567,34 +692,37 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                 dbLine.setDescription(memoryLine.getDescription());
                                 dbLine.setStatus(Status.DRAFT);
                                 
-                                double unitPrice = (memoryLine.getItemVariant() != null && memoryLine.getItemVariant().getEstimatedUnitPrice() != null)
+                                double unitPrice = (memoryLine.getItemVariant().getEstimatedUnitPrice() != null) 
                                                 ? memoryLine.getItemVariant().getEstimatedUnitPrice() : 0.0;
                                 dbLine.setItemUnitPrice(unitPrice);
                                 dbLine.setItemTotalAmount(unitPrice * memoryLine.getRequestedQuantity());
 
                                 dbLine = lineService.addPurchaseRequestLine(dbLine);
 
+                                // Manage recurring execution tracks if applicable
                                 if (pendingLineSchedulesMap.containsKey(memoryLine)) {
                                         RepeatedPeriod rawSchedule = pendingLineSchedulesMap.get(memoryLine);
                                         rawSchedule.setReferType(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE);
                                         rawSchedule.setReferId(dbLine.getId());     
                                         RepeatedPeriod savedSchedule = repeatedPeriodService.addRepeatedPeriod(rawSchedule, currentUser);
                                         dbLine.setRepeatableId(savedSchedule.getId());
+                                        lineService.updatePurchaseRequestLine(dbLine);
                                 }
-                                lineService.updatePurchaseRequestLine(dbLine);
                         }
-
-                        for (PurchaseRequestDocument document : documents) {
-                                document.setPurchaseRequestHeader(savedHeader);
-                                documentService.save(document);
-                        }
-
-                        Notification.show("Purchase Request and scheduling configurations saved successfully.");
-                        getUI().ifPresent(ui -> ui.navigate("purchase-request-approval/" + savedHeader.getPurchaseRequestId()));
-
-                } catch (Exception exception) {
-                        exception.printStackTrace();
-                        Notification.show("Error: " + exception.getMessage(), 5000, Notification.Position.MIDDLE);
                 }
+
+                // 4. Save attached support metadata files logs
+                for (PurchaseRequestDocument document : documents) {
+                        document.setPurchaseRequestHeader(savedHeader);
+                        documentService.save(document);
+                }
+
+                Notification.show("Purchase Request draft and custom unlisted requirements saved successfully.");
+                getUI().ifPresent(ui -> ui.navigate("purchase-request-approval/" + savedHeader.getPurchaseRequestId()));
+
+        } catch (Exception exception) {
+                exception.printStackTrace();
+                Notification.show("Error: " + exception.getMessage(), 5000, Notification.Position.MIDDLE);
         }
+}
 }

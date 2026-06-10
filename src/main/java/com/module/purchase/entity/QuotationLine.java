@@ -2,8 +2,17 @@ package com.module.purchase.entity;
 
 import java.util.Set;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -35,6 +44,10 @@ public class QuotationLine {
 
     @OneToMany(mappedBy = "quotationLine",fetch = FetchType.EAGER)
     private Set<DiscountType> discountTypes;
+
+    @ManyToOne
+    @JoinColumn(name = "request_for_quotation_line_id")
+    private RequestForQuotationLine requestForQuotationLine;
 
     public Long getId() {
         return id;
@@ -74,6 +87,14 @@ public class QuotationLine {
 
     public void setDiscountTypes(Set<DiscountType> discountTypes) {
         this.discountTypes = discountTypes;
+    }
+
+    public RequestForQuotationLine getRequestForQuotationLine() {
+        return requestForQuotationLine;
+    }
+
+    public void setRequestForQuotationLine(RequestForQuotationLine requestForQuotationLine) {
+        this.requestForQuotationLine = requestForQuotationLine;
     }
 
     

@@ -61,6 +61,8 @@ public class UsersView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
+        userIdField.setWidth("100px");
+
         // Employee
         employeeField.setItems(employeeService.getEmployees());
         employeeField.setItemLabelGenerator(Employee::getEmployeeName);
@@ -99,7 +101,7 @@ public class UsersView extends VerticalLayout {
 
         // Active
         activeField.setItems("Yes", "No");
-
+        activeField.setWidth("80px");
         // Page Size
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);

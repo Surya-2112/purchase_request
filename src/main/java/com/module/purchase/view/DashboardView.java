@@ -53,8 +53,8 @@ public class DashboardView extends VerticalLayout {
         add(    title,
                 createSummaryCards(),
                 createDepartmentWiseSpending(),
-                createRecentPurchaseRequests(),
-                createRecentPurchaseOrders()
+                createRecentPurchaseRequests()
+               // createRecentPurchaseOrders()
         );
     }
 
@@ -256,41 +256,41 @@ public class DashboardView extends VerticalLayout {
         return layout;
     }
     
-    private Component createRecentPurchaseOrders() {
+//     private Component createRecentPurchaseOrders() {
 
-        VerticalLayout layout = new VerticalLayout();
+//         VerticalLayout layout = new VerticalLayout();
 
-        H3 title = new H3("Recent Purchase Orders");
+//         H3 title = new H3("Recent Purchase Orders");
 
-        Grid<PurchaseOrderDTO> grid = new Grid<>();
+//         Grid<PurchaseOrderDTO> grid = new Grid<>();
 
-        grid.addColumn(PurchaseOrderDTO::getPurchaseOrderId)
-                .setHeader("PO No");
+//         grid.addColumn(PurchaseOrderDTO::getPurchaseOrderId)
+//                 .setHeader("PO No");
 
-        grid.addColumn(po -> (po.getVendor()!=null) ? po.getVendor().getVendorName(): "-")
-                .setHeader("Vendor");
+//         grid.addColumn(po -> (po.getVendor()!=null) ? po.getVendor().getVendorName(): "-")
+//                 .setHeader("Vendor");
 
-        grid.addColumn(po -> po.getPurchaseRequestHeader().getPurchaseRequestId())
-                .setHeader("PR No");
+//         grid.addColumn(po -> po.getPurchaseRequestHeader().getPurchaseRequestId())
+//                 .setHeader("PR No");
         
-        grid.addColumn(PurchaseOrderDTO::getStatus)
-                .setHeader("Stauts");
+//         grid.addColumn(PurchaseOrderDTO::getStatus)
+//                 .setHeader("Stauts");
 
-        grid.setItems(
-                purchaseOrderService
-                        .getRecentPurchaseOrders(
-                                PageRequest.of(0, 3)
-                        )
-        );
+//         grid.setItems(
+//                 purchaseOrderService
+//                         .getRecentPurchaseOrders(
+//                                 PageRequest.of(0, 3)
+//                         )
+//         );
 
-        grid.addItemClickListener(event -> {
+//         grid.addItemClickListener(event -> {
 
-           PurchaseOrderDTO po=event.getItem();
-               getUI().ifPresent(ui ->
-                        ui.navigate( ViewName.PURCHASE_ORDER_DETAILS.getRoute()+"/"+ po.getPurchaseOrderId()));
-        });
-        layout.add(title, grid);
-         grid.setAllRowsVisible(true);
-        return layout;
-    }
+//            PurchaseOrderDTO po=event.getItem();
+//                getUI().ifPresent(ui ->
+//                         ui.navigate( ViewName.PURCHASE_ORDER_DETAILS.getRoute()+"/"+ po.getPurchaseOrderId()));
+//         });
+//         layout.add(title, grid);
+//          grid.setAllRowsVisible(true);
+//         return layout;
+//     }
 }

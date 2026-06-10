@@ -1,10 +1,12 @@
 package com.module.purchase.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +28,7 @@ import com.module.purchase.repository.QuotationRepository;
 import com.module.purchase.specification.QuotationSpecification;
 
 @Service
-@Transactional(readOnly = true)
+@Transactional
 public class QuotationService {
 
     @Autowired
@@ -41,6 +43,9 @@ public class QuotationService {
     @Autowired
     private  QuotationMapper quotationMapper;
 
+    @Lazy
+    @Autowired
+    private PurchaseOrderHeaderService  purchaseOrderService;
 
     public Optional<Quotation> getQuotationById(Long id) {
         return quotationRepository.findById(id);
@@ -67,11 +72,26 @@ public class QuotationService {
     }
 
     @Transactional
-    public Quotation saveQuotation(Quotation quotation) {
+    public Quotation save(Quotation quotation) {
+        
+        return quotationRepository.save(quotation);
+    }
+    
+    public Quotation addQuotation(Quotation quotation)
+    {    
         if (quotation.getQuotationDate() == null) {
             quotation.setQuotationDate(LocalDate.now());
         }
-        return quotationRepository.save(quotation);
+        return  save(quotation);
+    }
+
+    public Quotation updateQuotation(Quotation quotation)
+    {
+        if(quotation.getStatus().equals(Status.APPROVED))
+        {   
+            purchaseOrderService.genratePurchaseOrder(quotation);
+        }
+        return save(quotation);
     }
 
     @Transactional
@@ -109,7 +129,12 @@ public class QuotationService {
     }
 
     public List<DiscountType> getDiscountsByLine(QuotationLine line) {
-        return discountTypeRepository.findByQuotationLine(line);
+        List<DiscountType> discounts= discountTypeRepository.findByQuotationLine(line);
+        if(discounts==null)
+        {
+            discounts=new ArrayList<DiscountType>();
+        }
+        return discounts;
     }
 
     @Transactional

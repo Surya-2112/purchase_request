@@ -196,9 +196,9 @@ public class PurchaseOrderView extends VerticalLayout {
             poGrid.setItems(
 
                     page.getContent()
-                            .stream()
-                            .filter(po -> po.getStatus()!= Status.DRAFT)
-                            .toList()
+                            // .stream()
+                            // .filter(po -> po.getStatus()!= Status.DRAFT)
+                            // .toList()
             );
 
             pageInfo.setText(

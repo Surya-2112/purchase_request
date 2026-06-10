@@ -3,13 +3,57 @@ package com.module.purchase.enums;
 public enum ViewName {
 
     DASHBOARD(""),
-    // LOGIN("login"),
-    // VIEW_PERMISSION("view-permission"),
 
     ASSIGNING_CONFIG("assigning-config"),
     ASSIGNING_CONFIG_DETAILS("assigning-config-details"),
     ASSIGNING_CONFIG_EDIT("assigning-config-edit"),
     ASSIGNING_CONFIG_FORM("assigning-config-form"),
+
+    CATEGORY("category"),
+    CATEGORY_DETAILS("category-details"),
+    CATEGORY_EDIT("category-edit"),
+    CATEGORY_FORM("category-form"),
+
+    VENDOR("vendor"),
+    VENDOR_DETAILS("vendor-details"),
+    VENDOR_EDIT("vendor-edit"),
+    VENDOR_FORM("vendor-form"),
+
+    UNIT("unit"),
+    UNIT_DETAILS("unit-details"),
+    UNIT_EDIT("unit-edit"),
+    UNIT_FORM("unit-form"),
+
+    ITEM("item"),
+    ITEM_DETAILS("item-details"),
+    ITEM_EDIT("item-edit"),
+    ITEM_FORM("item-form"),
+
+    ITEM_VARIANT("item-variant"),
+    ITEM_VARIANT_DETAILS("item-variant-details"),
+    ITEM_VARIANT_EDIT("item-variant-edit"),
+    ITEM_VARIANT_FORM("item-variant-form"),
+
+    PURCHASE_REQUEST("purchase-request"),
+    PURCHASE_REQUEST_FORM("purchase-request-form"),
+    PURCHASE_REQUEST_DETAILS("purchase-request-details"),
+    PURCHASE_REQUEST_APPROVAL("purchase-request-approval"),
+    ASSIGNED_APPROVALS_REQUEST_DETAILS("assigned-approvals-details"),
+
+    REQUEST_FOR_QUOTATION("request-for-quotation"),
+    REQUEST_FOR_QUOTATION_FORM("rfq-form"),
+    REQUEST_FOR_QUOTATION_DETAILS("request-for-quotation-details"),
+    REQUEST_FOR_QUOTATION_FINALIZED("rfq-finalized-view"),
+
+    QUOTATION_LEDGER("quotations"),
+    QUOTATION_FORM("quotation-form"),
+    QUOTATION_DETAILS("quotation-details"),
+    QUOTATION_COMPARISON_DASHBOARD("quotation-comparison"),
+    QUOTATION_EVALUATION_MATRIX("quotation-evaluation-matrix"),
+
+    PURCHASE_ORDER("purchase-order"),
+    PURCHASE_ORDER_DETAILS("purchase-order-details"),
+    ASSIGNED_APPROVALS_ORDER_DETAILS("assigned-order-approvals-details"),
 
     DEPARTMENT("department"),
     DEPARTMENT_DETAILS("department-details"),
@@ -25,20 +69,6 @@ public enum ViewName {
     EMPLOYEE_DETAILS("employee-details"),
     EMPLOYEE_EDIT("employee-edit"),
     EMPLOYEE_FORM("employee-form"),
-
-    ITEM("item"),
-    ITEM_DETAILS("item-details"),
-    ITEM_EDIT("item-edit"),
-    ITEM_FORM("item-form"),
-
-    PURCHASE_REQUEST("purchase-request"),
-    PURCHASE_REQUEST_FORM("purchase-request-form"),
-    PURCHASE_REQUEST_DETAILS("purchase-request-details"),
-    PURCHASE_REQUEST_APPROVAL("purchase-request-approval"),
-    ASSIGNING_APPROVALS_REQUEST_DETAILS("assigning-approvals-details"),
-
-    PURCHASE_ORDER("purchase-order"),
-    PURCHASE_ORDER_DETAILS("purchase-order-details"),
   
     USER("user"),
     USER_DETAILS("user-details"),
@@ -50,17 +80,13 @@ public enum ViewName {
     ROLE_EDIT("role-edit"),
     ROLE_FORM("role-form"),
 
-    VENDOR("vendor"),
-    VENDOR_DETAILS("vendor-details"),
-    VENDOR_EDIT("vendor-edit"),
-    VENDOR_FORM("vendor-form"),
-
-    CATEGORY("category"),
-    CATEGORY_DETAILS("category-details"),
-    CATEGORY_EDIT("category-edit"),
-    CATEGORY_FORM("category-form"),
+    REPEATED_PERIOD("repeated-period"),
+    REPEATED_PERIOD_DETAILS("repeated-period-details"),
+    REPEATED_PERIOD_EDIT("repeated-period-edit"),
     
-    AUDIT_LOGS("audit-logs");
+    AUDIT_LOGS("audit-logs"),
+
+    PURCHASE_REQUEST_DEPARTMENT("");
 
     private final String route;
 

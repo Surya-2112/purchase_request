@@ -1,12 +1,11 @@
 package com.module.purchase.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,12 +14,12 @@ import org.springframework.stereotype.Service;
 
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
-import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
-import com.module.purchase.entity.PurchaseRequestHeader;
-import com.module.purchase.entity.PurchaseRequestLine;
+import com.module.purchase.entity.Quotation;
+import com.module.purchase.entity.DiscountType;
+import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.entityDTO.PurchaseOrderDTO;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EntityType;
@@ -41,8 +40,9 @@ public class PurchaseOrderHeaderService {
     @Autowired
     private PurchaseOrderMapper purchaseOrderMapper;
 
+    @Lazy
     @Autowired
-    private PurchaseRequestLineService  purchaseRequestLineService;
+    private QuotationService quotationService;
 
     @Autowired 
     private DepartmentBudgetService departmentBudgetService;
@@ -104,30 +104,35 @@ public class PurchaseOrderHeaderService {
         return prpage.map(purchaseOrderMapper::toPurchaseOrderDTO);
     }
 
-    public void genratepurchaseOrder(PurchaseRequestHeader purchaseRequestHeader)
+    public void genratePurchaseOrder(Quotation quotation)
     {   
         PurchaseOrderHeader purchaseOrderHeader=new PurchaseOrderHeader();
-    //     purchaseOrderHeader.setPurchaseRequestHeader(purchaseRequestHeader);
-    //     purchaseOrderHeader.setStatus(Status.ORDER);
-    //     purchaseOrderHeader.setTotalAmount(purchaseRequestHeader.getTotalAmount());
-    //     purchaseOrderHeader.setCreatedDate(LocalDate.now());
-    //     purchaseOrderHeader.setVendor(purchaseRequestHeader.getVendor());
+        purchaseOrderHeader.setQuotation(quotation);
+        purchaseOrderHeader.setStatus(Status.DRAFT);
+        purchaseOrderHeader.setTotalAmount(quotation.getTotalAmount());
+        purchaseOrderHeader.setCreatedDate(LocalDate.now());
+        purchaseOrderHeader.setVendor(quotation.getVendor());
+        purchaseOrderHeader.setCreatedBy(null);
 
-    //     DepartmentBudget departmentBudget=departmentBudgetService.getByDepartmentAndYear(purchaseRequestHeader.getForDepartment(), Year.now());
-    //    departmentBudgetService.updateDepartmentBudget(departmentBudget,null);
-    //    departmentBudget.setRemainingBudgetAmount(departmentBudget.getRemainingBudgetAmount()-purchaseRequestHeader.getTotalAmount());// TODO :: make change .subtract(purchaseRequestHeader.getTotalAmount())
-
-    //     purchaseOrderHeader = addPurchaseOrderHeader(purchaseOrderHeader,null);
-    //     List<PurchaseRequestLine> lines= purchaseRequestLineService.getPurchaseRequestLineByHeader(purchaseRequestHeader);
-    //     for(PurchaseRequestLine line :lines)
-    //     {    PurchaseOrderLine poline=new PurchaseOrderLine();
-    //          poline.setItem(line.getItem());
-    //          poline.setPurchaseOrderHeader(purchaseOrderHeader);
-    //          poline.setQuantity(line.getQuantity());
-    //          poline.setUnitPrice(line.getUnitPrice());
-    //          poline.setTotalPrice(line.getTotalPrice());
-    //          poline.setDiscount(line.getDiscount());
-    //         purchaseOrderLineService.addPurchaseOrderLine(poline);
-    //     }
+        addPurchaseOrderHeader(purchaseOrderHeader,null);
+        List<QuotationLine> lines= quotationService.getLinesByQuotation(quotation);
+        for(QuotationLine line :lines)
+        {    PurchaseOrderLine poline=new PurchaseOrderLine();
+            poline.setItemVariant(line.getItemVariant());
+            poline.setPurchaseOrderHeader(purchaseOrderHeader);
+            poline.setUnitPrice(line.getUnitPrice());
+            poline.setQuantity(line.getRequestForQuotationLine().getRequestedQuantity());
+             Double maxDiscount=0.0;
+            for(DiscountType discounts:quotationService.getDiscountsByLine(line))
+            {
+                if(discounts.getFromQuantity()<=poline.getQuantity() && discounts.getToQuantity() >= poline.getQuantity())
+                {
+                    maxDiscount=discounts.getDiscountPercentage();
+                }
+            }
+            poline.setDiscountAmount(poline.getUnitPrice()/maxDiscount);
+            poline.setTotalAmount((poline.getUnitPrice()*poline.getQuantity())-poline.getDiscountAmount());
+            purchaseOrderLineService.addPurchaseOrderLine(poline);
+        }
     }
 }

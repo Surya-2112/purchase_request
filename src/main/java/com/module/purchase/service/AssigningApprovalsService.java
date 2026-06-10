@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +16,6 @@ import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
-import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.ApprovalType;
@@ -37,16 +35,6 @@ public class AssigningApprovalsService {
 
     @Autowired
     private AssigningApprovalsMapper assigningApprovalsMapper;
-
-    @Autowired 
-    private UsersService userService;
-
-    @Autowired
-    @Lazy
-    private PurchaseRequestHeaderService purchaseRequestHeaderService;
-
-    @Autowired
-    private PurchaseOrderHeaderService purchaseOrderHeaderService;
 
     @Autowired
     private AuditLogsService auditLogsService;
@@ -76,7 +64,6 @@ public class AssigningApprovalsService {
          return exist.get();
     }   
 
-    // REFACTORED: Now filters contextually by EmployeeGroup instead of explicitly testing Employee IDs
     public Page<AssigningApprovalsDTO> getPurchaseRequestApprovalsForMyGroup(
             AssigningApprovalsDTO assigningApprovalsDTO, 
             EmployeeGroup group, // Changed from Long userId
@@ -114,32 +101,9 @@ public class AssigningApprovalsService {
     }
 
     public AssigningApprovals updateApprovals(AssigningApprovals assigningApprovals, Employee employee) {   
-        AuditLogs log = new AuditLogs();
-        AssigningApprovals exist = getAssigningApprovalById(assigningApprovals.getAssigningApprovalsId()).get();
       
-        PurchaseRequestHeader purchaseRequestHeader = purchaseRequestHeaderService.getPurchaseRequestHeaderById(exist.getReferenceId()).get();
-        if (assigningApprovals.getStatus() == Status.APPROVED) { 
-            log.setAction(Action.APPROVE);
-            if (purchaseRequestHeader.getLevel() > assigningApprovals.getLevel()) {
-                AssigningApprovals next = getAssigningApprovalByTypeAndReferIdAndLevle(
-                                ApprovalType.PURCHASE_REQUEST,
-                                purchaseRequestHeader.getPurchaseRequestId(),
-                                assigningApprovals.getLevel() + 1);
-                next.setStatus(Status.WAITING_APPROVAL);
-                saveAssigningApproval(next);
-            } else {
-                purchaseOrderHeaderService.genratepurchaseOrder(purchaseRequestHeader);
-                purchaseRequestHeader.setStatus(Status.APPROVED);
-                purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader, null);
-            }
-        } else if (assigningApprovals.getStatus() == Status.REJECTED) {
-            log.setAction(Action.REJECT);
-            purchaseRequestHeader.setStatus(Status.REJECTED);
-            purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader, null);
-        }
-        if (assigningApprovals.getStatus() == Status.CANCELLED) {
-            log.setAction(Action.CANCEL);
-        }
+        AuditLogs log = new AuditLogs();
+        log.setAction(Action.UPDATE);
         log.setEntityType(EntityType.ASSIGNING_APPROVAL);
         log.setEntityId(assigningApprovals.getAssigningApprovalsId());
         log.setPerformedBy(employee);
