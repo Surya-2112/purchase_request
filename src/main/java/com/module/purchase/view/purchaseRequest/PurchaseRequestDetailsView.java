@@ -229,7 +229,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                 ? line.getItemVariant().getItem().getUnit().getCode() : "")
                                 .setHeader("Unit").setWidth("100px");
 
-                // FIXED: Explicit split layout mapping of Order Quantity and Approved Quantity columns
                 lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Requested Qty").setWidth("120px");
                 
                 lineGrid.addColumn(line -> line.getApprovedQuantity() != null ? line.getApprovedQuantity() : "-")

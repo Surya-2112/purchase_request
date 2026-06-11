@@ -67,16 +67,13 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
     private final Grid<QuotationLine> biddingGrid = new Grid<>();
     private final List<QuotationLine> biddingDataset = new ArrayList<>();
 
-    // Map to link temporary Discount list arrays to each QuotationLine in memory
     private final Map<QuotationLine, List<DiscountType>> lineDiscountsMap = new HashMap<>();
 
-    // Slab Components
     private final VerticalLayout discountSubPanel = new VerticalLayout();
     private final Span discountPanelHeader = new Span("Select an item above to map tiered volume break discounts.");
     private final Grid<DiscountType> discountMatrixGrid = new Grid<>();
     private final Button addSlabRowBtn = new Button("Add Discount Slab Tier Row");
 
-    // Actions
     private final Button saveDraftBtn = new Button("Save as Draft");
     private final Button submitBidBtn = new Button("Submit Final Bid");
     private final Button cancelBtn = new Button("Cancel");
@@ -179,8 +176,7 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                 clearDiscountSubPanel();
             }
         });
-
-        // 2. CONFIGURE NESTED LIVE-EDITABLE DISCOUNT MATRIX SUB-GRID
+        
         discountPanelHeader.getStyle().set("font-weight", "bold").set("color", "var(--lumo-secondary-text-color)");
 
         discountMatrixGrid.addComponentColumn(d -> {
@@ -236,13 +232,12 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         discountSubPanel.add(discountPanelHeader, discountMatrixGrid, addSlabRowBtn);
         discountSubPanel.setVisible(false);
 
-        // 3. ACTION BUTTONS
         saveDraftBtn.addThemeName("secondary contrast");
         saveDraftBtn.addClickListener(e -> processTransactionCommit(Status.DRAFT));
 
         submitBidBtn.addThemeName("primary success");
         submitBidBtn.setIcon(VaadinIcon.PAPERPLANE.create());
-        submitBidBtn.addClickListener(e -> processTransactionCommit(Status.APPROVED));
+        submitBidBtn.addClickListener(e -> processTransactionCommit(Status.WAITING_APPROVAL));
 
         cancelBtn.addThemeName("tertiary error");
         cancelBtn.addClickListener(e -> backToDashboard());
@@ -297,7 +292,6 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
 
                 List<RequestForQuotationLine> requiredLines = rfqService.getLinesByRfqId(rfq.getId());
 
-                // FIX: Look up vendor list via the single, explicit category of this RFQ
                 if (!isVendorUser && !requiredLines.isEmpty()) {
                     Category rfqCategory = requiredLines.get(0).getItemVariant().getItem().getCategory();
 
@@ -305,8 +299,6 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                 } else if (isVendorUser) {
                     checkSubmissionComplianceGuard();
                 }
-
-                // Hydrate bidding sheet using target QuotationLine objects directly
                 biddingDataset.clear();
                 lineDiscountsMap.clear();
 
@@ -314,10 +306,9 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                     QuotationLine pricingRow = new QuotationLine();
                     pricingRow.setItemVariant(rfqLine.getItemVariant());
                     pricingRow.setUnitPrice(0.0);
-
+                    pricingRow.setRequestForQuotationLine(rfqLine);
                     biddingDataset.add(pricingRow);
-                    lineDiscountsMap.put(pricingRow, new ArrayList<>()); // Maps clean nested discount collection
-                                                                         // indices
+                    lineDiscountsMap.put(pricingRow, new ArrayList<>()); 
                 }
 
                 biddingGrid.setItems(biddingDataset);
@@ -354,8 +345,6 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
             return;
         }
 
-        // Fetch the active target source requirements once to prevent repeating
-        // overhead lookups
         List<RequestForQuotationLine> rfqLines = rfqService.getLinesByRfqId(targetRfq.getId());
         double currentRunningSum = 0.0;
 
@@ -406,23 +395,18 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         }
 
         try {
-            // 1. Persist master top header row metrics snapshots
             Quotation masterProposal = new Quotation();
             masterProposal.setRequestForQuotation(targetRfq);
             masterProposal.setVendor(selectedVendorContext);
             masterProposal.setQuotationDate(LocalDate.now());
             masterProposal.setTotalAmount(totalAmountField.getValue());
             masterProposal.setStatus(targetedLifecycleState);
-
             masterProposal = quotationService.addQuotation(masterProposal);
 
-            // 2. Persist downstream child proposal item details lines
             for (QuotationLine pricingLine : biddingDataset) {
                 pricingLine.setQuotation(masterProposal);
                 QuotationLine savedLine = quotationService.saveQuotationLine(pricingLine);
 
-                // 3. Persist nested cascading multi-tier volume break slab discounts mappings
-                // logs
                 List<DiscountType> discounts = lineDiscountsMap.get(pricingLine);
                 for (DiscountType slab : discounts) {
                     slab.setQuotationLine(savedLine);

@@ -128,7 +128,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
 
         // Setup Demanded Line Items Grid Columns
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
-                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Sourced Material Item").setAutoWidth(true);
+                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Material Item").setAutoWidth(true);
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                 .setHeader("Specification Detail").setAutoWidth(true);
         detailsLinesGrid.addColumn(RequestForQuotationLine::getRequestedQuantity).setHeader("Quantity Demanded").setWidth("160px");
@@ -220,13 +220,13 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
                     }
                     case OPEN -> {
                         editBtn.setVisible(false);
-                        closeRfqBtn.setVisible(true);   // Expose Close operation safely when live
+                        closeRfqBtn.setVisible(true);   
                         cancelRfqBtn.setVisible(true); 
                         addQuotationBtn.setVisible(true); 
                         requestEndDateField.setReadOnly(false); 
                         updateDateBtn.setVisible(true);
                     }
-                    default -> { // Handles CLOSED, CANCELLED
+                    default -> { 
                         editBtn.setVisible(false);
                         closeRfqBtn.setVisible(false);
                         cancelRfqBtn.setVisible(false);

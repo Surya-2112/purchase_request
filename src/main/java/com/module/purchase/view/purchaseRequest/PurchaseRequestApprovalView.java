@@ -87,7 +87,6 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
             ComboBox<EmployeeGroup> combo = new ComboBox<>();
             combo.setItemLabelGenerator(EmployeeGroup::getDisplayName);
 
-            // FIX: Using FocusListener which is 100% universal in Vaadin to refresh options
             combo.addFocusListener(event -> {
                 Set<EmployeeGroup> allocatedGroups = approvals.stream()
                         .map(AssigningApprovals::getEmployeeGroup)

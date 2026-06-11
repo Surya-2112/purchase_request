@@ -69,6 +69,11 @@ public class PurchaseOrderHeaderService {
         return purchaseOrderHeader;
     }
 
+     public Long countByStatus(Status status)
+    {
+        return purchaseOrderHeaderRepository.countByStatus(status);
+    }
+
     public Optional<PurchaseOrderHeader> getPurchaseOrderHeaderById(Long id) {
         Optional<PurchaseOrderHeader>  existingPurchaseOrderHeader = purchaseOrderHeaderRepository.findById(id);
         if (!existingPurchaseOrderHeader.isPresent()) {
@@ -130,7 +135,12 @@ public class PurchaseOrderHeaderService {
                     maxDiscount=discounts.getDiscountPercentage();
                 }
             }
-            poline.setDiscountAmount(poline.getUnitPrice()/maxDiscount);
+            if(maxDiscount==0.0) 
+            {
+                poline.setDiscountAmount(0.0);
+            }
+            else{
+            poline.setDiscountAmount(poline.getUnitPrice()/(maxDiscount)); }
             poline.setTotalAmount((poline.getUnitPrice()*poline.getQuantity())-poline.getDiscountAmount());
             purchaseOrderLineService.addPurchaseOrderLine(poline);
         }

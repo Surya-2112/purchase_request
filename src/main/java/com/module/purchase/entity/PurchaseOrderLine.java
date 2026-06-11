@@ -7,6 +7,7 @@ import org.hibernate.annotations.ColumnDefault;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
 @Table( 
@@ -46,7 +47,7 @@ public class PurchaseOrderLine {
 
     @Column(name = "discount_amount", nullable = false)
     @ColumnDefault("0.0")
-    @Positive
+    @PositiveOrZero
     private Double discountAmount;
 
     @OneToMany(mappedBy = "purchaseOrderLine")

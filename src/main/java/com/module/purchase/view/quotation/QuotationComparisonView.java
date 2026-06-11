@@ -82,9 +82,8 @@ public class QuotationComparisonView extends VerticalLayout {
                 createFilterHeaderRow(filterAssignedRfqId, filterAssignedDate, filterAssignedQuoteCount), assignedGrid);
         assignedTabContent.setSizeFull();
         assignedTabContent.setPadding(false);
-        assignedTabContent.setVisible(false); // Hidden by default snapshot on view init
-
-        // Toggle layout modules view visibility states on Tab click transitions
+        assignedTabContent.setVisible(false); 
+        
         navigationTabs.addSelectedChangeListener(event -> {
             boolean isUnassignedActive = event.getSelectedTab().equals(unassignedTab);
             unassignedTabContent.setVisible(isUnassignedActive);
@@ -93,18 +92,16 @@ public class QuotationComparisonView extends VerticalLayout {
 
         add(viewTitle, new Hr(), navigationTabs, unassignedTabContent, assignedTabContent);
 
-        // Seed initial data arrays rows downstream from service registries layers
         refreshWorkspaceDatasets();
     }
 
     private void configureGridsBaseLayouts() {
-        // 1. CONFIGURE UNASSIGNED RFQ GRID
+       
         setupGridColumnsTemplate(unassignedGrid);
         unassignedGrid.addComponentColumn(rfq -> {
             Button analyzeBtn = new Button("Compare Bids Matrix", VaadinIcon.BAR_CHART.create());
             analyzeBtn.addThemeName("primary small");
-            // Reroutes back to the legacy column matrix analysis profile workspace layout
-            // canvas
+         
             analyzeBtn.addClickListener(
                     e -> getUI().ifPresent(ui -> ui.navigate("quotation-evaluation-matrix/" + rfq.getId())));
             return analyzeBtn;
@@ -129,8 +126,6 @@ public class QuotationComparisonView extends VerticalLayout {
         grid.addColumn(rfq -> rfq.getRequestEndDate() != null ? rfq.getRequestEndDate().toString() : "-")
                 .setHeader("Closing / End Date").setAutoWidth(true);
 
-        // Counts total submitted quotes currently locked under this tracking thread
-        // record key indices parameter
         grid.addColumn(rfq -> quotationService.getQuotationsByRfq(rfq).size()).setHeader("Quotations Received")
                 .setAutoWidth(true).setSortable(true);
     }
@@ -154,7 +149,6 @@ public class QuotationComparisonView extends VerticalLayout {
     }
 
     private void buildLiveFilteringBars() {
-        // Bind real-time change events directly to local sub-list evaluations
         filterUnassignedRfqId.addValueChangeListener(e -> executeUnassignedGridFilterPipeline());
         filterUnassignedDate.addValueChangeListener(e -> executeUnassignedGridFilterPipeline());
         filterUnassignedQuoteCount.addValueChangeListener(e -> executeUnassignedGridFilterPipeline());

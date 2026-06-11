@@ -114,7 +114,6 @@ public class PurchaseRequestView extends VerticalLayout {
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
         headerLayout.setAlignItems(Alignment.CENTER);
 
-        // Tab click actions
         allBtn.addClickListener(event -> {
             viewMode = "ALL";
             currentPage = 0;
@@ -159,7 +158,6 @@ public class PurchaseRequestView extends VerticalLayout {
         assignFilters = new HorizontalLayout(assignIdField, referenceIdField, assignStatusField, assignSearch, assignClear);
         assignFilters.setAlignItems(Alignment.END);
 
-        // Grid Configurations
         prGrid.removeAllColumns();
         prGrid.addColumn(PurchaseRequestDTO::getPurchaseRequestId).setHeader("PR ID");
         prGrid.addColumn(pr -> pr.getForDepartment() == null ? "" : pr.getForDepartment().getDepartmentName()).setHeader("Department");
@@ -187,7 +185,7 @@ public class PurchaseRequestView extends VerticalLayout {
         assignGrid.setHeightFull();
         assignGrid.addItemDoubleClickListener(event -> {
             AssigningApprovalsDTO a = event.getItem();
-            getUI().ifPresent(ui -> ui.navigate("assigning-approvals-details/" + a.getAssigningApprovalsId()));
+            getUI().ifPresent(ui -> ui.navigate("assigned-approvals-details/" + a.getAssigningApprovalsId()));
         });
 
         // Pagination Configuration
@@ -224,19 +222,14 @@ public class PurchaseRequestView extends VerticalLayout {
         expand(assignGrid);
     }
 
-    /**
-     * REFACTORED MULTI-GROUP CHECK ENGINE: Matches permissions if ANY group in the user's list matches.
-     */
     private void determineDefaultViewModeAndTabVisibility() {
         Users user = securityService.getLoggedInUser();
         Employee currentEmployee = user.getEmployee();
         
-        // Fetch all groups linked to this employee's active role profile setup
         List<EmployeeGroup> userGroups = (currentEmployee.getRole() != null) 
                 ? currentEmployee.getRole().getEmployeeGroups()
                 : List.of();
 
-        // FIXED: Stream through group list to find if ANY entry contains high-level management rights
         boolean isManagementGroup = userGroups.stream().anyMatch(g -> 
                 g == EmployeeGroup.SUPER_ADMIN || 
                 g == EmployeeGroup.MANAGER || 
@@ -245,12 +238,10 @@ public class PurchaseRequestView extends VerticalLayout {
                 g == EmployeeGroup.PURCHASE
         );
 
-        // Calculate if the user has created any records
         Page<PurchaseRequestDTO> createdPage = prService.getCreatedByUser(
                 new PurchaseRequestDTO(), user.getUserId(), 0, 1);
         boolean hasCreatedRequests = createdPage.getTotalElements() > 0;
 
-        // FIXED: Loop over each group in the list to check if ANY group has pending tasks waiting
         boolean hasAssignedTasks = false;
         for (EmployeeGroup singleGroup : userGroups) {
             Page<AssigningApprovalsDTO> assignedPage = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(
@@ -308,7 +299,6 @@ public class PurchaseRequestView extends VerticalLayout {
             return;
         }
 
-        // ================= ASSIGNED =================
         if ("ASSIGNED".equals(viewMode)) {
             assignGrid.setVisible(true);
             assignFilters.setVisible(true);
@@ -318,9 +308,7 @@ public class PurchaseRequestView extends VerticalLayout {
                     ? currentEmployee.getRole().getEmployeeGroups() 
                     : List.of();
 
-            // FIXED: If the user spans multiple groups (e.g. MANAGER and HR), we look for a primary 
-            // matching group context that currently has active, pending items to load onto the grid.
-            EmployeeGroup groupToQuery = EmployeeGroup.MANAGER; // Fallback default
+            EmployeeGroup groupToQuery = EmployeeGroup.MANAGER; 
             for (EmployeeGroup singleGroup : userGroups) {
                 Page<AssigningApprovalsDTO> testPage = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(
                         assignFilter, singleGroup, currentPage, pageSize);

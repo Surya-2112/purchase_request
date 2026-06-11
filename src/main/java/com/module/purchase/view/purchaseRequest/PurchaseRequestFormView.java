@@ -17,16 +17,16 @@ import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.entity.Users;
-import com.module.purchase.enums.Status;
 import com.module.purchase.enums.RepeatedPeriodReferType;
+import com.module.purchase.enums.Status;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.service.ItemVariantService;
+import com.module.purchase.service.NeedsService;
 import com.module.purchase.service.PurchaseRequestDocumentService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.RepeatedPeriodService;
-import com.module.purchase.service.NeedsService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -662,28 +662,24 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                         PurchaseRequestHeader header = new PurchaseRequestHeader();
                         header.setCreatedDate(new java.sql.Date(System.currentTimeMillis()));
                         header.setForDepartment(departmentField.getValue());
-                        header.setStatus(Status.DRAFT); // Parent document saved as DRAFT context
+                        header.setStatus(Status.DRAFT); 
                         header.setCreatedBy(currentUser);
                         header.setLevel(1);
                         header.setTotalAmount(calculatedGlobalTotal); 
                         savedHeader = headerService.addPurchaseRequestHeader(header, currentUser);
                 }
 
-                // 3. Split processing loop for the memory data array
                 for (PurchaseRequestLine memoryLine : lines) {
                         
-                        // CASE A: The item is unlisted (No ItemVariant attached)
                         if (memoryLine.getItemVariant() == null && memoryLine.getDescription() != null) {
-                                String cleanPayloadText = memoryLine.getDescription().replace("⚠️ [UNLISTED CATALOG ITEM] - ", "");
+                                String cleanPayloadText = memoryLine.getDescription().trim();
                                 
-                                // Store directly inside the generic Needs table, linking it to the Header ID!
                                 needsService.registerNewCatalogNeed(
                                         cleanPayloadText, 
                                         com.module.purchase.enums.EntityType.ITEM, 
-                                        savedHeader.getPurchaseRequestId() // Tied to Header ID directly
+                                        savedHeader.getPurchaseRequestId()
                                 );
                         } 
-                        // CASE B: Standard verified catalog material SKU entry
                         else if (memoryLine.getItemVariant() != null) {
                                 PurchaseRequestLine dbLine = new PurchaseRequestLine();
                                 dbLine.setPurchaseRequestHeader(savedHeader);
@@ -699,7 +695,6 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
 
                                 dbLine = lineService.addPurchaseRequestLine(dbLine);
 
-                                // Manage recurring execution tracks if applicable
                                 if (pendingLineSchedulesMap.containsKey(memoryLine)) {
                                         RepeatedPeriod rawSchedule = pendingLineSchedulesMap.get(memoryLine);
                                         rawSchedule.setReferType(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE);

@@ -6,10 +6,6 @@ import com.module.purchase.entity.Needs;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.repository.NeedsRepository;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.NumberField;
-import com.vaadin.flow.component.textfield.TextField;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

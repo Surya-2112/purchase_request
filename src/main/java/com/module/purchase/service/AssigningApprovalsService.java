@@ -16,6 +16,7 @@ import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.ApprovalType;
@@ -38,6 +39,12 @@ public class AssigningApprovalsService {
 
     @Autowired
     private AuditLogsService auditLogsService;
+
+    @Autowired
+    private NeedsService needsService;
+    
+    @Autowired
+    private PurchaseRequestHeaderService purchaseRequestHeaderService;
 
     public AssigningApprovals saveAssigningApproval(AssigningApprovals assigningApproval) {
         return assigningApprovalsRepository.save(assigningApproval);
@@ -66,13 +73,13 @@ public class AssigningApprovalsService {
 
     public Page<AssigningApprovalsDTO> getPurchaseRequestApprovalsForMyGroup(
             AssigningApprovalsDTO assigningApprovalsDTO, 
-            EmployeeGroup group, // Changed from Long userId
+            EmployeeGroup group, 
             int page, 
             int size) {
 
         Specification<AssigningApprovals> spec = Specification
             .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
-            .and(AssigningApprovalsSpecification.hasEmployeeGroup(group)) // CHANGED: Replaced personal approver with group criteria
+            .and(AssigningApprovalsSpecification.hasEmployeeGroup(group)) 
             .and(AssigningApprovalsSpecification.hasApprovalType(ApprovalType.PURCHASE_REQUEST))
             .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
             .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
@@ -85,7 +92,7 @@ public class AssigningApprovalsService {
     }
 
     public AssigningApprovals addApprovals(AssigningApprovals assigningApproval, Employee employee) {
-        if (assigningApproval.getLevel() == 1) {
+        if (needsService.getSpecificNeedRecord(EntityType.ITEM, assigningApproval.getReferenceId()).isEmpty() && assigningApproval.getLevel() == 1) {
             assigningApproval.setStatus(Status.WAITING_APPROVAL);
         }
         assigningApproval = assigningApprovalsRepository.save(assigningApproval);
@@ -103,7 +110,31 @@ public class AssigningApprovalsService {
     public AssigningApprovals updateApprovals(AssigningApprovals assigningApprovals, Employee employee) {   
       
         AuditLogs log = new AuditLogs();
-        log.setAction(Action.UPDATE);
+        AssigningApprovals exist = getAssigningApprovalById(assigningApprovals.getAssigningApprovalsId()).get();
+      
+        PurchaseRequestHeader purchaseRequestHeader=purchaseRequestHeaderService.getPurchaseRequestHeaderById(exist.getReferenceId()).get();
+        if(assigningApprovals.getStatus()==Status.APPROVED)
+        {   log.setAction(Action.APPROVE);
+           if(purchaseRequestHeader.getLevel()> assigningApprovals.getLevel())
+           {AssigningApprovals next = getAssigningApprovalByTypeAndReferIdAndLevle(
+                                ApprovalType.PURCHASE_REQUEST,
+                                purchaseRequestHeader.getPurchaseRequestId(),
+                                assigningApprovals.getLevel()+1);
+            next.setStatus(Status.WAITING_APPROVAL);
+            saveAssigningApproval(next);
+           }else{
+                purchaseRequestHeader.setStatus(Status.APPROVED);
+                purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader,null);
+           }
+        }else if(assigningApprovals.getStatus()==Status.REJECTED){
+            log.setAction(Action.REJECT);
+            purchaseRequestHeader.setStatus(Status.REJECTED);
+            purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader,null);
+        }
+        if(assigningApprovals.getStatus()==Status.CANCELLED)
+        {
+            log.setAction(Action.CANCEL);
+        }
         log.setEntityType(EntityType.ASSIGNING_APPROVAL);
         log.setEntityId(assigningApprovals.getAssigningApprovalsId());
         log.setPerformedBy(employee);
