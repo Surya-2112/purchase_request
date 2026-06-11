@@ -7,14 +7,17 @@ import java.util.Optional;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningApprovals;
+import com.module.purchase.entity.Needs;
 import com.module.purchase.entity.PurchaseRequestDocument;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
+import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.AssigningApprovalsService;
+import com.module.purchase.service.NeedsService;
 import com.module.purchase.service.PurchaseRequestDocumentService;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
@@ -46,6 +49,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
         private final PurchaseRequestDocumentService documentService;
         private final SecurityService securityService;
         private final RepeatedPeriodService repeatedPeriodService;
+        private final NeedsService needService;
 
         private PurchaseRequestHeader header;
 
@@ -60,7 +64,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
         private final Grid<AssigningApprovals> approvalGrid = new Grid<>(AssigningApprovals.class, false);
         private final Grid<PurchaseRequestDocument> documentGrid = new Grid<>(PurchaseRequestDocument.class, false);
 
-        // ================= NEW SEPARATE GRID COMPONENTS =================
         private final VerticalLayout repeatedPeriodsSection = new VerticalLayout();
         private final Grid<PurchaseRequestLine> repeatedPeriodsGrid = new Grid<>(PurchaseRequestLine.class, false);
 
@@ -72,6 +75,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                         PurchaseRequestLineService purchaseRequestLineService,
                         PurchaseRequestDocumentService documentService, 
                         SecurityService securityService,
+                        NeedsService needService,
                         RepeatedPeriodService repeatedPeriodService) {
 
                 this.headerService = headerService;
@@ -79,6 +83,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 this.purchaseRequestLineService = purchaseRequestLineService;
                 this.documentService = documentService;
                 this.securityService = securityService;
+                this.needService= needService;
                 this.repeatedPeriodService = repeatedPeriodService;
 
                 setSizeFull();
@@ -240,7 +245,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 lineGrid.setAllRowsVisible(true);
                 lineGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
-                // Approval Grid Configuration
                 approvalGrid.removeAllColumns();
                 approvalGrid.addColumn(AssigningApprovals::getLevel).setHeader("Level").setWidth("80px");
                 
@@ -365,7 +369,16 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
         private void loadGrids() {
                 List<PurchaseRequestLine> prLines = purchaseRequestLineService.getPurchaseRequestLineByHeader(header);
+                 List<Needs> requestNeeds= needService.getSpecificNeedRecord(EntityType.ITEM,header.getPurchaseRequestId());
+                 for(Needs line:requestNeeds)
+                 {   
+                  PurchaseRequestLine prLine = new PurchaseRequestLine();
+                   prLine.setDescription(line.getNeedLine());
+                    prLines.add(prLine);
+                 }
+
                 lineGrid.setItems(prLines);
+
 
                 List<PurchaseRequestLine> repeatableLines = new ArrayList<>();
                 for (PurchaseRequestLine line : prLines) {
@@ -380,6 +393,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 } else {
                         repeatedPeriodsSection.setVisible(false);
                 }
+
 
                 approvalGrid.setItems(assigningApprovalsService.getAssigningApprovalByTypeAndReferId(
                                 ApprovalType.PURCHASE_REQUEST,

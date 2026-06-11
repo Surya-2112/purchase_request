@@ -3,6 +3,7 @@ package com.module.purchase.view.item;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Item;
 import com.module.purchase.service.ItemService;
+import com.module.purchase.service.NeedsService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -25,9 +26,7 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
     private final ItemService itemService;
     private final SecurityService securityService;
 
-    public ItemDetailsView(
-            ItemService itemService,
-            SecurityService securityService) {
+    public ItemDetailsView( ItemService itemService, SecurityService securityService) {
 
         this.itemService = itemService;
         this.securityService = securityService;
@@ -86,8 +85,7 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
         );
 
         formLayout.addFormItem(
-                new Span(
-                        item.getUnit() == null
+                new Span(item.getUnit() == null
                                 ? ""
                                 : item.getUnit().getName()
                 ),

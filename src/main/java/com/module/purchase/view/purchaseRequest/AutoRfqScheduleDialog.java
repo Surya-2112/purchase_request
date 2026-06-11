@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.enums.FrequencyType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
+import com.module.purchase.enums.RequestForQuotationStatus;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -25,21 +26,17 @@ public class AutoRfqScheduleDialog extends Dialog {
         setHeaderTitle("Configure Sourcing Loop Schedule");
         setWidth("450px");
 
-        // Set up the interval multipliers
         frequencyPeriod.setMin(1);
         frequencyPeriod.setValue(1);
         frequencyPeriod.setRequiredIndicatorVisible(true);
 
-        // Bind the standard interval units enum (DAYS, WEEKS, MONTHS, YEARS)
         frequencyType.setItems(FrequencyType.values());
         frequencyType.setItemLabelGenerator(FrequencyType::name);
         frequencyType.setRequired(true);
 
-        // STALENESS GUARD: Enforce selection from today onwards
         fromDate.setMin(LocalDate.now());
         fromDate.setRequired(true);
 
-        // Reactive logic: prevent the end date from being set before the start date
         fromDate.addValueChangeListener(e -> {
             if (e.getValue() != null) {
                 toDate.setMin(e.getValue());
@@ -48,7 +45,6 @@ public class AutoRfqScheduleDialog extends Dialog {
             }
         });
 
-        // Form Presentation Grid Layout
         FormLayout formLayout = new FormLayout(frequencyPeriod, frequencyType, fromDate, toDate);
         formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
@@ -60,18 +56,15 @@ public class AutoRfqScheduleDialog extends Dialog {
                 return;
             }
 
-            // Construct and package data payload
             RepeatedPeriod period = new RepeatedPeriod();
             period.setReferType(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE);
             period.setFrequencyPeriod(frequencyPeriod.getValue());
             period.setFrequencyType(frequencyType.getValue());
             period.setFromDate(fromDate.getValue());
             period.setToDate(toDate.getValue());
-            
-            // Default first execution milestone pointer to match the start boundary
-            period.setNextDate(fromDate.getValue());
+            period.setStatus(RequestForQuotationStatus.DRAFT);
+            period.setNextDate(period.getFrequencyType().calculateNext(period.getFromDate(),period.getFrequencyPeriod()));
 
-            // Fire functional callback up to the parent PurchaseRequestFormView line-handler
             onSaveCallback.accept(period);
             close();
         });

@@ -1,9 +1,12 @@
 package com.module.purchase.view.item;
 
 import java.util.Optional;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 
 import com.module.purchase.config.SecurityService;
+import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Item;
 import com.module.purchase.entity.Employee;
@@ -13,7 +16,9 @@ import com.module.purchase.entity.Needs;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EntityType;
+import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.service.ItemVariantService;
@@ -56,6 +61,7 @@ public class ItemView extends VerticalLayout {
     private final NeedsService needsService;
     private final PurchaseRequestHeaderService headerService;
     private final PurchaseRequestLineService prLineService;
+    private final AssigningApprovalsService assigningApprovalsService;
 
     private final VerticalLayout catalogTabContent = new VerticalLayout();
     private final VerticalLayout requestsTabContent = new VerticalLayout();
@@ -74,21 +80,17 @@ public class ItemView extends VerticalLayout {
 
     private final Grid<Needs> adHocNeedsGrid = new Grid<>(Needs.class, false);
 
-    public ItemView(
-            ItemService itemService,
-            ItemVariantService itemVariantService,
-            CategoryService categoryService,
-            UnitService unitService,
-            SecurityService securityService,
-            NeedsService needsService,
-            PurchaseRequestHeaderService headerService,
-            PurchaseRequestLineService prLineService) {
+    public ItemView(ItemService itemService, ItemVariantService itemVariantService,CategoryService categoryService,
+            UnitService unitService, SecurityService securityService, NeedsService needsService,
+            AssigningApprovalsService assigningApprovalsService,
+            PurchaseRequestHeaderService headerService, PurchaseRequestLineService prLineService) {
 
         this.itemService = itemService;
         this.itemVariantService = itemVariantService;
         this.categoryService = categoryService;
         this.unitService = unitService;
         this.securityService = securityService;
+        this.assigningApprovalsService=assigningApprovalsService;
         this.needsService = needsService;
         this.headerService = headerService;
         this.prLineService = prLineService;
@@ -240,8 +242,8 @@ public class ItemView extends VerticalLayout {
         promotionModal.setWidth("520px");
 
         String rawPayload = selectedNeed.getNeedLine(); 
-        String suggestedName = extractPayloadValueByKey(rawPayload, "Name");
-        String suggestedSpec = extractPayloadValueByKey(rawPayload, "Spec");
+        // String suggestedName = extractPayloadValueByKey(rawPayload, "Name");
+        // String suggestedSpec = extractPayloadValueByKey(rawPayload, "Spec");
         double requestedQty = 1.0;
         try {
             requestedQty = Double.parseDouble(extractPayloadValueByKey(rawPayload, "Qty"));
@@ -273,18 +275,25 @@ public class ItemView extends VerticalLayout {
         existingModeLayout.setPadding(false);
 
         TextField officialNameField = new TextField("Item Name");
+        officialNameField.setRequired(true);
         TextField officialCodeField = new TextField("Item Code");
+        officialCodeField.setRequired(true);
         TextField officialSpecField = new TextField("Variant Specification");
+        officialSpecField.setRequired(true);
         NumberField estimatedPriceField = new NumberField("Estimated Unit Price (INR)");
         estimatedPriceField.setValue(0.0);
+        estimatedPriceField.setMin(1.0);
+        estimatedPriceField.setRequired(true);
 
         ComboBox<Category> targetCatBox = new ComboBox<>("Category");
         targetCatBox.setItems(categoryService.getCategories());
         targetCatBox.setItemLabelGenerator(Category::getCategoryName);
+        targetCatBox.setRequired(true);
 
         ComboBox<Unit> targetUnitBox = new ComboBox<>("Unit of Measurement (UOM)");
         targetUnitBox.setItems(unitService.getAllUnits());
         targetUnitBox.setItemLabelGenerator(Unit::getName);
+        targetUnitBox.setRequired(true);
 
         FormLayout newModeFormLayout = new FormLayout(
             officialNameField, officialCodeField, officialSpecField, 
@@ -358,13 +367,20 @@ public class ItemView extends VerticalLayout {
                         .sum();
                 targetHeader.setTotalAmount(updatedGlobalTotal);
 
-                needsService.resolveAndClearCompletedNeed(EntityType.ITEM, selectedNeed.getRefId());
+                needsService.resolveAndClearCompletedNeed(EntityType.ITEM, selectedNeed.getId().longValue());
+
 
                 Employee activeActor = securityService.getLoggedInUser().getEmployee();
                 
                 if (needsService.getSpecificNeedRecord(EntityType.ITEM, targetHeader.getPurchaseRequestId()).isEmpty()) {
-                     targetHeader.setStatus(Status.WAITING_APPROVAL);
-                     Notification.show("Line successfully linked. Document escalated to Manager Queue.");
+                    targetHeader.setStatus(Status.WAITING_APPROVAL);
+
+                    List<AssigningApprovals> approvals=assigningApprovalsService.getAssigningApprovalByTypeAndReferId(
+                        ApprovalType.PURCHASE_REQUEST,targetHeader.getPurchaseRequestId());
+                        approvals.get(0).setStatus(Status.WAITING_APPROVAL);
+                     assigningApprovalsService.updateApprovals(approvals.get(0),null);
+
+                    Notification.show("Line successfully linked. Document escalated to Manager Queue.");
                 } else {
                      Notification.show("Line mapped. Additional pending unresolved items exist on this sheet.");
                 }

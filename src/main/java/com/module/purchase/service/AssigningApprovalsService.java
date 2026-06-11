@@ -92,7 +92,7 @@ public class AssigningApprovalsService {
     }
 
     public AssigningApprovals addApprovals(AssigningApprovals assigningApproval, Employee employee) {
-        if (needsService.getSpecificNeedRecord(EntityType.ITEM, assigningApproval.getReferenceId()).isEmpty() && assigningApproval.getLevel() == 1) {
+        if (needsService.getSpecificNeedRecord(EntityType.ITEM, assigningApproval.getReferenceId()).isEmpty()&& assigningApproval.getLevel() == 1) {
             assigningApproval.setStatus(Status.WAITING_APPROVAL);
         }
         assigningApproval = assigningApprovalsRepository.save(assigningApproval);
@@ -131,9 +131,11 @@ public class AssigningApprovalsService {
             purchaseRequestHeader.setStatus(Status.REJECTED);
             purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader,null);
         }
-        if(assigningApprovals.getStatus()==Status.CANCELLED)
+        else if(assigningApprovals.getStatus()==Status.CANCELLED)
         {
             log.setAction(Action.CANCEL);
+        } else{
+            log.setAction(Action.UPDATE);
         }
         log.setEntityType(EntityType.ASSIGNING_APPROVAL);
         log.setEntityId(assigningApprovals.getAssigningApprovalsId());

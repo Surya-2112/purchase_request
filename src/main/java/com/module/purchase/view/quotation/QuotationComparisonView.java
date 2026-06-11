@@ -35,17 +35,14 @@ public class QuotationComparisonView extends VerticalLayout {
     private final RequestForQuotationService rfqService;
     private final QuotationService quotationService;
 
-    // Filter Fields for Unassigned Matrix Tab
     private final TextField filterUnassignedRfqId = new TextField();
     private final DatePicker filterUnassignedDate = new DatePicker();
     private final TextField filterUnassignedQuoteCount = new TextField();
 
-    // Filter Fields for Assigned Matrix Tab
     private final TextField filterAssignedRfqId = new TextField();
     private final DatePicker filterAssignedDate = new DatePicker();
     private final TextField filterAssignedQuoteCount = new TextField();
 
-    // Structural Display Grids
     private final Grid<RequestForQuotation> unassignedGrid = new Grid<>(RequestForQuotation.class, false);
     private final Grid<RequestForQuotation> assignedGrid = new Grid<>(RequestForQuotation.class, false);
 
@@ -62,11 +59,9 @@ public class QuotationComparisonView extends VerticalLayout {
 
         H2 viewTitle = new H2("Quotations Evaluation & Comparison Center");
 
-        // Initialize and assemble the structural view frameworks
         configureGridsBaseLayouts();
         buildLiveFilteringBars();
 
-        // Setup Tabbed Navigation Workspace
         Tab unassignedTab = new Tab("Pending Evaluation (Unassigned Closed RFQs)");
         Tab assignedTab = new Tab("Finalized Records (Assigned RFQs)");
         Tabs navigationTabs = new Tabs(unassignedTab, assignedTab);

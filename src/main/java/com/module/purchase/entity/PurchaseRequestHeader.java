@@ -1,6 +1,6 @@
 package com.module.purchase.entity;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -39,9 +39,9 @@ public class PurchaseRequestHeader {
     
     @NotNull
     @Column(nullable = false)
-    private Date createdDate;
+    private LocalDate createdDate;
 
-    @NotNull
+   @NotNull
    @Column(name = "approval_level", nullable = false)
     private Integer level;
 
@@ -86,11 +86,11 @@ public class PurchaseRequestHeader {
         this.totalAmount = totalAmount;
     }
 
-    public Date getCreatedDate() {
+    public LocalDate getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Date createdDate) {
+    public void setCreatedDate(LocalDate createdDate) {
         this.createdDate = createdDate;
     }
 

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.module.purchase.enums.FrequencyType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
+import com.module.purchase.enums.RequestForQuotationStatus;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -44,6 +45,9 @@ public class RepeatedPeriod {
 
     @Column(name = "next_date")
     private LocalDate nextDate;
+
+    @Enumerated(EnumType.STRING)
+    private RequestForQuotationStatus status;
 
     public Long getId() {
         return id;
@@ -109,5 +113,11 @@ public class RepeatedPeriod {
         this.nextDate = nextDate;
     }
 
+    public RequestForQuotationStatus getStatus() {
+        return status;
+    }
 
+    public void setStatus(RequestForQuotationStatus status) {
+        this.status = status;
+    }
 }

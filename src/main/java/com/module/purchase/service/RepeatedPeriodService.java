@@ -1,6 +1,7 @@
 package com.module.purchase.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,10 +15,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.PurchaseRequestHeader;
+import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
+import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
+import com.module.purchase.enums.Status;
 import com.module.purchase.repository.RepeatedPeriodRepository;
 import com.module.purchase.specification.RepeatedPeriodSpecification;
 
@@ -31,23 +36,21 @@ public class RepeatedPeriodService {
     @Autowired
     private AuditLogsService auditLogsService;
 
+    @Autowired
+    private PurchaseRequestLineService purchaseRequestLineService;
+
+    @Autowired
+    private PurchaseRequestHeaderService purchaseRequestHeaderService;
+
     public RepeatedPeriod save(RepeatedPeriod repeatedPeriod) {
         return repeatedPeriodRepository.save(repeatedPeriod);
     }
 
-    // FIND BY POLYMORPHIC PAIR
     public Optional<RepeatedPeriod> findByReferTypeAndReferId(RepeatedPeriodReferType referType, Long referId) {
         return repeatedPeriodRepository.findByReferTypeAndReferId(referType, referId);
     }
 
-    // FETCH BY TARGET EXECUTION TIMELINE
-    public List<RepeatedPeriod> findAllByNextDate(LocalDate nextDate) {
-        return repeatedPeriodRepository.findAllByNextDate(nextDate);
-    }
-
-   
     public RepeatedPeriod addRepeatedPeriod(RepeatedPeriod repeatedPeriod, Employee employee) {
-        // Automatically default next execution mark to matching start baseline if missing
         if (repeatedPeriod.getNextDate() == null) {
             repeatedPeriod.setNextDate(repeatedPeriod.getFromDate());
         }
@@ -55,18 +58,17 @@ public class RepeatedPeriodService {
         repeatedPeriod = save(repeatedPeriod);
 
         AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.REPEATED_PERIOD); // Ensure REPEATED_PERIOD is added to EntityType Enum
+        log.setEntityType(EntityType.REPEATED_PERIOD); 
         log.setEntityId(repeatedPeriod.getId());
         log.setAction(Action.CREATE);
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
 
-        // auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(log);
 
         return repeatedPeriod;
     }
 
-    // GET BY ID
     public Optional<RepeatedPeriod> getRepeatedPeriodById(Long id) {
         Optional<RepeatedPeriod> period = repeatedPeriodRepository.findById(id);
 
@@ -93,27 +95,21 @@ public class RepeatedPeriodService {
         return repeatedPeriodRepository.findAll(spec, pageable);
     }
 
-    // UPDATE WITH AUDIT LOGGING
     public RepeatedPeriod updateRepeatedPeriod(RepeatedPeriod repeatedPeriod, Employee employee) {
-        getRepeatedPeriodById(repeatedPeriod.getId()); // Throws exception if it doesn't exist
-
+        getRepeatedPeriodById(repeatedPeriod.getId()); 
         repeatedPeriod = save(repeatedPeriod);
-
         AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.REPEATED_PERIOD);
         log.setEntityId(repeatedPeriod.getId());
         log.setAction(Action.UPDATE);
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
-
-        // auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(log);
         return repeatedPeriod;
     }
 
-    // DELETE BY ID
     public void deleteRepeatedPeriodById(Long id, Employee employee) {
-        getRepeatedPeriodById(id); // Verifies existence first
+        getRepeatedPeriodById(id); 
 
         repeatedPeriodRepository.deleteById(id);
 
@@ -124,11 +120,51 @@ public class RepeatedPeriodService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
 
-        // auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(log);
     }
 
-    // ORPHAN REMOVAL (Used when unchecking Auto-RFQ checkboxes)
     public void deleteByReferTypeAndReferId(RepeatedPeriodReferType referType, Long referId) {
         repeatedPeriodRepository.deleteByReferTypeAndReferId(referType, referId);
+    }
+
+    public void assignedRepeatedTask()
+    {   System.out.println("-----------------------8 RepeatedPeriod is called ----------------------");
+        List<RepeatedPeriod> pendingTasks= repeatedPeriodRepository.findPendingTasks(LocalDate.now());
+    //    List<RequestForQuotationLine> rfqlines = new ArrayList<RequestForQuotationLine>();
+        for(RepeatedPeriod task:pendingTasks)
+        {
+            if(task.getReferType().equals(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE))
+            {
+                PurchaseRequestLine newPrLine=new PurchaseRequestLine();
+                PurchaseRequestHeader newHeader= new PurchaseRequestHeader();
+                PurchaseRequestLine referline= purchaseRequestLineService.getPurchaseRequestLineById(task.getId()).orElse(null);
+                if(referline==null)
+                {   task.setNextDate(null);
+                    updateRepeatedPeriod(task,null);
+                    continue;
+                }
+                newPrLine.setItemVariant(referline.getItemVariant());
+                newPrLine.setRequestedQuantity(referline.getRequestedQuantity());
+                newPrLine.setDescription("");
+                newPrLine.setItemUnitPrice(referline.getItemUnitPrice());
+                newPrLine.setStatus(Status.DRAFT);
+                newPrLine.setItemTotalAmount(referline.getItemTotalAmount());
+
+                newHeader.setCreatedBy(null);
+                newHeader.setCreatedDate(LocalDate.now());
+                newHeader.setStatus(Status.DRAFT);
+                newHeader.setForDepartment(referline.getPurchaseRequestHeader().getForDepartment());
+                newHeader.setLevel(1);
+                newHeader.setTotalAmount(newPrLine.getItemTotalAmount());
+
+                purchaseRequestHeaderService.addPurchaseRequestHeader(newHeader, null);
+                newPrLine.setPurchaseRequestHeader(newHeader);
+                purchaseRequestLineService.addPurchaseRequestLine(newPrLine);
+            }
+            else{
+
+            }
+            task.setNextDate(task.getFrequencyType().calculateNext(LocalDate.now(),task.getFrequencyPeriod()));
+        }
     }
 }

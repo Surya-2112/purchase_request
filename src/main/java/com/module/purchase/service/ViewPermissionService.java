@@ -93,7 +93,6 @@ public class ViewPermissionService {
             if (viewName.getRoute().equals(route)) {
                 return viewName;}
         }
-
         return null;
     }
 

@@ -64,7 +64,7 @@ public class SecurityService {
 
             List<EmployeeGroup> userGroups =user.getEmployee().getRole().getEmployeeGroups();
 
-            List<EmployeeGroup> allowedGroups =viewPermissionService.getGroupsByView(viewName);
+            List<EmployeeGroup> allowedGroups = viewPermissionService.getGroupsByView(viewName);
 
             if (allowedGroups == null|| allowedGroups.isEmpty()) {
 

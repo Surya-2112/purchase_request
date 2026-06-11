@@ -2,7 +2,6 @@ package com.module.purchase.config;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -50,17 +49,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private Collection<SimpleGrantedAuthority> getAuthorities(Users user) {
 
-        if (user.getEmployee() == null || user.getEmployee().getRole() == null|| user.getEmployee()
-                        .getRole()
-                        .getEmployeeGroups() == null) {
-
-            return Collections.singleton(new SimpleGrantedAuthority(  "ROLE_USER"));
-        }
-
-        return user.getEmployee() .getRole()
-                .getEmployeeGroups()
-                .stream()
-                .map(group -> new SimpleGrantedAuthority("ROLE_" + group.name()))
-                .collect(Collectors.toList());
+        return Collections.singleton(new SimpleGrantedAuthority(  "ROLE_USER"));
     }
 }

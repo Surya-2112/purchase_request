@@ -1,6 +1,7 @@
 package com.module.purchase.view.purchaseRequest;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,11 +13,13 @@ import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Item;
 import com.module.purchase.entity.ItemVariant;
+import com.module.purchase.entity.Needs;
 import com.module.purchase.entity.PurchaseRequestDocument;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.entity.Users;
+import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.DepartmentService;
@@ -64,7 +67,6 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
         private final RepeatedPeriodService repeatedPeriodService;
         private final NeedsService needsService;
 
-        // ================= UI INPUT FIELDS =================
         private final ComboBox<Department> departmentField = new ComboBox<>("Department");
         private final ComboBox<Item> itemField = new ComboBox<>("Item");
         private final ComboBox<ItemVariant> variantField = new ComboBox<>("Specification");
@@ -72,7 +74,6 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
         private final NumberField quantityField = new NumberField("Quantity");
         private final TextField descriptionField = new TextField("Description");
 
-        // ================= DOCUMENTS, LINES & SCHEDULES COMPONENTS =================
         private final List<PurchaseRequestDocument> documents = new ArrayList<>();
         private final Grid<PurchaseRequestDocument> documentGrid = new Grid<>(PurchaseRequestDocument.class, false);
         private final MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
@@ -119,7 +120,6 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                 departmentField.setItemLabelGenerator(Department::getDepartmentName);
                 departmentField.setWidth("300px");
 
-                // Execute custom access gating logic for departmental selections
                 evaluateDepartmentAccessControl();
 
                 itemField.setItems(itemService.getItems());
@@ -163,7 +163,6 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
 
                 Button addLineButton = new Button("Add / Update Line", e -> addLine());
                 
-                // Add Unlisted Item Pop-up Button Trigger
                 Button addUnlistedItemBtn = new Button("Add Unlisted Item", e -> openUnlistedItemRequestFormModal());
                 addUnlistedItemBtn.addThemeName("primary warning small");
 
@@ -195,7 +194,7 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                 headerLayout,
                                 new H3("Purchase Request Lines"),
                                 lineInput,
-                        addUnlistedItemBtn,
+                                addUnlistedItemBtn,
                                 lineGrid,
                                 recurringScheduleSection, 
                                 new H3("Upload Documents"),
@@ -230,7 +229,7 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
 
         private void openUnlistedItemRequestFormModal() {
                 Dialog requestModal = new Dialog();
-                requestModal.setHeaderTitle("Request Unlisted Material Specification");
+                requestModal.setHeaderTitle("Request Unlisted Item Specification");
                 requestModal.setWidth("450px");
 
                 TextField unlistedName = new TextField("Suggested Item Name");
@@ -261,12 +260,13 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                         unlistedSpec.getValue().isEmpty() ? "No Spec Provided" : unlistedSpec.getValue().trim(),
                                         unlistedQty.getValue());
 
-                        PurchaseRequestLine temporaryAdHocLine = new PurchaseRequestLine();
-                        temporaryAdHocLine.setStatus(Status.DRAFT);
-                        temporaryAdHocLine.setDescription( serializedNeedPayload);
-                        temporaryAdHocLine.setRequestedQuantity(unlistedQty.getValue());
+                        PurchaseRequestLine temporaryLine = new PurchaseRequestLine();
 
-                        lines.add(temporaryAdHocLine);
+                        temporaryLine.setStatus(Status.DRAFT);
+                        temporaryLine.setDescription( serializedNeedPayload);
+                        temporaryLine.setRequestedQuantity(unlistedQty.getValue());
+
+                        lines.add(temporaryLine);
                         refreshGridDataProviders();
                         
                         requestModal.close();
@@ -376,7 +376,12 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                         .ifPresent(period -> pendingLineSchedulesMap.put(line, period));
                         }
                 }
-                
+                List<Needs> needList= needsService.getSpecificNeedRecord(EntityType.ITEM,editingHeader.getPurchaseRequestId());
+                for(Needs need:needList)
+                {    PurchaseRequestLine line=new PurchaseRequestLine();
+                        line.setDescription(need.getNeedLine());
+                        lines.add(line);
+                }
                 refreshGridDataProviders();
                 saveButton.setText("Update & Go To Approval");
         }
@@ -384,21 +389,10 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
         private void configureGrid() {
                 lineGrid.removeAllColumns();
 
-                lineGrid.addColumn(line -> {
-                                if (line.getDescription() != null && line.getDescription().contains(" [UNLISTED CATALOG ITEM]")) {
-                                        return " Custom Ad-Hoc Request";
-                                }
-                                return line.getItemVariant() != null && line.getItemVariant().getItem() != null
-                                                ? line.getItemVariant().getItem().getItemName() : "";
-                        })
+                lineGrid.addColumn(line ->  line.getItemVariant() != null && line.getItemVariant().getItem() != null? line.getItemVariant().getItem().getItemName() : "")
                         .setHeader("Item").setAutoWidth(true);
 
-                lineGrid.addColumn(line -> {
-                                if (line.getDescription() != null && line.getDescription().contains("⚠️ [UNLISTED CATALOG ITEM]")) {
-                                        return "See Raw Parameters Log Below";
-                                }
-                                return line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "";
-                        })
+                lineGrid.addColumn(line ->  line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                         .setHeader("Specification").setAutoWidth(true);
 
                 lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Quantity").setWidth("120px");
@@ -650,17 +644,19 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                 calculatedGlobalTotal += (unitPrice * requestedQty);
                         }
                 }
-
                 if (editingHeader != null) {
                         editingHeader.setForDepartment(departmentField.getValue());
                         editingHeader.setTotalAmount(calculatedGlobalTotal); 
                         savedHeader = headerService.updatePurchaseRequestHeader(editingHeader, currentUser);
                         
                         lineService.deleteAllLine(savedHeader);
-                        needsService.resolveAndClearCompletedNeed(com.module.purchase.enums.EntityType.ITEM, savedHeader.getPurchaseRequestId());
+                        for(Needs need:needsService.getSpecificNeedRecord(EntityType.ITEM, savedHeader.getPurchaseRequestId()))
+                        {
+                          needsService.resolveAndClearCompletedNeed(EntityType.ITEM, need.getId().longValue());
+                        }
                 } else {
                         PurchaseRequestHeader header = new PurchaseRequestHeader();
-                        header.setCreatedDate(new java.sql.Date(System.currentTimeMillis()));
+                        header.setCreatedDate(LocalDate.now());
                         header.setForDepartment(departmentField.getValue());
                         header.setStatus(Status.DRAFT); 
                         header.setCreatedBy(currentUser);
@@ -672,21 +668,15 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                 for (PurchaseRequestLine memoryLine : lines) {
                         
                         if (memoryLine.getItemVariant() == null && memoryLine.getDescription() != null) {
-                                String cleanPayloadText = memoryLine.getDescription().trim();
-                                
-                                needsService.registerNewCatalogNeed(
-                                        cleanPayloadText, 
-                                        com.module.purchase.enums.EntityType.ITEM, 
-                                        savedHeader.getPurchaseRequestId()
-                                );
-                        } 
-                        else if (memoryLine.getItemVariant() != null) {
+                                String cleanPayloadText = memoryLine.getDescription().trim(); 
+                                needsService.registerNewCatalogNeed( cleanPayloadText, EntityType.ITEM, savedHeader.getPurchaseRequestId());
+                        } else if (memoryLine.getItemVariant() != null) {
                                 PurchaseRequestLine dbLine = new PurchaseRequestLine();
                                 dbLine.setPurchaseRequestHeader(savedHeader);
                                 dbLine.setItemVariant(memoryLine.getItemVariant());
                                 dbLine.setRequestedQuantity(memoryLine.getRequestedQuantity());
                                 dbLine.setDescription(memoryLine.getDescription());
-                                dbLine.setStatus(Status.DRAFT);
+                                dbLine.setStatus(Status.WAITING_APPROVAL);
                                 
                                 double unitPrice = (memoryLine.getItemVariant().getEstimatedUnitPrice() != null) 
                                                 ? memoryLine.getItemVariant().getEstimatedUnitPrice() : 0.0;
@@ -705,8 +695,6 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                 }
                         }
                 }
-
-                // 4. Save attached support metadata files logs
                 for (PurchaseRequestDocument document : documents) {
                         document.setPurchaseRequestHeader(savedHeader);
                         documentService.save(document);
