@@ -162,7 +162,6 @@ public class PurchaseRequestView extends VerticalLayout {
         prGrid.addColumn(PurchaseRequestDTO::getPurchaseRequestId).setHeader("PR ID");
         prGrid.addColumn(pr -> pr.getForDepartment() == null ? "" : pr.getForDepartment().getDepartmentName()).setHeader("Department");
         prGrid.addColumn(pr -> pr.getCreatedBy() == null ? "" : pr.getCreatedBy().getEmployeeName()).setHeader("Created By");
-        prGrid.addColumn(PurchaseRequestDTO::getTotalAmount).setHeader("Total Amount");
         prGrid.addColumn(pr -> pr.getStatus() != null ? pr.getStatus().name() : "").setHeader("Status");
 
         prGrid.setWidthFull();
@@ -324,10 +323,7 @@ public class PurchaseRequestView extends VerticalLayout {
             assignGrid.setItems(page.getContent());
             this.totalPages = page.getTotalPages() > 0 ? page.getTotalPages() : 1;
             pageInfo.setText("Page " + (currentPage + 1) + " of " + totalPages);
-        } 
-        
-        // ================= CREATED =================
-        else if ("CREATED".equals(viewMode)) {
+        } else if ("CREATED".equals(viewMode)) {
             prGrid.setVisible(true);
             prFilters.setVisible(true);
 
@@ -339,7 +335,6 @@ public class PurchaseRequestView extends VerticalLayout {
             pageInfo.setText("Page " + (currentPage + 1) + " of " + totalPages);
         } 
         
-        // ================= ALL =================
         else {
             prGrid.setVisible(true);
             prFilters.setVisible(true);

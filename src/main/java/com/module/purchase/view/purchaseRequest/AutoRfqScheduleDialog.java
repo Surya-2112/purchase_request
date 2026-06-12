@@ -64,7 +64,8 @@ public class AutoRfqScheduleDialog extends Dialog {
             period.setToDate(toDate.getValue());
             period.setStatus(RequestForQuotationStatus.DRAFT);
             period.setNextDate(period.getFrequencyType().calculateNext(period.getFromDate(),period.getFrequencyPeriod()));
-
+            if(period.getToDate()!=null)
+            period.setNextDate(period.getNextDate().isAfter(period.getToDate())? null: period.getNextDate());
             onSaveCallback.accept(period);
             close();
         });

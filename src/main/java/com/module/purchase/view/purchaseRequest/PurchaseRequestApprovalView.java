@@ -25,6 +25,8 @@ import jakarta.annotation.security.PermitAll;
 public class PurchaseRequestApprovalView extends VerticalLayout implements BeforeEnterObserver {
 
     private final PurchaseRequestHeaderService headerService;
+    private final PurchaseRequestLineService lineService;
+    private final RepeatedPeriodService repeatedPeriodService;
     private final AssigningConfigService configService;
     private final AssigningApprovalsService assigningApprovalsService;
     private final SecurityService securityService;
@@ -37,14 +39,14 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
     private final Button addBtn = new Button("Add Approver");
     private final Button saveBtn = new Button("Save");
 
-    public PurchaseRequestApprovalView(
-            PurchaseRequestHeaderService headerService,
-            AssigningConfigService configService,
-            SecurityService securityService,
-            AssigningApprovalsService assigningApprovalsService) {
+    public PurchaseRequestApprovalView( PurchaseRequestHeaderService headerService, AssigningConfigService configService,
+           PurchaseRequestLineService lineService,RepeatedPeriodService repeatedPeriodService,
+           SecurityService securityService, AssigningApprovalsService assigningApprovalsService) {
 
         this.headerService = headerService;
         this.configService = configService;
+        this.lineService=lineService;
+        this.repeatedPeriodService=repeatedPeriodService;
         this.securityService = securityService;
         this.assigningApprovalsService = assigningApprovalsService;
 
@@ -216,6 +218,17 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
         header.setStatus(Status.WAITING_APPROVAL);
         header.setLevel(approvals.size());
         headerService.updatePurchaseRequestHeader(header, currentEmployee);
+
+       for(PurchaseRequestLine line: lineService.getPurchaseRequestLineByHeader(header))
+        {
+            line.setStatus(Status.WAITING_APPROVAL);
+            lineService.updatePurchaseRequestLine(line,currentEmployee);
+            if(line.getRepeatableId()!=null)
+            {   RepeatedPeriod  period=repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId()).get();
+                period.setStatus(RequestForQuotationStatus.OPEN);
+                repeatedPeriodService.updateRepeatedPeriod( period,currentEmployee);
+            }
+        }
 
         Notification.show("Saved successfully", 3000, Position.TOP_CENTER);
         getUI().ifPresent(ui -> ui.navigate("purchase-request"));

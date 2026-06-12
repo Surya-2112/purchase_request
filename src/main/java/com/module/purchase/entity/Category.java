@@ -28,6 +28,9 @@ public class Category {
 
     @ManyToMany(mappedBy = "categories")
     private Set<Vendor> vendors;
+
+    // @OneToMany(mappedBy = "category")
+    // private Set<RequestForQuotation> requestForQuotations;
  
     public Long getCategoryId() {
         return categoryId;
@@ -82,6 +85,14 @@ public class Category {
         return "Category [categoryId=" + categoryId + ", categoryName=" + categoryName + ", repeatable=" + repeatable
                 + ", autoRfq=" + autoRfq + "]";
     }
+
+    // public Set<RequestForQuotation> getRequestForQuotations() {
+    //     return requestForQuotations;
+    // }
+
+    // public void setRequestForQuotations(Set<RequestForQuotation> requestForQuotations) {
+    //     this.requestForQuotations = requestForQuotations;
+    // }
 
     
 }

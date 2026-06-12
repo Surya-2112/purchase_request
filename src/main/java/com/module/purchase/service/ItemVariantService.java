@@ -71,7 +71,7 @@ public class ItemVariantService {
 
      public List<ItemVariant> getItemVariantsByItem(Item item) {
 
-        return itemVariantRepository.findByItem(item);
+        return itemVariantRepository.findByItemAndActive(item,true);
     }
 
     public Page<ItemVariant> getAllItemVariants(ItemVariant itemVariant, int page, int size) {
@@ -79,10 +79,8 @@ public class ItemVariantService {
         Specification<ItemVariant> spec = Specification
                 .where(ItemVariantSpecification.hasId(itemVariant.getId()))
                 .and(ItemVariantSpecification.hasItem(itemVariant.getItem()))
-                .and(ItemVariantSpecification.hasSpecification(
-                        itemVariant.getSpecification()))
-                .and(ItemVariantSpecification.hasActive(
-                        itemVariant.getActive()));
+                .and(ItemVariantSpecification.hasSpecification(itemVariant.getSpecification()))
+                .and(ItemVariantSpecification.hasActive(itemVariant.getActive()));
 
         PageRequest pageable = PageRequest.of(page, size);
 

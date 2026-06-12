@@ -18,6 +18,7 @@ import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseRequestHeader;
+import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entityDTO.PurchaseRequestDTO;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.ApprovalType;
@@ -139,24 +140,43 @@ public List<PurchaseRequestDTO> getRecentPurchaseRequests(PageRequest pageReques
 
          AuditLogs log= new AuditLogs();
 
-        if(purchaseRequestHeader.getStatus().equals(Status.CANCELLED))
-        {  log.setAction(Action.CANCEL);
-            List<AssigningApprovals> lines = assigningApprovalsService.getAssigningApprovalByTypeAndReferId(ApprovalType.PURCHASE_REQUEST,purchaseRequestHeader.getPurchaseRequestId());
+        switch (purchaseRequestHeader.getStatus()) {
+            case CANCELLED -> {
+                log.setAction(Action.CANCEL);
+                List<AssigningApprovals> lines = assigningApprovalsService.getAssigningApprovalByTypeAndReferId(ApprovalType.PURCHASE_REQUEST,purchaseRequestHeader.getPurchaseRequestId());
 
-            for(AssigningApprovals line:lines)
-            {
-                if(line.getStatus()==Status.WAITING_APPROVAL)
-                {   line.setStatus(Status.CANCELLED);
+                for(AssigningApprovals line:lines)
+                {
+                    if(line.getStatus()==Status.WAITING_APPROVAL)
+                    {   line.setStatus(Status.CANCELLED);
                     assigningApprovalsService.updateApprovals(line,employee);
+                    }
+                }
+                
+                for(PurchaseRequestLine line:purchaseRequestHeader.getPurchaseRequestLines())
+                {   line.setStatus(Status.CANCELLED);
+                purchaseRequestLineSerivce.updatePurchaseRequestLine(line,employee);
                 }
             }
-        }
-        else if(purchaseRequestHeader.getStatus()==Status.APPROVED)
-        {   log.setAction(Action.APPROVE);
-        }else if(purchaseRequestHeader.getStatus()==Status.REJECTED){
-             log.setAction(Action.REJECT);
-        }else{
-            log.setAction(Action.UPDATE);
+            case APPROVED -> {
+                log.setAction(Action.APPROVE);
+                for(PurchaseRequestLine line:purchaseRequestHeader.getPurchaseRequestLines())
+                {    if(line.getApprovedQuantity().equals(line.getRequestedQuantity()))
+                {line.setStatus(Status.APPROVED);
+                }else if(line.getApprovedQuantity()>0){
+                    line.setStatus(Status.PARTIALLY_APPROVED);
+                }else{line.setStatus(Status.REJECTED);}
+                purchaseRequestLineSerivce.updatePurchaseRequestLine(line,employee);
+                }
+            }
+            case REJECTED -> {
+                log.setAction(Action.REJECT);
+                for(PurchaseRequestLine line:purchaseRequestHeader.getPurchaseRequestLines())
+                {   line.setStatus(Status.REJECTED);
+                purchaseRequestLineSerivce.updatePurchaseRequestLine(line,employee);
+                }
+            }
+            default -> log.setAction(Action.UPDATE);
         }
         purchaseRequestHeader = savePurchaseRequestHeader(purchaseRequestHeader); 
 

@@ -124,7 +124,7 @@ public class RequestForQuotationService {
         if (linkedPrLines != null && !linkedPrLines.isEmpty()) {
             for (PurchaseRequestLine prLine : linkedPrLines) {
                 prLine.setRequestForQuotation(null); 
-                purchaseRequestLineService.updatePurchaseRequestLine(prLine);
+                purchaseRequestLineService.updatePurchaseRequestLine(prLine,employee);
             }
         }
         if (existingRfq.getRequestForQuotationLines() != null && !existingRfq.getRequestForQuotationLines().isEmpty()) {
@@ -143,6 +143,10 @@ public class RequestForQuotationService {
     }
 
     public RequestForQuotationLine addRfqLine(RequestForQuotationLine line) {
+        return rfqLineRepository.save(line);
+    }
+
+    public RequestForQuotationLine updateRfqLine(RequestForQuotationLine line) {
         return rfqLineRepository.save(line);
     }
 

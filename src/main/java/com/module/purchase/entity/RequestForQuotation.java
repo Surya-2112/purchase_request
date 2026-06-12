@@ -14,6 +14,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
@@ -47,6 +49,11 @@ public class RequestForQuotation {
 
     @OneToMany(mappedBy = "requestForQuotation")
     private Set<Quotation> quotations; 
+
+    // @NotNull
+    // @ManyToOne
+    // @JoinColumn(name = "category_id",nullable = false)
+    // private Category category;
 
     public Long getId() {
         return id;
@@ -95,4 +102,12 @@ public class RequestForQuotation {
     public void setQuotations(Set<Quotation> quotations) {
         this.quotations = quotations;
     }
+
+    // public Category getCategory() {
+    //     return category;
+    // }
+
+    // public void setCategory(Category category) {
+    //     this.category = category;
+    // }
 }

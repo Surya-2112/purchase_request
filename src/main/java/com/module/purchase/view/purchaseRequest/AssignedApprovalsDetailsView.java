@@ -11,7 +11,6 @@ import java.util.Optional;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningApprovals;
-import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseRequestDocument;
@@ -20,6 +19,7 @@ import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.RepeatedPeriodReferType;
+import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.DepartmentBudgetService;
@@ -64,7 +64,6 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
         private PurchaseRequestHeader header;
         private AssigningApprovals approval;
 
-        // Header Metrics Labels
         private final Span requestId = new Span();
         private final Span createdBy = new Span();
         private final Span department = new Span();
@@ -74,7 +73,6 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
         private final Span level = new Span();
         private final Span status = new Span();
 
-        // Budget Metrics Labels
         private final H3 budgetTitle = new H3();
         private final Span budgetYear = new Span();
         private final Span totalBudgetAmount = new Span();
@@ -86,15 +84,14 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
         private final Button rejectBtn = new Button("Reject");
         private final TextArea comments = new TextArea("Approver Comments / Remarks");
 
-        // UI grids
         private final Grid<PurchaseRequestLine> lineGrid = new Grid<>(PurchaseRequestLine.class, false);
         private final Grid<PurchaseRequestDocument> documentGrid = new Grid<>(PurchaseRequestDocument.class, false);
-        
-        // SOURCING PATTERNS DETACHED SECTION MAPPINGS
+ 
         private final VerticalLayout recurringScheduleSection = new VerticalLayout();
         private final Grid<PurchaseRequestLine> scheduleGrid = new Grid<>(PurchaseRequestLine.class, false);
         private final Map<PurchaseRequestLine, RepeatedPeriod> workingSchedulesMap = new HashMap<>();
 
+        private final List<PurchaseRequestLine> hasRepeatedPeriod = new ArrayList<>();
         private final List<PurchaseRequestLine> workingLinesList = new ArrayList<>();
         private boolean canUserModifyData = false;
 
@@ -136,16 +133,16 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 HorizontalLayout buttonLayout = new HorizontalLayout(approveBtn, rejectBtn);
                 buttonLayout.setSpacing(true);
 
-                recurringScheduleSection.add(new H3("Associated Sourcing Patterns (Editable by Approver)"), scheduleGrid);
+                recurringScheduleSection.add(new H3("Repeated Periods"), scheduleGrid);
                 recurringScheduleSection.setPadding(false);
                 recurringScheduleSection.setSpacing(true);
                 recurringScheduleSection.setVisible(false);
 
                 VerticalLayout content = new VerticalLayout(
-                                new H2("Purchase Request Approval Console"),
+                                new H2("Purchase Request Approval"),
                                 buildHeaderSection(),
                                 buildBudgetSection(),
-                                new H3("Line Items Sourcing Management (Partial Approval Allowed)"),
+                                new H3("Line Items"),
                                 lineGrid,
                                 recurringScheduleSection,
                                 new H3("Verification Documents"),
@@ -175,7 +172,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 evaluateGroupAccessControlPermissions();
                 bindHeaderData();
                 loadDepartmentBudget();
-                loadLinesData(); // This loads and runs real-time calculation loop on start up
+                loadLinesData();
                 loadDocuments();
         }
 
@@ -199,10 +196,10 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 requestId.setText("Purchase Request ID : " + header.getPurchaseRequestId());
                 createdBy.setText("Created By : " + (header.getCreatedBy() != null ? header.getCreatedBy().getEmployeeName() : "-"));
                 department.setText("Department : " + (header.getForDepartment() != null ? header.getForDepartment().getDepartmentName() : "-"));
-                requestedTotalAmount.setText("Total Amount Requested (Original Snapshot) : " + header.getTotalAmount());
+                requestedTotalAmount.setText("Total Amount Requested : " + header.getTotalAmount());
                 createdDate.setText("Created Date : " + header.getCreatedDate());
                 status.setText("Task Group Status : " + approval.getStatus());
-                level.setText("Active Approval Level Tier : " + approval.getLevel());
+                level.setText("Approval Level : " + approval.getLevel());
         }
 
         private void evaluateGroupAccessControlPermissions() {
@@ -244,7 +241,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 DepartmentBudget budget = departmentBudgetService.getByDepartmentAndYear(header.getForDepartment(), Year.now());
 
                 if (budget == null) {
-                        budgetTitle.setText("Department Budget Matrix Not Configured for " + Year.now().getValue());
+                        budgetTitle.setText("Department Budget Not Configured for " + Year.now().getValue());
                         budgetYear.setText("");
                         totalBudgetAmount.setText("");
                         remainingBudgetAmount.setText("");
@@ -253,10 +250,10 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         return;
                 }
 
-                budgetTitle.setText("Department Budget Ledger Verification");
-                budgetYear.setText("Fiscal Ledger Year : " + budget.getYear());
+                budgetTitle.setText("Department Budget");
+                budgetYear.setText("Year : " + budget.getYear());
                 totalBudgetAmount.setText("Total Allocated Budget : " + budget.getTotalBudgetAmount());
-                remainingBudgetAmount.setText("Available Balance before processing : " + budget.getRemainingBudgetAmount());
+                remainingBudgetAmount.setText("Available Balance : " + budget.getRemainingBudgetAmount());
                 remainingBudget = budget.getRemainingBudgetAmount();
                 isBudgetConfigured = true; 
                 
@@ -274,7 +271,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
                 lineGrid.addColumn(line -> (line.getItemVariant() != null && line.getItemVariant().getEstimatedUnitPrice() != null) 
                                 ? line.getItemVariant().getEstimatedUnitPrice() : 0.0)
-                                .setHeader("Est. Unit Price").setWidth("130px");
+                                .setHeader("Unit Price").setWidth("130px");
 
                 lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Requested Qty").setWidth("130px");
 
@@ -284,9 +281,8 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
                 lineGrid.addComponentColumn(line -> {
                         NumberField approvedQtyField = new NumberField();
-                        approvedQtyField.setWidth("140px");
+                        approvedQtyField.setWidth("120px");
 
-                        // DEFAULT INITIALIZATION MATRICES FOR TOTAL SECURITY
                         if (line.getApprovedQuantity() == null) {
                                 line.setApprovedQuantity(line.getRequestedQuantity());
                         }
@@ -314,7 +310,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         return approvedQtyField;
                 }).setHeader("Approved Qty").setWidth("160px");
 
-                lineGrid.addColumn(PurchaseRequestLine::getItemTotalAmount).setHeader("Line Total (Est.)").setWidth("140px");
+                lineGrid.addColumn(PurchaseRequestLine::getItemTotalAmount).setHeader("Line Total").setWidth("140px");
                 lineGrid.addColumn(PurchaseRequestLine::getDescription).setHeader("Description").setAutoWidth(true);
                 lineGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
                 lineGrid.setAllRowsVisible(true);
@@ -345,24 +341,30 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 scheduleGrid.addComponentColumn(line -> {
                         Button modifyScheduleBtn = new Button("Modify Schedule", e -> {
                                 RepeatedPeriod currentPeriod = workingSchedulesMap.get(line);
-                                AutoRfqScheduleDialog dialog = new AutoRfqScheduleDialog(updatedPeriod -> {
-                                        workingSchedulesMap.put(line, updatedPeriod);
+                                AutoRfqScheduleDialog dialog = new AutoRfqScheduleDialog(updatedPeriod -> { 
+                                        currentPeriod.setFrequencyPeriod(updatedPeriod.getFrequencyPeriod());
+                                        currentPeriod.setFrequencyType(updatedPeriod.getFrequencyType());
+                                        currentPeriod.setFromDate(updatedPeriod.getFromDate());
+                                        currentPeriod.setToDate(updatedPeriod.getToDate());
+                                        currentPeriod.setNextDate(updatedPeriod.getNextDate());
+                                        workingSchedulesMap.put(line, currentPeriod);
                                         scheduleGrid.getDataProvider().refreshAll();
-                                        Notification.show("Sourcing loop intervals updated successfully.");
+                                        Notification.show("Repeated preriod updated successfully.");
                                 });
                                 dialog.open();
                         });
                         modifyScheduleBtn.addThemeName("small primary");
-                        modifyScheduleBtn.setEnabled(canUserModifyData);
-
-                        Button clearScheduleBtn = new Button("Remove Loop", e -> {
+                        modifyScheduleBtn.setEnabled(canUserModifyData && isBudgetConfigured);
+        
+                        Button clearScheduleBtn = new Button("Remove", e -> {
+                                
                                 workingSchedulesMap.remove(line);
                                 scheduleGrid.getDataProvider().refreshAll();
                                 recurringScheduleSection.setVisible(!workingSchedulesMap.isEmpty());
-                                Notification.show("Recurrence loop removed from this specific item row.");
+                                Notification.show("Repeated preriod removed successfully.");
                         });
                         clearScheduleBtn.addThemeName("small error");
-                        clearScheduleBtn.setEnabled(canUserModifyData);
+                        clearScheduleBtn.setEnabled(canUserModifyData && isBudgetConfigured );
 
                         return new HorizontalLayout(modifyScheduleBtn, clearScheduleBtn);
                 }).setHeader("Scheduling Maintenance Actions").setWidth("320px");
@@ -398,8 +400,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
                 List<PurchaseRequestLine> repeatableLines = new ArrayList<>();
                 for (PurchaseRequestLine line : dbLines) {
-                        // FORCED INITIALIZATION DEFAULT FALLBACK BOUNDARIES:
-                        // If approved qty is untouched, default it completely to requested limits safely
+                        
                         if (line.getApprovedQuantity() == null) {
                                 line.setApprovedQuantity(line.getRequestedQuantity());
                         }
@@ -408,6 +409,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                                 Optional<RepeatedPeriod> periodOpt = repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId());
                                 if (periodOpt.isPresent()) {
                                         workingSchedulesMap.put(line, periodOpt.get());
+                                        hasRepeatedPeriod.add(line);
                                         repeatableLines.add(line);
                                 }
                         }
@@ -420,7 +422,6 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         recurringScheduleSection.setVisible(false);
                 }
 
-                // Hydrate live totals right away on view rendering initialization
                 recalculateTotalApprovalEvaluationAmount();
         }
 
@@ -438,7 +439,6 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         
                         double requestedQty = line.getRequestedQuantity() != null ? line.getRequestedQuantity() : 0.0;
                         
-                        // Default fallback mapping inside calculation steps loops
                         if (line.getApprovedQuantity() == null) {
                                 line.setApprovedQuantity(requestedQty);
                         }
@@ -453,8 +453,8 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 
                 lineGrid.getDataProvider().refreshAll();
                 
-                requestedTotalAmount.setText("Total Amount Requested (Original Snapshot): " + liveRequestedTotal);
-                approvedTotalAmount.setText("Total Amount Evaluated (Live Approved Quantities): " + liveAdjustedTotal);
+                requestedTotalAmount.setText("Total Amount Requested : " + liveRequestedTotal);
+                approvedTotalAmount.setText("Total Amount After Approval : " + liveAdjustedTotal);
                 
                 if (remainingBudget < liveAdjustedTotal) {
                         approvedTotalAmount.getStyle().set("color", "#d32f2f").set("font-weight", "bold");
@@ -475,7 +475,6 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         return;
                 }
 
-                // Re-verify exact live computed totals dynamically right before execution mapping saves
                 recalculateTotalApprovalEvaluationAmount();
                 double finalAmount = getFinalCalculatedTotal();
 
@@ -490,24 +489,26 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         for (PurchaseRequestLine approvedLine : workingLinesList) {
                                 if (approvedLine.getApprovedQuantity() == 0) {
                                         approvedLine.setStatus(Status.REJECTED);
-                                } else if (approvedLine.getApprovedQuantity() < approvedLine.getRequestedQuantity()) {
-                                        approvedLine.setStatus(Status.PARTIALLY_APPROVED);
-                                } else {
-                                        approvedLine.setStatus(Status.APPROVED);
-                                }
-
+                                } 
                                 if (workingSchedulesMap.containsKey(approvedLine)) {
                                         RepeatedPeriod activeSchedule = workingSchedulesMap.get(approvedLine);
                                         activeSchedule.setReferType(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE);
                                         activeSchedule.setReferId(approvedLine.getId());
-                                        
                                         RepeatedPeriod savedPeriod = repeatedPeriodService.addRepeatedPeriod(activeSchedule, actingEmployeeGroupMember);
                                         approvedLine.setRepeatableId(savedPeriod.getId());
-                                } else {
-                                        approvedLine.setRepeatableId(null); 
-                                }
+                                } 
+                                lineService.updatePurchaseRequestLine(approvedLine,actingEmployeeGroupMember);
 
-                                lineService.updatePurchaseRequestLine(approvedLine);
+                                if(hasRepeatedPeriod.contains(approvedLine))
+                                {    if(workingSchedulesMap.containsKey(approvedLine))
+                                        {
+                                           repeatedPeriodService.updateRepeatedPeriod(workingSchedulesMap.get(approvedLine), actingEmployeeGroupMember);
+                                        }else{
+                                             RepeatedPeriod period= repeatedPeriodService.getRepeatedPeriodById(approvedLine.getRepeatableId()).get();
+                                                period.setStatus(RequestForQuotationStatus.CANCELLED);
+                                            repeatedPeriodService.updateRepeatedPeriod(period, actingEmployeeGroupMember);
+                                        }  
+                                }
                         }
 
                         approval.setStatus(Status.APPROVED);
@@ -538,7 +539,17 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                                 line.setApprovedQuantity(0.0);
                                 line.setItemTotalAmount(0.0);
                                 line.setStatus(Status.REJECTED);
-                                lineService.updatePurchaseRequestLine(line);
+                                lineService.updatePurchaseRequestLine(line,actingEmployeeGroupMember);
+                                if(hasRepeatedPeriod.contains(line))
+                                {    if(workingSchedulesMap.containsKey(line))
+                                        {
+                                           repeatedPeriodService.updateRepeatedPeriod(workingSchedulesMap.get(line), actingEmployeeGroupMember);
+                                        }else{
+                                             RepeatedPeriod period= repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId()).get();
+                                                period.setStatus(RequestForQuotationStatus.CANCELLED);
+                                            repeatedPeriodService.updateRepeatedPeriod(period, actingEmployeeGroupMember);
+                                        }  
+                                }
                         }
 
                         approval.setStatus(Status.REJECTED);

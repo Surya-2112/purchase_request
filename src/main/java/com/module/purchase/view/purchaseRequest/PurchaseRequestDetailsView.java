@@ -190,9 +190,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
                         Button deleteButton = new Button("Delete Request");
                         deleteButton.addClickListener(e -> {
-                                headerService.deletePurchaseRequestHeaderById(
-                                                header.getPurchaseRequestId(),
-                                                securityService.getLoggedInUser().getEmployee());
+                                headerService.deletePurchaseRequestHeaderById( header.getPurchaseRequestId(), securityService.getLoggedInUser().getEmployee());
 
                                 Notification.show("Purchase Request Deleted");
                                 getUI().ifPresent(ui -> ui.navigate("purchase-request"));
@@ -261,7 +259,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 approvalGrid.setAllRowsVisible(true);
                 approvalGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
-                // Document Grid Configuration
                 documentGrid.removeAllColumns();
                 documentGrid.addColumn(PurchaseRequestDocument::getFileName).setHeader("File Name").setAutoWidth(true);
                 documentGrid.addColumn(PurchaseRequestDocument::getFileType).setHeader("Type").setWidth("150px");

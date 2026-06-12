@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -16,9 +17,12 @@ import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Item;
+import com.module.purchase.entity.ItemVariant;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
+import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.ApprovalType;
@@ -39,6 +43,7 @@ public class RepeatedPeriodService {
     @Autowired
     private AuditLogsService auditLogsService;
 
+    @Lazy
     @Autowired
     private PurchaseRequestLineService purchaseRequestLineService;
 
@@ -47,6 +52,12 @@ public class RepeatedPeriodService {
 
     @Autowired
     private AssigningApprovalsService assigningApprovalsService;
+
+    @Autowired
+    private RequestForQuotationService requestForQuotationService; 
+
+    @Autowired
+    private CategoryService categoryService;
 
     public RepeatedPeriod save(RepeatedPeriod repeatedPeriod) {
         return repeatedPeriodRepository.save(repeatedPeriod);
@@ -102,7 +113,8 @@ public class RepeatedPeriodService {
     }
 
     public RepeatedPeriod updateRepeatedPeriod(RepeatedPeriod repeatedPeriod, Employee employee) {
-        getRepeatedPeriodById(repeatedPeriod.getId()); 
+        getRepeatedPeriodById(repeatedPeriod.getId());
+
         repeatedPeriod = save(repeatedPeriod);
         AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.REPEATED_PERIOD);
@@ -135,15 +147,14 @@ public class RepeatedPeriodService {
 
     public void assignedRepeatedTask()
     {   System.out.println("----------------------- RepeatedPeriod is called ----------------------");
-        List<RepeatedPeriod> pendingTasks= repeatedPeriodRepository.findPendingTasks(LocalDate.now());
-        List<RequestForQuotationLine> rfqlines = new ArrayList<RequestForQuotationLine>();
+        List<RepeatedPeriod> pendingTasks= repeatedPeriodRepository.findPendingTasks(LocalDate.now(),RequestForQuotationStatus.OPEN);
         for(RepeatedPeriod task:pendingTasks)
-        {
+        { 
             if(task.getReferType().equals(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE))
             {
                 PurchaseRequestLine newPrLine=new PurchaseRequestLine();
                 PurchaseRequestHeader newHeader= new PurchaseRequestHeader();
-                PurchaseRequestLine referline= purchaseRequestLineService.getPurchaseRequestLineById(task.getId()).orElse(null);
+                PurchaseRequestLine referline= purchaseRequestLineService.getPurchaseRequestLineById(task.getReferId()).orElse(null);
                 if(referline==null)
                 {   task.setNextDate(null);
                     task.setStatus(RequestForQuotationStatus.CLOSED);
@@ -183,10 +194,40 @@ public class RepeatedPeriodService {
                 }
             }
             else if(task.getReferType().equals(RepeatedPeriodReferType.CATEGORY)){
-                
 
+                List<PurchaseRequestLine> prLines = purchaseRequestLineService.getPurchaseLinesByCategory(categoryService.getCategoryById(task.getReferId()).get());
+               if(!prLines.isEmpty())
+                 {   
+                RequestForQuotation rfq=new RequestForQuotation();
+                    rfq.setRequestedDate(task.getNextDate());
+                    rfq.setRequestEndDate(LocalDate.now().plusDays(7));
+                    rfq.setStatus(RequestForQuotationStatus.DRAFT);
+                    requestForQuotationService.addRequestForQuotation(rfq, null);
+
+                RequestForQuotationLine rfqLine=new RequestForQuotationLine();
+                rfqLine.setItemVariant(prLines.get(0).getItemVariant());
+                rfqLine.setRequestedQuantity(0.0);
+                rfqLine.setRequestForQuotation(rfq);
+                for(PurchaseRequestLine line: prLines)
+                {
+                    if(!rfqLine.getItemVariant().equals(line.getItemVariant())){
+                        requestForQuotationService.addRfqLine(rfqLine);
+                        rfqLine=new RequestForQuotationLine();
+                        rfqLine.setItemVariant(line.getItemVariant());
+                        rfqLine.setRequestedQuantity(0.0);
+                        rfqLine.setRequestForQuotation(rfq);
+                    }
+                    rfqLine.setRequestedQuantity(line.getApprovedQuantity()+rfqLine.getRequestedQuantity());
+                    line.setRequestForQuotation(rfq);
+                    purchaseRequestLineService.updatePurchaseRequestLine(line, null);
+                }
+                requestForQuotationService.addRfqLine(rfqLine);
             }
-            task.setNextDate(task.getFrequencyType().calculateNext(LocalDate.now(),task.getFrequencyPeriod()));
+                
+            }
+            task.setNextDate(task.getFrequencyType().calculateNext(task.getNextDate(),task.getFrequencyPeriod()));
+            if(task.getToDate()!=null)
+            {task.setNextDate(task.getNextDate().isAfter(task.getToDate())?null:task.getNextDate());}
         }
     }
 }

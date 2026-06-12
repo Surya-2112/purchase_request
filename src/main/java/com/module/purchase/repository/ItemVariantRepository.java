@@ -10,5 +10,5 @@ import com.module.purchase.entity.ItemVariant;
 
 public interface ItemVariantRepository extends JpaRepository<ItemVariant, Long>, JpaSpecificationExecutor<ItemVariant> {
     
-    List<ItemVariant> findByItem(Item item);
+    List<ItemVariant> findByItemAndActive(Item item,Boolean active);
 }

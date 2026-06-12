@@ -299,7 +299,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
             List<PurchaseRequestLine> connectedPrLines = prLineService.getRequestForQuotation(currentRfq);
             for (PurchaseRequestLine prLine : connectedPrLines) {
                 prLine.setRequestForQuotation(null);
-                prLineService.updatePurchaseRequestLine(prLine);
+                prLineService.updatePurchaseRequestLine(prLine,actor);
             }
 
             List<Quotation> associatedQuotations = quotationService.getQuotationsByRfq(currentRfq);

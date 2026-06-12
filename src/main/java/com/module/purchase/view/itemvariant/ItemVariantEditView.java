@@ -80,14 +80,13 @@ public class ItemVariantEditView extends VerticalLayout
 
         H2 title = new H2("Update Item Variant");
 
-        // SET VALUES
-
         itemField.setValue(itemVariant.getItem());
+        itemField.setReadOnly(true);
 
-        specificationField.setValue(
-                itemVariant.getSpecification() == null
+        specificationField.setValue( itemVariant.getSpecification() == null
                         ? ""
                         : itemVariant.getSpecification());
+        specificationField.setReadOnly(true);
 
         if (itemVariant.getEstimatedUnitPrice() != null) {
 
@@ -95,10 +94,12 @@ public class ItemVariantEditView extends VerticalLayout
                     itemVariant.getEstimatedUnitPrice());
         }
 
-        activeField.setValue(
-                Boolean.TRUE.equals(itemVariant.getActive())
+        activeField.setValue(Boolean.TRUE.equals(itemVariant.getActive())
                         ? "Active"
                         : "Inactive");
+        if(itemVariantService.getItemVariantsByItem(itemVariant.getItem()).size()<2 && itemVariant.getActive())
+        {  activeField.setReadOnly(true);       
+        }
 
         FormLayout formLayout = new FormLayout();
 

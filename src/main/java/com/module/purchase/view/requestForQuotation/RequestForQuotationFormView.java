@@ -49,7 +49,6 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
     private final PurchaseRequestLineService prLineService;
     private final CategoryService categoryService;
     private final SecurityService securityService;
-    private final ItemService itemService;
 
     private RequestForQuotation editingRfq;
     private Category activeCategoryFilter;
@@ -75,12 +74,11 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
     private final Button cancelBtn = new Button("Back");
 
     public RequestForQuotationFormView(RequestForQuotationService rfqService, PurchaseRequestLineService prLineService,
-                                       CategoryService categoryService, ItemService itemService,SecurityService securityService) {
+                                       CategoryService categoryService,SecurityService securityService) {
         this.rfqService = rfqService;
         this.prLineService = prLineService;
         this.categoryService = categoryService;
         this.securityService = securityService;
-        this.itemService=itemService;
 
         setSizeFull();
         setPadding(false);
@@ -105,7 +103,7 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
                             if (prLine.getItemVariant() != null
                                     && prLine.getItemVariant().getId().equals(line.getItemVariant().getId())) {
                                 prLine.setRequestForQuotation(null);
-                                prLineService.updatePurchaseRequestLine(prLine);
+                                prLineService.updatePurchaseRequestLine(prLine,securityService.getLoggedInUser().getEmployee());
                                 temporaryImportedPrLinesList.remove(prLine); 
                             }
                         }
@@ -219,15 +217,7 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
             return;
         }
 
-        List<PurchaseRequestLine> matchedLines = new ArrayList<PurchaseRequestLine>();
-
-        for(Item item : itemService.getItemByCategory(category))
-        {
-            for(ItemVariant itemVariant:item.getItemVariants())
-            {
-                matchedLines.addAll(prLineService.getApprovedPurchaseLinesAvailableForRfq(itemVariant));
-            }
-        }
+        List<PurchaseRequestLine> matchedLines = prLineService.getPurchaseLinesByCategory(category);
         pendingPrLinesGrid.setItems(matchedLines);
     }
 
@@ -340,9 +330,10 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
                 newRfq.setRequestedDate(dateCommitValue);
                 newRfq.setRequestEndDate(requestEndDate.getValue());
                 newRfq.setStatus(targetedStatus);
+              //  newRfq.setCategory(categorySelector.getValue());
                 this.editingRfq = rfqService.addRequestForQuotation(newRfq, actor);
             } else {
-                editingRfq.setRequestedDate(dateCommitValue); // Freeze date value on status upgrades
+                editingRfq.setRequestedDate(dateCommitValue);
                 editingRfq.setRequestEndDate(requestEndDate.getValue());
                 editingRfq.setStatus(targetedStatus);
                 rfqService.updateRequestForQuotation(editingRfq, actor);
@@ -351,7 +342,7 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
             for (PurchaseRequestLine prLine : temporaryImportedPrLinesList) {
                 if (prLine.getRequestForQuotation() == null) {
                     prLine.setRequestForQuotation(editingRfq);
-                    prLineService.updatePurchaseRequestLine(prLine);
+                    prLineService.updatePurchaseRequestLine(prLine,actor);
                 }
             }
 

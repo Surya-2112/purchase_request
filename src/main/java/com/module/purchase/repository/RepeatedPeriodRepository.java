@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.enums.RepeatedPeriodReferType;
+import com.module.purchase.enums.RequestForQuotationStatus;
 
 @Repository
 public interface RepeatedPeriodRepository extends JpaRepository<RepeatedPeriod, Long>, JpaSpecificationExecutor<RepeatedPeriod> {
@@ -20,6 +21,6 @@ public interface RepeatedPeriodRepository extends JpaRepository<RepeatedPeriod, 
 
     void deleteByReferTypeAndReferId(RepeatedPeriodReferType referType, Long referId);
 
-    @Query("SELECT t FROM RepeatedPeriod t WHERE t.nextDate <= :today")
-    List<RepeatedPeriod> findPendingTasks(@Param("today") LocalDate today);
+   @Query(" SELECT t FROM RepeatedPeriod t WHERE t.nextDate <= :today  AND t.status = :status ")
+List<RepeatedPeriod> findPendingTasks( @Param("today") LocalDate today, @Param("status") RequestForQuotationStatus status);
 }

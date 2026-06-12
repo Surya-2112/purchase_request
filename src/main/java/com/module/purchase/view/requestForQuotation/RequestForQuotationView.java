@@ -32,30 +32,30 @@ public class RequestForQuotationView extends VerticalLayout {
     private final SecurityService securityService;
     private final QuotationService quotationService;
 
-    // Grids
+    private Boolean isVendor = false;
+
     private final Grid<RequestForQuotation> rfqGrid = new Grid<>(RequestForQuotation.class, false);
 
-    // Pagination Parameters
     private int currentPage = 0;
     private int pageSize = 25;
     private int totalPages = 1;
     private final Span pageInfo = new Span();
 
-    // Filter Fields
     private final TextField rfqIdField = new TextField("RFQ ID");
     private final ComboBox<RequestForQuotationStatus> statusFilter = new ComboBox<>("Status");
     private final DatePicker requestedDateFilter = new DatePicker("Requested Date");
 
-   public RequestForQuotationView(RequestForQuotationService rfqService, SecurityService securityService, QuotationService quotationService) {
+    public RequestForQuotationView(RequestForQuotationService rfqService, SecurityService securityService,
+            QuotationService quotationService) {
         this.rfqService = rfqService;
         this.securityService = securityService;
-        this.quotationService= quotationService;
+        this.quotationService = quotationService;
 
         setSizeFull();
         setPadding(true);
         setSpacing(true);
 
-        // REMOVED statusFilter.setValue from here to prevent the IllegalStateException!
+        isVendor = !(securityService.getLoggedInUser().getVendor() == null);
 
         buildUI();
         loadData();
@@ -63,7 +63,6 @@ public class RequestForQuotationView extends VerticalLayout {
 
     private void buildUI() {
         H2 title = new H2("Requests For Quotations (RFQ)");
-
         Button addRfqButton = new Button("Add Request For Quotation");
         addRfqButton.addThemeName("primary success");
         addRfqButton.addClickListener(event -> getUI().ifPresent(ui -> ui.navigate("rfq-form")));
@@ -74,14 +73,16 @@ public class RequestForQuotationView extends VerticalLayout {
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
         headerLayout.setAlignItems(Alignment.CENTER);
 
-        // FIXED: Populate the list of items FIRST...
         statusFilter.setItems(RequestForQuotationStatus.values());
-        // ...and NOW it is perfectly safe to set the default selection value!
-        statusFilter.setValue(RequestForQuotationStatus.DRAFT); 
-        
+        statusFilter.setValue(RequestForQuotationStatus.DRAFT);
         statusFilter.setClearButtonVisible(true);
         statusFilter.setWidth("200px");
-        
+
+        if (isVendor) {
+            statusFilter.setVisible(false);
+            statusFilter.setValue(RequestForQuotationStatus.OPEN);
+        }
+
         rfqIdField.setPlaceholder("Search ID...");
         rfqIdField.setWidth("150px");
 
@@ -93,7 +94,8 @@ public class RequestForQuotationView extends VerticalLayout {
 
         Button clear = new Button("Clear", e -> {
             rfqIdField.clear();
-            statusFilter.setValue(RequestForQuotationStatus.DRAFT); 
+            statusFilter.setValue(RequestForQuotationStatus.DRAFT);
+            if (isVendor) { statusFilter.setValue(RequestForQuotationStatus.OPEN); }
             requestedDateFilter.clear();
             currentPage = 0;
             loadData();
@@ -102,30 +104,29 @@ public class RequestForQuotationView extends VerticalLayout {
         HorizontalLayout filtersLayout = new HorizontalLayout(rfqIdField, statusFilter, requestedDateFilter, search, clear);
         filtersLayout.setAlignItems(Alignment.END);
         filtersLayout.setSpacing(true);
-        
-        // Grid Columns Definitions Layout
+
         rfqGrid.removeAllColumns();
-        
+
         rfqGrid.addColumn(RequestForQuotation::getId).setHeader("RFQ ID").setWidth("110px").setFlexGrow(0);
-        rfqGrid.addColumn(rfq -> rfq.getRequestedDate() != null ? rfq.getRequestedDate().toString() : "-").setHeader("Requested Date").setAutoWidth(true);
-        rfqGrid.addColumn(rfq -> rfq.getRequestEndDate() != null ? rfq.getRequestEndDate().toString() : "-").setHeader("Closing/End Date").setAutoWidth(true);
-        
+        rfqGrid.addColumn(rfq -> rfq.getRequestedDate() != null ? rfq.getRequestedDate().toString() : "-")
+                .setHeader("Requested Date").setAutoWidth(true);
+        rfqGrid.addColumn(rfq -> rfq.getRequestEndDate() != null ? rfq.getRequestEndDate().toString() : "-")
+                .setHeader("Closing/End Date").setAutoWidth(true);
+
         rfqGrid.addColumn(rfq -> quotationService.getCountByRFQ(rfq))
                 .setHeader("Quotations Recv").setWidth("150px");
 
-        gridStatusBadgeMapping(); // Dynamic styling colors assignment injection row helper
+        gridStatusBadgeMapping();
 
         rfqGrid.setWidthFull();
         rfqGrid.setHeightFull();
         rfqGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
-        // Double click routing to drill down details page layout panels
         rfqGrid.addItemDoubleClickListener(event -> {
             RequestForQuotation selectedRfq = event.getItem();
             getUI().ifPresent(ui -> ui.navigate("request-for-quotation-details/" + selectedRfq.getId()));
         });
 
-        // Pagination layout configurations
         Button prev = new Button("Prev", event -> {
             if (currentPage > 0) {
                 currentPage--;
@@ -151,7 +152,8 @@ public class RequestForQuotationView extends VerticalLayout {
             }
         });
 
-        HorizontalLayout paginationLayout = new HorizontalLayout(prev, pageInfo, next, new Span("Page Size"), pageSizeField);
+        HorizontalLayout paginationLayout = new HorizontalLayout(prev, pageInfo, next, new Span("Page Size"),
+                pageSizeField);
         paginationLayout.setWidthFull();
         paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         paginationLayout.setAlignItems(Alignment.CENTER);
@@ -160,17 +162,16 @@ public class RequestForQuotationView extends VerticalLayout {
         expand(rfqGrid);
     }
 
-   private void gridStatusBadgeMapping() {
+    private void gridStatusBadgeMapping() {
         rfqGrid.addComponentColumn(rfq -> {
             Span badge = new Span(rfq.getStatus() != null ? rfq.getStatus().name() : "UNKNOWN");
-            
-            // Safe inline style pair declarations
+
             badge.getStyle()
-                 .set("padding", "2px 8px")
-                 .set("border-radius", "4px")
-                 .set("font-weight", "bold")
-                 .set("font-size", "12px");
-            
+                    .set("padding", "2px 8px")
+                    .set("border-radius", "4px")
+                    .set("font-weight", "bold")
+                    .set("font-size", "12px");
+
             if (rfq.getStatus() == RequestForQuotationStatus.DRAFT) {
                 badge.getStyle().set("background-color", "#f1f5f9").set("color", "#475569");
             } else if (rfq.getStatus() == RequestForQuotationStatus.OPEN) {
@@ -178,26 +179,25 @@ public class RequestForQuotationView extends VerticalLayout {
             } else if (rfq.getStatus() == RequestForQuotationStatus.CLOSED) {
                 badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
             }
-            
+
             return badge;
         }).setHeader("Status").setWidth("140px").setFlexGrow(0);
     }
 
     private void loadData() {
+
         Pageable pageable = PageRequest.of(currentPage, pageSize);
-        
+
         RequestForQuotation filterCriteria = new RequestForQuotation();
         if (!rfqIdField.isEmpty()) {
             try {
                 filterCriteria.setId(Long.valueOf(rfqIdField.getValue().trim()));
             } catch (NumberFormatException nfe) {
-                // Ignore silent fallback if raw text strings entered accidentally
             }
         }
         filterCriteria.setStatus(statusFilter.getValue());
         filterCriteria.setRequestedDate(requestedDateFilter.getValue());
 
-        // Calls your backend paged specification endpoint mapper cleanly
         Page<RequestForQuotation> page = rfqService.getRequestsForQuotationPaged(filterCriteria, pageable);
 
         if (page != null) {

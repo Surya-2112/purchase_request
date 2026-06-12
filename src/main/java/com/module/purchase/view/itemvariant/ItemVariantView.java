@@ -27,20 +27,15 @@ public class ItemVariantView extends VerticalLayout {
 
     private final ItemVariantService itemVariantService;
 
-    private final Grid<ItemVariant> itemVariantGrid =
-            new Grid<>(ItemVariant.class, false);
+    private final Grid<ItemVariant> itemVariantGrid = new Grid<>(ItemVariant.class, false);
 
-    private final TextField variantIdField =
-            new TextField("Variant ID");
+    private final TextField variantIdField = new TextField("Variant ID");
 
-    private final ComboBox<Item> itemField =
-            new ComboBox<>("Item");
+    private final ComboBox<Item> itemField = new ComboBox<>("Item");
 
-    private final TextField specificationField =
-            new TextField("Specification");
+    private final TextField specificationField = new TextField("Specification");
 
-    private final ComboBox<String> activeField =
-            new ComboBox<>("Active");
+    private final ComboBox<String> activeField = new ComboBox<>("Active");
 
     private int currentPage = 0;
     private int pageSize = 25;
@@ -48,7 +43,8 @@ public class ItemVariantView extends VerticalLayout {
     private final Span pageInfo = new Span();
 
     private ItemVariant currentFilter = new ItemVariant();
-
+    
+   
     public ItemVariantView(
             ItemVariantService itemVariantService,
             ItemService itemService,
@@ -60,7 +56,6 @@ public class ItemVariantView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
-        // HEADER
         H2 title = new H2("Item Variant List");
 
         Button addButton = new Button("Add Variant");
@@ -75,23 +70,20 @@ public class ItemVariantView extends VerticalLayout {
             form.open();
         });
 
-        addButton.setVisible(
-                securityService.canAccessView("item-variant-form"));
+        addButton.setVisible(securityService.canAccessView("item-variant-form"));
 
-        HorizontalLayout headerLayout =
-                new HorizontalLayout(title, addButton);
+        HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
 
         headerLayout.setWidthFull();
-        headerLayout.setJustifyContentMode(
-                JustifyContentMode.BETWEEN);
+        headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-        // FILTERS
         itemField.setItems(itemService.getItems());
         itemField.setItemLabelGenerator(Item::getItemName);
         itemField.setClearButtonVisible(true);
 
         activeField.setItems("Yes", "No");
-        activeField.setClearButtonVisible(true);
+        currentFilter.setActive(null);
+
 
         Button searchButton =
                 new Button("Search", e -> applyFilter());
@@ -153,9 +145,7 @@ public class ItemVariantView extends VerticalLayout {
                                     + variant.getId()));
         });
 
-        // PAGE SIZE
-        ComboBox<Integer> pageSizeField =
-                new ComboBox<>();
+        ComboBox<Integer> pageSizeField = new ComboBox<>();
 
         pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);
@@ -168,7 +158,6 @@ public class ItemVariantView extends VerticalLayout {
             loadVariants();
         });
 
-        // PAGINATION
         Button previousButton =
                 new Button("Previous", e -> {
 
@@ -197,10 +186,8 @@ public class ItemVariantView extends VerticalLayout {
                         pageSizeField);
 
         paginationLayout.setWidthFull();
-        paginationLayout.setJustifyContentMode(
-                JustifyContentMode.CENTER);
-        paginationLayout.setAlignItems(
-                Alignment.CENTER);
+        paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        paginationLayout.setAlignItems(Alignment.CENTER);
 
         loadVariants();
 
@@ -215,8 +202,7 @@ public class ItemVariantView extends VerticalLayout {
 
     private void loadVariants() {
 
-        Page<ItemVariant> page =
-                itemVariantService.getAllItemVariants(
+        Page<ItemVariant> page = itemVariantService.getAllItemVariants(
                         currentFilter,
                         currentPage,
                         pageSize);
@@ -236,26 +222,18 @@ public class ItemVariantView extends VerticalLayout {
 
         if (!variantIdField.getValue().isEmpty()) {
 
-            variantId = Long.valueOf(
-                    variantIdField.getValue().trim());
+            variantId = Long.valueOf(variantIdField.getValue().trim());
         }
 
         currentFilter = new ItemVariant();
 
         currentFilter.setId(variantId);
 
-        currentFilter.setItem(
-                itemField.getValue());
+        currentFilter.setItem(itemField.getValue());
 
-        currentFilter.setSpecification(
-                specificationField.getValue());
+        currentFilter.setSpecification(specificationField.getValue());
 
-        if (activeField.getValue() != null) {
-
-            currentFilter.setActive(
-                    activeField.getValue()
-                            .equals("Yes"));
-        }
+        currentFilter.setActive(activeField.getValue()==null? null : activeField.getValue().equals("YES"));
 
         currentPage = 0;
 

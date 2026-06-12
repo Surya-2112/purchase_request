@@ -677,7 +677,7 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                 dbLine.setItemVariant(memoryLine.getItemVariant());
                                 dbLine.setRequestedQuantity(memoryLine.getRequestedQuantity());
                                 dbLine.setDescription(memoryLine.getDescription());
-                                dbLine.setStatus(Status.WAITING_APPROVAL);
+                                dbLine.setStatus(Status.DRAFT);
                                 
                                 double unitPrice = (memoryLine.getItemVariant().getEstimatedUnitPrice() != null) 
                                                 ? memoryLine.getItemVariant().getEstimatedUnitPrice() : 0.0;
@@ -689,11 +689,11 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                 if (pendingLineSchedulesMap.containsKey(memoryLine)) {
                                         RepeatedPeriod rawSchedule = pendingLineSchedulesMap.get(memoryLine);
                                         rawSchedule.setReferType(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE);
-                                        rawSchedule.setStatus(RequestForQuotationStatus.OPEN);
+                                        rawSchedule.setStatus(RequestForQuotationStatus.DRAFT);
                                         rawSchedule.setReferId(dbLine.getId());     
                                         RepeatedPeriod savedSchedule = repeatedPeriodService.addRepeatedPeriod(rawSchedule, currentUser);
                                         dbLine.setRepeatableId(savedSchedule.getId());
-                                        lineService.updatePurchaseRequestLine(dbLine);
+                                        lineService.updatePurchaseRequestLine(dbLine,currentUser);
                                 }
                         }
                 }

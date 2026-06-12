@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
@@ -27,6 +28,7 @@ import com.module.purchase.repository.DepartmentBudgetRepository;
 import com.module.purchase.specification.DepartmentBudgetSpecification;
 
 @Service
+@Transactional
 public class DepartmentBudgetService {
 
     @Autowired

@@ -29,9 +29,6 @@ public class ItemVariantForm extends Dialog {
     private final NumberField estimatedPriceField =
             new NumberField("Estimated Unit Price");
 
-    private final ComboBox<String> activeField =
-            new ComboBox<>("Active");
-
     public ItemVariantForm(
             ItemVariantService itemVariantService,
             ItemService itemService,
@@ -56,15 +53,10 @@ public class ItemVariantForm extends Dialog {
         // PRICE
         estimatedPriceField.setMin(0);
 
-        // ACTIVE
-        activeField.setItems("Yes", "No");
-        activeField.setValue("Yes");
-
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
                 itemField,
-                activeField,
                 estimatedPriceField,
                 specificationField
         );
@@ -114,8 +106,7 @@ public class ItemVariantForm extends Dialog {
             variant.setSpecification(
                     specificationField.getValue());
 
-            variant.setActive(
-                    activeField.getValue().equals("Yes"));
+            variant.setActive(true);
 
             if (estimatedPriceField.getValue() != null) {
 

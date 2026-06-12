@@ -36,10 +36,8 @@ public class ItemVariantSpecification {
 
     public static Specification<ItemVariant> hasActive(Boolean active) {
 
-        return (root, query, cb) ->
-                active == null
-                        ? null
-                        : cb.equal(root.get("active"), active);
+        return (root, query, cb) ->  active == null
+                        ? null: cb.equal(root.get("active"), active);
     }
 
     public static Specification<ItemVariant> hasEstimatedUnitPrice(Double estimatedUnitPrice) {
