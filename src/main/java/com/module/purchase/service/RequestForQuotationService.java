@@ -40,12 +40,10 @@ public class RequestForQuotationService {
     @Autowired
     private AuditLogsService auditLogsService;
 
-    // SAVE BASE METHOD
     public RequestForQuotation saveRequestForQuotation(RequestForQuotation rfq) {
         return rfqRepository.save(rfq);
     }
 
-    // CREATE NEW RFQ MASTER ENTITY
     public RequestForQuotation addRequestForQuotation(RequestForQuotation rfq, Employee employee) {
         if (rfq.getRequestedDate() == null) {
             rfq.setRequestedDate(LocalDate.now());
@@ -63,7 +61,7 @@ public class RequestForQuotationService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
 
-        // auditLogsService.addAuditLog(log);
+         auditLogsService.addAuditLog(log);
 
         return rfq;
     }
@@ -82,8 +80,6 @@ public class RequestForQuotationService {
         return rfqRepository.findAll();
     }
 
-   
-
     public Page<RequestForQuotation> getRequestsForQuotationPaged(RequestForQuotation filter, Pageable pageable) {
         if (filter == null) {
             filter = new RequestForQuotation();
@@ -97,7 +93,6 @@ public class RequestForQuotationService {
         return rfqRepository.findAll(spec, pageable);
     }
 
-    // UPDATE RFQ HEADER ENTITY
     public RequestForQuotation updateRequestForQuotation(RequestForQuotation rfq, Employee employee) {
         getRequestForQuotationById(rfq.getId());
 
@@ -110,7 +105,7 @@ public class RequestForQuotationService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
 
-        // auditLogsService.addAuditLog(log);
+         auditLogsService.addAuditLog(log);
 
         return rfq;
     }
@@ -132,8 +127,6 @@ public class RequestForQuotationService {
                 purchaseRequestLineService.updatePurchaseRequestLine(prLine);
             }
         }
-
-
         if (existingRfq.getRequestForQuotationLines() != null && !existingRfq.getRequestForQuotationLines().isEmpty()) {
             rfqLineRepository.deleteAll(existingRfq.getRequestForQuotationLines());
         }
@@ -146,7 +139,7 @@ public class RequestForQuotationService {
         log.setAction(Action.DELETE);
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
-        // auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(log);
     }
 
     public RequestForQuotationLine addRfqLine(RequestForQuotationLine line) {

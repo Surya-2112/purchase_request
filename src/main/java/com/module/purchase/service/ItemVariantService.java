@@ -36,10 +36,7 @@ public class ItemVariantService {
         return itemVariantRepository.save(itemVariant);
     }
 
-    // CREATE
-    public ItemVariant addItemVariant(
-            ItemVariant itemVariant,
-            Employee employee) {
+    public ItemVariant addItemVariant(  ItemVariant itemVariant,  Employee employee) {
 
         itemVariant = saveItemVariant(itemVariant);
 
@@ -50,12 +47,11 @@ public class ItemVariantService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
 
-     //   auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(log);
 
         return itemVariant;
     }
 
-    // GET BY ID
     public Optional<ItemVariant> getItemVariantById(Long id) {
 
         Optional<ItemVariant> itemVariant =
@@ -69,7 +65,6 @@ public class ItemVariantService {
         return itemVariant;
     }
 
-    // LIST ALL
     public List<ItemVariant> getItemVariants() {
         return itemVariantRepository.findAll();
     }
@@ -79,11 +74,7 @@ public class ItemVariantService {
         return itemVariantRepository.findByItem(item);
     }
 
-    // PAGINATION + FILTER
-    public Page<ItemVariant> getAllItemVariants(
-            ItemVariant itemVariant,
-            int page,
-            int size) {
+    public Page<ItemVariant> getAllItemVariants(ItemVariant itemVariant, int page, int size) {
 
         Specification<ItemVariant> spec = Specification
                 .where(ItemVariantSpecification.hasId(itemVariant.getId()))
@@ -98,10 +89,7 @@ public class ItemVariantService {
         return itemVariantRepository.findAll(spec, pageable);
     }
 
-    // UPDATE
-    public ItemVariant updateItemVariant(
-            ItemVariant itemVariant,
-            Employee employee) {
+    public ItemVariant updateItemVariant(ItemVariant itemVariant,Employee employee) {
 
         getItemVariantById(itemVariant.getId()).get();
 
@@ -114,15 +102,12 @@ public class ItemVariantService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
 
-        //auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(log);
 
         return itemVariant;
     }
 
-    // DELETE
-    public void deleteItemVariantById(
-            Long id,
-            Employee employee) {
+    public void deleteItemVariantById(Long id, Employee employee) {
 
         ItemVariant existing =
                 getItemVariantById(id).get();
@@ -164,6 +149,6 @@ public class ItemVariantService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
 
-        //auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(log);
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ResourceNotFoundException;
+import com.module.purchase.entity.ItemVariant;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RequestForQuotation;
@@ -36,11 +37,6 @@ public class PurchaseRequestLineService {
     public List<PurchaseRequestLine> getPurchaseRequestLineByHeader(PurchaseRequestHeader header)
     {
         return purchaseRequestLineRepository.findByPurchaseRequestHeader(header);
-    }
-
-    public List<PurchaseRequestLine> getApprovedLinesAvailableForRfq()
-    {
-        return purchaseRequestLineRepository.findAvailableApprovedLinesForRfq(Status.DRAFT);
     }
 
     public PurchaseRequestLine updatePurchaseRequestLine(PurchaseRequestLine purchaseRequestLine) {
@@ -73,5 +69,10 @@ public class PurchaseRequestLineService {
     public List<PurchaseRequestLine> getRequestForQuotation(RequestForQuotation rfq)
     {
         return purchaseRequestLineRepository.findByRequestForQuotation(rfq);
+    }
+
+    public List<PurchaseRequestLine> getApprovedPurchaseLinesAvailableForRfq(ItemVariant itemVariant)
+    {  
+       return purchaseRequestLineRepository.findByItemVariantAndRequestForQuotationIsNullAndStatusIn(itemVariant,List.of(Status.APPROVED,Status.PARTIALLY_APPROVED));
     }
 }

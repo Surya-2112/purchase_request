@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ResourceNotFoundException;
+import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseRequestHeader;
@@ -20,8 +21,10 @@ import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.enums.Action;
+import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
+import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
 import com.module.purchase.repository.RepeatedPeriodRepository;
 import com.module.purchase.specification.RepeatedPeriodSpecification;
@@ -41,6 +44,9 @@ public class RepeatedPeriodService {
 
     @Autowired
     private PurchaseRequestHeaderService purchaseRequestHeaderService;
+
+    @Autowired
+    private AssigningApprovalsService assigningApprovalsService;
 
     public RepeatedPeriod save(RepeatedPeriod repeatedPeriod) {
         return repeatedPeriodRepository.save(repeatedPeriod);
@@ -128,9 +134,9 @@ public class RepeatedPeriodService {
     }
 
     public void assignedRepeatedTask()
-    {   System.out.println("-----------------------8 RepeatedPeriod is called ----------------------");
+    {   System.out.println("----------------------- RepeatedPeriod is called ----------------------");
         List<RepeatedPeriod> pendingTasks= repeatedPeriodRepository.findPendingTasks(LocalDate.now());
-    //    List<RequestForQuotationLine> rfqlines = new ArrayList<RequestForQuotationLine>();
+        List<RequestForQuotationLine> rfqlines = new ArrayList<RequestForQuotationLine>();
         for(RepeatedPeriod task:pendingTasks)
         {
             if(task.getReferType().equals(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE))
@@ -140,6 +146,7 @@ public class RepeatedPeriodService {
                 PurchaseRequestLine referline= purchaseRequestLineService.getPurchaseRequestLineById(task.getId()).orElse(null);
                 if(referline==null)
                 {   task.setNextDate(null);
+                    task.setStatus(RequestForQuotationStatus.CLOSED);
                     updateRepeatedPeriod(task,null);
                     continue;
                 }
@@ -147,21 +154,36 @@ public class RepeatedPeriodService {
                 newPrLine.setRequestedQuantity(referline.getRequestedQuantity());
                 newPrLine.setDescription("");
                 newPrLine.setItemUnitPrice(referline.getItemUnitPrice());
-                newPrLine.setStatus(Status.DRAFT);
+                newPrLine.setStatus(Status.WAITING_APPROVAL);
                 newPrLine.setItemTotalAmount(referline.getItemTotalAmount());
 
-                newHeader.setCreatedBy(null);
+                newHeader.setCreatedBy(referline.getPurchaseRequestHeader().getCreatedBy());
                 newHeader.setCreatedDate(LocalDate.now());
-                newHeader.setStatus(Status.DRAFT);
+                newHeader.setStatus(Status.WAITING_APPROVAL);
                 newHeader.setForDepartment(referline.getPurchaseRequestHeader().getForDepartment());
-                newHeader.setLevel(1);
+                newHeader.setLevel(referline.getPurchaseRequestHeader().getLevel());
                 newHeader.setTotalAmount(newPrLine.getItemTotalAmount());
 
-                purchaseRequestHeaderService.addPurchaseRequestHeader(newHeader, null);
+                newHeader=purchaseRequestHeaderService.addPurchaseRequestHeader(newHeader, null);
                 newPrLine.setPurchaseRequestHeader(newHeader);
                 purchaseRequestLineService.addPurchaseRequestLine(newPrLine);
+
+                for(AssigningApprovals approvals:assigningApprovalsService.getAssigningApprovalByTypeAndReferId(ApprovalType.PURCHASE_REQUEST, referline.getPurchaseRequestHeader().getPurchaseRequestId()))
+                {  AssigningApprovals newApproval=new AssigningApprovals();
+
+                    newApproval.setApprovalType(approvals.getApprovalType());
+                    newApproval.setAssignedBy(approvals.getAssignedBy());
+                    newApproval.setEmployeeGroup(approvals.getEmployeeGroup());
+                    newApproval.setAssignedDate(LocalDate.now());
+                    newApproval.setLevel(approvals.getLevel());
+                    newApproval.setStatus(Status.DRAFT);
+                    newApproval.setSource(approvals.getSource());
+                    newApproval.setReferenceId(newHeader.getPurchaseRequestId());
+                    assigningApprovalsService.addApprovals(newApproval,null);
+                }
             }
-            else{
+            else if(task.getReferType().equals(RepeatedPeriodReferType.CATEGORY)){
+                
 
             }
             task.setNextDate(task.getFrequencyType().calculateNext(LocalDate.now(),task.getFrequencyPeriod()));

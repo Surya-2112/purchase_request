@@ -108,15 +108,13 @@ public class VendorForm extends Dialog {
 
             Vendor vendor = new Vendor();
 
-            // BASIC DETAILS
             vendor.setVendorName(
                     vendorNameField.getValue().trim());
 
             vendor.setVendorEmail(
                     vendorEmailField.getValue().trim());
 
-            vendor.setVendorPhoneNumber(
-                    vendorPhoneField.getValue().trim());
+            vendor.setVendorPhoneNumber(vendorPhoneField.getValue().trim().equals("")?null:vendorPhoneField.getValue());
 
             vendor.setActive(true);
 

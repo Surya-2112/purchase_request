@@ -15,6 +15,7 @@ import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
+import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Item;
 import com.module.purchase.enums.Action;
@@ -114,6 +115,11 @@ public class ItemService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
         auditLogsService.addAuditLog(log);
+    }
+
+    public List<Item> getItemByCategory(Category category)
+    {
+        return itemRepository.findByCategory(category);
     }
 
 }

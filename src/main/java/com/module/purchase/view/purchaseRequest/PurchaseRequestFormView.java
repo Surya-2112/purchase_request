@@ -21,6 +21,7 @@ import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.entity.Users;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
+import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.ItemService;
@@ -688,6 +689,7 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                                 if (pendingLineSchedulesMap.containsKey(memoryLine)) {
                                         RepeatedPeriod rawSchedule = pendingLineSchedulesMap.get(memoryLine);
                                         rawSchedule.setReferType(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE);
+                                        rawSchedule.setStatus(RequestForQuotationStatus.OPEN);
                                         rawSchedule.setReferId(dbLine.getId());     
                                         RepeatedPeriod savedSchedule = repeatedPeriodService.addRepeatedPeriod(rawSchedule, currentUser);
                                         dbLine.setRepeatableId(savedSchedule.getId());

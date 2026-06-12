@@ -8,11 +8,14 @@ import java.util.Set;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Item;
+import com.module.purchase.entity.ItemVariant;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.service.CategoryService;
+import com.module.purchase.service.ItemService;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.RequestForQuotationService;
 import com.module.purchase.view.MainLayout;
@@ -46,6 +49,7 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
     private final PurchaseRequestLineService prLineService;
     private final CategoryService categoryService;
     private final SecurityService securityService;
+    private final ItemService itemService;
 
     private RequestForQuotation editingRfq;
     private Category activeCategoryFilter;
@@ -53,36 +57,30 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
     private final VerticalLayout demandSourcingSection = new VerticalLayout();
     private final Grid.Column<RequestForQuotationLine> actionColumn;
 
-    // Master Header Fields
     private final DatePicker requestedDate = new DatePicker("Requested Date");
     private final DatePicker requestEndDate = new DatePicker("Quotation Closing / End Date");
 
-    // Category Batch Loader Controls
     private final ComboBox<Category> categorySelector = new ComboBox<>("Filter by Item Category");
     private final Grid<PurchaseRequestLine> pendingPrLinesGrid = new Grid<>(PurchaseRequestLine.class, false);
     private final Button importSelectedLinesBtn = new Button("Add Selected Lines to RFQ");
 
-    // Unified RFQ Workspace Grid
     private final Grid<RequestForQuotationLine> rfqLinesGrid = new Grid<>(RequestForQuotationLine.class, false);
     private final List<RequestForQuotationLine> rfqWorkingLinesList = new ArrayList<>();
     
-    // TRACKER LIST: Captures locally-added PR rows to remove them from selection
     private final List<PurchaseRequestLine> temporaryImportedPrLinesList = new ArrayList<>();
 
-    // Footer Actions
     private final Button saveDraftBtn = new Button("Save as Draft");
     private final Button saveAndOpenBtn = new Button("Save and Open");
     private final Button deleteRfqBtn = new Button("Delete RFQ");
     private final Button cancelBtn = new Button("Back");
 
-    public RequestForQuotationFormView(RequestForQuotationService rfqService,
-                                       PurchaseRequestLineService prLineService,
-                                       CategoryService categoryService,
-                                       SecurityService securityService) {
+    public RequestForQuotationFormView(RequestForQuotationService rfqService, PurchaseRequestLineService prLineService,
+                                       CategoryService categoryService, ItemService itemService,SecurityService securityService) {
         this.rfqService = rfqService;
         this.prLineService = prLineService;
         this.categoryService = categoryService;
         this.securityService = securityService;
+        this.itemService=itemService;
 
         setSizeFull();
         setPadding(false);
@@ -133,7 +131,6 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
 
         H2 formTitle = new H2("Manage Request for Quotation (RFQ)");
 
-        // Plain Text Label Style: completely flattens the input field aesthetics
         requestedDate.setValue(LocalDate.now());
         requestedDate.setReadOnly(true);
 
@@ -222,19 +219,15 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
             return;
         }
 
-        List<Long> importedLineIds = temporaryImportedPrLinesList.stream()
-                .map(PurchaseRequestLine::getId) 
-                .toList();
+        List<PurchaseRequestLine> matchedLines = new ArrayList<PurchaseRequestLine>();
 
-        List<PurchaseRequestLine> matchedLines = prLineService.getApprovedLinesAvailableForRfq().stream()
-                .filter(line -> line.getRequestForQuotation() == null)
-                .filter(line -> !importedLineIds.contains(line.getId()))
-                .filter(line -> line.getItemVariant() != null &&
-                        line.getItemVariant().getItem() != null &&
-                        line.getItemVariant().getItem().getCategory() != null &&
-                        category.getCategoryId().equals(line.getItemVariant().getItem().getCategory().getCategoryId()))
-                .toList();
-
+        for(Item item : itemService.getItemByCategory(category))
+        {
+            for(ItemVariant itemVariant:item.getItemVariants())
+            {
+                matchedLines.addAll(prLineService.getApprovedPurchaseLinesAvailableForRfq(itemVariant));
+            }
+        }
         pendingPrLinesGrid.setItems(matchedLines);
     }
 
