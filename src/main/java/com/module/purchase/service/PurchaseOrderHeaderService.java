@@ -28,7 +28,10 @@ import com.module.purchase.mapper.PurchaseOrderMapper;
 import com.module.purchase.repository.PurchaseOrderHeaderRepository;
 import com.module.purchase.specification.PurchaseOrderSpecification;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
+@Transactional
 public class PurchaseOrderHeaderService {
     
     @Autowired
@@ -109,40 +112,61 @@ public class PurchaseOrderHeaderService {
         return prpage.map(purchaseOrderMapper::toPurchaseOrderDTO);
     }
 
-    public void genratePurchaseOrder(Quotation quotation)
-    {   
-        PurchaseOrderHeader purchaseOrderHeader=new PurchaseOrderHeader();
+    public void genratePurchaseOrder(Quotation quotation) {   
+        PurchaseOrderHeader purchaseOrderHeader = new PurchaseOrderHeader();
         purchaseOrderHeader.setQuotation(quotation);
         purchaseOrderHeader.setStatus(Status.DRAFT);
-        purchaseOrderHeader.setTotalAmount(quotation.getTotalAmount());
         purchaseOrderHeader.setCreatedDate(LocalDate.now());
         purchaseOrderHeader.setVendor(quotation.getVendor());
         purchaseOrderHeader.setCreatedBy(null);
-
-        addPurchaseOrderHeader(purchaseOrderHeader,null);
-        List<QuotationLine> lines= quotationService.getLinesByQuotation(quotation);
-        for(QuotationLine line :lines)
-        {    PurchaseOrderLine poline=new PurchaseOrderLine();
+        purchaseOrderHeader.setLevel(0);
+      purchaseOrderHeader.setTotalAmount(1.0);
+        
+        
+        purchaseOrderHeader = savePurchaseOrderHeader(purchaseOrderHeader);
+        double aggregatePurchaseOrderGrossValue = 0.0;
+        
+        List<QuotationLine> lines = quotationService.getLinesByQuotation(quotation);
+        
+        for (QuotationLine line : lines) {   
+            PurchaseOrderLine poline = new PurchaseOrderLine();
             poline.setItemVariant(line.getItemVariant());
             poline.setPurchaseOrderHeader(purchaseOrderHeader);
             poline.setUnitPrice(line.getUnitPrice());
-            poline.setQuantity(line.getRequestForQuotationLine().getRequestedQuantity());
-             Double maxDiscount=0.0;
-            for(DiscountType discounts:quotationService.getDiscountsByLine(line))
-            {
-                if(discounts.getFromQuantity()<=poline.getQuantity() && discounts.getToQuantity() >= poline.getQuantity())
-                {
-                    maxDiscount=discounts.getDiscountPercentage();
+            
+            double quantity = (line.getRequestForQuotationLine() != null) 
+                    ? line.getRequestForQuotationLine().getRequestedQuantity() 
+                    : 0.0;
+            poline.setQuantity(quantity);
+
+            double matchedDiscountPercentage = 0.0;
+            List<DiscountType> availableSlabs = quotationService.getDiscountsByLine(line);
+            
+            for (DiscountType discount : availableSlabs) {
+                boolean matchesLowerBound = quantity >= discount.getFromQuantity();
+                boolean matchesUpperBound = (discount.getToQuantity() == null) || (quantity <= discount.getToQuantity());
+
+                if (matchesLowerBound && matchesUpperBound) {
+                    matchedDiscountPercentage = discount.getDiscountPercentage();
+                    break; 
                 }
             }
-            if(maxDiscount==0.0) 
-            {
-                poline.setDiscountAmount(0.0);
-            }
-            else{
-            poline.setDiscountAmount(poline.getUnitPrice()/(maxDiscount)); }
-            poline.setTotalAmount((poline.getUnitPrice()*poline.getQuantity())-poline.getDiscountAmount());
+            
+            double baseLineGrossCost = poline.getUnitPrice() * poline.getQuantity();
+            double finalCalculatedDiscountValue = baseLineGrossCost * (matchedDiscountPercentage / 100.0);
+            double accurateLineNetTotal = baseLineGrossCost - finalCalculatedDiscountValue;
+
+            poline.setDiscountAmount(finalCalculatedDiscountValue);
+            poline.setTotalAmount(accurateLineNetTotal);
+            
             purchaseOrderLineService.addPurchaseOrderLine(poline);
+            
+            aggregatePurchaseOrderGrossValue += accurateLineNetTotal;
         }
+
+        purchaseOrderHeader.setTotalAmount(aggregatePurchaseOrderGrossValue);
+        addPurchaseOrderHeader(purchaseOrderHeader, null);
     }
+
+
 }

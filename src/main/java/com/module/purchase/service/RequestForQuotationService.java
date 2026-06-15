@@ -17,6 +17,7 @@ import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.RequestForQuotationLine;
+import com.module.purchase.entity.Vendor;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.RequestForQuotationStatus;
@@ -80,7 +81,7 @@ public class RequestForQuotationService {
         return rfqRepository.findAll();
     }
 
-    public Page<RequestForQuotation> getRequestsForQuotationPaged(RequestForQuotation filter, Pageable pageable) {
+    public Page<RequestForQuotation> getRequestsForQuotationPaged(RequestForQuotation filter,Vendor vendor ,Pageable pageable) {
         if (filter == null) {
             filter = new RequestForQuotation();
         }
@@ -88,7 +89,12 @@ public class RequestForQuotationService {
         Specification<RequestForQuotation> spec = Specification
                 .where(RequestForQuotationSpecification.hasId(filter.getId()))
                 .and(RequestForQuotationSpecification.hasStatus(filter.getStatus()))
-                .and(RequestForQuotationSpecification.hasRequestedDate(filter.getRequestedDate()));
+                .and(RequestForQuotationSpecification.hasRequestedDate(filter.getRequestedDate()))
+                .and(RequestForQuotationSpecification.hasCategory(filter.getCategory()));
+
+        if (vendor != null) {
+        spec = spec.and(RequestForQuotationSpecification.belongsToVendorCategories(vendor));
+        }
 
         return rfqRepository.findAll(spec, pageable);
     }

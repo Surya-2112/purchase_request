@@ -29,12 +29,10 @@ public class CategoryForm extends Dialog {
     private final RepeatedPeriodService repeatedPeriodService;
     private final SecurityService securityService;
 
-    // ================= CATEGORY FIELDS =================
     private final TextField categoryNameField = new TextField("Category Name");
     private final Checkbox repeatableField = new Checkbox("Is Repeatable Category?");
     private final Checkbox autoRfqField = new Checkbox("Send RFQ Automatically?");
 
-    // ================= EMBEDDED REPEATED PERIOD FIELDS =================
     private final VerticalLayout scheduleSection = new VerticalLayout();
     private final IntegerField frequencyPeriodField = new IntegerField("Repeat Every");
     private final ComboBox<FrequencyType> frequencyTypeField = new ComboBox<>("Interval Type");
@@ -43,9 +41,7 @@ public class CategoryForm extends Dialog {
 
     private Category category;
 
-    public CategoryForm(CategoryService categoryService, 
-                        RepeatedPeriodService repeatedPeriodService, 
-                        SecurityService securityService) {
+    public CategoryForm(CategoryService categoryService, RepeatedPeriodService repeatedPeriodService, SecurityService securityService) {
         
         this.categoryService = categoryService;
         this.repeatedPeriodService = repeatedPeriodService;
@@ -56,17 +52,14 @@ public class CategoryForm extends Dialog {
 
         categoryNameField.setRequiredIndicatorVisible(true);
 
-        // Configure Embedded Schedule Sub-Fields
         frequencyPeriodField.setMin(1);
         frequencyPeriodField.setValue(1);
         frequencyTypeField.setItems(FrequencyType.values());
         frequencyTypeField.setItemLabelGenerator(FrequencyType::name);
 
-        // STALENESS CONSTRAINT: Restrict selection from today onwards on initial draw
         fromDateField.setMin(LocalDate.now());
         fromDateField.setRequired(true);
 
-        // Optional reactive constraint: ensure end date can't be before start date
         fromDateField.addValueChangeListener(e -> {
             if (e.getValue() != null) {
                 toDateField.setMin(e.getValue());
@@ -75,12 +68,7 @@ public class CategoryForm extends Dialog {
             }
         });
 
-        FormLayout scheduleFormLayout = new FormLayout(
-                frequencyPeriodField, 
-                frequencyTypeField, 
-                fromDateField, 
-                toDateField
-        );
+        FormLayout scheduleFormLayout = new FormLayout( frequencyPeriodField, frequencyTypeField,  fromDateField, toDateField );
         scheduleFormLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
         
         scheduleSection.add(new H3("Automated RFQ Schedule Setup"), scheduleFormLayout);
@@ -91,9 +79,6 @@ public class CategoryForm extends Dialog {
         autoRfqField.addValueChangeListener(event -> {
             boolean isRfqEnabled = event.getValue();
             scheduleSection.setVisible(isRfqEnabled);
-            if (isRfqEnabled) {
-                repeatableField.setValue(true);
-            }
         });
 
         FormLayout baseCategoryFormLayout = new FormLayout(categoryNameField, repeatableField, autoRfqField);
@@ -117,7 +102,6 @@ public class CategoryForm extends Dialog {
     public void setCategory(Category category) {
         this.category = category;
 
-        // Dynamic minimum boundary update anytime the dialog instance opens
         fromDateField.setMin(LocalDate.now());
 
         if (category != null) {
@@ -128,15 +112,13 @@ public class CategoryForm extends Dialog {
             setHeaderTitle("Update Category");
 
             if (category.isAutoRfq()) {
-                Optional<RepeatedPeriod> periodOpt = repeatedPeriodService
-                        .findByReferTypeAndReferId(RepeatedPeriodReferType.CATEGORY, category.getCategoryId());
+                Optional<RepeatedPeriod> periodOpt = repeatedPeriodService.findByReferTypeAndReferId(RepeatedPeriodReferType.CATEGORY, category.getCategoryId());
                 
                 if (periodOpt.isPresent()) {
                     RepeatedPeriod period = periodOpt.get();
                     frequencyPeriodField.setValue(period.getFrequencyPeriod());
                     frequencyTypeField.setValue(period.getFrequencyType());
                     
-                    // Allow historical display mapping during modification load steps
                     if (period.getFromDate() != null && period.getFromDate().isBefore(LocalDate.now())) {
                         fromDateField.setMin(period.getFromDate());
                     }
@@ -181,7 +163,6 @@ public class CategoryForm extends Dialog {
                     return;
                 }
                 
-                // BACKEND FAIL-SAFE: Double-check if the entered date is historical
                 if (fromDateField.getValue().isBefore(LocalDate.now()) && (category == null || !category.isAutoRfq())) {
                     Notification.show("Start Date cannot be a past date", 3000, Notification.Position.TOP_CENTER);
                     return;

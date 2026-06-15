@@ -42,6 +42,10 @@ public class PurchaseOrderHeader {
     @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
 
+    @NotNull
+    @Column(name = "approval_level", nullable = false)
+    private Integer level;
+
     @ManyToOne
     @JoinColumn(name = "vendor_id", referencedColumnName = "vendor_id")
     private Vendor vendor;
@@ -109,6 +113,16 @@ public class PurchaseOrderHeader {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public Integer getLevel()
+    {
+        return level;
+    }
+
+    public void setLevel(Integer level)
+    {
+        this.level=level;
     }
 
 }

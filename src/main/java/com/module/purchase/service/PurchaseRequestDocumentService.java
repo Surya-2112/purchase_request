@@ -9,9 +9,10 @@ import com.module.purchase.entity.PurchaseRequestDocument;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.repository.PurchaseRequestDocumentRepositor;
 
-import org.springframework.transaction.annotation.Transactional;;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class PurchaseRequestDocumentService {
 
     @Autowired

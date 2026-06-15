@@ -17,4 +17,6 @@ public interface AssigningConfigRepository
 
         Optional<AssigningConfig> findByApprovalTypeAndLevel(ApprovalType approvalType,Integer level);
 
+        List<AssigningConfig> findByApprovalTypeOrderByLevelAsc(ApprovalType approvalType);
+
 }

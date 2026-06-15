@@ -2,7 +2,14 @@ package com.module.purchase.entity;
 
 import java.util.Set;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "category")
@@ -19,7 +26,6 @@ public class Category {
     @Column(name = "is_repeatable", nullable = false)
     private Boolean repeatable = false;
 
-    // Added to check if automation should instantly send out RFQs to matched vendors
     @Column(name = "auto_rfq", nullable = false)
     private Boolean autoRfq = false;
 
@@ -29,8 +35,8 @@ public class Category {
     @ManyToMany(mappedBy = "categories")
     private Set<Vendor> vendors;
 
-    // @OneToMany(mappedBy = "category")
-    // private Set<RequestForQuotation> requestForQuotations;
+    @OneToMany(mappedBy = "category")
+    private Set<RequestForQuotation> requestForQuotations;
  
     public Long getCategoryId() {
         return categoryId;
@@ -86,13 +92,13 @@ public class Category {
                 + ", autoRfq=" + autoRfq + "]";
     }
 
-    // public Set<RequestForQuotation> getRequestForQuotations() {
-    //     return requestForQuotations;
-    // }
+    public Set<RequestForQuotation> getRequestForQuotations() {
+        return requestForQuotations;
+    }
 
-    // public void setRequestForQuotations(Set<RequestForQuotation> requestForQuotations) {
-    //     this.requestForQuotations = requestForQuotations;
-    // }
+    public void setRequestForQuotations(Set<RequestForQuotation> requestForQuotations) {
+        this.requestForQuotations = requestForQuotations;
+    }
 
     
 }

@@ -10,8 +10,8 @@ import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
@@ -41,11 +41,8 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
     // STATUS
     private final ComboBox<String> activeField = new ComboBox<>("Status");
 
-    // CATEGORIES (NEW)
-    private final MultiSelectComboBox<Category> categoryField =
-            new MultiSelectComboBox<>("Categories");
+    private final MultiSelectComboBox<Category> categoryField =new MultiSelectComboBox<>("Categories");
 
-    // ADDRESS
     private final TextField addressLineField = new TextField("Address Line");
     private final TextField streetField = new TextField("Street");
     private final TextField cityField = new TextField("City");

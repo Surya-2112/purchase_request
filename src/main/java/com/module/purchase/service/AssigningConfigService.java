@@ -120,4 +120,26 @@ public class AssigningConfigService {
         return assigningConfig;
     }
 
+public List<AssigningConfig> determineRequiredApprovals( Double chosenQuoteAmount,  Double lowestQuoteAmount, 
+        ApprovalType approvalType) {
+
+    double marginDiffPercent = 0.0;
+    if (chosenQuoteAmount > lowestQuoteAmount && lowestQuoteAmount > 0) {
+        marginDiffPercent = ((chosenQuoteAmount - lowestQuoteAmount) / lowestQuoteAmount) * 100.0;
+    }
+
+    List<AssigningConfig> matchingConfigs = assigningConfigRepository.findByApprovalTypeOrderByLevelAsc(approvalType);
+
+    final double variance = marginDiffPercent;
+    return matchingConfigs.stream().filter(config -> {
+        
+        boolean amountInRange = chosenQuoteAmount >= config.getMinAmount() && 
+                (config.getMaxAmount() == null || chosenQuoteAmount <= config.getMaxAmount());
+
+        boolean varianceExceeded = variance > config.getMarginDifferencePercentage();
+        
+        return amountInRange || varianceExceeded;
+    }).toList();
+}
+
 }

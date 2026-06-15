@@ -1,33 +1,31 @@
 package com.module.purchase.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import com.module.purchase.repository.UsersRepository;
-import com.module.purchase.entity.AuditLogs;
-import com.module.purchase.entity.Employee;
-import com.module.purchase.entity.Vendor;
-import com.module.purchase.entity.Users;
-import com.module.purchase.entityDTO.UsersDTO;
-
-import java.util.Optional;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceIsNotActiveException;
 import com.module.purchase.customException.ResourceNotFoundException;
-import com.module.purchase.mapper.UsersMapper;
-import com.module.purchase.specification.UsersSpecification;
-import com.module.purchase.enums.EntityType;
+import com.module.purchase.entity.AuditLogs;
+import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Users;
+import com.module.purchase.entity.Vendor;
+import com.module.purchase.entityDTO.UsersDTO;
 import com.module.purchase.enums.Action;
-
-import org.springframework.transaction.annotation.Transactional;
+import com.module.purchase.enums.EntityType;
+import com.module.purchase.mapper.UsersMapper;
+import com.module.purchase.repository.UsersRepository;
+import com.module.purchase.specification.UsersSpecification;
 
 @Service
 @Transactional
@@ -130,7 +128,7 @@ public class UsersService {
     public Users updateUser(Users user,Employee employee) {
         Users existingUser = getUserById(user.getUserId()).get();
 
-        if (!existingUser.getEmployee().getActive()) {
+        if (existingUser.getEmployee()!=null&&!existingUser.getEmployee().getActive()) {
             throw new ResourceIsNotActiveException("Employee is not active");
         }
         if (!existingUser.getUserEmail().equals(user.getUserEmail())) {

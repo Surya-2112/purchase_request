@@ -40,10 +40,7 @@ public class VendorForm extends Dialog {
     private final TextField countryField = new TextField("Country");
     private final TextField postalCodeField = new TextField("Pincode");
 
-    public VendorForm(
-            VendorService vendorService,
-            CategoryService categoryService,
-            SecurityService securityService) {
+    public VendorForm( VendorService vendorService, CategoryService categoryService, SecurityService securityService) {
 
         this.vendorService = vendorService;
         this.categoryService = categoryService;
@@ -52,11 +49,9 @@ public class VendorForm extends Dialog {
         setHeaderTitle("Add Vendor");
         setWidth("700px");
 
-        // Required Fields
         vendorNameField.setRequired(true);
         vendorEmailField.setRequired(true);
 
-        // Categories
         categoryField.setItems(categoryService.getCategories());
         categoryField.setItemLabelGenerator(Category::getCategoryName);
 
@@ -75,9 +70,7 @@ public class VendorForm extends Dialog {
                 postalCodeField
         );
 
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2)
-        );
+        formLayout.setResponsiveSteps( new FormLayout.ResponsiveStep("0", 2));
 
         Button saveButton = new Button("Save");
         Button cancelButton = new Button("Cancel");
@@ -95,8 +88,7 @@ public class VendorForm extends Dialog {
 
         try {
 
-            if (vendorNameField.isEmpty()
-                    || vendorEmailField.isEmpty()) {
+            if (vendorNameField.isEmpty() || vendorEmailField.isEmpty()) {
 
                 Notification.show(
                         "Please fill all required fields",
@@ -108,47 +100,33 @@ public class VendorForm extends Dialog {
 
             Vendor vendor = new Vendor();
 
-            vendor.setVendorName(
-                    vendorNameField.getValue().trim());
+            vendor.setVendorName( vendorNameField.getValue().trim());
 
-            vendor.setVendorEmail(
-                    vendorEmailField.getValue().trim());
+            vendor.setVendorEmail( vendorEmailField.getValue().trim());
 
             vendor.setVendorPhoneNumber(vendorPhoneField.getValue().trim().equals("")?null:vendorPhoneField.getValue());
 
             vendor.setActive(true);
 
-            // CATEGORIES
-            vendor.setCategories(
-                    new ArrayList<>(categoryField.getValue()));
+            vendor.setCategories(new ArrayList<>(categoryField.getValue()));
 
-            // ADDRESS
             Address address = new Address();
 
-            address.setAddressLine(
-                    addressLineField.getValue().trim());
+            address.setAddressLine(addressLineField.getValue().trim());
 
-            address.setStreet(
-                    streetField.getValue().trim());
+            address.setStreet(streetField.getValue().trim());
 
-            address.setCity(
-                    cityField.getValue().trim());
+            address.setCity( cityField.getValue().trim());
 
-            address.setState(
-                    stateField.getValue().trim());
+            address.setState( stateField.getValue().trim());
 
-            address.setCountry(
-                    countryField.getValue().trim());
+            address.setCountry( countryField.getValue().trim());
 
-            address.setPostalCode(
-                    postalCodeField.getValue().trim());
+            address.setPostalCode( postalCodeField.getValue().trim());
 
             vendor.setVendorAddress(address);
 
-            // SAVE
-            vendorService.addVendor(
-                    vendor,
-                    securityService.getLoggedInUser().getEmployee());
+            vendorService.addVendor( vendor, securityService.getLoggedInUser().getEmployee());
 
             Notification.show(
                     "Vendor Saved Successfully",

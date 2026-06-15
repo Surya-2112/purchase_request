@@ -80,7 +80,7 @@ public class AssigningApprovalsService {
         Specification<AssigningApprovals> spec = Specification
             .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
             .and(AssigningApprovalsSpecification.hasEmployeeGroup(group)) 
-            .and(AssigningApprovalsSpecification.hasApprovalType(ApprovalType.PURCHASE_REQUEST))
+            .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
             .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
             .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
 

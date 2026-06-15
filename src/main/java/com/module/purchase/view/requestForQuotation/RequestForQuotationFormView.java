@@ -8,14 +8,11 @@ import java.util.Set;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Employee;
-import com.module.purchase.entity.Item;
-import com.module.purchase.entity.ItemVariant;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.service.CategoryService;
-import com.module.purchase.service.ItemService;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.RequestForQuotationService;
 import com.module.purchase.view.MainLayout;
@@ -59,13 +56,13 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
     private final DatePicker requestedDate = new DatePicker("Requested Date");
     private final DatePicker requestEndDate = new DatePicker("Quotation Closing / End Date");
 
-    private final ComboBox<Category> categorySelector = new ComboBox<>("Filter by Item Category");
+    private final ComboBox<Category> categorySelector = new ComboBox<>("RFQ Item Category");
     private final Grid<PurchaseRequestLine> pendingPrLinesGrid = new Grid<>(PurchaseRequestLine.class, false);
     private final Button importSelectedLinesBtn = new Button("Add Selected Lines to RFQ");
 
     private final Grid<RequestForQuotationLine> rfqLinesGrid = new Grid<>(RequestForQuotationLine.class, false);
     private final List<RequestForQuotationLine> rfqWorkingLinesList = new ArrayList<>();
-    
+
     private final List<PurchaseRequestLine> temporaryImportedPrLinesList = new ArrayList<>();
 
     private final Button saveDraftBtn = new Button("Save as Draft");
@@ -74,7 +71,7 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
     private final Button cancelBtn = new Button("Back");
 
     public RequestForQuotationFormView(RequestForQuotationService rfqService, PurchaseRequestLineService prLineService,
-                                       CategoryService categoryService,SecurityService securityService) {
+            CategoryService categoryService, SecurityService securityService) {
         this.rfqService = rfqService;
         this.prLineService = prLineService;
         this.categoryService = categoryService;
@@ -103,16 +100,23 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
                             if (prLine.getItemVariant() != null
                                     && prLine.getItemVariant().getId().equals(line.getItemVariant().getId())) {
                                 prLine.setRequestForQuotation(null);
-                                prLineService.updatePurchaseRequestLine(prLine,securityService.getLoggedInUser().getEmployee());
-                                temporaryImportedPrLinesList.remove(prLine); 
+                                prLineService.updatePurchaseRequestLine(prLine, securityService.getLoggedInUser().getEmployee());
                             }
                         }
                     }
                 } catch (Exception ex) {
                     Notification.show("Notice: Transient element cleared.");
                 }
+
+                temporaryImportedPrLinesList.removeIf(prLine
+                        -> prLine.getItemVariant() != null
+                        && prLine.getItemVariant().getId().equals(line.getItemVariant().getId())
+                );
+
                 rfqWorkingLinesList.remove(line);
                 rfqLinesGrid.getDataProvider().refreshAll();
+
+                toggleCategorySelectorState();
                 loadApprovedPrLinesByCategory(activeCategoryFilter);
             });
             return removeBtn;
@@ -127,7 +131,7 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
         scrollContent.setPadding(true);
         scrollContent.setSpacing(true);
 
-        H2 formTitle = new H2("Manage Request for Quotation (RFQ)");
+        H2 formTitle = new H2("Request for Quotation ");
 
         requestedDate.setValue(LocalDate.now());
         requestedDate.setReadOnly(true);
@@ -141,8 +145,9 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
 
         categorySelector.setItems(categoryService.getCategories());
         categorySelector.setItemLabelGenerator(Category::getCategoryName);
-        categorySelector.setPlaceholder("Select a category to fetch approved demands...");
+        categorySelector.setPlaceholder("Select a category");
         categorySelector.setWidth("300px");
+        categorySelector.setRequiredIndicatorVisible(true); 
         categorySelector.addValueChangeListener(event -> {
             this.activeCategoryFilter = event.getValue();
             loadApprovedPrLinesByCategory(activeCategoryFilter);
@@ -158,7 +163,7 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
         pendingPrLinesGrid.setSelectionMode(Grid.SelectionMode.MULTI);
         pendingPrLinesGrid.addColumn(
                 line -> line.getPurchaseRequestHeader() != null ? line.getPurchaseRequestHeader().getPurchaseRequestId()
-                        : "-")
+                : "-")
                 .setHeader("PR ID").setWidth("80px");
         pendingPrLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
                 ? line.getItemVariant().getItem().getItemName()
@@ -176,8 +181,7 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
         demandSourcingSection.setWidthFull();
         demandSourcingSection.setPadding(false);
         demandSourcingSection.setSpacing(true);
-        demandSourcingSection.add(new H3("1. Fetch Pending Demands from Approved Purchase Requests"),
-                pickerHeaderContainer, pendingPrLinesGrid);
+        demandSourcingSection.add(new H3("Pending Purchase Requests"), pickerHeaderContainer, pendingPrLinesGrid);
 
         rfqLinesGrid.setAllRowsVisible(true);
         rfqLinesGrid.setWidthFull();
@@ -201,10 +205,7 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
         footerActions.setSpacing(true);
 
         scrollContent.add(formTitle, headerLayout, new Hr(),
-                demandSourcingSection,
-                new H3("2. Unified Request for Quotation Sourcing Lines Block (Locked Approved Quantities)"),
-                rfqLinesGrid,
-                footerActions);
+                demandSourcingSection, new H3("Request for Quotation Lines"), rfqLinesGrid, footerActions);
 
         Scroller viewScroller = new Scroller(scrollContent);
         viewScroller.setSizeFull();
@@ -218,10 +219,21 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
         }
 
         List<PurchaseRequestLine> matchedLines = prLineService.getPurchaseLinesByCategory(category);
-        pendingPrLinesGrid.setItems(matchedLines);
+
+        List<PurchaseRequestLine> filteredLines = matchedLines.stream()
+                .filter(prLine -> temporaryImportedPrLinesList.stream()
+                .noneMatch(imported -> imported.getId().equals(prLine.getId())))
+                .toList();
+
+        pendingPrLinesGrid.setItems(filteredLines);
     }
 
     private void batchImportSelectedPrLinesToRfq() {
+        if (categorySelector.isEmpty()) {
+            Notification.show("Please select a Category before importing lines.", 3000, Position.MIDDLE);
+            return;
+        }
+
         Set<PurchaseRequestLine> selectedPrLines = pendingPrLinesGrid.getSelectedItems();
         if (selectedPrLines.isEmpty()) {
             Notification.show("Please select at least one checkbox entry line.", 3000, Position.MIDDLE);
@@ -254,20 +266,35 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
         rfqLinesGrid.setItems(rfqWorkingLinesList);
         rfqLinesGrid.getDataProvider().refreshAll();
 
+        toggleCategorySelectorState();
+
         pendingPrLinesGrid.deselectAll();
         loadApprovedPrLinesByCategory(activeCategoryFilter);
         Notification.show("Items imported to active workspace and consolidated successfully.");
     }
 
+    private void toggleCategorySelectorState() {
+        if (!rfqWorkingLinesList.isEmpty()) {
+            categorySelector.setReadOnly(true);
+        } else {
+            if (this.editingRfq == null || this.editingRfq.getStatus() == RequestForQuotationStatus.DRAFT) {
+                categorySelector.setReadOnly(false);
+            }
+        }
+    }
+
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
-        temporaryImportedPrLinesList.clear(); 
+        temporaryImportedPrLinesList.clear();
 
         if (id != null) {
             rfqService.getRequestForQuotationById(id).ifPresent(rfq -> {
                 this.editingRfq = rfq;
                 requestedDate.setValue(rfq.getRequestedDate());
                 requestEndDate.setValue(rfq.getRequestEndDate());
+
+                // Show preserved category assignment inside database
+                categorySelector.setValue(rfq.getCategory());
 
                 rfqWorkingLinesList.clear();
                 rfqWorkingLinesList.addAll(rfqService.getLinesByRfqId(rfq.getId()));
@@ -285,12 +312,18 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
                         saveDraftBtn.setVisible(true);
                         saveAndOpenBtn.setVisible(true);
                         deleteRfqBtn.setVisible(true);
+                        toggleCategorySelectorState();
                     }
-                    default -> lockDownViewEntirely();
+                    default -> {
+                        lockDownViewEntirely();
+                        categorySelector.setReadOnly(true);
+                    }
                 }
             });
         } else {
             this.editingRfq = null;
+            categorySelector.clear();
+            categorySelector.setReadOnly(false);
             rfqWorkingLinesList.clear();
             rfqLinesGrid.setItems(rfqWorkingLinesList);
             requestEndDate.setReadOnly(false);
@@ -305,6 +338,7 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
 
     private void lockDownViewEntirely() {
         requestEndDate.setReadOnly(true);
+        categorySelector.setReadOnly(true);
         demandSourcingSection.setVisible(false);
         actionColumn.setVisible(false);
         saveDraftBtn.setVisible(false);
@@ -313,16 +347,14 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
     }
 
     private void persistFormTransaction(RequestForQuotationStatus targetedStatus) {
-        if (requestEndDate.isEmpty() || rfqWorkingLinesList.isEmpty()) {
-            Notification.show("Validation Fault: A valid deadline date and item lines are required.", 4000,
+        if (categorySelector.isEmpty() || requestEndDate.isEmpty() || rfqWorkingLinesList.isEmpty()) {
+            Notification.show("Validation Fault: Category, valid deadline date, and item lines are required.", 4000,
                     Position.MIDDLE);
             return;
         }
 
         try {
             Employee actor = securityService.getLoggedInUser().getEmployee();
-
-            // Set the execution date baseline
             LocalDate dateCommitValue = (targetedStatus == RequestForQuotationStatus.OPEN) ? LocalDate.now() : requestedDate.getValue();
 
             if (this.editingRfq == null) {
@@ -330,19 +362,22 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
                 newRfq.setRequestedDate(dateCommitValue);
                 newRfq.setRequestEndDate(requestEndDate.getValue());
                 newRfq.setStatus(targetedStatus);
-              //  newRfq.setCategory(categorySelector.getValue());
+
+                newRfq.setCategory(categorySelector.getValue());
+
                 this.editingRfq = rfqService.addRequestForQuotation(newRfq, actor);
             } else {
                 editingRfq.setRequestedDate(dateCommitValue);
                 editingRfq.setRequestEndDate(requestEndDate.getValue());
                 editingRfq.setStatus(targetedStatus);
+                editingRfq.setCategory(categorySelector.getValue());
                 rfqService.updateRequestForQuotation(editingRfq, actor);
             }
 
             for (PurchaseRequestLine prLine : temporaryImportedPrLinesList) {
                 if (prLine.getRequestForQuotation() == null) {
                     prLine.setRequestForQuotation(editingRfq);
-                    prLineService.updatePurchaseRequestLine(prLine,actor);
+                    prLineService.updatePurchaseRequestLine(prLine, actor);
                 }
             }
 
@@ -362,8 +397,9 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
     }
 
     private void executeFullRfqDeletionRoutine() {
-        if (this.editingRfq == null || this.editingRfq.getId() == null)
+        if (this.editingRfq == null || this.editingRfq.getId() == null) {
             return;
+        }
         try {
             Employee actor = securityService.getLoggedInUser().getEmployee();
             rfqService.deleteRequestForQuotationById(editingRfq.getId(), actor);

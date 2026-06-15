@@ -50,10 +50,10 @@ public class RequestForQuotation {
     @OneToMany(mappedBy = "requestForQuotation")
     private Set<Quotation> quotations; 
 
-    // @NotNull
-    // @ManyToOne
-    // @JoinColumn(name = "category_id",nullable = false)
-    // private Category category;
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "category_id",nullable = false)
+    private Category category;
 
     public Long getId() {
         return id;
@@ -103,11 +103,11 @@ public class RequestForQuotation {
         this.quotations = quotations;
     }
 
-    // public Category getCategory() {
-    //     return category;
-    // }
+    public Category getCategory() {
+        return category;
+    }
 
-    // public void setCategory(Category category) {
-    //     this.category = category;
-    // }
+    public void setCategory(Category category) {
+        this.category = category;
+    }
 }

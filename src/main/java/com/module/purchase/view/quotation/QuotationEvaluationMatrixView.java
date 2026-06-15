@@ -7,10 +7,14 @@ import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.DiscountType;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Quotation;
+import com.module.purchase.entity.AssigningConfig;
 import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ApprovalType;
+import com.module.purchase.enums.EmployeeGroup;
+import com.module.purchase.service.AssigningConfigService;
 import com.module.purchase.service.QuotationService;
 import com.module.purchase.service.RequestForQuotationService;
 import com.module.purchase.view.MainLayout;
@@ -42,19 +46,22 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
     private final RequestForQuotationService rfqService;
     private final QuotationService quotationService;
     private final SecurityService securityService;
+    private final AssigningConfigService assigningConfigService;
 
     private RequestForQuotation targetRfq;
-    
+
     private final VerticalLayout quotationCardsStackContainer = new VerticalLayout();
     private final Button backBtn = new Button("Back to Evaluation Center");
     private final Span systemicNoticeMessage = new Span();
 
     public QuotationEvaluationMatrixView(RequestForQuotationService rfqService, 
                                         QuotationService quotationService,
-                                        SecurityService securityService) {
+                                        SecurityService securityService, 
+                                        AssigningConfigService assigningConfigService) {
         this.rfqService = rfqService;
         this.quotationService = quotationService;
         this.securityService = securityService;
+        this.assigningConfigService = assigningConfigService;
 
         setSizeFull();
         setPadding(true);
@@ -71,14 +78,13 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
         quotationCardsStackContainer.setSpacing(true);
         quotationCardsStackContainer.setPadding(false);
 
-        // Build a Scroller container to handle multiple stacked vendor cards gracefully
         VerticalLayout scrollContent = new VerticalLayout(
-            new H2("Request for Quotation - Multi-Bid Stacked Evaluation Worksheet"),
-            systemicNoticeMessage,
-            new Hr(),
-            quotationCardsStackContainer,
-            new Hr(),
-            backBtn
+                new H2("Request for Quotation - Multi-Bid Stacked Evaluation Worksheet"),
+                systemicNoticeMessage,
+                new Hr(),
+                quotationCardsStackContainer,
+                new Hr(),
+                backBtn
         );
         scrollContent.setWidthFull();
         scrollContent.setPadding(false);
@@ -117,7 +123,7 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
             return;
         }
 
-        systemicNoticeMessage.setText("💡 Tip: Double-click any line row item within a vendor's pricing grid sheet below to review its cascading multi-tier Slab Volume Discounts matrix.");
+        systemicNoticeMessage.setText(" 💡 Tip: Double-click any line row item within a vendor's pricing grid sheet below to review its cascading multi-tier Slab Volume Discounts matrix.");
 
         for (Quotation quotation : bidsDataset) {
             quotationCardsStackContainer.add(createStandaloneVendorBidCardBlock(quotation));
@@ -138,17 +144,51 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
         String docDate = quotation.getQuotationDate() != null ? quotation.getQuotationDate().toString() : "-";
         String grossValue = String.format("%.2f INR", quotation.getTotalAmount());
 
-        Span metaInfoText = new Span(String.format("🏬 Supplier: %s   |   📅 Filed Date: %s   |   💰 Gross Estimate: %s", 
+        Span metaInfoText = new Span(String.format("🏬 Supplier: %s   |   📅 Filed Date: %s   |   💰 Gross Estimate: %s",
                 vendorName, docDate, grossValue));
         metaInfoText.getStyle().set("font-weight", "bold").set("font-size", "15px");
 
         Button approveBtn = new Button("Approve Vendor Contract", VaadinIcon.CHECK_CIRCLE.create());
         approveBtn.addThemeName("success primary small");
-        
+
         if (quotation.getStatus() == Status.APPROVED) {
             approveBtn.setText("Contract Awarded Winner");
             approveBtn.setEnabled(false);
             cardContainer.getStyle().set("border", "2px solid var(--lumo-success-color)").set("background-color", "#f0fdf4");
+        } else if (quotation.getStatus() == Status.WAITING_APPROVAL) { 
+            
+            List<Quotation> currentBidsList = quotationService.getQuotationsByRfq(targetRfq).stream()
+                    .filter(q -> q.getStatus() != Status.DRAFT && q.getStatus() != Status.CANCELLED)
+                    .collect(Collectors.toList());
+            
+            double lowestBidAmount = currentBidsList.stream().mapToDouble(Quotation::getTotalAmount).min().orElse(0.0);
+            
+            List<AssigningConfig> structuralTiersChain = assigningConfigService
+                    .determineRequiredApprovals(quotation.getTotalAmount(), lowestBidAmount, ApprovalType.QUOTATION);
+
+            EmployeeGroup currentActiveGroupRequirement = structuralTiersChain.stream()
+                    .map(AssigningConfig::getEmployeeGroup)
+                    .findFirst() 
+                    .orElse(null);
+
+            List<EmployeeGroup> currentUserGroups = securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups();
+
+            boolean hasAuthority = currentUserGroups != null && 
+                    (currentUserGroups.contains(currentActiveGroupRequirement) || currentUserGroups.contains(EmployeeGroup.SUPER_ADMIN));
+
+            if (hasAuthority) {
+                approveBtn.setText("Authorize & Sign Off Level");
+                approveBtn.addThemeName("primary warning");
+                approveBtn.setEnabled(true);
+                cardContainer.getStyle().set("border", "2px solid var(--lumo-warning-color)").set("background-color", "#fffbeb");
+            } else {
+                String targetGroupName = currentActiveGroupRequirement != null ? currentActiveGroupRequirement.name() : "Approver";
+                approveBtn.setText("Awaiting " + targetGroupName + " Review");
+                approveBtn.setEnabled(false);
+                approveBtn.addThemeName("contrast");
+                cardContainer.getStyle().set("border", "2px solid var(--lumo-contrast-30pct)").set("background-color", "var(--lumo-contrast-5pct)");
+            }
+
         } else if (targetRfq.getStatus() == RequestForQuotationStatus.CLOSED && isAnyBidApprovedInThread()) {
             approveBtn.setVisible(false); 
         }
@@ -165,9 +205,9 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
         linesGrid.setAllRowsVisible(true);
         linesGrid.setWidthFull();
 
-        linesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
+        linesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
                 ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item / Variant Name").setAutoWidth(true);
-        
+
         linesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                 .setHeader("Sourcing Specification").setAutoWidth(true);
 
@@ -197,28 +237,70 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
     private void executeAwardContractTransaction(Quotation winnerQuote) {
         try {
             Employee actionBuyerActor = securityService.getLoggedInUser().getEmployee();
+            List<Quotation> currentBidsList = quotationService.getQuotationsByRfq(targetRfq).stream()
+                    .filter(q -> q.getStatus() != Status.DRAFT && q.getStatus() != Status.CANCELLED)
+                    .collect(Collectors.toList());
 
-            // Process and update evaluation states down the active dataset pipeline
-            List<Quotation> currentBidsList = quotationService.getQuotationsByRfq(targetRfq);
-            for (Quotation quotation : currentBidsList) {
-                if (quotation.getId().equals(winnerQuote.getId())) {
-                    quotation.setStatus(Status.APPROVED); 
-                } else if (quotation.getStatus() != Status.DRAFT && quotation.getStatus() != Status.CANCELLED) {
-                    quotation.setStatus(Status.REJECTED); 
+            double lowestBidAmount = currentBidsList.stream().mapToDouble(Quotation::getTotalAmount).min().orElse(0.0);
+            double chosenBidAmount = winnerQuote.getTotalAmount();
+
+            List<AssigningConfig> requiredApprovalTiers = assigningConfigService
+                    .determineRequiredApprovals(chosenBidAmount, lowestBidAmount, ApprovalType.QUOTATION);
+
+            if (winnerQuote.getStatus() == Status.WAITING_APPROVAL) {
+                List<EmployeeGroup> currentUserGroups = actionBuyerActor.getRole().getEmployeeGroups();
+                
+                // Real-world configuration evaluation: Does this user possess authority for the absolute highest tier required?
+                boolean isHighestTierSatisfied = requiredApprovalTiers.isEmpty() || currentUserGroups.contains(EmployeeGroup.SUPER_ADMIN) ||
+                        currentUserGroups.contains(requiredApprovalTiers.get(requiredApprovalTiers.size() - 1).getEmployeeGroup());
+
+                if (isHighestTierSatisfied) {
+                    for (Quotation quotation : currentBidsList) {
+                        if (quotation.getId().equals(winnerQuote.getId())) {
+                            quotation.setStatus(Status.APPROVED);
+                        } else {
+                            quotation.setStatus(Status.REJECTED);
+                        }
+                        quotationService.updateQuotation(quotation);
+                    }
+                    targetRfq.setStatus(RequestForQuotationStatus.CLOSED);
+                    rfqService.updateRequestForQuotation(targetRfq, actionBuyerActor);
+
+                    Notification.show("Final authorization secured. Vendor contract awarded successfully!", 4000, Position.TOP_CENTER);
+                } else {
+                    Notification.show("Level sign-off verified. Document advanced to next workflow authority tier.", 4000, Position.TOP_CENTER);
                 }
-                quotationService.updateQuotation(quotation);
+                
+            } else {
+                if (requiredApprovalTiers.isEmpty()) {
+                    for (Quotation quotation : currentBidsList) {
+                        if (quotation.getId().equals(winnerQuote.getId())) {
+                            quotation.setStatus(Status.APPROVED);
+                        } else {
+                            quotation.setStatus(Status.REJECTED);
+                        }
+                        quotationService.updateQuotation(quotation);
+                    }
+                    targetRfq.setStatus(RequestForQuotationStatus.CLOSED);
+                    rfqService.updateRequestForQuotation(targetRfq, actionBuyerActor);
+
+                    Notification.show("Contract awarded automatically! No external manager approvals were required.", 4000, Position.TOP_CENTER);
+                } else {
+                    String levelsChainSummary = requiredApprovalTiers.stream()
+                            .map(tier -> "Level " + tier.getLevel() + " (" + tier.getEmployeeGroup().name() + ")")
+                            .collect(Collectors.joining(" ➔ "));
+
+                    winnerQuote.setStatus(Status.WAITING_APPROVAL);
+                    quotationService.updateQuotation(winnerQuote);
+
+                    Notification.show("Routing Request! This award requires authorization chain: " + levelsChainSummary, 6000, Position.TOP_CENTER);
+                }
             }
 
-            targetRfq.setStatus(RequestForQuotationStatus.CLOSED);
-            rfqService.updateRequestForQuotation(targetRfq, actionBuyerActor);
-
-            Notification.show("Sourcing validation complete. Contract awarded to winner vendor successfully!", 4000, Position.TOP_CENTER);
-            
-            // FIX: Removed old undefined buildLiveFilteringBars() call. Reroute back to dashboard securely.
             getUI().ifPresent(ui -> ui.navigate("quotation-comparison"));
 
         } catch (Exception ex) {
-            Notification.show("Contract assignment execution matrix failed: " + ex.getMessage(), 5000, Position.MIDDLE);
+            Notification.show("Workflow engine failed to evaluate assignment criteria: " + ex.getMessage(), 5000, Position.MIDDLE);
         }
     }
 
@@ -244,7 +326,7 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
         modalSlabsGrid.setItems(detailedSlabsList);
 
         if (detailedSlabsList.isEmpty()) {
-            modalLayout.add(new Span("⚠️ No specific bulk volume discount slabs were registered for this row item."));
+            modalLayout.add(new Span("No specific bulk volume discount slabs were registered for this row item."));
         } else {
             modalLayout.add(modalSlabsGrid);
         }

@@ -10,6 +10,7 @@ import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Users;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;
 import com.module.purchase.entityDTO.PurchaseRequestDTO;
+import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.AssigningApprovalsService;
@@ -40,35 +41,28 @@ public class PurchaseRequestView extends VerticalLayout {
     private final DepartmentService departmentService;
     private final EmployeeService employeeService;
 
-    // ================= GRIDS =================
     private final Grid<PurchaseRequestDTO> prGrid = new Grid<>(PurchaseRequestDTO.class, false);
     private final Grid<AssigningApprovalsDTO> assignGrid = new Grid<>(AssigningApprovalsDTO.class, false);
 
-    // ================= PAGINATION =================
     private int currentPage = 0;
     private int pageSize = 25;
     private int totalPages = 1;
     private final Span pageInfo = new Span();
 
-    // ================= VIEW MODE =================
     private String viewMode = "CREATED"; 
 
-    // ================= FILTER DTOs =================
     private PurchaseRequestDTO prFilter = new PurchaseRequestDTO();
     private AssigningApprovalsDTO assignFilter = new AssigningApprovalsDTO();
 
-    // ================= PR FILTERS =================
     private final TextField prIdField = new TextField("PR ID");
     private final ComboBox<Employee> createdByField = new ComboBox<>("Created By");
     private final ComboBox<Department> departmentField = new ComboBox<>("Department");
     private final ComboBox<Status> statusField = new ComboBox<>("Status");
 
-    // ================= ASSIGN FILTERS =================
     private final TextField assignIdField = new TextField("Assign ID");
     private final TextField referenceIdField = new TextField("Reference ID");
     private final ComboBox<Status> assignStatusField = new ComboBox<>("Status");
 
-    // ================= FILTER LAYOUTS =================
     private HorizontalLayout prFilters;
     private HorizontalLayout assignFilters;
 
@@ -309,6 +303,7 @@ public class PurchaseRequestView extends VerticalLayout {
 
             EmployeeGroup groupToQuery = EmployeeGroup.MANAGER; 
             for (EmployeeGroup singleGroup : userGroups) {
+                 assignFilter.setApprovalType(ApprovalType.PURCHASE_REQUEST);
                 Page<AssigningApprovalsDTO> testPage = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(
                         assignFilter, singleGroup, currentPage, pageSize);
                 if (testPage.getTotalElements() > 0) {
@@ -395,8 +390,9 @@ public class PurchaseRequestView extends VerticalLayout {
         assignIdField.clear();
         referenceIdField.clear();
         assignStatusField.setValue(Status.WAITING_APPROVAL);
-
+      
         assignFilter = new AssigningApprovalsDTO();
+         assignFilter.setApprovalType(ApprovalType.PURCHASE_REQUEST);
         assignFilter.setStatus(Status.WAITING_APPROVAL);
         currentPage = 0;
         loadData();

@@ -2,10 +2,7 @@ package com.module.purchase.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
 import com.module.purchase.entity.Needs;
-import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.repository.NeedsRepository;
 
@@ -13,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.validation.constraints.AssertFalse;
 
 @Service
 @Transactional(readOnly = true)

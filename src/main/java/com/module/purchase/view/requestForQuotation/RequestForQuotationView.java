@@ -113,8 +113,13 @@ public class RequestForQuotationView extends VerticalLayout {
         rfqGrid.addColumn(rfq -> rfq.getRequestEndDate() != null ? rfq.getRequestEndDate().toString() : "-")
                 .setHeader("Closing/End Date").setAutoWidth(true);
 
-        rfqGrid.addColumn(rfq -> quotationService.getCountByRFQ(rfq))
-                .setHeader("Quotations Recv").setWidth("150px");
+        rfqGrid.addColumn(rfq -> {
+            if (rfq.getStatus() == RequestForQuotationStatus.DRAFT) {
+                return "-";
+            }
+            return String.valueOf(quotationService.getCountByRFQ(rfq));
+        })
+        .setHeader("Quotations Recv").setWidth("150px");
 
         gridStatusBadgeMapping();
 
@@ -198,7 +203,7 @@ public class RequestForQuotationView extends VerticalLayout {
         filterCriteria.setStatus(statusFilter.getValue());
         filterCriteria.setRequestedDate(requestedDateFilter.getValue());
 
-        Page<RequestForQuotation> page = rfqService.getRequestsForQuotationPaged(filterCriteria, pageable);
+        Page<RequestForQuotation> page = rfqService.getRequestsForQuotationPaged(filterCriteria,securityService.getLoggedInUser().getVendor(), pageable);
 
         if (page != null) {
             rfqGrid.setItems(page.getContent());

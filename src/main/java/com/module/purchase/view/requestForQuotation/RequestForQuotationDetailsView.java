@@ -53,20 +53,16 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
     private boolean isVendorUser = false;
     private Vendor loggedInVendor;
 
-    // Read-Only Profile Header Fields
     private final TextField rfqIdField = new TextField("RFQ Reference ID");
     private final TextField requestedDateField = new TextField("Requested Date");
     
-    // Dynamic Date Control Panel Layout elements
     private final DatePicker requestEndDateField = new DatePicker("Quotation Closing / End Date");
     private final Button updateDateBtn = new Button("Extend / Adjust Closing Date");
     private final HorizontalLayout statusBadgeContainer = new HorizontalLayout();
 
-    // Sourced Line Items Grid
     private final Grid<RequestForQuotationLine> detailsLinesGrid = new Grid<>(RequestForQuotationLine.class, false);
     private final List<RequestForQuotationLine> linesDataset = new ArrayList<>();
 
-    // Action Row Buttons
     private final Button backBtn = new Button("Back to Dashboard");
     private final Button editBtn = new Button("Edit Draft Layout");
     private final Button closeRfqBtn = new Button("Close RFQ"); // ADDED: Manual operational timeline lock-in
@@ -104,7 +100,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         scrollContent.setPadding(true);
         scrollContent.setSpacing(true);
 
-        H2 pageTitle = new H2(isVendorUser ? "Review Invitation For Quotation" : "Request for Quotation Profile Summary");
+        H2 pageTitle = new H2("Request for Quotation");
 
         rfqIdField.setReadOnly(true);
         requestedDateField.setReadOnly(true);
@@ -126,12 +122,11 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         HorizontalLayout statusSection = new HorizontalLayout(new Span("Current Lifecycle State: "), statusBadgeContainer);
         statusSection.setAlignItems(Alignment.CENTER);
 
-        // Setup Demanded Line Items Grid Columns
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
-                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Material Item").setAutoWidth(true);
+                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item").setAutoWidth(true);
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                 .setHeader("Specification Detail").setAutoWidth(true);
-        detailsLinesGrid.addColumn(RequestForQuotationLine::getRequestedQuantity).setHeader("Quantity Demanded").setWidth("160px");
+        detailsLinesGrid.addColumn(RequestForQuotationLine::getRequestedQuantity).setHeader("Quantity").setWidth("160px");
 
         detailsLinesGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         detailsLinesGrid.setAllRowsVisible(true);
@@ -144,7 +139,6 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         editBtn.setIcon(VaadinIcon.EDIT.create());
         editBtn.setVisible(false); 
 
-        // Employee: Close RFQ Button Parameters configuration
         closeRfqBtn.addThemeName("primary success");
         closeRfqBtn.setIcon(VaadinIcon.LOCK.create());
         closeRfqBtn.setVisible(false);
@@ -169,7 +163,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         actionsLayout.setSpacing(true);
 
         scrollContent.add(pageTitle, headerLayout, dateAdjustmentRow, statusSection, new Hr(), 
-                           new H3("Linked Core Asset Demand Items"), detailsLinesGrid, actionsLayout);
+                           new H3("Request for Quotations Items"), detailsLinesGrid, actionsLayout);
 
         Scroller scroller = new Scroller(scrollContent);
         scroller.setSizeFull();

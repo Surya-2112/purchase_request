@@ -42,26 +42,23 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
     private Quotation currentQuotation;
     private boolean isVendorUser = false;
 
-    // Read-Only Profile Header Summary Fields
     private final TextField quoteIdField = new TextField("Quotation ID Reference");
     private final TextField rfqIdField = new TextField("Source RFQ Reference");
     private final TextField vendorNameField = new TextField("Vendor / Contractor Name");
     private final TextField dateField = new TextField("Date of Submission");
     private final TextField grossTotalField = new TextField("Total Cost Offer");
+    private final TextField categoryField=new TextField("Category");
     private final HorizontalLayout statusBadgeContainer = new HorizontalLayout();
 
-    // Master Quotation Lines Matrix Grid
     private final Grid<QuotationLine> linesGrid = new Grid<>(QuotationLine.class, false);
     private final List<QuotationLine> linesDataset = new ArrayList<>();
 
-    // Child Nested Slab Discounts Grid
     private final Grid<DiscountType> discountMatrixGrid = new Grid<>(DiscountType.class, false);
 
-    // Action Panel Components
-    private final Button backBtn = new Button("Back to Ledger");
-    private final Button editBtn = new Button("Edit Draft Workspace"); // ADDED
-    private final Button submitFinalBtn = new Button("Submit & Finalize Bid"); // ADDED
-    private final Button deleteBtn = new Button("Delete Quotation Draft"); // ADDED
+    private final Button backBtn = new Button("Back");
+    private final Button editBtn = new Button("Edit Draft Workspace"); 
+    private final Button submitFinalBtn = new Button("Submit & Finalize Bid");
+    private final Button deleteBtn = new Button("Delete Quotation Draft"); 
 
     public QuotationDetailsView(QuotationService quotationService, SecurityService securityService) {
         this.quotationService = quotationService;
@@ -87,30 +84,30 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
         scrollContent.setPadding(true);
         scrollContent.setSpacing(true);
 
-        H2 pageTitle = new H2("Quotation Financial Proposal Details");
+        H2 pageTitle = new H2("Quotation Details");
 
         quoteIdField.setReadOnly(true);
         rfqIdField.setReadOnly(true);
         vendorNameField.setReadOnly(true);
         dateField.setReadOnly(true);
         grossTotalField.setReadOnly(true);
-
+        categoryField.setReadOnly(true);
+        
         FormLayout summaryLayout = new FormLayout();
         summaryLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 3));
         
         if (isVendorUser) {
-            summaryLayout.add(quoteIdField, rfqIdField, dateField, grossTotalField);
+            summaryLayout.add(quoteIdField, rfqIdField, dateField, grossTotalField,categoryField);
         } else {
-            summaryLayout.add(quoteIdField, rfqIdField, vendorNameField, dateField, grossTotalField);
+            summaryLayout.add(quoteIdField, rfqIdField, vendorNameField, dateField, grossTotalField,categoryField);
         }
 
         statusBadgeContainer.setAlignItems(Alignment.CENTER);
-        HorizontalLayout statusSection = new HorizontalLayout(new Span("Proposal Evaluation State: "), statusBadgeContainer);
+        HorizontalLayout statusSection = new HorizontalLayout(new Span(" Status:"), statusBadgeContainer);
         statusSection.setAlignItems(Alignment.CENTER);
 
-        // Configure Proposal Lines Grid Columns
         linesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
-                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item Material Sourced").setAutoWidth(true);
+                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item Name").setAutoWidth(true);
         
         linesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                 .setHeader("Specification Detail").setAutoWidth(true);
@@ -129,26 +126,24 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
             }
         });
 
-        // Configure Nested Volume Discount Matrices Grid Columns
-        discountMatrixGrid.addColumn(DiscountType::getFromQuantity).setHeader("From Quantity (Slab Start)").setAutoWidth(true);
-        discountMatrixGrid.addColumn(DiscountType::getToQuantity).setHeader("To Quantity (Slab End)").setAutoWidth(true);
-        discountMatrixGrid.addColumn(d -> String.format("%.1f %%", d.getDiscountPercentage())).setHeader("Discount Percentage Deducted").setAutoWidth(true);
+        discountMatrixGrid.addColumn(DiscountType::getFromQuantity).setHeader("From Quantity").setAutoWidth(true);
+        discountMatrixGrid.addColumn(DiscountType::getToQuantity).setHeader("To Quantity").setAutoWidth(true);
+        discountMatrixGrid.addColumn(d -> String.format("%.1f %%", d.getDiscountPercentage())).setHeader("Discount Percentage").setAutoWidth(true);
         
         discountMatrixGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         discountMatrixGrid.setAllRowsVisible(true);
         discountMatrixGrid.setWidthFull();
 
-        // Standard Navigation setup
         backBtn.setIcon(VaadinIcon.ARROW_LEFT.create());
         backBtn.addClickListener(e -> backToDashboard());
 
-        // Configuration Layer for dynamic Draft Buttons
         editBtn.addThemeName("primary warning");
         editBtn.setIcon(VaadinIcon.EDIT.create());
         editBtn.setVisible(false);
         editBtn.addClickListener(e -> {
             if (currentQuotation != null && currentQuotation.getRequestForQuotation() != null) {
-                // Reroutes cleanly back to the workspace pricing input sheet canvas
+
+
                 getUI().ifPresent(ui -> ui.navigate("quotation-form/new/" + currentQuotation.getRequestForQuotation().getId()));
             }
         });
@@ -167,10 +162,10 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
         actionsLayout.setSpacing(true);
 
         scrollContent.add(pageTitle, summaryLayout, statusSection, new Hr(), 
-                           new H3("Offered Item Sourcing Base Estimates Price Breakdowns"), 
-                           new Span("Click any row below to populate its corresponding Volume Tier Slab Discounts structure matrix."),
+                           new H3("Quotation Items"), 
+                           new Span("Click any row below to get Discounts structure "),
                            linesGrid, new Hr(),
-                           new H3("Volume / Quantity Tier Slab Discount Matrix"), discountMatrixGrid, 
+                           new H3("Discount Slab"), discountMatrixGrid, 
                            new Hr(), actionsLayout);
 
         Scroller viewScroller = new Scroller(scrollContent);
@@ -193,6 +188,7 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
             vendorNameField.setValue(quote.getVendor() != null ? quote.getVendor().getVendorName() : "-");
             dateField.setValue(quote.getQuotationDate() != null ? quote.getQuotationDate().toString() : "-");
             grossTotalField.setValue(String.format("%.2f INR", quote.getTotalAmount()));
+            categoryField.setValue(quote.getRequestForQuotation().getCategory().getCategoryName());
 
             renderStatusBadge(quote.getStatus());
 
@@ -201,8 +197,6 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
             linesGrid.setItems(linesDataset);
             
             discountMatrixGrid.setItems(new ArrayList<>());
-
-            // DYNAMIC BUTTON TOGGLE LOGIC BASED ON STATUS VALUE MATCHES
             if (quote.getStatus() == Status.DRAFT) {
                 editBtn.setVisible(true);
                 submitFinalBtn.setVisible(true);
