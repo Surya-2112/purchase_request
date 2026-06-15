@@ -57,13 +57,13 @@ public class QuotationComparisonView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
-        H2 viewTitle = new H2("Quotations Evaluation & Comparison Center");
+        H2 viewTitle = new H2("Quotations Evaluation & Comparison");
 
         configureGridsBaseLayouts();
         buildLiveFilteringBars();
 
-        Tab unassignedTab = new Tab("Pending Evaluation (Unassigned Closed RFQs)");
-        Tab assignedTab = new Tab("Finalized Records (Assigned RFQs)");
+        Tab unassignedTab = new Tab("Pending Evaluation ");
+        Tab assignedTab = new Tab("Finalized Quotations ");
         Tabs navigationTabs = new Tabs(unassignedTab, assignedTab);
         navigationTabs.setWidthFull();
 
@@ -94,7 +94,7 @@ public class QuotationComparisonView extends VerticalLayout {
        
         setupGridColumnsTemplate(unassignedGrid);
         unassignedGrid.addComponentColumn(rfq -> {
-            Button analyzeBtn = new Button("Compare Bids Matrix", VaadinIcon.BAR_CHART.create());
+            Button analyzeBtn = new Button("Compare Quotations", VaadinIcon.BAR_CHART.create());
             analyzeBtn.addThemeName("primary small");
          
             analyzeBtn.addClickListener(

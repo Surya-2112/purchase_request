@@ -1,6 +1,7 @@
 package com.module.purchase.entity;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.hibernate.annotations.ColumnDefault;
 
@@ -15,6 +16,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
@@ -58,6 +60,9 @@ public class PurchaseOrderHeader {
     @Column(nullable = false)
     @ColumnDefault("'DRAFT'")
     private Status status;
+
+    @OneToMany(mappedBy="purchaseOrderHeader")
+    private List<PurchaseOrderLine> purchaseOrderLines;
 
     public Long getPurchaseOrderId() {
         return purchaseOrderId;
@@ -123,6 +128,14 @@ public class PurchaseOrderHeader {
     public void setLevel(Integer level)
     {
         this.level=level;
+    }
+
+    public List<PurchaseOrderLine> getPurchaseOrderLines() {
+        return purchaseOrderLines;
+    }
+
+    public void setPurchaseOrderLines(List<PurchaseOrderLine> purchaseOrderLines) {
+        this.purchaseOrderLines = purchaseOrderLines;
     }
 
 }

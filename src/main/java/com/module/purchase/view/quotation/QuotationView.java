@@ -1,5 +1,7 @@
 package com.module.purchase.view.quotation;
 
+import java.util.Arrays;
+import java.util.List;
 import org.springframework.data.domain.Page;
 
 import com.module.purchase.config.SecurityService;
@@ -30,36 +32,24 @@ public class QuotationView extends VerticalLayout {
     private final QuotationService quotationService;
     private final SecurityService securityService;
 
-    // ================= GRIDS =================
     private final Grid<QuotationDTO> quotationGrid = new Grid<>(QuotationDTO.class, false);
 
-    // ================= PAGINATION =================
     private int currentPage = 0;
     private int pageSize = 25;
     private int totalPages = 1;
     private final Span pageInfo = new Span();
 
-    // ================= VIEW MODE =================
-    private String viewMode = "ALL"; 
-
-    // ================= SECURITY CONTEXT =================
     private boolean isVendorUser = false;
     private Vendor loggedInVendor;
 
-    // ================= FILTER DTOs =================
     private QuotationDTO qFilter = new QuotationDTO();
 
-    // ================= FILTERS SPECIFICATIONS =================
     private final TextField quoteIdField = new TextField("Quote ID");
     private final TextField rfqIdField = new TextField("Source RFQ ID");
     private final TextField supplierField = new TextField("Supplier Name");
     private final ComboBox<Status> statusField = new ComboBox<>("Status");
 
-    // ================= FILTER LAYOUTS =================
     private HorizontalLayout filterBar;
-    private final HorizontalLayout tabsContainer = new HorizontalLayout();
-    private final Button allBtn = new Button("All Quotations");
-    private final Button draftBtn = new Button("My Draft Bids"); 
     private final HorizontalLayout paginationLayout = new HorizontalLayout();
 
     public QuotationView(QuotationService quotationService, SecurityService securityService) {
@@ -72,48 +62,29 @@ public class QuotationView extends VerticalLayout {
 
         evaluateUserRoleContext();
         buildUI();
-        determineDefaultViewModeAndTabVisibility();
+        configureDefaultStatusFilters();
         loadData();
     }
 
     private void evaluateUserRoleContext() {
         Users user = securityService.getLoggedInUser();
-        if (user.getVendor() != null) {
+        if (user != null && user.getVendor() != null) {
             this.isVendorUser = true;
             this.loggedInVendor = user.getVendor();
         }
     }
 
     private void buildUI() {
-        H2 title = new H2("Supplier Quotations Matrix");
+        H2 title = new H2("Quotations");
 
-        Button addButton = new Button("New Quotation Submission");
-        addButton.addClickListener(event -> getUI().ifPresent(ui -> ui.navigate("quotation-form")));
-        addButton.setVisible(isVendorUser); 
-
-        HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
+        HorizontalLayout headerLayout = new HorizontalLayout(title);
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
         headerLayout.setAlignItems(Alignment.CENTER);
 
-        // Tab click actions
-        allBtn.addClickListener(event -> {
-            viewMode = "ALL";
-            currentPage = 0;
-            loadData();
-        });
-
-        draftBtn.addClickListener(event -> {
-            viewMode = "DRAFTS";
-            currentPage = 0;
-            loadData();
-        });
-
-        tabsContainer.add(allBtn, draftBtn);
-        tabsContainer.setSpacing(true);
-
-        // Configure Input Filters
-        statusField.setItems(Status.values());
+        statusField.setItems(Status.DRAFT,Status.APPROVED, Status.WAITING_APPROVAL, Status.REJECTED, Status.CANCELLED);
+     
+        statusField.setClearButtonVisible(true);
 
         Button searchBtn = new Button("Search", e -> applyFilter());
         Button clearBtn = new Button("Clear", e -> clearFilter());
@@ -125,7 +96,6 @@ public class QuotationView extends VerticalLayout {
         filterBar.add(statusField, searchBtn, clearBtn);
         filterBar.setAlignItems(Alignment.END);
 
-        // Configure Columns Grid
         quotationGrid.addColumn(QuotationDTO::getId).setHeader("Quote ID").setWidth("100px").setFlexGrow(0);
         
         quotationGrid.addColumn(q -> q.getRequestForQuotation() != null ? "RFQ-" + q.getRequestForQuotation().getId() : "-")
@@ -141,18 +111,17 @@ public class QuotationView extends VerticalLayout {
         quotationGrid.addColumn(q -> q.getQuotationDate() != null ? q.getQuotationDate().toString() : "-")
                 .setHeader("Submission Date").setAutoWidth(true);
         
-        quotationGrid.addColumn(q -> String.format("%.2f INR", q.getTotalAmount())).setHeader("Gross Total Cost Offer").setAutoWidth(true);
+        quotationGrid.addColumn(q -> String.format("%.2f INR", q.getTotalAmount())).setHeader("Total Cost Offer").setAutoWidth(true);
 
         quotationGrid.setWidthFull();
         quotationGrid.setHeightFull();
-        quotationGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        quotationGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         
         quotationGrid.addItemDoubleClickListener(event -> {
             QuotationDTO q = event.getItem();
             getUI().ifPresent(ui -> ui.navigate("quotation-details/" + q.getId()));
         });
 
-        // Pagination Configuration
         Button prev = new Button("Prev", event -> {
             if (currentPage > 0) {
                 currentPage--;
@@ -170,10 +139,13 @@ public class QuotationView extends VerticalLayout {
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);
+        pageSizeField.setWidth("100px");
         pageSizeField.addValueChangeListener(event -> {
-            pageSize = event.getValue();
-            currentPage = 0;
-            loadData();
+            if (event.getValue() != null) {
+                pageSize = event.getValue();
+                currentPage = 0;
+                loadData();
+            }
         });
 
         paginationLayout.add(prev, pageInfo, next, new Span("Page Size"), pageSizeField);
@@ -181,7 +153,7 @@ public class QuotationView extends VerticalLayout {
         paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         paginationLayout.setAlignItems(Alignment.CENTER);
 
-        add(headerLayout, tabsContainer, filterBar, quotationGrid, paginationLayout);
+        add(headerLayout, filterBar, quotationGrid, paginationLayout);
         expand(quotationGrid);
     }
 
@@ -207,23 +179,32 @@ public class QuotationView extends VerticalLayout {
         }).setHeader("Status").setWidth("130px").setFlexGrow(0);
     }
 
-    private void determineDefaultViewModeAndTabVisibility() {
-        if (isVendorUser) {
-            allBtn.setText("All Submissions");
-            draftBtn.setVisible(true);
-            tabsContainer.setVisible(true);
+    private void configureDefaultStatusFilters() {
+        if (securityService.canAccessView("quotation-form")) {
+            statusField.setValue(Status.DRAFT);
+            qFilter.setStatus(Status.DRAFT);
         } else {
-            // Employees have no tab segment separations needed right now
-            tabsContainer.setVisible(false); 
+            statusField.clear();
+            qFilter.setStatus(null);
         }
-        viewMode = "ALL";
     }
 
     private void loadData() {
+        if (qFilter == null) {
+            qFilter = new QuotationDTO();
+        }
+
         if (isVendorUser) {
             qFilter.setVendor(loggedInVendor);
-            if ("DRAFTS".equals(viewMode)) {
-                qFilter.setStatus(Status.DRAFT);
+            if (statusField.getValue() != null) {
+                qFilter.setStatus(statusField.getValue());
+            }
+        } else {
+            
+            if (statusField.getValue() == null) {
+                qFilter.setStatus(null); 
+            } else {
+                qFilter.setStatus(statusField.getValue());
             }
         }
 
@@ -245,15 +226,16 @@ public class QuotationView extends VerticalLayout {
             rfq.setId(Long.valueOf(rfqIdField.getValue().trim()));
             qFilter.setRequestForQuotation(rfq);
         }
-        if (!isVendorUser && !supplierField.isEmpty()) {
-            Vendor searchVendor = new Vendor();
-            searchVendor.setVendorName(supplierField.getValue().trim());
-            qFilter.setVendor(searchVendor);
-        }
         
-        if (isVendorUser && "DRAFTS".equals(viewMode)) {
-            qFilter.setStatus(Status.DRAFT);
+        if (isVendorUser) {
+            qFilter.setVendor(loggedInVendor);
+            qFilter.setStatus(statusField.getValue());
         } else {
+            if (!supplierField.isEmpty()) {
+                Vendor searchVendor = new Vendor();
+                searchVendor.setVendorName(supplierField.getValue().trim());
+                qFilter.setVendor(searchVendor);
+            }
             qFilter.setStatus(statusField.getValue());
         }
 
@@ -264,13 +246,14 @@ public class QuotationView extends VerticalLayout {
     private void clearFilter() {
         quoteIdField.clear();
         rfqIdField.clear();
-        statusField.clear();
         if (!isVendorUser) {
             supplierField.clear();
         }
 
         qFilter = new QuotationDTO();
         currentPage = 0;
+
+        configureDefaultStatusFilters();
         loadData();
     }
 }

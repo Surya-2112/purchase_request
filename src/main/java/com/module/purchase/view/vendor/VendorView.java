@@ -43,6 +43,7 @@ public class VendorView extends VerticalLayout {
 
     private int currentPage = 0;
     private int pageSize = 25;
+    private int totalPages = 1;
 
     private final Span pageInfo = new Span();
 
@@ -59,15 +60,12 @@ public class VendorView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
-        // ACTIVE
         activeField.setItems("Yes", "No");
 
-        // CATEGORY
         categoryField.setItems(categoryService.getCategories());
         categoryField.setItemLabelGenerator(Category::getCategoryName);
         categoryField.setClearButtonVisible(true);
-
-        // HEADER
+            
         H2 title = new H2("Vendor List");
 
         Button addButton = new Button("Add Vendor", e -> {
@@ -89,11 +87,9 @@ public class VendorView extends VerticalLayout {
         headerLayout.setJustifyContentMode(
                 JustifyContentMode.BETWEEN);
 
-        // FILTER BUTTONS
         Button searchButton = new Button("Search", e -> applyFilter());
         Button clearButton = new Button("Clear", e -> clearFilter());
 
-        // FILTER LAYOUT
         HorizontalLayout filterLayout = new HorizontalLayout(
                 vendorIdField,
                 vendorNameField,
@@ -106,7 +102,6 @@ public class VendorView extends VerticalLayout {
         filterLayout.setWidthFull();
         filterLayout.setAlignItems(Alignment.END);
 
-        // GRID COLUMNS
         vendorGrid.addColumn(VendorDTO::getVendorId)
                 .setHeader("Vendor ID")
                 .setAutoWidth(true);
@@ -139,7 +134,6 @@ public class VendorView extends VerticalLayout {
             );
         });
 
-        // PAGE SIZE
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);
@@ -150,7 +144,6 @@ public class VendorView extends VerticalLayout {
             loadVendors();
         });
 
-        // PAGINATION BUTTONS
         Button previousButton = new Button("Previous", e -> {
             if (currentPage > 0) {
                 currentPage--;
@@ -159,8 +152,11 @@ public class VendorView extends VerticalLayout {
         });
 
         Button nextButton = new Button("Next", e -> {
-            currentPage++;
-            loadVendors();
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+               loadVendors();
+            }
+            
         });
 
         HorizontalLayout paginationLayout = new HorizontalLayout(
@@ -192,10 +188,9 @@ public class VendorView extends VerticalLayout {
 
         vendorGrid.setItems(page.getContent());
 
-        pageInfo.setText(
-                "Page " + (currentPage + 1)
-                        + " of " + page.getTotalPages()
-        );
+        this.totalPages = page.getTotalPages() > 0 ? page.getTotalPages() : 1;
+
+        pageInfo.setText("Page " + (currentPage + 1) + " of " + totalPages);
     }
 
     private void applyFilter() {

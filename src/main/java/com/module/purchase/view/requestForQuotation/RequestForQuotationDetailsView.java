@@ -65,7 +65,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
 
     private final Button backBtn = new Button("Back to Dashboard");
     private final Button editBtn = new Button("Edit Draft Layout");
-    private final Button closeRfqBtn = new Button("Close RFQ"); // ADDED: Manual operational timeline lock-in
+    private final Button closeRfqBtn = new Button("Close RFQ"); 
     private final Button cancelRfqBtn = new Button("Cancel RFQ"); 
     private final Button addQuotationBtn = new Button("Add Quotation Bid"); 
     private final Button createQuotationBtn = new Button("Submit Quotation Bid"); 
@@ -119,7 +119,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         dateAdjustmentRow.setPadding(false);
 
         statusBadgeContainer.setAlignItems(Alignment.CENTER);
-        HorizontalLayout statusSection = new HorizontalLayout(new Span("Current Lifecycle State: "), statusBadgeContainer);
+        HorizontalLayout statusSection = new HorizontalLayout(new Span("Status: "), statusBadgeContainer);
         statusSection.setAlignItems(Alignment.CENTER);
 
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
@@ -132,30 +132,24 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         detailsLinesGrid.setAllRowsVisible(true);
         detailsLinesGrid.setWidthFull();
 
-        backBtn.setIcon(VaadinIcon.ARROW_LEFT.create());
         backBtn.addClickListener(e -> backToDashboard());
 
         editBtn.addThemeName("primary warning");
-        editBtn.setIcon(VaadinIcon.EDIT.create());
         editBtn.setVisible(false); 
 
         closeRfqBtn.addThemeName("primary success");
-        closeRfqBtn.setIcon(VaadinIcon.LOCK.create());
         closeRfqBtn.setVisible(false);
         closeRfqBtn.addClickListener(e -> executeCloseRfqRoutine());
 
         cancelRfqBtn.addThemeName("error primary");
-        cancelRfqBtn.setIcon(VaadinIcon.CLOSE.create());
         cancelRfqBtn.setVisible(false);
         cancelRfqBtn.addClickListener(e -> executeCancelRfqRoutine());
 
         addQuotationBtn.addThemeName("primary success");
-        addQuotationBtn.setIcon(VaadinIcon.PLUS.create());
         addQuotationBtn.setVisible(false);
         addQuotationBtn.addClickListener(e -> navigateToQuotationForm());
 
         createQuotationBtn.addThemeName("primary success");
-        createQuotationBtn.setIcon(VaadinIcon.PENCIL.create());
         createQuotationBtn.setVisible(false);
         createQuotationBtn.addClickListener(e -> navigateToQuotationForm());
 
@@ -260,17 +254,12 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         }
     }
 
-    /**
-     * CLOSING ROUTINE: Immediately terminates active vendor bidding timelines by snapping
-     * the end date parameter to today and upgrading document state variables to CLOSED.
-     */
     private void executeCloseRfqRoutine() {
         if (this.currentRfq == null || this.currentRfq.getId() == null) return;
 
         try {
             Employee actor = securityService.getLoggedInUser().getEmployee();
 
-            // Freeze the bidding deadline parameter structurally to today's timestamp execution baseline
             currentRfq.setRequestEndDate(LocalDate.now());
             currentRfq.setStatus(RequestForQuotationStatus.CLOSED);
             

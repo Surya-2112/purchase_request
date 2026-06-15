@@ -51,7 +51,7 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
     private RequestForQuotation targetRfq;
 
     private final VerticalLayout quotationCardsStackContainer = new VerticalLayout();
-    private final Button backBtn = new Button("Back to Evaluation Center");
+    private final Button backBtn = new Button("Back");
     private final Span systemicNoticeMessage = new Span();
 
     public QuotationEvaluationMatrixView(RequestForQuotationService rfqService, 
@@ -79,7 +79,7 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
         quotationCardsStackContainer.setPadding(false);
 
         VerticalLayout scrollContent = new VerticalLayout(
-                new H2("Request for Quotation - Multi-Bid Stacked Evaluation Worksheet"),
+                new H2("Received Quotations"),
                 systemicNoticeMessage,
                 new Hr(),
                 quotationCardsStackContainer,
@@ -119,11 +119,11 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
                 .collect(Collectors.toList());
 
         if (bidsDataset.isEmpty()) {
-            systemicNoticeMessage.setText("Notice: No verified vendor pricing models have been logged yet against RFQ-" + rfq.getId());
+            systemicNoticeMessage.setText("No  Quotations as Received for RFQ-" + rfq.getId());
             return;
         }
 
-        systemicNoticeMessage.setText(" 💡 Tip: Double-click any line row item within a vendor's pricing grid sheet below to review its cascading multi-tier Slab Volume Discounts matrix.");
+        systemicNoticeMessage.setText(" Double-click any line row item within a vendor's pricing grid sheet below to review Discounts Slab.");
 
         for (Quotation quotation : bidsDataset) {
             quotationCardsStackContainer.add(createStandaloneVendorBidCardBlock(quotation));
@@ -144,15 +144,15 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
         String docDate = quotation.getQuotationDate() != null ? quotation.getQuotationDate().toString() : "-";
         String grossValue = String.format("%.2f INR", quotation.getTotalAmount());
 
-        Span metaInfoText = new Span(String.format("🏬 Supplier: %s   |   📅 Filed Date: %s   |   💰 Gross Estimate: %s",
+        Span metaInfoText = new Span(String.format("Supplier: %s   |   Filed Date: %s   |   Total amount: %s",
                 vendorName, docDate, grossValue));
         metaInfoText.getStyle().set("font-weight", "bold").set("font-size", "15px");
 
-        Button approveBtn = new Button("Approve Vendor Contract", VaadinIcon.CHECK_CIRCLE.create());
+        Button approveBtn = new Button("Approve Vendor Quotations");
         approveBtn.addThemeName("success primary small");
 
         if (quotation.getStatus() == Status.APPROVED) {
-            approveBtn.setText("Contract Awarded Winner");
+            approveBtn.setText("Quotations Allocated");
             approveBtn.setEnabled(false);
             cardContainer.getStyle().set("border", "2px solid var(--lumo-success-color)").set("background-color", "#f0fdf4");
         } else if (quotation.getStatus() == Status.WAITING_APPROVAL) { 
@@ -177,7 +177,7 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
                     (currentUserGroups.contains(currentActiveGroupRequirement) || currentUserGroups.contains(EmployeeGroup.SUPER_ADMIN));
 
             if (hasAuthority) {
-                approveBtn.setText("Authorize & Sign Off Level");
+                approveBtn.setText("Approve Vendor Quotations");
                 approveBtn.addThemeName("primary warning");
                 approveBtn.setEnabled(true);
                 cardContainer.getStyle().set("border", "2px solid var(--lumo-warning-color)").set("background-color", "#fffbeb");
@@ -250,7 +250,6 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
             if (winnerQuote.getStatus() == Status.WAITING_APPROVAL) {
                 List<EmployeeGroup> currentUserGroups = actionBuyerActor.getRole().getEmployeeGroups();
                 
-                // Real-world configuration evaluation: Does this user possess authority for the absolute highest tier required?
                 boolean isHighestTierSatisfied = requiredApprovalTiers.isEmpty() || currentUserGroups.contains(EmployeeGroup.SUPER_ADMIN) ||
                         currentUserGroups.contains(requiredApprovalTiers.get(requiredApprovalTiers.size() - 1).getEmployeeGroup());
 
@@ -306,11 +305,11 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
 
     private void openTieredSlabsBreakdownModalDialog(QuotationLine line) {
         Dialog slabsModalOverlay = new Dialog();
-        slabsModalOverlay.setHeaderTitle("Volume Tier Slab Breakdown");
+        slabsModalOverlay.setHeaderTitle("Discount Slabs ");
         slabsModalOverlay.setWidth("600px");
 
         String itemName = line.getItemVariant() != null ? line.getItemVariant().getItem().getItemName() : "Selected Item";
-        VerticalLayout modalLayout = new VerticalLayout(new H3("Tiered discounts mapping rules matching: " + itemName));
+        VerticalLayout modalLayout = new VerticalLayout(new H3("Discounts Item : " + itemName));
         modalLayout.setPadding(false);
 
         Grid<DiscountType> modalSlabsGrid = new Grid<>();
@@ -326,12 +325,12 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
         modalSlabsGrid.setItems(detailedSlabsList);
 
         if (detailedSlabsList.isEmpty()) {
-            modalLayout.add(new Span("No specific bulk volume discount slabs were registered for this row item."));
+            modalLayout.add(new Span("discount slabs were not registered for this row item."));
         } else {
             modalLayout.add(modalSlabsGrid);
         }
 
-        Button closeOverlayBtn = new Button("Close Breakdown View", e -> slabsModalOverlay.close());
+        Button closeOverlayBtn = new Button("Close View", e -> slabsModalOverlay.close());
         closeOverlayBtn.addThemeName("tertiary");
         slabsModalOverlay.getFooter().add(closeOverlayBtn);
 

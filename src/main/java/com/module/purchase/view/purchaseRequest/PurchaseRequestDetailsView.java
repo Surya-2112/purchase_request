@@ -233,6 +233,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                 .setHeader("Unit").setWidth("100px");
 
                 lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Requested Qty").setWidth("120px");
+                lineGrid.addColumn(PurchaseRequestLine::getOrderedQuantity).setHeader("Order Qty").setWidth("120px");
                 
                 lineGrid.addColumn(line -> line.getApprovedQuantity() != null ? line.getApprovedQuantity() : "-")
                                 .setHeader("Approved Qty").setWidth("130px");

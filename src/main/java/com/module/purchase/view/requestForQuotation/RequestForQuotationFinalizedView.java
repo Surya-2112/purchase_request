@@ -37,23 +37,19 @@ import jakarta.annotation.security.PermitAll;
 public class RequestForQuotationFinalizedView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final RequestForQuotationService rfqService;
-    private final QuotationService quotationService; // Injected service field layer
-
-    // Read-Only Structural Fields
+    private final QuotationService quotationService; 
     private final TextField rfqIdField = new TextField("RFQ Reference ID");
     private final DatePicker requestedDate = new DatePicker("Requested Date");
     private final DatePicker requestEndDate = new DatePicker("Quotation Closing / End Date");
     private final HorizontalLayout statusBadgeContainer = new HorizontalLayout();
 
-    // Sourced Line Items Grid
     private final Grid<RequestForQuotationLine> detailsLinesGrid = new Grid<>(RequestForQuotationLine.class, false);
     private final List<RequestForQuotationLine> linesDataset = new ArrayList<>();
 
-    // Historical Audit Evaluation Grids
     private final Grid<Quotation> approvedQuotationGrid = new Grid<>(Quotation.class, false);
     private final Grid<Quotation> rejectedQuotationsGrid = new Grid<>(Quotation.class, false);
 
-    private final Button backBtn = new Button("Back to Evaluation Center");
+    private final Button backBtn = new Button("Back ");
 
     public RequestForQuotationFinalizedView(RequestForQuotationService rfqService, QuotationService quotationService) {
         this.rfqService = rfqService;
@@ -72,14 +68,12 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
         scrollContent.setPadding(true);
         scrollContent.setSpacing(true);
 
-        H2 pageTitle = new H2("Finalized Request for Quotation Archive");
+        H2 pageTitle = new H2("Finalized Request for Quotation");
 
-        // Force complete read-only constraint mechanics across all form layers
         rfqIdField.setReadOnly(true);
         requestedDate.setReadOnly(true);
         requestEndDate.setReadOnly(true);
 
-        // Plain text aesthetics optimization for dates
         requestedDate.addThemeName("small");
         requestedDate.getStyle().set("border", "none").set("background", "transparent").set("box-shadow", "none");
         requestEndDate.addThemeName("small");
@@ -94,7 +88,7 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
 
         // Core demand table grid configuration
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
-                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Sourced Material Item").setAutoWidth(true);
+                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Sourced Item").setAutoWidth(true);
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                 .setHeader("Specification Detail").setAutoWidth(true);
         detailsLinesGrid.addColumn(RequestForQuotationLine::getRequestedQuantity).setHeader("Quantity Demanded").setWidth("160px");
@@ -103,10 +97,8 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
         detailsLinesGrid.setAllRowsVisible(true);
         detailsLinesGrid.setWidthFull();
 
-        // 1. CONFIGURE HISTORICAL CONTRACT WINNER GRID
         setupQuotationGridStructureTemplate(approvedQuotationGrid);
         
-        // 2. CONFIGURE COMPETING REJECTED BIDS GRID  
         setupQuotationGridStructureTemplate(rejectedQuotationsGrid);
 
         backBtn.setIcon(VaadinIcon.ARROW_LEFT.create());
@@ -117,13 +109,13 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
             headerLayout, 
             statusSection, 
             new Hr(), 
-            new H3("Linked Core Asset Demand Items Summary"), 
+            new H3("Demand Items Summary"), 
             detailsLinesGrid, 
             new Hr(),
-            new H3("🏆 Awarded Winner Vendor Quotation Contract"),
+            new H3("Allocated Vendor Proposals"),
             approvedQuotationGrid,
             new Hr(),
-            new H3("❌ Competing Rejected Vendor Proposals"),
+            new H3("Rejected Vendor Proposals"),
             rejectedQuotationsGrid,
             new Hr(), 
             backBtn
@@ -142,7 +134,7 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
         grid.addColumn(q -> "QUOTE-" + q.getId()).setHeader("Quotation ID").setWidth("120px");
         grid.addColumn(q -> q.getVendor() != null ? q.getVendor().getVendorName() : "-").setHeader("Vendor Name").setAutoWidth(true);
         grid.addColumn(q -> q.getQuotationDate() != null ? q.getQuotationDate().toString() : "-").setHeader("Submission Date").setWidth("150px");
-        grid.addColumn(q -> String.format("%.2f INR", q.getTotalAmount())).setHeader("Total Bid Offer").setWidth("160px");
+        grid.addColumn(q -> String.format("%.2f INR", q.getTotalAmount())).setHeader("Total Offer").setWidth("160px");
         
         // Add itemized details lookup redirect button link layer
         grid.addComponentColumn(q -> {

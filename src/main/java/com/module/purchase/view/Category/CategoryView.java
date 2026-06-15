@@ -28,7 +28,6 @@ public class CategoryView extends VerticalLayout {
 
     private final Grid<Category> categoryGrid = new Grid<>(Category.class, false);
 
-    // ================= FILTER FIELDS =================
     private final TextField categoryIdField = new TextField("Category ID");
     private final TextField categoryNameField = new TextField("Category Name");
     private final ComboBox<String> repeatableField = new ComboBox<>("Is Repeatable");
@@ -40,7 +39,6 @@ public class CategoryView extends VerticalLayout {
 
     private final Span pageInfo = new Span();
 
-    // Using a dedicated DTO container class to support true null selections for booleans
     private Category currentFilter = new Category();
 
     public CategoryView(CategoryService categoryService, SecurityService securityService, RepeatedPeriodService repeatedPeriodService) {
@@ -50,7 +48,6 @@ public class CategoryView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
-        // INITIALIZE COMBOCBOX OPTIONS WITHOUT BOOTSTRAPPING DUMMY "ALL" VALUES
         repeatableField.setItems("Yes", "No");
         repeatableField.setClearButtonVisible(true);
         repeatableField.setWidth("140px");
@@ -59,7 +56,6 @@ public class CategoryView extends VerticalLayout {
         autoRfqField.setClearButtonVisible(true);
         autoRfqField.setWidth("140px");
 
-        // HEADER
         H2 title = new H2("Category List");
 
         Button addButton = new Button("Add Category", event -> {
@@ -74,7 +70,6 @@ public class CategoryView extends VerticalLayout {
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-        // FILTER CONTROL BUTTONS
         Button searchButton = new Button("Search", e -> applyFilter());
         Button clearButton = new Button("Clear", e -> clearFilter());
 
@@ -89,7 +84,6 @@ public class CategoryView extends VerticalLayout {
         filterLayout.setWidthFull();
         filterLayout.setAlignItems(Alignment.END);
 
-        // GRID CONFIGURATION WITH FIXED WIDTHS FOR BOOLEANS
         categoryGrid.addColumn(Category::getCategoryId).setHeader("Category ID").setWidth("120px").setFlexGrow(0);
         categoryGrid.addColumn(Category::getCategoryName).setHeader("Category Name").setAutoWidth(true);
         
@@ -107,7 +101,6 @@ public class CategoryView extends VerticalLayout {
             getUI().ifPresent(ui -> ui.navigate("category-details/" + category.getCategoryId()));
         });
 
-        // PAGE SIZE SELECTOR
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);
@@ -120,7 +113,6 @@ public class CategoryView extends VerticalLayout {
             }
         });
 
-        // PAGINATION CONTROLS
         Button previousButton = new Button("Previous", e -> {
             if (currentPage > 0) {
                 currentPage--;
@@ -149,7 +141,6 @@ public class CategoryView extends VerticalLayout {
         currentFilter.setAutoRfq(null);
         currentFilter.setRepeatable(null);
         loadCategories();
-        System.out.println("dffd");
 
         add(headerLayout, filterLayout, categoryGrid, paginationLayout);
         expand(categoryGrid);

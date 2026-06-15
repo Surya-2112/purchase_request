@@ -47,7 +47,7 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
     private final TextField vendorNameField = new TextField("Vendor / Contractor Name");
     private final TextField dateField = new TextField("Date of Submission");
     private final TextField grossTotalField = new TextField("Total Cost Offer");
-    private final TextField categoryField=new TextField("Category");
+    private final TextField categoryField = new TextField("Category");
     private final HorizontalLayout statusBadgeContainer = new HorizontalLayout();
 
     private final Grid<QuotationLine> linesGrid = new Grid<>(QuotationLine.class, false);
@@ -56,9 +56,9 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
     private final Grid<DiscountType> discountMatrixGrid = new Grid<>(DiscountType.class, false);
 
     private final Button backBtn = new Button("Back");
-    private final Button editBtn = new Button("Edit Draft Workspace"); 
+    private final Button editBtn = new Button("Edit Draft Workspace");
     private final Button submitFinalBtn = new Button("Submit & Finalize Bid");
-    private final Button deleteBtn = new Button("Delete Quotation Draft"); 
+    private final Button deleteBtn = new Button("Delete Quotation Draft");
 
     public QuotationDetailsView(QuotationService quotationService, SecurityService securityService) {
         this.quotationService = quotationService;
@@ -92,27 +92,29 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
         dateField.setReadOnly(true);
         grossTotalField.setReadOnly(true);
         categoryField.setReadOnly(true);
-        
+
         FormLayout summaryLayout = new FormLayout();
         summaryLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 3));
-        
+
         if (isVendorUser) {
-            summaryLayout.add(quoteIdField, rfqIdField, dateField, grossTotalField,categoryField);
+            summaryLayout.add(quoteIdField, rfqIdField, dateField, grossTotalField, categoryField);
         } else {
-            summaryLayout.add(quoteIdField, rfqIdField, vendorNameField, dateField, grossTotalField,categoryField);
+            summaryLayout.add(quoteIdField, rfqIdField, vendorNameField, dateField, grossTotalField, categoryField);
         }
 
         statusBadgeContainer.setAlignItems(Alignment.CENTER);
         HorizontalLayout statusSection = new HorizontalLayout(new Span(" Status:"), statusBadgeContainer);
         statusSection.setAlignItems(Alignment.CENTER);
 
-        linesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
-                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item Name").setAutoWidth(true);
-        
+        linesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
+                ? line.getItemVariant().getItem().getItemName()
+                : "").setHeader("Item Name").setAutoWidth(true);
+
         linesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                 .setHeader("Specification Detail").setAutoWidth(true);
-        
-        linesGrid.addColumn(line -> String.format("%.2f INR", line.getUnitPrice())).setHeader("Offered Unit Price").setWidth("160px");
+
+        linesGrid.addColumn(line -> String.format("%.2f INR", line.getUnitPrice())).setHeader("Offered Unit Price")
+                .setWidth("160px");
 
         linesGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         linesGrid.setAllRowsVisible(true);
@@ -128,8 +130,9 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
 
         discountMatrixGrid.addColumn(DiscountType::getFromQuantity).setHeader("From Quantity").setAutoWidth(true);
         discountMatrixGrid.addColumn(DiscountType::getToQuantity).setHeader("To Quantity").setAutoWidth(true);
-        discountMatrixGrid.addColumn(d -> String.format("%.1f %%", d.getDiscountPercentage())).setHeader("Discount Percentage").setAutoWidth(true);
-        
+        discountMatrixGrid.addColumn(d -> String.format("%.1f %%", d.getDiscountPercentage()))
+                .setHeader("Discount Percentage").setAutoWidth(true);
+
         discountMatrixGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         discountMatrixGrid.setAllRowsVisible(true);
         discountMatrixGrid.setWidthFull();
@@ -141,10 +144,8 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
         editBtn.setIcon(VaadinIcon.EDIT.create());
         editBtn.setVisible(false);
         editBtn.addClickListener(e -> {
-            if (currentQuotation != null && currentQuotation.getRequestForQuotation() != null) {
-
-
-                getUI().ifPresent(ui -> ui.navigate("quotation-form/new/" + currentQuotation.getRequestForQuotation().getId()));
+            if (currentQuotation != null && currentQuotation.getId() != null) {
+                getUI().ifPresent(ui -> ui.navigate("quotation-form/edit/" + currentQuotation.getId()));
             }
         });
 
@@ -161,12 +162,12 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
         HorizontalLayout actionsLayout = new HorizontalLayout(backBtn, editBtn, submitFinalBtn, deleteBtn);
         actionsLayout.setSpacing(true);
 
-        scrollContent.add(pageTitle, summaryLayout, statusSection, new Hr(), 
-                           new H3("Quotation Items"), 
-                           new Span("Click any row below to get Discounts structure "),
-                           linesGrid, new Hr(),
-                           new H3("Discount Slab"), discountMatrixGrid, 
-                           new Hr(), actionsLayout);
+        scrollContent.add(pageTitle, summaryLayout, statusSection, new Hr(),
+                new H3("Quotation Items"),
+                new Span("Click any row below to get Discounts structure "),
+                linesGrid, new Hr(),
+                new H3("Discount Slab"), discountMatrixGrid,
+                new Hr(), actionsLayout);
 
         Scroller viewScroller = new Scroller(scrollContent);
         viewScroller.setSizeFull();
@@ -184,7 +185,8 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
             this.currentQuotation = quote;
 
             quoteIdField.setValue("QUOTE-" + quote.getId());
-            rfqIdField.setValue(quote.getRequestForQuotation() != null ? "RFQ-" + quote.getRequestForQuotation().getId() : "-");
+            rfqIdField.setValue(
+                    quote.getRequestForQuotation() != null ? "RFQ-" + quote.getRequestForQuotation().getId() : "-");
             vendorNameField.setValue(quote.getVendor() != null ? quote.getVendor().getVendorName() : "-");
             dateField.setValue(quote.getQuotationDate() != null ? quote.getQuotationDate().toString() : "-");
             grossTotalField.setValue(String.format("%.2f INR", quote.getTotalAmount()));
@@ -195,7 +197,7 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
             linesDataset.clear();
             linesDataset.addAll(quotationService.getLinesByQuotation(quote));
             linesGrid.setItems(linesDataset);
-            
+
             discountMatrixGrid.setItems(new ArrayList<>());
             if (quote.getStatus() == Status.DRAFT) {
                 editBtn.setVisible(true);
@@ -208,7 +210,8 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
             }
 
         }, () -> {
-            Notification.show("The selected proposal mapping is missing from active storage logs.", 4000, Position.MIDDLE);
+            Notification.show("The selected proposal mapping is missing from active storage logs.", 4000,
+                    Position.MIDDLE);
             backToDashboard();
         });
     }
@@ -218,20 +221,24 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
         discountMatrixGrid.setItems(activeDiscounts);
     }
 
- 
     private void executeFinalizeDraftWorkflow() {
-        if (currentQuotation == null) return;
+        if (currentQuotation == null)
+            return;
         try {
             currentQuotation.setStatus(Status.WAITING_APPROVAL);
             quotationService.updateQuotation(currentQuotation);
-            Notification.show("Quotation final pricing proposal successfully finalized and opened for bidding evaluation!", 4000, Position.TOP_CENTER);
+            Notification.show(
+                    "Quotation final pricing proposal successfully finalized and opened for bidding evaluation!", 4000,
+                    Position.TOP_CENTER);
             backToDashboard();
         } catch (Exception ex) {
             Notification.show("Submission commit rejected: " + ex.getMessage(), 5000, Position.MIDDLE);
         }
     }
+
     private void executeDraftDeletionRoutine() {
-        if (currentQuotation == null || currentQuotation.getId() == null) return;
+        if (currentQuotation == null || currentQuotation.getId() == null)
+            return;
         try {
             quotationService.deleteQuotation(currentQuotation.getId());
             Notification.show("Draft proposal dropped and storage space unmapped safely.", 4000, Position.TOP_CENTER);
@@ -245,8 +252,8 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
         statusBadgeContainer.removeAll();
         Span badge = new Span(status != null ? status.name() : "UNKNOWN");
         badge.getStyle()
-             .set("padding", "4px 12px").set("border-radius", "12px")
-             .set("font-weight", "bold").set("font-size", "13px");
+                .set("padding", "4px 12px").set("border-radius", "12px")
+                .set("font-weight", "bold").set("font-size", "13px");
 
         if (status == Status.DRAFT) {
             badge.getStyle().set("background-color", "#f1f5f9").set("color", "#475569");

@@ -146,8 +146,9 @@ public class RepeatedPeriodService {
     }
 
     public void assignedRepeatedTask()
-    {   System.out.println("----------------------- RepeatedPeriod is called ----------------------");
+    {  
         List<RepeatedPeriod> pendingTasks= repeatedPeriodRepository.findPendingTasks(LocalDate.now(),RequestForQuotationStatus.OPEN);
+        System.out.println(pendingTasks);
         for(RepeatedPeriod task:pendingTasks)
         { 
             if(task.getReferType().equals(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE))

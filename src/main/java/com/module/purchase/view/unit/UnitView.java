@@ -8,6 +8,7 @@ import com.module.purchase.entity.Unit;
 import com.module.purchase.service.UnitService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
@@ -24,7 +25,6 @@ import jakarta.annotation.security.PermitAll;
 public class UnitView extends VerticalLayout {
 
     private final UnitService unitService;
-    private final SecurityService securityService;
 
     private final Grid<Unit> unitGrid = new Grid<>(Unit.class, false);
 
@@ -34,13 +34,16 @@ public class UnitView extends VerticalLayout {
 
     private int currentPage = 0;
     private int pageSize = 25;
+    private int totalPages = 1;
 
     private final Span pageInfo = new Span();
 
-    public UnitView(UnitService unitService, SecurityService securityService) {
+    private final Button previousButton = new Button("Previous");
+    private final Button nextButton = new Button("Next");
+    private Unit currentFilter = new Unit();
 
+    public UnitView(UnitService unitService, SecurityService securityService) {
         this.unitService = unitService;
-        this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
@@ -49,101 +52,124 @@ public class UnitView extends VerticalLayout {
         // HEADER
         H2 title = new H2("Unit Master");
 
-        Button addButton = new Button("Add Unit", e -> {
+        Button addButton = new Button("Add Unit", event -> {
             UnitForm form = new UnitForm(unitService, securityService);
+            form.addDetachListener(detachEvent -> loadUnits());
             form.open();
         });
 
         addButton.setVisible(securityService.canAccessView("unit-form"));
 
-        HorizontalLayout header = new HorizontalLayout(title, addButton);
-        header.setWidthFull();
-        header.setJustifyContentMode(JustifyContentMode.BETWEEN);
+        HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
+        headerLayout.setWidthFull();
+        headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-        // FILTER BUTTONS
-        Button searchButton = new Button("Search", e -> loadUnits());
-        Button clearButton = new Button("Clear", e -> clearFilters());
+        Button searchButton = new Button("Search", e -> applyFilter());
+        Button clearButton = new Button("Clear", e -> clearFilter());
 
         HorizontalLayout filterLayout = new HorizontalLayout(
                 unitIdField,
                 unitNameField,
                 unitCodeField,
                 searchButton,
-                clearButton
-        );
-
-        filterLayout.setAlignItems(Alignment.END);
+                clearButton);
         filterLayout.setWidthFull();
+        filterLayout.setAlignItems(Alignment.END);
 
-        // GRID CONFIG
-        unitGrid.addColumn(Unit::getId)
-                .setHeader("ID")
-                .setAutoWidth(true);
+        unitGrid.addColumn(Unit::getId).setHeader("Unit ID").setAutoWidth(true);
+        unitGrid.addColumn(Unit::getName).setHeader("Unit Name").setAutoWidth(true);
+        unitGrid.addColumn(Unit::getCode).setHeader("Unit Code").setAutoWidth(true);
 
-        unitGrid.addColumn(Unit::getName)
-                .setHeader("Unit Name")
-                .setAutoWidth(true);
-
-        unitGrid.addColumn(Unit::getCode)
-                .setHeader("Code")
-                .setAutoWidth(true);
-
-        unitGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        unitGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         unitGrid.setSizeFull();
 
-        // DOUBLE CLICK (optional edit page)
         unitGrid.addItemDoubleClickListener(event -> {
             Unit unit = event.getItem();
-            getUI().ifPresent(ui ->
-                    ui.navigate("unit-edit/" + unit.getId())
-            );
+            getUI().ifPresent(ui -> ui.navigate("unit-edit/" + unit.getId()));
         });
 
-        // PAGINATION
-        Button prev = new Button("Previous", e -> {
+        ComboBox<Integer> pageSizeField = new ComboBox<>();
+        pageSizeField.setItems(10, 25, 50, 100);
+        pageSizeField.setValue(25);
+
+        pageSizeField.addValueChangeListener(e -> {
+            if (e.getValue() != null) {
+                pageSize = e.getValue();
+                currentPage = 0;
+                loadUnits();
+            }
+        });
+
+        Button previousButton = new Button("Previous", e -> {
             if (currentPage > 0) {
                 currentPage--;
                 loadUnits();
             }
         });
 
-        Button next = new Button("Next", e -> {
-            currentPage++;
-            loadUnits();
+        Button nextButton = new Button("Next", e -> {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadUnits();
+            }
         });
 
-        HorizontalLayout pagination = new HorizontalLayout(prev, pageInfo, next);
-        pagination.setAlignItems(Alignment.CENTER);
-
-        // LOAD
+        HorizontalLayout paginationLayout = new HorizontalLayout(
+                previousButton,
+                pageInfo,
+                nextButton,
+                new Span("Page Size"),
+                pageSizeField);
+        paginationLayout.setWidthFull();
+        paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        paginationLayout.setAlignItems(Alignment.CENTER);
+       
         loadUnits();
 
-        add(header, filterLayout, unitGrid, pagination);
+        add(headerLayout, filterLayout, unitGrid, paginationLayout);
         expand(unitGrid);
     }
 
     private void loadUnits() {
-        Unit unit=new Unit();
-        unit.setId(unitIdField.getValue().isBlank() ? null : Integer.parseInt(unitIdField.getValue()));
-        unit.setName(unitNameField.getValue());
-        unit.setCode(unitCodeField.getValue());
-        
-
-        Page<Unit> page = unitService.getUnits(unit,PageRequest.of(currentPage, pageSize)
-        );
+        Page<Unit> page = unitService.getUnits(
+                currentFilter,
+                PageRequest.of(currentPage, pageSize));
 
         unitGrid.setItems(page.getContent());
 
-        pageInfo.setText("Page " + (currentPage + 1)
-                + " of " + page.getTotalPages());
+        this.totalPages = page.getTotalPages() > 0 ? page.getTotalPages() : 1;
+
+        pageInfo.setText("Page " + (currentPage + 1) + " of " + totalPages);
     }
 
-    private void clearFilters() {
+    private void applyFilter() {
+        Integer id = null;
+
+        if (!unitIdField.getValue().isEmpty()) {
+            try {
+                id = Integer.valueOf(unitIdField.getValue().trim());
+            } catch (NumberFormatException e) {
+                id = -1;
+            }
+        }
+
+        currentFilter = new Unit();
+        currentFilter.setId(id);
+        currentFilter.setName(unitNameField.isEmpty() ? null : unitNameField.getValue().trim());
+        currentFilter.setCode(unitCodeField.isEmpty() ? null : unitCodeField.getValue().trim());
+
+        currentPage = 0;
+        loadUnits();
+    }
+
+    private void clearFilter() {
         unitIdField.clear();
         unitNameField.clear();
         unitCodeField.clear();
 
+        currentFilter = new Unit();
         currentPage = 0;
+
         loadUnits();
     }
 }

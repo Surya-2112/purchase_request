@@ -9,6 +9,7 @@ import com.module.purchase.entity.ItemVariant;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RequestForQuotation;
+import com.module.purchase.entity.PurchaseOrderLine;
 import com.module.purchase.enums.Status;
 
 public interface PurchaseRequestLineRepository extends JpaRepository<PurchaseRequestLine, Long>, JpaSpecificationExecutor<PurchaseRequestLine> {
@@ -18,5 +19,7 @@ public interface PurchaseRequestLineRepository extends JpaRepository<PurchaseReq
      List<PurchaseRequestLine> findByRequestForQuotation(RequestForQuotation rfq);
 
      List<PurchaseRequestLine> findByItemVariantAndRequestForQuotationIsNullAndStatusIn( ItemVariant itemVariant,List<Status> statuses);
+
+    List<PurchaseRequestLine> findByPurchaseOrderLine(PurchaseOrderLine orderLine);
 
 }

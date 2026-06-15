@@ -18,6 +18,7 @@ import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.entity.RequestForQuotation;
+import com.module.purchase.entity.PurchaseOrderLine;
 import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
@@ -112,5 +113,10 @@ public class PurchaseRequestLineService {
             }
         }
         return matchedLines;
+    }
+
+    public List<PurchaseRequestLine> getPurchaseRequestLineByOrder(PurchaseOrderLine orderLine)
+    {
+        return purchaseRequestLineRepository.findByPurchaseOrderLine(orderLine);
     }
 }

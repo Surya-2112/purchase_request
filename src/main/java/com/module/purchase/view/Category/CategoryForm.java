@@ -7,6 +7,7 @@ import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Category;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.enums.FrequencyType;
+import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.RepeatedPeriodService;
@@ -190,12 +191,12 @@ public class CategoryForm extends Dialog {
                 period.setFrequencyType(frequencyTypeField.getValue());
                 period.setFromDate(fromDateField.getValue());
                 period.setToDate(toDateField.getValue());
+                period.setStatus(RequestForQuotationStatus.OPEN);
                 
                 if (period.getId() == null || !fromDateField.getValue().equals(period.getFromDate())) {
-                    period.setNextDate(fromDateField.getValue());
+                    period.setNextDate(period.getFrequencyType().calculateNext(period.getFromDate(),period.getFrequencyPeriod()));
                 }
-
-                repeatedPeriodService.save(period);
+                repeatedPeriodService.addRepeatedPeriod(period,securityService.getLoggedInUser().getEmployee());
             } else {
                 repeatedPeriodService.deleteByReferTypeAndReferId(RepeatedPeriodReferType.CATEGORY, savedCategory.getCategoryId());
             }

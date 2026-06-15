@@ -1,12 +1,9 @@
 package com.module.purchase.view.purchaseOrder;
 
 import java.time.LocalDate;
-import java.time.Year;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -14,22 +11,17 @@ import java.util.stream.Collectors;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.AssigningConfig;
-import com.module.purchase.entity.Department;
-import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
-import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.enums.ApprovalSource;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.AssigningConfigService;
-import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.service.PurchaseOrderHeaderService;
 import com.module.purchase.service.PurchaseOrderLineService;
-import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
@@ -50,7 +42,7 @@ import com.vaadin.flow.router.Route;
 
 import jakarta.annotation.security.PermitAll;
 
-@Route(value = "purchase-order-approval/:id", layout = MainLayout.class)
+@Route(value = "purchase-order-approval/:id", layout = com.module.purchase.view.MainLayout.class)
 @PermitAll
 public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeEnterObserver {
 
@@ -58,7 +50,6 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
     private final PurchaseOrderLineService poLineService;
     private final AssigningConfigService configService;
     private final AssigningApprovalsService assigningApprovalsService;
-    private final DepartmentBudgetService departmentBudgetService;
     private final SecurityService securityService;
 
     private PurchaseOrderHeader poHeader;
@@ -68,26 +59,21 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
     private final Grid<PurchaseOrderLine> itemsGrid = new Grid<>(PurchaseOrderLine.class, false);
 
     private final Span totalPoAmountText = new Span();
-    private final VerticalLayout budgetAlertsContainer = new VerticalLayout();
 
     private final Button addApproverBtn = new Button("Add Manual Approver", VaadinIcon.PLUS.create());
     private final Button submitPoBtn = new Button("Submit Purchase Order", VaadinIcon.PAPERPLANE.create());
-
-    private boolean isAnyDepartmentOverBudget = false;
 
     public PurchaseOrderApprovalView(
             PurchaseOrderHeaderService poHeaderService,
             PurchaseOrderLineService poLineService,
             AssigningConfigService configService,
             AssigningApprovalsService assigningApprovalsService,
-            DepartmentBudgetService departmentBudgetService,
             SecurityService securityService) {
 
         this.poHeaderService = poHeaderService;
         this.poLineService = poLineService;
         this.configService = configService;
         this.assigningApprovalsService = assigningApprovalsService;
-        this.departmentBudgetService = departmentBudgetService;
         this.securityService = securityService;
 
         setSizeFull();
@@ -103,14 +89,9 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
         configureItemsGrid();
         configureWorkflowGrid();
 
-        budgetAlertsContainer.setPadding(false);
-        budgetAlertsContainer.setSpacing(false);
-        budgetAlertsContainer.setWidthFull();
-
         VerticalLayout coreFormContainer = new VerticalLayout(
-                new H2("Purchase Order and Add Aprovers"),
+                new H2("Purchase Order and Add Approvers"),
                 totalPoAmountText,
-                budgetAlertsContainer,
                 new Hr(),
                 new H3("Purchase Order Lines"),
                 itemsGrid,
@@ -149,25 +130,10 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
         itemsGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
                 ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item Name").setAutoWidth(true);
         
-        itemsGrid.addColumn(line -> {
-            try {
-                org.hibernate.Hibernate.initialize(line.getPurchaseRequestLines());
-            } catch (Exception ignored) {}
-
-            if (line.getPurchaseRequestLines() != null && !line.getPurchaseRequestLines().isEmpty()) {
-                return line.getPurchaseRequestLines().stream()
-                        .map(prl -> prl.getPurchaseRequestHeader() != null && prl.getPurchaseRequestHeader().getForDepartment() != null 
-                                ? prl.getPurchaseRequestHeader().getForDepartment().getDepartmentName() : "Unknown")
-                        .distinct()
-                        .collect(Collectors.joining(", "));
-            }
-            return "Department ";
-        }).setHeader("Department Name").setAutoWidth(true);
-
         itemsGrid.addColumn(PurchaseOrderLine::getQuantity).setHeader("Quantity").setWidth("120px");
-        itemsGrid.addColumn(line -> String.format("%.2f INR", line.getUnitPrice())).setHeader("Unit Price").setWidth("140px");
-        itemsGrid.addColumn(line -> String.format("%.2f INR", line.getDiscountAmount())).setHeader("Slab Discount").setWidth("140px");
-        itemsGrid.addColumn(line -> String.format("%.2f INR", line.getTotalAmount())).setHeader("Net Total").setWidth("150px");
+        itemsGrid.addColumn(line -> String.format("%.2f ", line.getUnitPrice())).setHeader("Unit Price").setWidth("140px");
+        itemsGrid.addColumn(line -> String.format("%.2f ", line.getDiscountAmount())).setHeader("Slab Discount").setWidth("140px");
+        itemsGrid.addColumn(line -> String.format("%.2f ", line.getTotalAmount())).setHeader("Total Amount").setWidth("150px");
         
         itemsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         itemsGrid.setAllRowsVisible(true);
@@ -223,13 +189,12 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
 
             groupCombo.setReadOnly(item.getSource() == ApprovalSource.AUTO);
             return groupCombo;
-        }).setHeader("Assigned Authorization Role Group").setAutoWidth(true);
+        }).setHeader("Assigned Role Group").setAutoWidth(true);
 
-        workflowGrid.addColumn(a -> a.getSource() != null ? a.getSource().name() : "").setHeader("Generation Origin").setWidth("140px");
+        workflowGrid.addColumn(a -> a.getSource() != null ? a.getSource().name() : "").setHeader("Source").setWidth("140px");
 
         workflowGrid.addComponentColumn(item -> {
-            Button removeStepBtn = new Button("Remove Step", VaadinIcon.TRASH.create());
-            removeStepBtn.addThemeName("error small tertiary");
+            Button removeStepBtn = new Button("Remove");
             removeStepBtn.addClickListener(e -> {
                 approvalTiersDataset.remove(item);
                 resequenceWorkflowTiers();
@@ -247,79 +212,12 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
     }
 
     private void refreshFormMetricsAndDataset() {
-        budgetAlertsContainer.removeAll();
-        isAnyDepartmentOverBudget = false;
-
         List<PurchaseOrderLine> poLines = poLineService.getPurchaseOrderLineByHeader(poHeader);
-        
-        // FIX: Initialize line relations prior to feeding the dataset array into the Vaadin UI Grid container
-        for (PurchaseOrderLine line : poLines) {
-            try {
-                org.hibernate.Hibernate.initialize(line.getPurchaseRequestLines());
-            } catch (Exception ignored) {}
-        }
-        
         itemsGrid.setItems(poLines);
 
         double totalPoValue = poHeader.getTotalAmount() != null ? poHeader.getTotalAmount() : 0.0;
-        totalPoAmountText.setText("PO Consolidated Gross Estimate: " + String.format("%.2f INR", totalPoValue));
+        totalPoAmountText.setText("Purchase Order Total Amount: " + String.format("%.2f ", totalPoValue));
         totalPoAmountText.getStyle().set("font-weight", "bold").set("font-size", "18px");
-
-        Map<Department, Double> departmentCostAggregationMap = new HashMap<>();
-
-        for (PurchaseOrderLine line : poLines) {
-            if (line.getPurchaseRequestLines() != null && !line.getPurchaseRequestLines().isEmpty()) {
-                double allocatedPrLineCost = line.getTotalAmount() / line.getPurchaseRequestLines().size();
-                for (PurchaseRequestLine prl : line.getPurchaseRequestLines()) {
-                    if (prl.getPurchaseRequestHeader() != null && prl.getPurchaseRequestHeader().getForDepartment() != null) {
-                        Department dept = prl.getPurchaseRequestHeader().getForDepartment();
-                        departmentCostAggregationMap.put(dept, departmentCostAggregationMap.getOrDefault(dept, 0.0) + allocatedPrLineCost);
-                    }
-                }
-            }
-        }
-
-        for (Map.Entry<Department, Double> entry : departmentCostAggregationMap.entrySet()) {
-            Department dept = entry.getKey();
-            Double dynamicAllocatedCost = entry.getValue();
-
-            DepartmentBudget budgetLedger = departmentBudgetService.getByDepartmentAndYear(dept, Year.now());
-            HorizontalLayout ledgerAlertRow = new HorizontalLayout();
-            ledgerAlertRow.setWidthFull();
-            ledgerAlertRow.setSpacing(true);
-
-            if (budgetLedger != null) {
-                double remainingBalance = budgetLedger.getRemainingBudgetAmount();
-                Span badgeText = new Span(String.format("🏬 Department: %s  |  Allocated PO Cost: %.2f INR  |  GL Budget Balance: %.2f INR", 
-                        dept.getDepartmentName(), dynamicAllocatedCost, remainingBalance));
-                
-                if (remainingBalance < dynamicAllocatedCost) {
-                    isAnyDepartmentOverBudget = true;
-                    badgeText.getStyle().set("color", "var(--lumo-error-text-color)").set("font-weight", "bold");
-                    ledgerAlertRow.add(VaadinIcon.WARNING.create(), badgeText);
-                    ledgerAlertRow.getStyle().set("background-color", "#fef2f2").set("padding", "6px").set("border-radius", "4px");
-                } else {
-                    badgeText.getStyle().set("color", "var(--lumo-success-text-color)");
-                    ledgerAlertRow.add(VaadinIcon.CHECK.create(), badgeText);
-                    ledgerAlertRow.getStyle().set("background-color", "#f0fdf4").set("padding", "6px").set("border-radius", "4px");
-                }
-            } else {
-                isAnyDepartmentOverBudget = true;
-                Span errorBadge = new Span(String.format(" Critical: Budget Ledger not configured for department: %s", dept.getDepartmentName()));
-                errorBadge.getStyle().set("color", "var(--lumo-error-text-color)").set("font-weight", "bold");
-                ledgerAlertRow.add(errorBadge);
-                ledgerAlertRow.getStyle().set("background-color", "#fef2f2").set("padding", "6px").set("border-radius", "4px");
-            }
-            budgetAlertsContainer.add(ledgerAlertRow);
-        }
-
-        if (isAnyDepartmentOverBudget) {
-            submitPoBtn.setEnabled(false);
-            submitPoBtn.setText("Submission Blocked (Over Budget)");
-        } else {
-            submitPoBtn.setEnabled(true);
-            submitPoBtn.setText("Submit Purchase Order");
-        }
     }
 
     private void loadAutomaticMatrixRules() {
@@ -367,11 +265,6 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
     }
 
     private void executeCommitAndSubmitWorkflow() {
-        if (isAnyDepartmentOverBudget) {
-            Notification.show("Compliance Block: Cannot process order. One or more department general ledgers are overrunning budgets.", 5000, Position.TOP_CENTER);
-            return;
-        }
-
         if (approvalTiersDataset.isEmpty()) {
             Notification.show("Sourcing Constraint: You must allocate at least one configuration approval group.", 3000, Position.TOP_CENTER);
             return;

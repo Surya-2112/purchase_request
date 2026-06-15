@@ -145,11 +145,13 @@ public class ItemView extends VerticalLayout {
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
+        itemIdField.setWidth("75px");
+
         categoryField.setItems(categoryService.getCategories());
         categoryField.setItemLabelGenerator(Category::getCategoryName);
         unitField.setItems(unitService.getAllUnits());
         unitField.setItemLabelGenerator(Unit::getName);
-
+        unitField.setWidth("75px");
         Button searchButton = new Button("Search", e -> applyFilter());
         Button clearButton = new Button("Clear", e -> clearFilter());
 
@@ -217,7 +219,7 @@ public class ItemView extends VerticalLayout {
             processBtn.addThemeName("primary small success");
             processBtn.addClickListener(e -> openCatalogPromotionWizardDialogueModal(need));
             return processBtn;
-        }).setHeader("Catalog Action").setWidth("240px");
+        }).setHeader("Action").setWidth("240px");
 
         adHocNeedsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         adHocNeedsGrid.setSizeFull();
@@ -238,12 +240,10 @@ public class ItemView extends VerticalLayout {
 
     private void openCatalogPromotionWizardDialogueModal(Needs selectedNeed) {
         Dialog promotionModal = new Dialog();
-        promotionModal.setHeaderTitle("Unlisted Material Allocation");
+        promotionModal.setHeaderTitle("Unlisted Item Allocation");
         promotionModal.setWidth("520px");
 
         String rawPayload = selectedNeed.getNeedLine(); 
-        // String suggestedName = extractPayloadValueByKey(rawPayload, "Name");
-        // String suggestedSpec = extractPayloadValueByKey(rawPayload, "Spec");
         double requestedQty = 1.0;
         try {
             requestedQty = Double.parseDouble(extractPayloadValueByKey(rawPayload, "Qty"));
@@ -280,7 +280,7 @@ public class ItemView extends VerticalLayout {
         officialCodeField.setRequired(true);
         TextField officialSpecField = new TextField("Variant Specification");
         officialSpecField.setRequired(true);
-        NumberField estimatedPriceField = new NumberField("Estimated Unit Price (INR)");
+        NumberField estimatedPriceField = new NumberField("Estimated Unit Price");
         estimatedPriceField.setValue(0.0);
         estimatedPriceField.setMin(1.0);
         estimatedPriceField.setRequired(true);
@@ -290,7 +290,7 @@ public class ItemView extends VerticalLayout {
         targetCatBox.setItemLabelGenerator(Category::getCategoryName);
         targetCatBox.setRequired(true);
 
-        ComboBox<Unit> targetUnitBox = new ComboBox<>("Unit of Measurement (UOM)");
+        ComboBox<Unit> targetUnitBox = new ComboBox<>("Unit ");
         targetUnitBox.setItems(unitService.getAllUnits());
         targetUnitBox.setItemLabelGenerator(Unit::getName);
         targetUnitBox.setRequired(true);
@@ -311,7 +311,7 @@ public class ItemView extends VerticalLayout {
         VerticalLayout dialogBodyContent = new VerticalLayout(resolutionModeRadio, new Hr(), existingModeLayout, newModeFormLayout);
         dialogBodyContent.setPadding(false);
 
-        Button executePromotionBtn = new Button("Commit Allocation & Push Approvals", VaadinIcon.CHECK_CIRCLE.create());
+        Button executePromotionBtn = new Button("Add Item & Move To Approvals");
         executePromotionBtn.addThemeName("primary success");
         
         final double finalQty = requestedQty; 

@@ -1,6 +1,7 @@
 package com.module.purchase.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +18,7 @@ import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
+import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.DiscountType;
 import com.module.purchase.entity.QuotationLine;
@@ -47,8 +49,8 @@ public class PurchaseOrderHeaderService {
     @Autowired
     private QuotationService quotationService;
 
-    @Autowired 
-    private DepartmentBudgetService departmentBudgetService;
+    @Autowired
+    private PurchaseRequestLineService purchaseRequestLineService;
 
     @Autowired
     private AuditLogsService auditLogsService;
@@ -72,6 +74,22 @@ public class PurchaseOrderHeaderService {
         return purchaseOrderHeader;
     }
 
+    public PurchaseOrderHeader updatePurchaseOrderHeader(PurchaseOrderHeader purchaseOrderHeader,Employee employee) {
+             
+        purchaseOrderHeader=savePurchaseOrderHeader(purchaseOrderHeader);
+
+        AuditLogs log= new AuditLogs();
+        log.setEntityType(EntityType.PURCHASE_ORDER);
+        log.setEntityId(purchaseOrderHeader.getPurchaseOrderId());
+        log.setAction(Action.UPDATE);
+        log.setPerformedBy(employee);
+        log.setTimestamp(LocalDate.now());
+        auditLogsService.addAuditLog(log);
+
+        return purchaseOrderHeader;
+    }
+
+
      public Long countByStatus(Status status)
     {
         return purchaseOrderHeaderRepository.countByStatus(status);
@@ -90,7 +108,6 @@ public class PurchaseOrderHeaderService {
          Specification<PurchaseOrderHeader> spec = Specification
                 .where(PurchaseOrderSpecification.hasPurchaseOrderId(purchaseOrderDTO.getPurchaseOrderId()))
                 .and(PurchaseOrderSpecification.hasCreatedBy(purchaseOrderDTO.getCreatedBy()))
-                .and(PurchaseOrderSpecification.hasDepartment(purchaseOrderDTO.getForDepartment()))
                 .and(PurchaseOrderSpecification.hasStatus(purchaseOrderDTO.getStatus()));
 
             return purchaseOrderMapper.toPurchaseOrdersDTO(purchaseOrderHeaderRepository.findAll(spec));
@@ -105,6 +122,7 @@ public class PurchaseOrderHeaderService {
 
         Specification<PurchaseOrderHeader> spec = Specification
                 .where(PurchaseOrderSpecification.hasPurchaseOrderId(purchaseOrderDTO.getPurchaseOrderId()))
+                .and(PurchaseOrderSpecification.hasStatus(purchaseOrderDTO.getStatus()))
                 .and(PurchaseOrderSpecification.hasVendor(purchaseOrderDTO.getVendor()));
 
         Pageable pageable = PageRequest.of(page, size);
@@ -120,9 +138,10 @@ public class PurchaseOrderHeaderService {
         purchaseOrderHeader.setVendor(quotation.getVendor());
         purchaseOrderHeader.setCreatedBy(null);
         purchaseOrderHeader.setLevel(0);
-      purchaseOrderHeader.setTotalAmount(1.0);
+        purchaseOrderHeader.setTotalAmount(1.0);
         
-        
+        List<PurchaseOrderLine> polines=new ArrayList<PurchaseOrderLine>();
+
         purchaseOrderHeader = savePurchaseOrderHeader(purchaseOrderHeader);
         double aggregatePurchaseOrderGrossValue = 0.0;
         
@@ -151,7 +170,7 @@ public class PurchaseOrderHeaderService {
                     break; 
                 }
             }
-            
+              
             double baseLineGrossCost = poline.getUnitPrice() * poline.getQuantity();
             double finalCalculatedDiscountValue = baseLineGrossCost * (matchedDiscountPercentage / 100.0);
             double accurateLineNetTotal = baseLineGrossCost - finalCalculatedDiscountValue;
@@ -159,13 +178,28 @@ public class PurchaseOrderHeaderService {
             poline.setDiscountAmount(finalCalculatedDiscountValue);
             poline.setTotalAmount(accurateLineNetTotal);
             
-            purchaseOrderLineService.addPurchaseOrderLine(poline);
+            polines.add(purchaseOrderLineService.addPurchaseOrderLine(poline));
             
             aggregatePurchaseOrderGrossValue += accurateLineNetTotal;
         }
 
         purchaseOrderHeader.setTotalAmount(aggregatePurchaseOrderGrossValue);
-        addPurchaseOrderHeader(purchaseOrderHeader, null);
+        purchaseOrderHeader=addPurchaseOrderHeader(purchaseOrderHeader, null);
+        
+        List<PurchaseRequestLine> prLines=purchaseRequestLineService.getRequestForQuotation(quotation.getRequestForQuotation());
+
+        for(PurchaseRequestLine line:prLines)
+        {   
+            for(PurchaseOrderLine poline:polines)
+            {   
+                if(poline.getItemVariant().equals(line.getItemVariant())){
+                    line.setPurchaseOrderLine(poline);
+                    purchaseRequestLineService.updatePurchaseRequestLine(line,null);
+                }
+                 System.out.println(line.getId()+" "+poline.getId());
+            }
+        }
+       
     }
 
 

@@ -71,7 +71,7 @@ public class SecurityService {
                 return false;
             }
 
-            return allowedGroups.stream().allMatch(userGroups::contains);
+            return allowedGroups.stream().anyMatch(userGroups::contains);
 
         } catch (Exception exception) {
 

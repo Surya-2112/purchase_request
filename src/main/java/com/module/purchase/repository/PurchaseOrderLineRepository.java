@@ -11,4 +11,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface PurchaseOrderLineRepository extends JpaRepository<PurchaseOrderLine, Long>,JpaSpecificationExecutor<PurchaseOrderLine> {
     
     List<PurchaseOrderLine> findByPurchaseOrderHeader(PurchaseOrderHeader purchaseOrderHeader);
+                            
 }

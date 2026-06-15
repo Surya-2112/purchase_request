@@ -1,12 +1,9 @@
 package com.module.purchase.view.purchaseOrder;
 
 import java.util.List;
-import java.util.Objects;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Users;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;
@@ -15,7 +12,6 @@ import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.AssigningApprovalsService;
-import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.PurchaseOrderHeaderService;
 import com.module.purchase.view.MainLayout;
@@ -39,7 +35,6 @@ public class PurchaseOrderView extends VerticalLayout {
     private final PurchaseOrderHeaderService poService;
     private final AssigningApprovalsService assigningApprovalsService;
     private final SecurityService securityService;
-    private final DepartmentService departmentService;
     private final EmployeeService employeeService;
 
     private final Grid<PurchaseOrderDTO> poGrid = new Grid<>(PurchaseOrderDTO.class, false);
@@ -57,7 +52,6 @@ public class PurchaseOrderView extends VerticalLayout {
 
     private final TextField poIdField = new TextField("PO ID");
     private final ComboBox<Employee> createdByField = new ComboBox<>("Created By");
-    private final ComboBox<Department> departmentField = new ComboBox<>("Department");
     private final ComboBox<Status> statusField = new ComboBox<>("Status");
 
     private final TextField assignIdField = new TextField("Assign ID");
@@ -70,19 +64,17 @@ public class PurchaseOrderView extends VerticalLayout {
     private final HorizontalLayout tabsContainer = new HorizontalLayout();
     private final Button allBtn = new Button("All Purchase Orders");
     private final Button assignedBtn = new Button("Assigned to You");
-    private final Button createdBtn = new Button("Created by You");
+    private final Button createdBtn = new Button("Generated Purchase Orders");
     private final HorizontalLayout paginationLayout = new HorizontalLayout();
 
     public PurchaseOrderView(
             PurchaseOrderHeaderService poService,
             SecurityService securityService,
-            DepartmentService departmentService,
             EmployeeService employeeService,
             AssigningApprovalsService assigningApprovalsService) {
 
         this.poService = poService;
         this.securityService = securityService;
-        this.departmentService = departmentService;
         this.employeeService = employeeService;
         this.assigningApprovalsService = assigningApprovalsService;
 
@@ -98,7 +90,7 @@ public class PurchaseOrderView extends VerticalLayout {
     }
 
     private void buildUI() {
-        H2 title = new H2("Purchase Orders Management Matrix");
+        H2 title = new H2("Purchase Orders");
 
         HorizontalLayout headerLayout = new HorizontalLayout(title);
         headerLayout.setWidthFull();
@@ -128,15 +120,12 @@ public class PurchaseOrderView extends VerticalLayout {
         createdByField.setItems(employeeService.getEmployees());
         createdByField.setItemLabelGenerator(Employee::getEmployeeName);
 
-        departmentField.setItems(departmentService.getDepartments());
-        departmentField.setItemLabelGenerator(Department::getDepartmentName);
-
         statusField.setItems(Status.values());
 
         Button search = new Button("Search", e -> applyFilter());
         Button clear = new Button("Clear", e -> clearFilter());
 
-        poFilters = new HorizontalLayout(poIdField, departmentField, createdByField, statusField, search, clear);
+        poFilters = new HorizontalLayout(poIdField, createdByField, statusField, search, clear);
         poFilters.setAlignItems(Alignment.END);
 
         assignStatusField.setItems(Status.WAITING_APPROVAL, Status.APPROVED, Status.REJECTED);
@@ -150,14 +139,13 @@ public class PurchaseOrderView extends VerticalLayout {
 
         poGrid.removeAllColumns();
         poGrid.addColumn(PurchaseOrderDTO::getPurchaseOrderId).setHeader("PO ID");
-        poGrid.addColumn(po -> po.getForDepartment() == null ? "" : po.getForDepartment().getDepartmentName()).setHeader("Department");
         poGrid.addColumn(po -> po.getCreatedBy() == null ? "" : po.getCreatedBy().getEmployeeName()).setHeader("Created By");
         poGrid.addColumn(po -> po.getTotalAmount() != null ? String.format("%.2f INR", po.getTotalAmount()) : "0.00 INR").setHeader("Total Amount");
         poGrid.addColumn(po -> po.getStatus() != null ? po.getStatus().name() : "").setHeader("Status");
 
         poGrid.setWidthFull();
         poGrid.setHeightFull();
-        poGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        poGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         
         poGrid.addItemDoubleClickListener(event -> {
             PurchaseOrderDTO po = event.getItem();
@@ -172,13 +160,12 @@ public class PurchaseOrderView extends VerticalLayout {
         assignGrid.addColumn(AssigningApprovalsDTO::getAssigningApprovalsId).setHeader("Assign ID");
         assignGrid.addColumn(AssigningApprovalsDTO::getReferenceId).setHeader("PO Reference ID");
         assignGrid.addColumn(a -> a.getApprover() == null ? "" : a.getApprover().getEmployeeName()).setHeader("Approver");
-        assignGrid.addColumn(AssigningApprovalsDTO::getLevel).setHeader("Hierarchy Level");
-        assignGrid.addColumn(AssigningApprovalsDTO::getApprovalType).setHeader("Approval Type");
+        assignGrid.addColumn(AssigningApprovalsDTO::getLevel).setHeader("Approval Level");
         assignGrid.addColumn(AssigningApprovalsDTO::getStatus).setHeader("Status");
 
         assignGrid.setWidthFull();
         assignGrid.setHeightFull();
-        assignGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        assignGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         
         assignGrid.addItemDoubleClickListener(event -> {
             AssigningApprovalsDTO a = event.getItem();
@@ -202,10 +189,13 @@ public class PurchaseOrderView extends VerticalLayout {
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);
+        pageSizeField.setWidth("100px");
         pageSizeField.addValueChangeListener(event -> {
-            pageSize = event.getValue();
-            currentPage = 0;
-            loadData();
+            if (event.getValue() != null) {
+                pageSize = event.getValue();
+                currentPage = 0;
+                loadData();
+            }
         });
 
         paginationLayout.add(prev, pageInfo, next, new Span("Page Size"), pageSizeField);
@@ -234,7 +224,10 @@ public class PurchaseOrderView extends VerticalLayout {
                 g == EmployeeGroup.PURCHASE
         );
 
-        Page<PurchaseOrderDTO> createdPage = poService.getAllPurchaseOrder(poFilter, 0, 1);
+        // Pre-initialize check filter as draft for compliance scanning loop
+        PurchaseOrderDTO initCheckFilter = new PurchaseOrderDTO();
+        initCheckFilter.setStatus(Status.DRAFT);
+        Page<PurchaseOrderDTO> createdPage = poService.getAllPurchaseOrder(initCheckFilter, 0, 1);
         boolean hasCreatedRequests = createdPage.getTotalElements() > 0;
 
         boolean hasAssignedTasks = false;
@@ -323,22 +316,34 @@ public class PurchaseOrderView extends VerticalLayout {
         } else if ("CREATED".equals(viewMode)) {
             poGrid.setVisible(true);
             poFilters.setVisible(true);
+            
+            createdByField.setVisible(false);
+            statusField.setVisible(false);
+
+            poFilter.setStatus(Status.DRAFT);
 
             Page<PurchaseOrderDTO> page = poService.getAllPurchaseOrder(poFilter, currentPage, pageSize);
 
-            poGrid.setItems(page.getContent());
+            List<PurchaseOrderDTO> selfDrafts = page.getContent().stream()
+                    .filter(po -> po.getCreatedBy() != null && po.getCreatedBy().getEmployeeId().equals(currentEmployeeId))
+                    .toList();
+
+            poGrid.setItems(selfDrafts);
             this.totalPages = page.getTotalPages() > 0 ? page.getTotalPages() : 1;
             pageInfo.setText("Page " + (currentPage + 1) + " of " + totalPages);
             
         } else {
             poGrid.setVisible(true);
             poFilters.setVisible(true);
+            
+            createdByField.setVisible(true);
+            statusField.setVisible(true);
 
             Page<PurchaseOrderDTO> page = poService.getAllPurchaseOrder(poFilter, currentPage, pageSize);
 
             List<PurchaseOrderDTO> filteredContent = page.getContent().stream()
                     .filter(po -> po.getStatus() != Status.DRAFT || 
-                             (po.getCreatedBy() != null && po.getCreatedBy().getEmployeeId().equals(currentEmployeeId)))
+                                 (po.getCreatedBy() != null && po.getCreatedBy().getEmployeeId().equals(currentEmployeeId)))
                     .toList();
 
             poGrid.setItems(filteredContent);
@@ -352,9 +357,13 @@ public class PurchaseOrderView extends VerticalLayout {
         if (!poIdField.isEmpty()) {
             poFilter.setPurchaseOrderId(Long.valueOf(poIdField.getValue().trim()));
         }
-        poFilter.setCreatedBy(createdByField.getValue());
-        poFilter.setForDepartment(departmentField.getValue());
-        poFilter.setStatus(statusField.getValue());
+        
+        if ("CREATED".equals(viewMode)) {
+            poFilter.setStatus(Status.DRAFT);
+        } else {
+            poFilter.setCreatedBy(createdByField.getValue());
+            poFilter.setStatus(statusField.getValue());
+        }
 
         currentPage = 0;
         loadData();
@@ -363,10 +372,12 @@ public class PurchaseOrderView extends VerticalLayout {
     private void clearFilter() {
         poIdField.clear();
         createdByField.clear();
-        departmentField.clear();
         statusField.clear();
 
         poFilter = new PurchaseOrderDTO();
+        if ("CREATED".equals(viewMode)) {
+            poFilter.setStatus(Status.DRAFT);
+        }
         currentPage = 0;
         loadData();
     }
