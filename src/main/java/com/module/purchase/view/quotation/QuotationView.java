@@ -83,7 +83,8 @@ public class QuotationView extends VerticalLayout {
         headerLayout.setAlignItems(Alignment.CENTER);
 
         statusField.setItems(Status.DRAFT,Status.APPROVED, Status.WAITING_APPROVAL, Status.REJECTED, Status.CANCELLED);
-     
+        statusField.setItemLabelGenerator(Status::getDisplayName);
+
         statusField.setClearButtonVisible(true);
 
         Button searchBtn = new Button("Search", e -> applyFilter());

@@ -128,7 +128,7 @@ public class PurchaseRequestHeaderService {
         log.setEntityType(EntityType.PURCHASE_REQUEST);
         log.setEntityId(id);
         log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
+        log.setPerformedBy(employee);  
         log.setTimestamp(LocalDate.now());
         auditLogsService.addAuditLog(log);
     }

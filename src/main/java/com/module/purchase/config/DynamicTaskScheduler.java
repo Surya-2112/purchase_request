@@ -12,7 +12,7 @@ public class DynamicTaskScheduler {
     @Autowired
     RepeatedPeriodService repeatedPeriodService;
     
-    @Scheduled(cron = "0 0 * * * *") 
+    @Scheduled(cron = "0 0 12 * * *") 
     public void scheduledTask(){
         repeatedPeriodService.assignedRepeatedTask();
     }

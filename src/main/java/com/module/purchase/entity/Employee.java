@@ -41,12 +41,12 @@ public class Employee {
     @Email
     private String employeeEmail;
 
-   @Column(name = "employee_phone_number", length=15)
+    @Column(name = "employee_phone_number", length=15, nullable=true)
     @Size(min=10,max=15)
     private String employeePhoneNumber;
 
     @ManyToOne
-     @JoinColumn(name = "department_id")
+    @JoinColumn(name = "department_id")
     @JsonIgnoreProperties({ "employees", "headEmployee" })
     private Department department;
 

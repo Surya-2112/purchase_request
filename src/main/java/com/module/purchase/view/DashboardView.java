@@ -1,25 +1,24 @@
 package com.module.purchase.view;
 
 import java.time.Year;
-import java.util.Collection;
+import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.GrantedAuthority;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Users;
 import com.module.purchase.entity.Vendor;
-import com.module.purchase.entityDTO.PurchaseOrderDTO;
 import com.module.purchase.entityDTO.PurchaseRequestDTO;
-import com.module.purchase.entityDTO.QuotationDTO; // Ensure this is imported for the Vendor Grid
+import com.module.purchase.entityDTO.QuotationDTO;
+import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
 import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.service.PurchaseOrderHeaderService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.service.QuotationService;
-import com.module.purchase.entity.Users;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
@@ -80,11 +79,14 @@ public class DashboardView extends VerticalLayout {
                 } 
                 else {
                     if (currentEmployee.getRole() != null) {
-                        String roleName = currentEmployee.getRole().getRoleName();
+                        List<EmployeeGroup> roleName = currentEmployee.getRole().getEmployeeGroups();
                         
-                        boolean isManagement = "SUPER_ADMIN".equals(roleName) 
-                                            || "ROLE_DIRECTOR".equals(roleName) 
-                                            || "ROLE_MANAGER".equals(roleName);
+                        boolean isManagement = false;
+
+                        if(roleName.contains(EmployeeGroup.SUPER_ADMIN) ||roleName.contains(EmployeeGroup.MANAGER) || roleName.contains(EmployeeGroup.DIRECTOR) )
+                        {
+                            isManagement = true;
+                        }
 
                         if (isManagement) {
                             add(createManagementSummaryCards());

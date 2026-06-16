@@ -284,7 +284,6 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         this.existingQuotation = null;
 
         if (parameter.startsWith("new/")) {
-            // ================== MODE: CREATE NEW QUOTATION ==================
             pageTitle.setText("New Quotation Pricing Proposal");
             String rfqIdStr = parameter.substring(4).trim();
             try {
@@ -415,7 +414,6 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
             return;
         }
 
-        // Only enforce duplicate structural constraint checks during new bids creation pipelines
         if (existingQuotation == null && quotationService.isDuplicateSubmission(targetRfq.getId(), selectedVendorContext.getVendorId())) {
             Notification.show("Transaction Cancelled: Unique contract constraints matching hit.", 4000, Position.MIDDLE);
             return;
@@ -443,7 +441,6 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
             masterProposal.setTotalAmount(totalAmountField.getValue());
             masterProposal.setStatus(targetedLifecycleState);
             
-            // Upsert Master
             if (existingQuotation != null) {
                 quotationService.updateQuotation(masterProposal);
             } else {
@@ -470,10 +467,6 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
     }
 
     private void backToDashboard() {
-        if (isVendorUser) {
-            getUI().ifPresent(ui -> ui.navigate("vendor-sourcing"));
-        } else {
             getUI().ifPresent(ui -> ui.navigate("quotations"));
-        }
     }
 }

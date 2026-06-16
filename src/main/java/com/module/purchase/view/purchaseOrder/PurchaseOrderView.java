@@ -122,6 +122,7 @@ public class PurchaseOrderView extends VerticalLayout {
         createdByField.setItemLabelGenerator(Employee::getEmployeeName);
 
         statusField.setItems(Status.values());
+        statusField.setItemLabelGenerator(Status::getDisplayName);
 
         Button search = new Button("Search", e -> applyFilter());
         Button clear = new Button("Clear", e -> clearFilter());
@@ -338,11 +339,7 @@ public class PurchaseOrderView extends VerticalLayout {
 
             Page<PurchaseOrderDTO> page = poService.getAllPurchaseOrder(poFilter, currentPage, pageSize);
 
-            List<PurchaseOrderDTO> selfDrafts = page.getContent().stream()
-                    .filter(po -> po.getCreatedBy() != null && po.getCreatedBy().getEmployeeId().equals(currentEmployeeId))
-                    .toList();
-
-            poGrid.setItems(selfDrafts);
+            poGrid.setItems(page.getContent());
             this.totalPages = page.getTotalPages() > 0 ? page.getTotalPages() : 1;
             pageInfo.setText("Page " + (currentPage + 1) + " of " + totalPages);
             

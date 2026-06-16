@@ -137,6 +137,8 @@ public class PurchaseRequestView extends VerticalLayout {
         departmentField.setItemLabelGenerator(Department::getDepartmentName);
 
         statusField.setItems(Status.values());
+        statusField.setItems(Status.WAITING_APPROVAL, Status.APPROVED, Status.REJECTED,Status.PARTIALLY_APPROVED,Status.CANCELLED);
+        statusField.setItemLabelGenerator(Status::getDisplayName);
 
         Button search = new Button("Search", e -> applyFilter());
         Button clear = new Button("Clear", e -> clearFilter());
@@ -144,7 +146,8 @@ public class PurchaseRequestView extends VerticalLayout {
         prFilters = new HorizontalLayout(prIdField, departmentField, createdByField, statusField, search, clear);
         prFilters.setAlignItems(Alignment.END);
 
-        assignStatusField.setItems(Status.WAITING_APPROVAL, Status.APPROVED, Status.REJECTED);
+        assignStatusField.setItems(Status.WAITING_APPROVAL, Status.APPROVED, Status.REJECTED,Status.PARTIALLY_APPROVED);
+        assignStatusField.setItemLabelGenerator(Status::getDisplayName);
         assignStatusField.setValue(Status.WAITING_APPROVAL);
 
         Button assignSearch = new Button("Search", e -> applyAssignFilter());

@@ -21,8 +21,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "employee-details", layout = MainLayout.class)
 @PermitAll
-public class EmployeeDetailsView extends VerticalLayout
-        implements HasUrlParameter<Long> {
+public class EmployeeDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final EmployeeService employeeService;
 

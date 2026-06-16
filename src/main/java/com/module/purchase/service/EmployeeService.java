@@ -112,13 +112,13 @@ public class EmployeeService {
 
 
     public Employee updateEmployee(Employee employee,Employee updated) {
+
         Employee existingEmployee = getEmployeeById(employee.getEmployeeId()).get();
         if (!existingEmployee.getEmployeeEmail().equals(employee.getEmployeeEmail())) {
             throw new ModificationNotAllowedException("cannot update employee email");
         }
         if (existingEmployee.getDepartment() != null && employee.getDepartment() != existingEmployee.getDepartment()) {
-            Department department = departmentService
-                    .getDepartmentById(existingEmployee.getDepartment().getDepartmentId()).get();
+            Department department = departmentService.getDepartmentById(existingEmployee.getDepartment().getDepartmentId()).get();
             if (department.getHeadEmployee() == existingEmployee) {
                 throw new RuntimeException("This employee is  head of department");
             }
@@ -131,8 +131,14 @@ public class EmployeeService {
         log.setPerformedBy(updated);
         log.setTimestamp(LocalDate.now());
         auditLogsService.addAuditLog(log);
-
-        return saveEmployee(employee);
+        try{
+        employee=saveEmployee(employee);
+        }catch(Exception ex)
+        {
+            System.out.println(ex.getMessage());
+        }
+        System.out.println("phone number:"+employee.getEmployeePhoneNumber()+" "+employee.getAddress());
+        return employee;
     }
 
     public void deleteEmployeeById(Long employeeId,Employee deleted) {

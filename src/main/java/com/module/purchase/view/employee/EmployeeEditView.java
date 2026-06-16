@@ -74,14 +74,12 @@ public class EmployeeEditView extends VerticalLayout
                 setSizeFull();
                 setPadding(true);
 
-                // LOAD DEPARTMENTS
                 departmentField.setItems(departmentService.getDepartments());
 
                 departmentField.setItemLabelGenerator(Department::getDepartmentName);
 
                 departmentField.setReadOnly(!securityService.canAccessView("employee-form"));
 
-                // LOAD ROLES
                 roleField.setItems(roleService.getRoles());
 
                 roleField.setReadOnly(!securityService.canAccessView("employee-form"));
@@ -197,15 +195,14 @@ public class EmployeeEditView extends VerticalLayout
                 formLayout.setResponsiveSteps(
                                 new FormLayout.ResponsiveStep("0", 2));
 
-                // SAVE BUTTON
                 Button saveButton = new Button("Save");
 
                 saveButton.addClickListener(clickEvent -> {
 
                         try {
 
-                                phoneField.setPattern("[0-9]{10}");
-                                phoneField.setErrorMessage("Enter valid 10 digit number");
+                               phoneField.setPattern("[0-9]{10}");
+                               phoneField.setErrorMessage("Enter valid 10 digit number");
 
                                 postalCodeField.setPattern("[0-9]{6}");
                                 postalCodeField.setErrorMessage("Enter vaild 6 digit postal code");
@@ -216,8 +213,9 @@ public class EmployeeEditView extends VerticalLayout
                                 employee.setEmployeeEmail(
                                                 employeeEmailField.getValue());
 
-                                employee.setEmployeePhoneNumber(
-                                                phoneField.getValue());
+                                String str=phoneField.getValue().equals("") ? null: phoneField.getValue();
+                                System.out.println(str);
+                                employee.setEmployeePhoneNumber(str);
 
                                 employee.setDepartment(
                                                 departmentField.getValue());
@@ -254,8 +252,8 @@ public class EmployeeEditView extends VerticalLayout
 
                                 employee.setAddress(updatedAddress);
 
-                                employeeService.updateEmployee(employee,
-                                                securityService.getLoggedInUser().getEmployee());
+                                employee=employeeService.updateEmployee(employee,securityService.getLoggedInUser().getEmployee());
+
 
                                 Notification.show(
                                                 "Employee Updated Successfully",
@@ -275,8 +273,6 @@ public class EmployeeEditView extends VerticalLayout
                         }
 
                 });
-
-                // CANCEL BUTTON
                 Button cancelButton = new Button("Cancel");
 
                 cancelButton.addClickListener(clickEvent -> {
