@@ -16,6 +16,7 @@ import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.PurchaseOrderHeaderService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -224,7 +225,6 @@ public class PurchaseOrderView extends VerticalLayout {
                 g == EmployeeGroup.PURCHASE
         );
 
-        // Pre-initialize check filter as draft for compliance scanning loop
         PurchaseOrderDTO initCheckFilter = new PurchaseOrderDTO();
         initCheckFilter.setStatus(Status.DRAFT);
         Page<PurchaseOrderDTO> createdPage = poService.getAllPurchaseOrder(initCheckFilter, 0, 1);
@@ -270,7 +270,21 @@ public class PurchaseOrderView extends VerticalLayout {
         }
     }
 
+    private void updateButtonStyles() {
+        allBtn.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        assignedBtn.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createdBtn.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        switch (viewMode) {
+            case "ALL" -> allBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            case "ASSIGNED" -> assignedBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            case "CREATED" -> createdBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        }
+    }
+
     private void loadData() {
+        updateButtonStyles();
+
         Users user = securityService.getLoggedInUser();
         Long currentEmployeeId = user.getEmployee().getEmployeeId();
 

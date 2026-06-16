@@ -32,20 +32,20 @@ import com.module.purchase.specification.QuotationSpecification;
 public class QuotationService {
 
     @Autowired
-    private  QuotationRepository quotationRepository;
+    private QuotationRepository quotationRepository;
 
     @Autowired
-    private  QuotationLineRepository quotationLineRepository;
+    private QuotationLineRepository quotationLineRepository;
 
     @Autowired
-    private  DiscountTypeRepository discountTypeRepository;
+    private DiscountTypeRepository discountTypeRepository;
 
     @Autowired
-    private  QuotationMapper quotationMapper;
+    private QuotationMapper quotationMapper;
 
     @Lazy
     @Autowired
-    private PurchaseOrderHeaderService  purchaseOrderService;
+    private PurchaseOrderHeaderService purchaseOrderService;
 
     public Optional<Quotation> getQuotationById(Long id) {
         return quotationRepository.findById(id);
@@ -73,22 +73,19 @@ public class QuotationService {
 
     @Transactional
     public Quotation save(Quotation quotation) {
-        
+
         return quotationRepository.save(quotation);
     }
-    
-    public Quotation addQuotation(Quotation quotation)
-    {    
+
+    public Quotation addQuotation(Quotation quotation) {
         if (quotation.getQuotationDate() == null) {
             quotation.setQuotationDate(LocalDate.now());
         }
-        return  save(quotation);
+        return save(quotation);
     }
 
-    public Quotation updateQuotation(Quotation quotation)
-    {
-        if(quotation.getStatus().equals(Status.APPROVED))
-        {   
+    public Quotation updateQuotation(Quotation quotation) {
+        if (quotation.getStatus().equals(Status.APPROVED)) {
             purchaseOrderService.genratePurchaseOrder(quotation);
         }
         return save(quotation);
@@ -129,10 +126,9 @@ public class QuotationService {
     }
 
     public List<DiscountType> getDiscountsByLine(QuotationLine line) {
-        List<DiscountType> discounts= discountTypeRepository.findByQuotationLine(line);
-        if(discounts==null)
-        {
-            discounts=new ArrayList<DiscountType>();
+        List<DiscountType> discounts = discountTypeRepository.findByQuotationLine(line);
+        if (discounts == null) {
+            discounts = new ArrayList<DiscountType>();
         }
         return discounts;
     }
@@ -170,7 +166,28 @@ public class QuotationService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Quotation> quotationPage = quotationRepository.findAll(spec, pageable);
 
-        // Using your mapper to transform the entities into DTOs cleanly
         return quotationPage.map(quotationMapper::toQuotationDTO);
     }
+
+    public Long countRFQForVendor(Vendor vendor) {
+        if (vendor == null) {
+            return 0L;
+        }
+        return quotationRepository.countByVendor(vendor);
+    }
+
+    public Long countByStatusForVendor(Status status, Vendor vendor) {
+        if (vendor == null) {
+            return 0L;
+        }
+        return quotationRepository.countByStatusAndVendor(status, vendor);
+    }
+
+    public List<QuotationDTO> getRecentQuotationsForVendor(Vendor vendor, Pageable pageable) {
+    if (vendor == null) {
+        return java.util.List.of();
+    }
+    List<Quotation> quotations = quotationRepository.findByVendorOrderByIdDesc(vendor, pageable);
+    return quotationMapper.toQuotationDTO(quotations); 
+}
 }

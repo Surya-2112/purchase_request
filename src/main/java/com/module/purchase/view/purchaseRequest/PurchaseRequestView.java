@@ -19,6 +19,7 @@ import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -181,7 +182,6 @@ public class PurchaseRequestView extends VerticalLayout {
             getUI().ifPresent(ui -> ui.navigate("assigned-approvals-details/" + a.getAssigningApprovalsId()));
         });
 
-        // Pagination Configuration
         Button prev = new Button("Prev", event -> {
             if (currentPage > 0) {
                 currentPage--;
@@ -241,7 +241,7 @@ public class PurchaseRequestView extends VerticalLayout {
                     new AssigningApprovalsDTO(), singleGroup, 0, 1);
             if (assignedPage.getTotalElements() > 0) {
                 hasAssignedTasks = true;
-                break; // Exit loop early if any matching group task is uncovered
+                break; 
             }
         }
 
@@ -257,7 +257,6 @@ public class PurchaseRequestView extends VerticalLayout {
                 viewMode = "ALL";
             }
         } else {
-            // Standard Employee Logic Loop
             allBtn.setVisible(false);
             createdBtn.setVisible(hasCreatedRequests);
             assignedBtn.setVisible(hasAssignedTasks);
@@ -276,7 +275,21 @@ public class PurchaseRequestView extends VerticalLayout {
         }
     }
 
+    private void updateButtonStyles() {
+        allBtn.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        assignedBtn.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createdBtn.removeThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        switch (viewMode) {
+            case "ALL" -> allBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            case "ASSIGNED" -> assignedBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            case "CREATED" -> createdBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        }
+    }
+
     private void loadData() {
+        updateButtonStyles();
+
         Users user = securityService.getLoggedInUser();
         Long currentEmployeeId = user.getEmployee().getEmployeeId();
 
@@ -339,7 +352,7 @@ public class PurchaseRequestView extends VerticalLayout {
 
             List<PurchaseRequestDTO> filteredContent = page.getContent().stream()
                     .filter(pr -> pr.getStatus() != Status.DRAFT || 
-                     pr.getCreatedBy().getEmployeeId().equals(currentEmployeeId))
+                             pr.getCreatedBy().getEmployeeId().equals(currentEmployeeId))
                     .toList();
 
             prGrid.setItems(filteredContent);

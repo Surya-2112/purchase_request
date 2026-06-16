@@ -4,8 +4,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Lazy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,11 +55,11 @@ public class PurchaseRequestHeaderService {
         return purchaseRequestHeaderRepository.save(purchaseRequestHeader);
     }
 
-    public PurchaseRequestHeader addPurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader,Employee employee) {
+    public PurchaseRequestHeader addPurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader, Employee employee) {
 
         purchaseRequestHeader = savePurchaseRequestHeader(purchaseRequestHeader);
 
-        AuditLogs log= new AuditLogs();
+        AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.PURCHASE_REQUEST);
         log.setEntityId(purchaseRequestHeader.getPurchaseRequestId());
         log.setAction(Action.CREATE);
@@ -70,13 +70,11 @@ public class PurchaseRequestHeaderService {
         return purchaseRequestHeader;
     }
 
-     public Long countAll()
-    {
+    public Long countAll() {
         return purchaseRequestHeaderRepository.count();
     }
 
-    public Long countByStatus(Status status)
-    {
+    public Long countByStatus(Status status) {
         return purchaseRequestHeaderRepository.countByStatus(status);
     }
 
@@ -85,7 +83,6 @@ public class PurchaseRequestHeaderService {
         if (!existingPurchaseRequestHeader.isPresent()) {
             throw new ResourceNotFoundException("Purchase request header not found with id: " + id);
         }
-       // System.out.println(existingPurchaseRequestHeader);
         return existingPurchaseRequestHeader;
     }
 
@@ -116,18 +113,18 @@ public class PurchaseRequestHeaderService {
         return prpage.map(purchaseRequestMapper::toPurchaseRequestDTO);
     }
 
-public List<PurchaseRequestDTO> getRecentPurchaseRequests(PageRequest pageRequest) {
+    public List<PurchaseRequestDTO> getRecentPurchaseRequests(PageRequest pageRequest) {
 
-    return purchaseRequestMapper.toPurchaseRequestDTO(purchaseRequestHeaderRepository
-            .findAllByOrderByPurchaseRequestIdDesc(pageRequest));
-}
+        return purchaseRequestMapper.toPurchaseRequestDTO(purchaseRequestHeaderRepository
+                .findAllByOrderByPurchaseRequestIdDesc(pageRequest));
+    }
 
-    public void deletePurchaseRequestHeaderById(Long id,Employee employee) {
-        
+    public void deletePurchaseRequestHeaderById(Long id, Employee employee) {
+
         purchaseRequestLineSerivce.deleteAllLine(getPurchaseRequestHeaderById(id).get());
         purchaseRequestHeaderRepository.deleteById(id);
 
-        AuditLogs log= new AuditLogs();
+        AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.PURCHASE_REQUEST);
         log.setEntityId(id);
         log.setAction(Action.DELETE);
@@ -136,49 +133,51 @@ public List<PurchaseRequestDTO> getRecentPurchaseRequests(PageRequest pageReques
         auditLogsService.addAuditLog(log);
     }
 
-    public PurchaseRequestHeader updatePurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader,Employee employee) {
+    public PurchaseRequestHeader updatePurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader, Employee employee) {
 
-         AuditLogs log= new AuditLogs();
+        AuditLogs log = new AuditLogs();
 
         switch (purchaseRequestHeader.getStatus()) {
             case CANCELLED -> {
                 log.setAction(Action.CANCEL);
-                List<AssigningApprovals> lines = assigningApprovalsService.getAssigningApprovalByTypeAndReferId(ApprovalType.PURCHASE_REQUEST,purchaseRequestHeader.getPurchaseRequestId());
+                List<AssigningApprovals> lines = assigningApprovalsService.getAssigningApprovalByTypeAndReferId(ApprovalType.PURCHASE_REQUEST, purchaseRequestHeader.getPurchaseRequestId());
 
-                for(AssigningApprovals line:lines)
-                {
-                    if(line.getStatus()==Status.WAITING_APPROVAL)
-                    {   line.setStatus(Status.CANCELLED);
-                    assigningApprovalsService.updateApprovals(line,employee);
+                for (AssigningApprovals line : lines) {
+                    if (line.getStatus() == Status.WAITING_APPROVAL) {
+                        line.setStatus(Status.CANCELLED);
+                        assigningApprovalsService.updateApprovals(line, employee);
                     }
                 }
-                
-                for(PurchaseRequestLine line:purchaseRequestHeader.getPurchaseRequestLines())
-                {   line.setStatus(Status.CANCELLED);
-                purchaseRequestLineSerivce.updatePurchaseRequestLine(line,employee);
+
+                for (PurchaseRequestLine line : purchaseRequestHeader.getPurchaseRequestLines()) {
+                    line.setStatus(Status.CANCELLED);
+                    purchaseRequestLineSerivce.updatePurchaseRequestLine(line, employee);
                 }
             }
             case APPROVED -> {
                 log.setAction(Action.APPROVE);
-                for(PurchaseRequestLine line:purchaseRequestHeader.getPurchaseRequestLines())
-                {    if(line.getApprovedQuantity().equals(line.getRequestedQuantity()))
-                {line.setStatus(Status.APPROVED);
-                }else if(line.getApprovedQuantity()>0){
-                    line.setStatus(Status.PARTIALLY_APPROVED);
-                }else{line.setStatus(Status.REJECTED);}
-                purchaseRequestLineSerivce.updatePurchaseRequestLine(line,employee);
+                for (PurchaseRequestLine line : purchaseRequestHeader.getPurchaseRequestLines()) {
+                    if (line.getApprovedQuantity().equals(line.getRequestedQuantity())) {
+                        line.setStatus(Status.APPROVED);
+                    } else if (line.getApprovedQuantity() > 0) {
+                        line.setStatus(Status.PARTIALLY_APPROVED);
+                    } else {
+                        line.setStatus(Status.REJECTED);
+                    }
+                    purchaseRequestLineSerivce.updatePurchaseRequestLine(line, employee);
                 }
             }
             case REJECTED -> {
                 log.setAction(Action.REJECT);
-                for(PurchaseRequestLine line:purchaseRequestHeader.getPurchaseRequestLines())
-                {   line.setStatus(Status.REJECTED);
-                purchaseRequestLineSerivce.updatePurchaseRequestLine(line,employee);
+                for (PurchaseRequestLine line : purchaseRequestHeader.getPurchaseRequestLines()) {
+                    line.setStatus(Status.REJECTED);
+                    purchaseRequestLineSerivce.updatePurchaseRequestLine(line, employee);
                 }
             }
-            default -> log.setAction(Action.UPDATE);
+            default ->
+                log.setAction(Action.UPDATE);
         }
-        purchaseRequestHeader = savePurchaseRequestHeader(purchaseRequestHeader); 
+        purchaseRequestHeader = savePurchaseRequestHeader(purchaseRequestHeader);
 
         log.setEntityType(EntityType.PURCHASE_REQUEST);
         log.setEntityId(purchaseRequestHeader.getPurchaseRequestId());
@@ -187,5 +186,29 @@ public List<PurchaseRequestDTO> getRecentPurchaseRequests(PageRequest pageReques
         auditLogsService.addAuditLog(log);
 
         return purchaseRequestHeader;
+    }
+
+    public Long countAllByEmployee(Employee employee) {
+        if (employee == null) {
+            return 0L;
+        }
+        return purchaseRequestHeaderRepository.countByCreatedBy(employee);
+    }
+
+    public Long countByStatusAndEmployee(Status status, Employee employee) {
+        if (employee == null) {
+            return 0L;
+        }
+        return purchaseRequestHeaderRepository.countByStatusAndCreatedBy(status, employee);
+    }
+
+    public List<PurchaseRequestDTO> getRecentPurchaseRequestsByEmployee(Employee employee, org.springframework.data.domain.Pageable pageable) {
+        if (employee == null) {
+            return List.of();
+        }
+        List<PurchaseRequestHeader> headers = purchaseRequestHeaderRepository
+                .findByCreatedByOrderByPurchaseRequestIdDesc(employee, pageable);
+
+        return purchaseRequestMapper.toPurchaseRequestDTO(headers);
     }
 }

@@ -30,18 +30,19 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
     private final RepeatedPeriodService repeatedPeriodService;
     private final PurchaseRequestLineService lineService;
 
-    // Metric Fields Components
     private final Span scheduleId = new Span();
     private final Span intervalPattern = new Span();
     private final Span executionDates = new Span();
     private final Span referenceModule = new Span();
 
-    // Associated Row Target Sub-items Details Components
     private final VerticalLayout linkedItemContainer = new VerticalLayout();
     private final Span itemNameField = new Span();
     private final Span specField = new Span();
     private final Span quantityField = new Span();
     private final Span costField = new Span();
+
+    private final Button backButton = new Button("Back to Schedules Grid");
+    private final Button parentPrButton = new Button("Open Purchase Request");
 
     public RepeatedPeriodDetailsView(RepeatedPeriodService repeatedPeriodService,
                                      PurchaseRequestLineService lineService) {
@@ -56,10 +57,10 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
     }
 
     private void buildUI() {
-        H2 pageTitle = new H2("Recurring Schedule Profile Information");
+        H2 pageTitle = new H2("Scheduled Information");
 
         VerticalLayout profileCard = new VerticalLayout(
-                new H3("Schedule Configuration Metrics"),
+                new H3("Schedule Configuration"),
                 scheduleId, referenceModule, intervalPattern, executionDates
         );
         profileCard.getStyle().set("background", "#f8fafc").set("border-radius", "8px").set("border", "1px solid #e2e8f0");
@@ -67,19 +68,16 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
         profileCard.setPadding(true);
 
         linkedItemContainer.add(
-                new H3("Linked Core Asset / Item Metadata Snapshot"),
+                new H3("Item for Purchase Request"),
                 itemNameField, specField, quantityField, costField
         );
         linkedItemContainer.getStyle().set("background", "#f0fdf4").set("border-radius", "8px").set("border", "1px solid #bbf7d0");
         linkedItemContainer.setSpacing(false);
         linkedItemContainer.setPadding(true);
-        linkedItemContainer.setVisible(false); // Only displayed if mapping matches lines table row elements
+        linkedItemContainer.setVisible(false);
 
-        Button backButton = new Button("Back to Schedules Grid", e -> getUI().ifPresent(ui -> ui.navigate("repeated-periods")));
+        backButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("repeated-periods")));
         
-        Button parentPrButton = new Button("Open Parent Purchase Request", e -> {
-            // Handled contextually based on entity associations setup step limits
-        });
         parentPrButton.addThemeName("primary");
         parentPrButton.setVisible(false);
 
@@ -96,15 +94,16 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
         RepeatedPeriod record = repeatedPeriodService.getRepeatedPeriodById(recordId)
                 .orElseThrow(() -> new RuntimeException("Sourcing rule profile was completely removed."));
 
-        // Hydrate configuration visual string containers text parameters
-        scheduleId.setText("Schedule Profile Reference ID: " + record.getId());
-        referenceModule.setText("Originating Component Mapping Context: " + record.getReferType());
-        intervalPattern.setText("Configured Recurrence Cycle: Every " + record.getFrequencyPeriod() + " " + record.getFrequencyType());
-        executionDates.setText("Lifespan Horizon: From [" + record.getFromDate() + "] until [" + 
-                (record.getToDate() != null ? record.getToDate().toString() : "Indefinite Run Loop") + 
-                "] | Next Trigger Target: " + (record.getNextDate() != null ? record.getNextDate().toString() : "Processing Queue..."));
+        scheduleId.setText("Schedule Reference ID: " + record.getId());
+        referenceModule.setText("Source: " + record.getReferType());
+        intervalPattern.setText("Repeated Times " + record.getFrequencyPeriod() + " " + record.getFrequencyType());
+        
+        String start = record.getFromDate() != null ? record.getFromDate().toString() : "-";
+        String end = record.getToDate() != null ? record.getToDate().toString() : "Indefinite Run Loop";
+        String next = record.getNextDate() != null ? record.getNextDate().toString() : "Processing Queue...";
+        
+        executionDates.setText("From Date : " + start + ", To Date : " + end + ", Next Date : " + next);
 
-        // If it targets a PR Line item row, safely resolve relational fields across database tables
         if (record.getReferType() == RepeatedPeriodReferType.PURCHASE_REQUEST_LINE && record.getReferId() != null) {
             Optional<PurchaseRequestLine> lineOpt = lineService.getPurchaseRequestLineById(record.getReferId());
             
@@ -112,26 +111,22 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
                 PurchaseRequestLine targetLine = lineOpt.get();
                 linkedItemContainer.setVisible(true);
 
-                itemNameField.setText("Item Classification Code: " + 
+                itemNameField.setText("Item Code : " + 
                         (targetLine.getItemVariant() != null && targetLine.getItemVariant().getItem() != null 
                         ? targetLine.getItemVariant().getItem().getItemName() : "Unknown Generic Asset"));
                 
-                specField.setText("Specification Detail Tag: " + 
+                specField.setText("Specification Detail : " + 
                         (targetLine.getItemVariant() != null ? targetLine.getItemVariant().getSpecification() : "-"));
                 
-                quantityField.setText("Base Order Quantity Target per Loop Run: " + targetLine.getRequestedQuantity());
+                quantityField.setText("Requested Quantity : " + targetLine.getRequestedQuantity());
                 
                 double unitCost = targetLine.getItemUnitPrice() != null ? targetLine.getItemUnitPrice() : 0.0;
-                costField.setText("Evaluated Estimated Unit Base Cost Amount: " + unitCost);
+                costField.setText(" Unit Amount: " + unitCost);
 
-                // Dynamically append action click listener router linking straight back up to parent Document
                 if (targetLine.getPurchaseRequestHeader() != null) {
                     Long headerId = targetLine.getPurchaseRequestHeader().getPurchaseRequestId();
-                    
-                    // Locate our view component instance out of array list stack collections layers structures
-                    Button prNavigationBtn = (Button) ((HorizontalLayout) getComponentAt(4)).getComponentAt(1);
-                    prNavigationBtn.setVisible(true);
-                    prNavigationBtn.addClickListener(clickEvent -> getUI().ifPresent(ui -> ui.navigate("purchase-request-details/" + headerId)));
+                    parentPrButton.setVisible(true);
+                    parentPrButton.addClickListener(clickEvent -> getUI().ifPresent(ui -> ui.navigate("purchase-request-details/" + headerId)));
                 }
             } else {
                 Notification.show("Notice: The original target line item row has been purged from active tracking tables.", 4000, Position.MIDDLE);
