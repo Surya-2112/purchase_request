@@ -1,11 +1,13 @@
 package com.module.purchase.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.module.purchase.repository.PurchaseOrderLineRepository;
+import com.module.purchase.specification.PurchaseOrderLineSpecification;
 import com.module.purchase.customException.ResourceNotFoundException;
-import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
+
 import java.util.Optional;
 import java.util.List;
 
@@ -39,16 +41,24 @@ public class PurchaseOrderLineService {
         return purchaseOrderLineRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public List<PurchaseOrderLine> getPurchaseOrderLineByHeader(PurchaseOrderHeader purchaseOrderHeader) {
-        List<PurchaseOrderLine> lines = purchaseOrderLineRepository.findByPurchaseOrderHeader(purchaseOrderHeader);
-        
-        for (PurchaseOrderLine line : lines) {
-            if (line.getPurchaseRequestLines() != null) {
-                line.getPurchaseRequestLines().size(); 
-            }
-        }
-        return lines;
+    public List<PurchaseOrderLine> getPurchaseOrderList(PurchaseOrderLine purchaseOrderline) {
+
+        Specification<PurchaseOrderLine> spec = Specification
+                .where(PurchaseOrderLineSpecification.hasId(purchaseOrderline.getId()))
+                .and(PurchaseOrderLineSpecification.hasPurchaseOrderHeader(purchaseOrderline.getPurchaseOrderHeader()))
+                .and(PurchaseOrderLineSpecification.hasItemVariant(purchaseOrderline.getItemVariant()));
+
+        return purchaseOrderLineRepository.findAll(spec);
+    }
+
+    public Long getCountPurchaseOrderList(PurchaseOrderLine purchaseOrderline) {
+
+        Specification<PurchaseOrderLine> spec = Specification
+                .where(PurchaseOrderLineSpecification.hasId(purchaseOrderline.getId()))
+                .and(PurchaseOrderLineSpecification.hasPurchaseOrderHeader(purchaseOrderline.getPurchaseOrderHeader()))
+                .and(PurchaseOrderLineSpecification.hasItemVariant(purchaseOrderline.getItemVariant()));
+
+        return purchaseOrderLineRepository.count(spec);
     }
 
 }

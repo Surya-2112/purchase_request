@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
 import com.module.purchase.repository.PurchaseRequestLineRepository;
+import com.module.purchase.specification.PurchaseRequestLineSpecification;
 
 @Service
 @Transactional
@@ -37,6 +39,10 @@ public class PurchaseRequestLineService {
 
     @Autowired
     private ItemService itemService;
+
+    @Autowired
+    @Lazy
+    private ItemVariantService itemVariantService;
 
      public PurchaseRequestLine savePurchaseRequestLine(PurchaseRequestLine purchaseRequestLine) {
         return purchaseRequestLineRepository.save(purchaseRequestLine);
@@ -106,8 +112,9 @@ public class PurchaseRequestLineService {
     {    List<PurchaseRequestLine> matchedLines=new ArrayList<>();
 
         for(Item item : itemService.getItemByCategory(category))
-        {
-            for(ItemVariant itemVariant:item.getItemVariants())
+        {    ItemVariant itemspec=new ItemVariant();
+            itemspec.setItem(item);
+            for(ItemVariant itemVariant:itemVariantService.getItemVariantsList(itemspec))
             {
                 matchedLines.addAll(getApprovedPurchaseLinesAvailableForRfq(itemVariant));
             }
@@ -119,4 +126,33 @@ public class PurchaseRequestLineService {
     {
         return purchaseRequestLineRepository.findByPurchaseOrderLine(orderLine);
     }
+
+     public List<PurchaseRequestLine> getPurchaseRequestLineList(PurchaseRequestLine purchaseRequestline) {
+
+        Specification<PurchaseRequestLine> spec = Specification
+                .where(PurchaseRequestLineSpecification.hasId(purchaseRequestline.getId()))
+                .and(PurchaseRequestLineSpecification.hasPurchaseRequestHeader(purchaseRequestline.getPurchaseRequestHeader()))
+                .and(PurchaseRequestLineSpecification.hasStatus(purchaseRequestline.getStatus()))
+                .and(PurchaseRequestLineSpecification.hasRepeatableId(purchaseRequestline.getRepeatableId()))
+                .and(PurchaseRequestLineSpecification.hasRequestForQuotation(purchaseRequestline.getRequestForQuotation()))
+                .and(PurchaseRequestLineSpecification.hasPurchaseOrderLine(purchaseRequestline.getPurchaseOrderLine()))
+                .and(PurchaseRequestLineSpecification.hasItemVariant(purchaseRequestline.getItemVariant()));
+
+        return purchaseRequestLineRepository.findAll(spec);
+    }
+
+    public Long getCountPurchaseRequestLineList(PurchaseRequestLine purchaseRequestline) {
+
+        Specification<PurchaseRequestLine> spec = Specification
+                .where(PurchaseRequestLineSpecification.hasId(purchaseRequestline.getId()))
+                .and(PurchaseRequestLineSpecification.hasPurchaseRequestHeader(purchaseRequestline.getPurchaseRequestHeader()))
+                .and(PurchaseRequestLineSpecification.hasStatus(purchaseRequestline.getStatus()))
+                .and(PurchaseRequestLineSpecification.hasRepeatableId(purchaseRequestline.getRepeatableId()))
+                .and(PurchaseRequestLineSpecification.hasRequestForQuotation(purchaseRequestline.getRequestForQuotation()))
+                .and(PurchaseRequestLineSpecification.hasPurchaseOrderLine(purchaseRequestline.getPurchaseOrderLine()))
+                .and(PurchaseRequestLineSpecification.hasItemVariant(purchaseRequestline.getItemVariant()));
+
+        return purchaseRequestLineRepository.count(spec);
+    }
+
 }

@@ -20,13 +20,13 @@ public class PurchaseRequestDocument {
     @Column(name = "document_id") 
     private Long documentId;
 
-    @Column(name = "file_name", nullable = false) 
+    @Column(name = "file_name") 
     private String fileName;
 
-    @Column(name = "file_type", nullable = false) 
+    @Column(name = "file_type") 
     private String fileType;
 
-    @Column(name = "file_size", nullable = false) 
+    @Column(name = "file_size") 
     private Long fileSize;
 
     @Lob 

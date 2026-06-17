@@ -25,6 +25,7 @@ import com.module.purchase.mapper.QuotationMapper;
 import com.module.purchase.repository.DiscountTypeRepository;
 import com.module.purchase.repository.QuotationLineRepository;
 import com.module.purchase.repository.QuotationRepository;
+import com.module.purchase.specification.QuotationLineSpecification;
 import com.module.purchase.specification.QuotationSpecification;
 
 @Service
@@ -102,7 +103,8 @@ public class QuotationService {
                 quotationLineRepository.deleteByQuotation(quotation);
                 quotationRepository.delete(quotation);
             } else {
-                throw new IllegalStateException("Compliance Block: Finalized quotations cannot be deleted from the system ledger.");
+                throw new IllegalStateException(
+                        "Compliance Block: Finalized quotations cannot be deleted from the system ledger.");
             }
         });
     }
@@ -135,9 +137,10 @@ public class QuotationService {
 
     @Transactional
     public DiscountType saveDiscountType(DiscountType discountType) {
-        // Validation check to make sure bounds parameters logic doesn't crash calculations engines
+
         if (discountType.getFromQuantity() >= discountType.getToQuantity()) {
-            throw new IllegalArgumentException("Validation Fault: 'From Quantity' slab boundary must sit below 'To Quantity' metrics.");
+            throw new IllegalArgumentException(
+                    "Validation Fault: 'From Quantity' slab boundary must sit below 'To Quantity' metrics.");
         }
         return discountTypeRepository.save(discountType);
     }
@@ -159,7 +162,8 @@ public class QuotationService {
         Specification<Quotation> spec = Specification
                 .where(QuotationSpecification.hasQuotationId(quotationDTO.getId()))
                 .and(QuotationSpecification.hasRequestForQuotationId(
-                        quotationDTO.getRequestForQuotation() != null ? quotationDTO.getRequestForQuotation().getId() : null))
+                        quotationDTO.getRequestForQuotation() != null ? quotationDTO.getRequestForQuotation().getId()
+                                : null))
                 .and(QuotationSpecification.hasVendor(quotationDTO.getVendor()))
                 .and(QuotationSpecification.hasStatus(quotationDTO.getStatus()));
 
@@ -184,10 +188,32 @@ public class QuotationService {
     }
 
     public List<QuotationDTO> getRecentQuotationsForVendor(Vendor vendor, Pageable pageable) {
-    if (vendor == null) {
-        return java.util.List.of();
+        if (vendor == null) {
+            return java.util.List.of();
+        }
+        List<Quotation> quotations = quotationRepository.findByVendorOrderByIdDesc(vendor, pageable);
+        return quotationMapper.toQuotationDTO(quotations);
     }
-    List<Quotation> quotations = quotationRepository.findByVendorOrderByIdDesc(vendor, pageable);
-    return quotationMapper.toQuotationDTO(quotations); 
-}
+
+     public Long getCountQuotationLineList(QuotationLine Quotationline) {
+
+        Specification<QuotationLine> spec = Specification
+                .where(QuotationLineSpecification.hasId(Quotationline.getId()))
+                .and(QuotationLineSpecification.hasQuotation(Quotationline.getQuotation()))
+                .and(QuotationLineSpecification.hasRequestForQuotationLine(Quotationline.getRequestForQuotationLine()))
+                .and(QuotationLineSpecification.hasItemVariant(Quotationline.getItemVariant()));
+
+        return quotationLineRepository.count(spec);
+    }
+
+     public List<QuotationLine> getQuotationLineList(QuotationLine Quotationline) {
+
+        Specification<QuotationLine> spec = Specification
+                .where(QuotationLineSpecification.hasId(Quotationline.getId()))
+                .and(QuotationLineSpecification.hasQuotation(Quotationline.getQuotation()))
+                .and(QuotationLineSpecification.hasRequestForQuotationLine(Quotationline.getRequestForQuotationLine()))
+                .and(QuotationLineSpecification.hasItemVariant(Quotationline.getItemVariant()));
+
+        return quotationLineRepository.findAll(spec);
+    }
 }

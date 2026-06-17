@@ -1,10 +1,5 @@
 package com.module.purchase.entity;
 
-import java.util.Set;
-
-import org.hibernate.annotations.ColumnDefault;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,7 +7,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -28,37 +22,22 @@ public class Department {
     @Column(name = "department_id")
     private Long departmentId;
 
-    @Column(name = "department_name", unique = true, nullable = false, length=100)
+    @Column(name = "department_name")
     @Size(max=100)
     @NotBlank
     private String departmentName;
 
     @Size(max=20)
     @NotBlank
-     @Column(name = "department_code", unique = true, nullable= false, length=20)
+     @Column(name = "department_code")
     private String departmentCode;
 
     @OneToOne
     @JoinColumn(name = "head_employee_id")
-    @JsonIgnoreProperties({"department","role","user","address"})
     private Employee headEmployee;
    
     @NotNull
-    @Column(nullable = false)
-    @ColumnDefault("true")
     private Boolean active = true;
-
-    @OneToMany(mappedBy = "department")
-    @JsonIgnoreProperties({"department"})
-    private Set<Employee> employees;
-
-    @OneToMany(mappedBy = "department")
-    @JsonIgnoreProperties({"department"})
-    private Set<DepartmentBudget> departmentBudgets;
-
-    @OneToMany(mappedBy = "forDepartment")
-    @JsonIgnoreProperties({"forDepartment"})
-    private Set<PurchaseRequestHeader> purchaseRequestHeaders;
 
     public Long getDepartmentId() {
         return departmentId;
@@ -98,29 +77,6 @@ public class Department {
 
     public void setActive(Boolean active) {
         this.active = active;
-    }
-
-    public Set<Employee> getEmployees() {
-        return employees;
-    }
-
-    public void setEmployees(Set<Employee> employees) {
-        this.employees = employees;
-    }
-    public Set<DepartmentBudget> getDepartmentBudgets() {
-        return departmentBudgets;
-    }
-
-    public void setDepartmentBudgets(Set<DepartmentBudget> departmentBudgets) {
-        this.departmentBudgets = departmentBudgets;
-    }
-
-    public Set<PurchaseRequestHeader> getPurchaseRequestHeaders() {
-        return purchaseRequestHeaders;
-    }
-
-    public void setPurchaseRequestHeaders(Set<PurchaseRequestHeader> purchaseRequestHeaders) {
-        this.purchaseRequestHeaders = purchaseRequestHeaders;
     }
 
     @Override

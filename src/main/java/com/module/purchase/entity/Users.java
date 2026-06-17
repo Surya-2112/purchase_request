@@ -21,16 +21,15 @@ public class Users {
     private Long userId;
 
     @NotNull
-    @Column(name = "user_name", nullable = false, unique = true)
+    @Column(name = "user_name")
     private String userName;
 
     @NotNull
-    @Column(nullable = false)
     private String password;
 
     @NotNull
     @Email
-    @Column(name = "user_email", nullable = false, unique = true)
+    @Column(name = "user_email")
     private String userEmail;
 
     @OneToOne(mappedBy = "users")

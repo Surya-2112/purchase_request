@@ -49,7 +49,6 @@ public class UnitView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
-        // HEADER
         H2 title = new H2("Unit Master");
 
         Button addButton = new Button("Add Unit", event -> {

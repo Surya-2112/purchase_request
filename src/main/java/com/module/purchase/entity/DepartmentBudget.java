@@ -10,14 +10,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
-@Table( name = "department_budget",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"department_id", "budget_year"}))
+@Table( name = "department_budget")
 public class DepartmentBudget {
   
     @Id
@@ -27,21 +25,21 @@ public class DepartmentBudget {
     
     @NotNull
     @ManyToOne
-     @JoinColumn(name = "department_id", referencedColumnName = "department_id", nullable = false)
+     @JoinColumn(name = "department_id", referencedColumnName = "department_id")
     private Department department;
 
     @NotNull
-    @Column(name = "total_budget_amount", nullable = false)
+    @Column(name = "total_budget_amount")
     @Positive
     private Double TotalBudgetAmount;
 
     @NotNull
-    @Column(name = "remaining_budget_amount", nullable = false)
+    @Column(name = "remaining_budget_amount")
     @PositiveOrZero
     private Double RemainingBudgetAmount;
 
     @NotNull
-    @Column(name = "budget_year", nullable = false)
+    @Column(name = "budget_year")
     private Year year;
 
     public Long getDepartmentBudgetId() {

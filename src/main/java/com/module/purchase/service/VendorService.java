@@ -19,6 +19,7 @@ import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Vendor;
+import com.module.purchase.entityDTO.PurchaseOrderDTO;
 import com.module.purchase.entityDTO.VendorDTO;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EntityType;
@@ -38,6 +39,9 @@ public class VendorService {
 
     @Autowired
     private AuditLogsService auditLogsService;
+
+    @Autowired
+    private PurchaseOrderHeaderService purchaseOrderService;
 
     public Vendor saveVendor(Vendor vendor) {
         return vendorRepository.save(vendor);
@@ -115,7 +119,9 @@ public class VendorService {
 
     public void deleteVendorById(Long vendorId,Employee employee) {
         Vendor existingVendor = getVendorById(vendorId).get();
-        if (existingVendor.getPurchaseOrderHeader() != null && !existingVendor.getPurchaseOrderHeader().isEmpty()) {
+        PurchaseOrderDTO purchaseOrderDTO= new PurchaseOrderDTO();
+        purchaseOrderDTO.setVendor(existingVendor);
+        if (purchaseOrderService.getCountPurchaseOrder(purchaseOrderDTO)>0) {
             throw new ResourceAlreadyUsedException("Cannot delete vendor with associated purchase order header");
         }
         vendorRepository.deleteById(vendorId);

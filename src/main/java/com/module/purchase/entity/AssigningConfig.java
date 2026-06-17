@@ -27,24 +27,24 @@ public class AssigningConfig {
     @Column(name = "assigning_config_id")
     private Long id;
 
-    @Column(name = "min_amount", nullable = false)
+    @Column(name = "min_amount")
     private Double minAmount;
 
     @Column(name = "max_amount")
     private Double maxAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "employee_group", nullable = false)
+    @Column(name = "employee_group")
     private EmployeeGroup employeeGroup;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "approval_type", nullable = false)
+    @Column(name = "approval_type")
     private ApprovalType approvalType;
 
-    @Column(name = "margin_difference_percentage", nullable = false)
+    @Column(name = "margin_difference_percentage")
     private Double marginDifferencePercentage;
 
-    @Column(name = "approval_level",nullable = false)
+    @Column(name = "approval_level")
     private Integer level;
     
     public Long getId() {

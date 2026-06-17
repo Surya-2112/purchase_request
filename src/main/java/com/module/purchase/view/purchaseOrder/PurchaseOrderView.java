@@ -321,8 +321,7 @@ public class PurchaseOrderView extends VerticalLayout {
                 }
             }
 
-            Page<AssigningApprovalsDTO> page = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(
-                    assignFilter, groupToQuery, currentPage, pageSize);
+            Page<AssigningApprovalsDTO> page = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(assignFilter, groupToQuery, currentPage, pageSize);
 
             assignGrid.setItems(page.getContent());
             this.totalPages = page.getTotalPages() > 0 ? page.getTotalPages() : 1;

@@ -1,21 +1,12 @@
 package com.module.purchase.entity;
 
-import java.util.Set;
-
-import org.hibernate.annotations.ColumnDefault;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
-@Table( 
-     name = "purchase_order_line",
-    uniqueConstraints = {
-       @UniqueConstraint(columnNames = {"purchase_order_id", "variant_id"})
-    }
-)
+@Table( name = "purchase_order_line")
 public class PurchaseOrderLine {
 
     @Id
@@ -24,34 +15,29 @@ public class PurchaseOrderLine {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "purchase_order_id", nullable = false)
+    @JoinColumn(name = "purchase_order_id")
     private PurchaseOrderHeader purchaseOrderHeader;
 
     @ManyToOne
-    @JoinColumn(name = "variant_id", referencedColumnName = "variant_id", nullable = false)
+    @JoinColumn(name = "variant_id", referencedColumnName = "variant_id")
     private ItemVariant itemVariant;
 
     @NotNull
-    @Column(name = "unit_price", nullable = false)
+    @Column(name = "unit_price")
     @Positive
     private Double unitPrice;
 
     @NotNull
-    @Column(nullable = false)
     @Positive
     private Double quantity;
 
-     @Column(name = "total_amount", nullable = false)
+    @Column(name = "total_amount")
     @Positive
     private Double totalAmount;
 
-    @Column(name = "discount_amount", nullable = false)
-    @ColumnDefault("0.0")
+    @Column(name = "discount_amount")
     @PositiveOrZero
     private Double discountAmount;
-
-    @OneToMany(mappedBy = "purchaseOrderLine")
-    private Set<PurchaseRequestLine> purchaseRequestLines;
 
     public Long getId() {
         return id;
@@ -108,12 +94,4 @@ public class PurchaseOrderLine {
     public void setDiscountAmount(Double discountAmount) {
         this.discountAmount = discountAmount;
     }
-
-    public Set<PurchaseRequestLine> getPurchaseRequestLines() {
-        return purchaseRequestLines;
-    }
-
-    public void setPurchaseRequestLines(Set<PurchaseRequestLine> purchaseRequestLines) {
-        this.purchaseRequestLines = purchaseRequestLines;
-    }    
 }

@@ -14,4 +14,6 @@ public interface DepartmentBudgetRepository extends JpaRepository<DepartmentBudg
     
     Optional<DepartmentBudget> findByDepartmentAndYear(Department department, Year year);
     List<DepartmentBudget> findByYear(Year year);
+
+    List<DepartmentBudget> findByDepartment(Department department);
 }

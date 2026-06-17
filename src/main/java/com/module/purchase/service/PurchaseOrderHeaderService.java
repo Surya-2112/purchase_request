@@ -110,6 +110,7 @@ public class PurchaseOrderHeaderService {
         Specification<PurchaseOrderHeader> spec = Specification
                 .where(PurchaseOrderSpecification.hasPurchaseOrderId(purchaseOrderDTO.getPurchaseOrderId()))
                 .and(PurchaseOrderSpecification.hasCreatedBy(purchaseOrderDTO.getCreatedBy()))
+                .and(PurchaseOrderSpecification.hasCreatedBy(purchaseOrderDTO.getCreatedBy()))
                 .and(PurchaseOrderSpecification.hasStatus(purchaseOrderDTO.getStatus()));
 
         return purchaseOrderMapper.toPurchaseOrdersDTO(purchaseOrderHeaderRepository.findAll(spec));
@@ -141,7 +142,7 @@ public class PurchaseOrderHeaderService {
         purchaseOrderHeader.setLevel(0);
         purchaseOrderHeader.setTotalAmount(1.0);
 
-        List<PurchaseOrderLine> polines = new ArrayList<PurchaseOrderLine>();
+        List<PurchaseOrderLine> polines = new ArrayList<>();
 
         purchaseOrderHeader = savePurchaseOrderHeader(purchaseOrderHeader);
         double aggregatePurchaseOrderGrossValue = 0.0;
@@ -199,6 +200,28 @@ public class PurchaseOrderHeaderService {
             }
         }
 
+    }
+
+    public List<PurchaseOrderHeader> getPurchaseOrderList(PurchaseOrderDTO purchaseOrderDTO) {
+
+        Specification<PurchaseOrderHeader> spec = Specification
+                .where(PurchaseOrderSpecification.hasPurchaseOrderId(purchaseOrderDTO.getPurchaseOrderId()))
+                .and(PurchaseOrderSpecification.hasStatus(purchaseOrderDTO.getStatus()))
+                .and(PurchaseOrderSpecification.hasCreatedBy(purchaseOrderDTO.getCreatedBy()))
+                .and(PurchaseOrderSpecification.hasVendor(purchaseOrderDTO.getVendor()));
+
+        return purchaseOrderHeaderRepository.findAll(spec);
+    }
+
+    public Long getCountPurchaseOrder(PurchaseOrderDTO purchaseOrderDTO) {
+
+        Specification<PurchaseOrderHeader> spec = Specification
+                .where(PurchaseOrderSpecification.hasPurchaseOrderId(purchaseOrderDTO.getPurchaseOrderId()))
+                .and(PurchaseOrderSpecification.hasStatus(purchaseOrderDTO.getStatus()))
+                .and(PurchaseOrderSpecification.hasCreatedBy(purchaseOrderDTO.getCreatedBy()))
+                .and(PurchaseOrderSpecification.hasVendor(purchaseOrderDTO.getVendor()));
+
+        return purchaseOrderHeaderRepository.count(spec);
     }
 
 }

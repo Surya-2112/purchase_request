@@ -7,24 +7,24 @@ import jakarta.validation.constraints.Size;
 @Embeddable
 public class Address {
     
-    @Column(name = "address_line", length = 255) 
+    @Column(name = "address_line") 
     private String addressLine;
 
-    @Column(name = "street", length = 255) 
+    @Column(name = "street") 
     private String street;
 
-    @Column(name = "city", length = 150)
+    @Column(name = "city")
     @Size(max = 150)
     private String city;
 
-    @Column(name = "state", length = 100)
+    @Column(name = "state")
     @Size(max = 100)
     private String state;
 
-    @Column(name = "postal_code", length = 12)
+    @Column(name = "postal_code")
     private String postalCode;
 
-    @Column(name = "country", length = 50)
+    @Column(name = "country")
     @Size(max = 50)
     private String country;
 

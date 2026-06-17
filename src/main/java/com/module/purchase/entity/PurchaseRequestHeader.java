@@ -1,9 +1,7 @@
 package com.module.purchase.entity;
 
 import java.time.LocalDate;
-import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.module.purchase.enums.Status;
 
 import jakarta.persistence.Column;
@@ -15,7 +13,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
@@ -30,37 +27,25 @@ public class PurchaseRequestHeader {
 
     @ManyToOne
      @JoinColumn(name = "requester_id", referencedColumnName = "employee_id")
-    @JsonIgnoreProperties({"purchaseRequests"})
     private Employee createdBy;
 
     @NotNull
-    @Column( nullable = false)
     private Double totalAmount;
     
     @NotNull
-    @Column(nullable = false)
     private LocalDate createdDate;
 
    @NotNull
-   @Column(name = "approval_level", nullable = false)
+   @Column(name = "approval_level")
     private Integer level;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Status status;
 
-    @OneToMany(mappedBy = "purchaseRequestHeader")
-    private List<PurchaseRequestDocument> documents;
-
     @ManyToOne
-    @JoinColumn(name = "department_id", nullable = false)
-    @JsonIgnoreProperties("purchaseRequestHeaders")
+    @JoinColumn(name = "department_id")
     private Department forDepartment;
-
-    @OneToMany(mappedBy = "purchaseRequestHeader")
-    @JsonIgnoreProperties({"purchaseRequestHeader"})
-    private List<PurchaseRequestLine> purchaseRequestLines;
 
     public Long getPurchaseRequestId() {
         return purchaseRequestId;
@@ -116,21 +101,5 @@ public class PurchaseRequestHeader {
 
     public void setForDepartment(Department forDepartment) {
         this.forDepartment = forDepartment;
-    }
-
-    public List<PurchaseRequestLine> getPurchaseRequestLines() {
-        return purchaseRequestLines;
-    }
-
-    public void setPurchaseRequestLines(List<PurchaseRequestLine> purchaseRequestLines) {
-        this.purchaseRequestLines = purchaseRequestLines;
-    }
-
-    public List<PurchaseRequestDocument> getDocuments() {
-        return documents;
-    }
-
-    public void setDocuments(List<PurchaseRequestDocument> documents) {
-        this.documents = documents;
     }
 }

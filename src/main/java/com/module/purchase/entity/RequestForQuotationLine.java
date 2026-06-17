@@ -1,7 +1,5 @@
 package com.module.purchase.entity;
 
-import org.hibernate.annotations.ColumnDefault;
-import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,17 +8,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 @Entity
-@Table(
-    name = "request_for_quotation_line",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"request_for_quotation_id", "variant_id"})
-)
 public class RequestForQuotationLine {
 
     @Id
@@ -29,21 +20,17 @@ public class RequestForQuotationLine {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "request_for_quotation_id", referencedColumnName = "request_for_quotation_id", nullable = false)
+    @JoinColumn(name = "request_for_quotation_id", referencedColumnName = "request_for_quotation_id")
     private RequestForQuotation requestForQuotation;
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "variant_id", referencedColumnName = "variant_id", nullable = false)
+    @JoinColumn(name = "variant_id", referencedColumnName = "variant_id")
     private ItemVariant itemVariant;
 
-    @Column(name = "requested_quantity", nullable = false)
+    @Column(name = "requested_quantity")
     @Positive
-    @ColumnDefault("1.0")
     private Double requestedQuantity=1.0;
-
-    @OneToMany(mappedBy ="requestForQuotationLine")
-    private List<QuotationLine> quotations;
 
     public Long getId() {
         return id;

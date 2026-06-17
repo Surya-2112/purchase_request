@@ -1,7 +1,5 @@
 package com.module.purchase.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -12,16 +10,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
-import java.util.Set;
-
-import org.hibernate.annotations.ColumnDefault;
 
 import jakarta.persistence.Table;
 
@@ -52,7 +46,7 @@ public class Vendor {
     private Address vendorAddress;
 
     @OneToOne
-     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private Users users;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -60,18 +54,8 @@ public class Vendor {
             joinColumns = @JoinColumn(name = "vendor_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
     private List<Category> categories;
 
-    @OneToMany(mappedBy = "vendor")
-    @JsonIgnoreProperties("vendor")
-    private Set<Quotation> quotations;
-
     @NotNull
-    @Column(nullable = false)
-    @ColumnDefault("true")
     private Boolean active;
-
-    @OneToMany(mappedBy = "vendor")
-    @JsonIgnoreProperties("vendor")
-    private List<PurchaseOrderHeader> purchaseOrderHeader;
 
     public Long getVendorId() {
         return vendorId;
@@ -121,14 +105,6 @@ public class Vendor {
         this.vendorAddress = vendorAddress;
     }
 
-    public List<PurchaseOrderHeader> getPurchaseOrderHeader() {
-        return purchaseOrderHeader;
-    }
-
-    public void setPurchaseOrderHeader(List<PurchaseOrderHeader> purchaseOrderHeader) {
-        this.purchaseOrderHeader = purchaseOrderHeader;
-    }
-
     public List<Category> getCategories() {
         return categories;
     }
@@ -143,14 +119,6 @@ public class Vendor {
 
     public void setUsers(Users users) {
         this.users = users;
-    }
-
-    public Set<Quotation> getQuotations() {
-        return quotations;
-    }
-
-    public void setQuotations(Set<Quotation> quotations) {
-        this.quotations = quotations;
     }
 
     @Override

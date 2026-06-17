@@ -33,12 +33,10 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
     private final CategoryService categoryService;
     private final SecurityService securityService;
 
-    // BASIC
     private final TextField vendorNameField = new TextField("Vendor Name");
     private final EmailField vendorEmailField = new EmailField("Vendor Email");
     private final TextField vendorPhoneField = new TextField("Vendor Phone");
 
-    // STATUS
     private final ComboBox<String> activeField = new ComboBox<>("Status");
 
     private final MultiSelectComboBox<Category> categoryField =new MultiSelectComboBox<>("Categories");
@@ -84,7 +82,6 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
 
         H2 title = new H2("Update Vendor");
 
-        // BASIC
         vendorNameField.setValue(vendor.getVendorName() == null ? "" : vendor.getVendorName());
         vendorEmailField.setValue(vendor.getVendorEmail() == null ? "" : vendor.getVendorEmail());
         vendorEmailField.setReadOnly(true);
@@ -93,12 +90,10 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
 
         activeField.setValue(Boolean.TRUE.equals(vendor.getActive()) ? "Active" : "Inactive");
 
-        // CATEGORIES SET
         if (vendor.getCategories() != null) {
             categoryField.setValue(vendor.getCategories());
         }
 
-        // ADDRESS
         Address address = vendor.getVendorAddress();
         if (address != null) {
 
@@ -137,10 +132,9 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
             try {
 
                 vendor.setVendorName(vendorNameField.getValue());
-                vendor.setVendorPhoneNumber(vendorPhoneField.getValue());
+                vendor.setVendorPhoneNumber(vendorPhoneField.getValue().trim().equals("")?null:vendorPhoneField.getValue().trim());
                 vendor.setActive("Active".equals(activeField.getValue()));
 
-                // CATEGORIES UPDATE
                 vendor.setCategories(List.copyOf(categoryField.getValue()));
 
                 Address updatedAddress = vendor.getVendorAddress();

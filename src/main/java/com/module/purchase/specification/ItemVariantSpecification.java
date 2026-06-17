@@ -40,11 +40,4 @@ public class ItemVariantSpecification {
                         ? null: cb.equal(root.get("active"), active);
     }
 
-    public static Specification<ItemVariant> hasEstimatedUnitPrice(Double estimatedUnitPrice) {
-
-        return (root, query, cb) ->
-                estimatedUnitPrice == null
-                        ? null
-                        : cb.equal(root.get("estimatedUnitPrice"), estimatedUnitPrice);
-    }
 }

@@ -1,7 +1,5 @@
 package com.module.purchase.entity;
 
-import org.hibernate.annotations.ColumnDefault;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -18,23 +16,22 @@ public class DiscountType {
 
     @ManyToOne
     @NotNull
-    @JoinColumn(name = "quotation_line_id", referencedColumnName = "quotation_line_id", nullable = false)
+    @JoinColumn(name = "quotation_line_id", referencedColumnName = "quotation_line_id")
     private QuotationLine quotationLine;
 
-    @Column(name = "from_quantity", nullable = false)
+    @Column(name = "from_quantity")
     @NotNull
     @Positive
     private Double fromQuantity;
 
-    @Column(name = "to_quantity", nullable = false)
+    @Column(name = "to_quantity")
     @Positive
     @NotNull
     private Double toQuantity;
 
-    @Column(name = "discount_percentage", nullable = false)
+    @Column(name = "discount_percentage")
     @PositiveOrZero
     @NotNull
-    @ColumnDefault("0.0")
     private Double discountPercentage;
 
     public Long getId() {

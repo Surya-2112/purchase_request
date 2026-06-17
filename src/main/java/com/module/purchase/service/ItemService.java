@@ -122,4 +122,29 @@ public class ItemService {
         return itemRepository.findByCategory(category);
     }
 
+    public List<Item> getItemsList(Item item) {
+        
+        Specification<Item> spec = Specification
+        .where(ItemSpecification.hasItemId(item.getItemId()))
+        .and(ItemSpecification.hasItemCode(item.getItemCode()))
+        .and(ItemSpecification.hasItemName(item.getItemName()))
+        .and(ItemSpecification.hasCategory(item.getCategory()))
+        .and(ItemSpecification.hasUnit(item.getUnit()));
+
+        return itemRepository.findAll(spec);
+    }
+
+    public Long getCountItemsList(Item item) {
+        
+        Specification<Item> spec = Specification
+        .where(ItemSpecification.hasItemId(item.getItemId()))
+        .and(ItemSpecification.hasItemCode(item.getItemCode()))
+        .and(ItemSpecification.hasItemName(item.getItemName()))
+        .and(ItemSpecification.hasCategory(item.getCategory()))
+        .and(ItemSpecification.hasUnit(item.getUnit()));
+
+        return itemRepository.count(spec);
+    }
+    
+
 }

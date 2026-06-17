@@ -3,7 +3,6 @@ package com.module.purchase.specification;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.module.purchase.entity.Vendor;
-import com.module.purchase.entity.Category;
 
 
 public class VendorSpecification {

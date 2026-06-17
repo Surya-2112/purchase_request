@@ -1,10 +1,5 @@
 package com.module.purchase.entity;
 
-import java.util.List;
-
-import org.hibernate.annotations.ColumnDefault;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -14,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
@@ -32,61 +26,36 @@ public class Employee {
     private Long employeeId;
 
     @NotBlank
-    @Column(name = "employee_name", nullable = false, length=72)
+    @Column(name = "employee_name")
     @Size(min=3,max=72)
     private String employeeName;
 
     @NotBlank
-    @Column(name = "employee_email", unique = true , nullable = false)
+    @Column(name = "employee_email")
     @Email
     private String employeeEmail;
 
-    @Column(name = "employee_phone_number", length=15, nullable=true)
+    @Column(name = "employee_phone_number")
     @Size(min=10,max=15)
     private String employeePhoneNumber;
 
     @ManyToOne
     @JoinColumn(name = "department_id")
-    @JsonIgnoreProperties({ "employees", "headEmployee" })
     private Department department;
 
     @ManyToOne
     @JoinColumn(name = "role_id", referencedColumnName = "role_id")
-    @JsonIgnoreProperties({ "employees" })
     private Role role;
 
     @Embedded
     private Address address;
 
     @NotNull
-    @Column(nullable = false)
-    @ColumnDefault("true")
     private Boolean active = true;
 
     @OneToOne
     @JoinColumn(name = "userId")
-    @JsonIgnoreProperties({ "employee" })
     private Users users;
-
-    @OneToMany(mappedBy = "createdBy")
-    @JsonIgnoreProperties({ "createdBy" })
-    private List<PurchaseRequestHeader> purchaseRequestHeaders;
-
-    @OneToMany(mappedBy = "createdBy")
-    @JsonIgnoreProperties({ "createdBy" })
-    private List<PurchaseOrderHeader> purchaseOrderHeaders;
-
-    @OneToMany(mappedBy = "approver")
-    @JsonIgnoreProperties({ "approver" })
-    private List<AssigningApprovals> forApprovals;
-
-    @OneToMany(mappedBy = "assignedBy")
-    @JsonIgnoreProperties({ "assignedBy" })
-    private List<AssigningApprovals> assignedApprovals;
-
-    @OneToMany(mappedBy = "performedBy")
-    @JsonIgnoreProperties({ "performedBy" })
-    private List<AuditLogs> auditLogs;
 
     public Long getEmployeeId() {
         return employeeId;
@@ -158,46 +127,6 @@ public class Employee {
 
     public void setUsers(Users users) {
         this.users = users;
-    }
-
-    public List<PurchaseRequestHeader> getPurchaseRequestHeaders() {
-        return purchaseRequestHeaders;
-    }
-
-    public void setPurchaseRequestHeaders(List<PurchaseRequestHeader> purchaseRequestHeaders) {
-        this.purchaseRequestHeaders = purchaseRequestHeaders;
-    }
-
-    public List<AssigningApprovals> getForApprovals() {
-        return forApprovals;
-    }
-
-    public void setForApprovals(List<AssigningApprovals> forApprovals) {
-        this.forApprovals = forApprovals;
-    }
-
-    public List<AssigningApprovals> getAssignedApprovals() {
-        return assignedApprovals;
-    }
-
-    public void setAssignedApprovals(List<AssigningApprovals> assignedApprovals) {
-        this.assignedApprovals = assignedApprovals;
-    }
-
-    public List<AuditLogs> getAuditLogs() {
-        return auditLogs;
-    }
-
-    public void setAuditLogs(List<AuditLogs> auditLogs) {
-        this.auditLogs = auditLogs;
-    }
-
-    public List<PurchaseOrderHeader> getPurchaseOrderHeaders() {
-        return purchaseOrderHeaders;
-    }
-
-    public void setPurchaseOrderHeaders(List<PurchaseOrderHeader> purchaseOrderHeaders) {
-        this.purchaseOrderHeaders = purchaseOrderHeaders;
     }
 
     @Override

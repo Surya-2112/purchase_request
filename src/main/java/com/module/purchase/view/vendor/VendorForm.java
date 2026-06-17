@@ -23,16 +23,13 @@ public class VendorForm extends Dialog {
     private final CategoryService categoryService;
     private final SecurityService securityService;
 
-    // BASIC DETAILS
     private final TextField vendorNameField = new TextField("Vendor Name");
     private final EmailField vendorEmailField = new EmailField("Vendor Email");
     private final TextField vendorPhoneField = new TextField("Vendor Phone");
 
-    // CATEGORY
     private final MultiSelectComboBox<Category> categoryField =
             new MultiSelectComboBox<>("Categories");
 
-    // ADDRESS
     private final TextField addressLineField = new TextField("Address Line");
     private final TextField streetField = new TextField("Street");
     private final TextField cityField = new TextField("City");

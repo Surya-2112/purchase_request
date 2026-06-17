@@ -15,6 +15,7 @@ import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Item;
 import com.module.purchase.entity.Unit;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EntityType;
@@ -31,12 +32,13 @@ public class UnitService {
     @Autowired
     private AuditLogsService auditLogsService;
 
-    // SAVE BASE METHOD
+    @Autowired 
+    private ItemService itemService;
+
     public Unit saveUnit(Unit unit) {
         return unitRepository.save(unit);
     }
 
-    // CREATE
     public Unit addUnit(Unit unit, Employee employee) {
 
         Optional<Unit> existing = unitRepository.findByName(unit.getName());
@@ -55,12 +57,11 @@ public class UnitService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
 
-       // auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(log);
 
         return unit;
     }
 
-    // GET BY ID
     public Optional<Unit> getUnitById(Integer id) {
 
         Optional<Unit> unit = unitRepository.findById(id);
@@ -76,7 +77,6 @@ public class UnitService {
         return unitRepository.findAll();
     }
 
-    // PAGINATION + FILTER
     public Page<Unit> getUnits(Unit unit, Pageable pageable) {
 
         Specification<Unit> spec = Specification
@@ -87,7 +87,6 @@ public class UnitService {
         return unitRepository.findAll(spec, pageable);
     }
 
-    // UPDATE
     public Unit updateUnit(Unit unit, Employee employee) {
 
         getUnitById(unit.getId()).get();
@@ -101,19 +100,18 @@ public class UnitService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
 
-       // auditLogsService.addAuditLog(log);
+       auditLogsService.addAuditLog(log);
 
         return unit;
     }
 
-    // DELETE
     public void deleteUnitById(Integer id, Employee employee) {
 
         Unit existing = getUnitById(id).get();
-
-        if (existing.getItems() != null && !existing.getItems().isEmpty()) {
-            throw new ResourceAlreadyUsedException(
-                    "Cannot delete unit because it is used in items");
+        Item item=new Item(); 
+        item.setUnit(existing);
+        if (itemService.getCountItemsList(item)>0) {
+            throw new ResourceAlreadyUsedException("Cannot delete unit because it is used in items");
         }
 
         unitRepository.deleteById(id);
@@ -125,6 +123,6 @@ public class UnitService {
         log.setPerformedBy(employee);
         log.setTimestamp(LocalDate.now());
 
-       // auditLogsService.addAuditLog(log);
+       auditLogsService.addAuditLog(log);
     }
 }

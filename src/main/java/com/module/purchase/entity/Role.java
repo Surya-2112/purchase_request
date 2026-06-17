@@ -32,7 +32,7 @@ public class Role {
 
     @NotNull
     @Size(max=50)
-    @Column(name = "role_name", unique = true, nullable = false, length=50)
+    @Column(name = "role_name")
     private String roleName;
 
     @CollectionTable(
@@ -43,10 +43,6 @@ public class Role {
     @Enumerated(EnumType.STRING)
     @ElementCollection(fetch = FetchType.EAGER, targetClass = EmployeeGroup.class)
     private List<EmployeeGroup> employeeGroups;
-
-    @OneToMany(mappedBy = "role")
-    @JsonIgnoreProperties({"role"})
-    private List<Employee> employees;
 
     public Long getRoleId() {
         return roleId;
@@ -72,14 +68,6 @@ public class Role {
         this.employeeGroups = employeeGroups;
     }
 
-    public List<Employee> getEmployees() {
-        return employees;
-    }
-
-    public void setEmployees(List<Employee> employees) {
-        this.employees = employees;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -89,6 +77,4 @@ public class Role {
         sb.append('}');
         return sb.toString();
     }
-
-
 }

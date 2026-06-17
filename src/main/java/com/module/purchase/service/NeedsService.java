@@ -31,7 +31,7 @@ public class NeedsService {
 
     public List<Needs> getSpecificNeedRecord(EntityType entityType, Long refId) {
         if (entityType == null || refId == null) {
-            return new ArrayList();
+            return new ArrayList<>();
         }
         return needsRepository.findByEntityTypeAndRefId(entityType, refId);
     }

@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
@@ -18,15 +19,16 @@ import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.entityDTO.AssigningApprovalsDTO;
 import com.module.purchase.entityDTO.EmployeeDTO;
+import com.module.purchase.entityDTO.PurchaseRequestDTO;
+import com.module.purchase.entityDTO.PurchaseOrderDTO;
+import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.EntityType;
-import com.module.purchase.enums.Action;
 import com.module.purchase.mapper.EmployeeMapper;
 import com.module.purchase.repository.EmployeeRepository;
 import com.module.purchase.specification.EmployeeSpecification;
-
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -45,6 +47,15 @@ public class EmployeeService {
     @Autowired
     private AuditLogsService auditLogsService;
 
+    @Autowired
+    @Lazy
+    private PurchaseRequestHeaderService purchaseRequestHeaderService;
+
+    @Autowired
+    private PurchaseOrderHeaderService purchaseOrderHeaderService;
+
+    @Autowired
+    private AssigningApprovalsService assigningApprovalService;
 
     public Employee saveEmployee(Employee employee) {
         return employeeRepository.save(employee);
@@ -58,9 +69,9 @@ public class EmployeeService {
         }
 
         employee.setActive(true);
-        employee=saveEmployee(employee);
+        employee = saveEmployee(employee);
 
-        AuditLogs log= new AuditLogs();
+        AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.EMPLOYEE);
         log.setEntityId(employee.getEmployeeId());
         log.setAction(Action.CREATE);
@@ -71,11 +82,8 @@ public class EmployeeService {
         return employee;
     }
 
-    public List<Employee> getEmployeesByEmployeeGroup(
-            EmployeeGroup employeeGroup) {
-        return employeeRepository
-                .findByRoleEmployeeGroup(
-                        employeeGroup);
+    public List<Employee> getEmployeesByEmployeeGroup(EmployeeGroup employeeGroup) {
+        return employeeRepository.findByRoleEmployeeGroup(employeeGroup);
     }
 
     public Optional<Employee> getEmployeeById(Long id) {
@@ -105,60 +113,74 @@ public class EmployeeService {
         return employeeRepository.findAll();
     }
 
-    public List<Employee> getEmplyeesWithoutUsers()
-    {
+    public List<Employee> getEmplyeesWithoutUsers() {
         return employeeRepository.findEmployeesWithoutUser();
     }
 
-
-    public Employee updateEmployee(Employee employee,Employee updated) {
+    public Employee updateEmployee(Employee employee, Employee updated) {
 
         Employee existingEmployee = getEmployeeById(employee.getEmployeeId()).get();
         if (!existingEmployee.getEmployeeEmail().equals(employee.getEmployeeEmail())) {
             throw new ModificationNotAllowedException("cannot update employee email");
         }
         if (existingEmployee.getDepartment() != null && employee.getDepartment() != existingEmployee.getDepartment()) {
-            Department department = departmentService.getDepartmentById(existingEmployee.getDepartment().getDepartmentId()).get();
+            Department department = departmentService
+                    .getDepartmentById(existingEmployee.getDepartment().getDepartmentId()).get();
             if (department.getHeadEmployee() == existingEmployee) {
                 throw new RuntimeException("This employee is  head of department");
             }
         }
 
-        AuditLogs log= new AuditLogs();
+        AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.EMPLOYEE);
         log.setEntityId(employee.getEmployeeId());
         log.setAction(Action.UPDATE);
         log.setPerformedBy(updated);
         log.setTimestamp(LocalDate.now());
         auditLogsService.addAuditLog(log);
-        try{
-        employee=saveEmployee(employee);
-        }catch(Exception ex)
-        {
+        try {
+            employee = saveEmployee(employee);
+        } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-        System.out.println("phone number:"+employee.getEmployeePhoneNumber()+" "+employee.getAddress());
+        System.out.println("phone number:" + employee.getEmployeePhoneNumber() + " " + employee.getAddress());
         return employee;
     }
 
-    public void deleteEmployeeById(Long employeeId,Employee deleted) {
+    public void deleteEmployeeById(Long employeeId, Employee deleted) {
         Employee existingEmployee = getEmployeeById(employeeId).get();
-        if (existingEmployee.getAuditLogs() != null && !existingEmployee.getAuditLogs().isEmpty()) {
+
+        AuditLogs auditLogs = new AuditLogs();
+        auditLogs.setPerformedBy(existingEmployee);
+        Long auditLogsCount = auditLogsService.getAuditLogsCount(auditLogs);
+
+        AssigningApprovalsDTO approvals = new AssigningApprovalsDTO();
+        approvals.setAssignedBy(existingEmployee);
+        Long approvalCount = assigningApprovalService.getCountApprovals(approvals);
+
+        PurchaseRequestDTO pr = new PurchaseRequestDTO();
+        pr.setCreatedBy(existingEmployee);
+        Long prHeaderscount = purchaseRequestHeaderService.getCountPurchaseRequest(pr);
+
+        PurchaseOrderDTO po = new PurchaseOrderDTO();
+        po.setCreatedBy(existingEmployee);
+        Long poHeaderscount = purchaseOrderHeaderService.getCountPurchaseOrder(po);
+
+        if (auditLogsCount > 0) {
             throw new ResourceAlreadyUsedException("Cannot delete Employee with associated audit logs");
         }
-        if (existingEmployee.getForApprovals() != null && !existingEmployee.getForApprovals().isEmpty()) {
+        if (approvalCount > 0) {
             throw new ResourceAlreadyUsedException("Cannot delete Employee with associated requested approvals");
         }
-        if (existingEmployee.getPurchaseRequestHeaders() != null
-                && !existingEmployee.getPurchaseRequestHeaders().isEmpty()) {
+        if (prHeaderscount>0) {
             throw new ResourceAlreadyUsedException("Cannot delete Employee with associated purchase request header");
         }
-        if (existingEmployee.getPurchaseOrderHeaders() != null
-                && !existingEmployee.getPurchaseOrderHeaders().isEmpty()) {
+
+        if (poHeaderscount > 0) {
             throw new ResourceAlreadyUsedException("Cannot delete Employee with associated purchase order header");
         }
-         
-        AuditLogs log= new AuditLogs();
+
+        AuditLogs log = new AuditLogs();
         log.setEntityType(EntityType.EMPLOYEE);
         log.setEntityId(employeeId);
         log.setAction(Action.DELETE);
@@ -167,5 +189,29 @@ public class EmployeeService {
         auditLogsService.addAuditLog(log);
 
         employeeRepository.deleteById(employeeId);
+    }
+
+    public List<Employee> getEmployeesList(EmployeeDTO employeeDTO) {
+
+        Specification<Employee> spec = Specification
+                .where(EmployeeSpecification.hasEmployeeId(employeeDTO.getEmployeeId()))
+                .and(EmployeeSpecification.hasEmployeeName(employeeDTO.getEmployeeName()))
+                .and(EmployeeSpecification.hasDepartment(employeeDTO.getDepartment()))
+                .and(EmployeeSpecification.hasRole(employeeDTO.getRole()))
+                .and(EmployeeSpecification.hasActive(employeeDTO.getActive()));
+
+        return employeeRepository.findAll(spec);
+    }
+
+    public Long getCountEmployees(EmployeeDTO employeeDTO) {
+
+        Specification<Employee> spec = Specification
+                .where(EmployeeSpecification.hasEmployeeId(employeeDTO.getEmployeeId()))
+                .and(EmployeeSpecification.hasEmployeeName(employeeDTO.getEmployeeName()))
+                .and(EmployeeSpecification.hasDepartment(employeeDTO.getDepartment()))
+                .and(EmployeeSpecification.hasRole(employeeDTO.getRole()))
+                .and(EmployeeSpecification.hasActive(employeeDTO.getActive()));
+
+        return employeeRepository.count(spec);
     }
 }

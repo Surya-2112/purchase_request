@@ -28,20 +28,20 @@ public class AuditLogs {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(name = "entity_type", nullable = false)
+    @Column(name = "entity_type")
     private EntityType entityType;
 
     @NotNull
-    @Column(name = "entity_id", nullable = false)
+    @Column(name = "entity_id")
     private Long entityId;
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(name = "performed_action", nullable = false)
+    @Column(name = "performed_action")
     private Action action;
 
     @ManyToOne
-   @JoinColumn(name = "performed_by_id", referencedColumnName = "employee_id")
+    @JoinColumn(name = "performed_by_id", referencedColumnName = "employee_id")
     private Employee performedBy;
 
     @NotNull

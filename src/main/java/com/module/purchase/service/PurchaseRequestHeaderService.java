@@ -137,6 +137,11 @@ public class PurchaseRequestHeaderService {
 
         AuditLogs log = new AuditLogs();
 
+        PurchaseRequestLine purchaseRequestLine=new PurchaseRequestLine();
+        purchaseRequestLine.setPurchaseRequestHeader(purchaseRequestHeader);
+
+        List<PurchaseRequestLine> purchaseRequestLines = purchaseRequestLineSerivce.getPurchaseRequestLineList(purchaseRequestLine);
+
         switch (purchaseRequestHeader.getStatus()) {
             case CANCELLED -> {
                 log.setAction(Action.CANCEL);
@@ -149,14 +154,14 @@ public class PurchaseRequestHeaderService {
                     }
                 }
 
-                for (PurchaseRequestLine line : purchaseRequestHeader.getPurchaseRequestLines()) {
+                for (PurchaseRequestLine line : purchaseRequestLines) {
                     line.setStatus(Status.CANCELLED);
                     purchaseRequestLineSerivce.updatePurchaseRequestLine(line, employee);
                 }
             }
             case APPROVED -> {
                 log.setAction(Action.APPROVE);
-                for (PurchaseRequestLine line : purchaseRequestHeader.getPurchaseRequestLines()) {
+                for (PurchaseRequestLine line : purchaseRequestLines) {
                     if (line.getApprovedQuantity().equals(line.getRequestedQuantity())) {
                         line.setStatus(Status.APPROVED);
                     } else if (line.getApprovedQuantity() > 0) {
@@ -169,7 +174,7 @@ public class PurchaseRequestHeaderService {
             }
             case REJECTED -> {
                 log.setAction(Action.REJECT);
-                for (PurchaseRequestLine line : purchaseRequestHeader.getPurchaseRequestLines()) {
+                for (PurchaseRequestLine line : purchaseRequestLines) {
                     line.setStatus(Status.REJECTED);
                     purchaseRequestLineSerivce.updatePurchaseRequestLine(line, employee);
                 }
@@ -210,5 +215,27 @@ public class PurchaseRequestHeaderService {
                 .findByCreatedByOrderByPurchaseRequestIdDesc(employee, pageable);
 
         return purchaseRequestMapper.toPurchaseRequestDTO(headers);
+    }
+
+    public List<PurchaseRequestHeader> getPurchaseRequestList(PurchaseRequestDTO purchaseRequestDTO) {
+
+        Specification<PurchaseRequestHeader> spec = Specification
+                .where(PurchaseRequestSpecification.hasPurchaseRequestId(purchaseRequestDTO.getPurchaseRequestId()))
+                .and(PurchaseRequestSpecification.hasCreatedBy(purchaseRequestDTO.getCreatedBy()))
+                .and(PurchaseRequestSpecification.hasForDepartment(purchaseRequestDTO.getForDepartment()))
+                .and(PurchaseRequestSpecification.hasStatus(purchaseRequestDTO.getStatus()));
+
+        return purchaseRequestHeaderRepository.findAll(spec);
+    }
+
+    public Long getCountPurchaseRequest(PurchaseRequestDTO purchaseRequestDTO) {
+
+        Specification<PurchaseRequestHeader> spec = Specification
+                .where(PurchaseRequestSpecification.hasPurchaseRequestId(purchaseRequestDTO.getPurchaseRequestId()))
+                .and(PurchaseRequestSpecification.hasCreatedBy(purchaseRequestDTO.getCreatedBy()))
+                .and(PurchaseRequestSpecification.hasForDepartment(purchaseRequestDTO.getForDepartment()))
+                .and(PurchaseRequestSpecification.hasStatus(purchaseRequestDTO.getStatus()));
+
+        return purchaseRequestHeaderRepository.count(spec);
     }
 }

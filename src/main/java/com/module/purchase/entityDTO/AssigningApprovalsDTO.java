@@ -11,6 +11,8 @@ public class AssigningApprovalsDTO {
 
     private Employee approver;
 
+     private Employee assignedBy;
+
     private EmployeeGroup employeeGroup;
 
     private ApprovalType approvalType;
@@ -76,5 +78,14 @@ public class AssigningApprovalsDTO {
     public void setEmployeeGroup(EmployeeGroup employeeGroup) {
         this.employeeGroup = employeeGroup;
     }
+
+    public Employee getAssignedBy() {
+        return assignedBy;
+    }
+
+    public void setAssignedBy(Employee assignedBy) {
+        this.assignedBy = assignedBy;
+    }
+
 }
 

@@ -213,15 +213,13 @@ public class EmployeeEditView extends VerticalLayout
                                 employee.setEmployeeEmail(
                                                 employeeEmailField.getValue());
 
-                                String str=phoneField.getValue().equals("") ? null: phoneField.getValue();
+                                String str=phoneField.getValue().trim().equals("") ? null: phoneField.getValue().trim();
                                 System.out.println(str);
                                 employee.setEmployeePhoneNumber(str);
 
-                                employee.setDepartment(
-                                                departmentField.getValue());
+                                employee.setDepartment( departmentField.getValue());
 
-                                employee.setRole(
-                                                roleField.getValue());
+                                employee.setRole( roleField.getValue());
 
                                 employee.setActive(
                                                 activeField.getValue().equals("Active"));

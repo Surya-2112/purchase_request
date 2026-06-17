@@ -132,4 +132,9 @@ public class DepartmentBudgetService {
     public List<DepartmentBudget> getDepartmentSpendingData(Year year) {
         return departmentBudgetRepository.findByYear(year);
     }
+
+    public List<DepartmentBudget> getDepartmentBudgetByDepartment(Department department)
+    {
+        return departmentBudgetRepository.findByDepartment(department);
+    }
 }

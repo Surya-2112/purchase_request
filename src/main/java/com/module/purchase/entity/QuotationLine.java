@@ -1,27 +1,16 @@
 package com.module.purchase.entity;
 
-import java.util.Set;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 @Entity
-@Table(
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"quotation_id", "variant_id"})
-    }
-)
 public class QuotationLine {
 
     @Id
@@ -30,20 +19,17 @@ public class QuotationLine {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "quotation_id", nullable = false)
+    @JoinColumn(name = "quotation_id")
     private Quotation quotation;
 
     @ManyToOne
-    @JoinColumn(name = "variant_id", nullable = false)
+    @JoinColumn(name = "variant_id")
     private ItemVariant itemVariant;
 
     @NotNull
     @Positive
-    @Column(name = "unit_price", nullable = false)
+    @Column(name = "unit_price")
     private Double unitPrice;
-
-    @OneToMany(mappedBy = "quotationLine",fetch = FetchType.EAGER)
-    private Set<DiscountType> discountTypes;
 
     @ManyToOne
     @JoinColumn(name = "request_for_quotation_line_id")
@@ -81,14 +67,6 @@ public class QuotationLine {
         this.unitPrice = unitPrice;
     }
 
-    public Set<DiscountType> getDiscountTypes() {
-        return discountTypes;
-    }
-
-    public void setDiscountTypes(Set<DiscountType> discountTypes) {
-        this.discountTypes = discountTypes;
-    }
-
     public RequestForQuotationLine getRequestForQuotationLine() {
         return requestForQuotationLine;
     }
@@ -96,6 +74,4 @@ public class QuotationLine {
     public void setRequestForQuotationLine(RequestForQuotationLine requestForQuotationLine) {
         this.requestForQuotationLine = requestForQuotationLine;
     }
-
-    
 }

@@ -19,7 +19,6 @@ import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.QuotationLine;
-import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.AssigningApprovalsService;
@@ -70,7 +69,6 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
     private final Span poTotalAmountText = new Span();
     private final Span workflowLevelText = new Span();
 
-    // Binds the grid straight to your standard Department entity model
     private final Grid<Department> budgetGrid = new Grid<>();
     private final Grid<PurchaseOrderLine> poLinesGrid = new Grid<>(PurchaseOrderLine.class, false);
     private final Grid<PurchaseRequestLine> prLinesGrid = new Grid<>(PurchaseRequestLine.class, false);
@@ -224,7 +222,6 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
         budgetGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         budgetGrid.setAllRowsVisible(true);
 
-        // Grid Style Class Assignment via direct state verification
         budgetGrid.setClassNameGenerator(dept -> {
             DepartmentBudget accountLedger = departmentBudgetService.getByDepartmentAndYear(dept, Year.now());
             double available = (accountLedger != null && accountLedger.getRemainingBudgetAmount() != null) ? accountLedger.getRemainingBudgetAmount() : 0.0;
@@ -312,7 +309,9 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
         workingPoLinesList.clear();
         workingPrLinesList.clear();
 
-        List<PurchaseOrderLine> poLines = poLineService.getPurchaseOrderLineByHeader(poHeader);
+        PurchaseOrderLine poline=new PurchaseOrderLine();
+        poline.setPurchaseOrderHeader(poHeader);
+        List<PurchaseOrderLine> poLines = poLineService.getPurchaseOrderList(poline);
         workingPoLinesList.addAll(poLines);
         poLinesGrid.setItems(workingPoLinesList);
 
@@ -366,8 +365,8 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
                 }
             }
 
-            if (matchRuleRow != null && matchRuleRow.getDiscountTypes() != null) {
-                for (DiscountType slab : matchRuleRow.getDiscountTypes()) {
+            if (matchRuleRow != null && quotationService.getDiscountsByLine(matchRuleRow) != null) {
+                for (DiscountType slab : quotationService.getDiscountsByLine(matchRuleRow)) {
                     double fromQty = slab.getFromQuantity() != null ? slab.getFromQuantity() : 0.0;
                     Double toQtyObj = slab.getToQuantity();
 

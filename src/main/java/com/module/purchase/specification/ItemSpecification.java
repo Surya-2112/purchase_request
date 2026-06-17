@@ -39,4 +39,5 @@ public class ItemSpecification {
                         ? null
                         : cb.equal(root.get("unit"), unit);
     }
+    
 }

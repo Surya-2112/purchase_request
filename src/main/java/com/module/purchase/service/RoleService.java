@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.module.purchase.repository.RoleRepository;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Role;
+import com.module.purchase.entityDTO.EmployeeDTO;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.Action;
@@ -36,6 +37,9 @@ public class RoleService {
 
     @Autowired
     private AuditLogsService auditLogsService;
+
+    @Autowired
+    private EmployeeService employeeService;
 
     public Role saveRole(Role role) {
         return roleRepository.save(role);
@@ -109,7 +113,9 @@ public class RoleService {
     public void deleteRoleById(Long roleId,Employee employee)
     { 
         Role existingRole= getRoleById(roleId).get();
-        if(existingRole.getEmployees() != null && !existingRole.getEmployees().isEmpty())
+        EmployeeDTO employeeDTO =new EmployeeDTO();
+        employeeDTO.setRole(existingRole);
+        if(employeeService.getCountEmployees(employeeDTO)>0)
         {
             throw new ResourceAlreadyUsedException("Cannot delete Role with associated employee");
         }

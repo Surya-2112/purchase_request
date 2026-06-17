@@ -1,9 +1,6 @@
 package com.module.purchase.entity;
 
 import java.time.LocalDate;
-import java.util.Set;
-
-import org.hibernate.annotations.ColumnDefault;
 
 import com.module.purchase.enums.RequestForQuotationStatus;
 
@@ -16,13 +13,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "request_for_quotation")
-
 public class RequestForQuotation {
 
     @Id
@@ -31,28 +26,21 @@ public class RequestForQuotation {
     private Long id;
 
     @NotNull
-    @Column(name = "requested_date", nullable = false)
+    @Column(name = "requested_date")
     private LocalDate requestedDate;
 
     @NotNull
-    @Column(name = "request_end_date", nullable = false)
+    @Column(name = "request_end_date")
     private LocalDate requestEndDate;
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(name = "status", nullable = false)
-    @ColumnDefault("'DRAFT'")
+    @Column(name = "status")
     private RequestForQuotationStatus status = RequestForQuotationStatus.DRAFT;
-
-    @OneToMany(mappedBy = "requestForQuotation")
-    private Set<RequestForQuotationLine> requestForQuotationLines;
-
-    @OneToMany(mappedBy = "requestForQuotation")
-    private Set<Quotation> quotations; 
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "category_id",nullable = false)
+    @JoinColumn(name = "category_id")
     private Category category;
 
     public Long getId() {
@@ -85,22 +73,6 @@ public class RequestForQuotation {
 
     public void setStatus(RequestForQuotationStatus status) {
         this.status = status;
-    }
-
-    public Set<RequestForQuotationLine> getRequestForQuotationLines() {
-        return requestForQuotationLines;
-    }
-
-    public void setRequestForQuotationLines(Set<RequestForQuotationLine> requestForQuotationLines) {
-        this.requestForQuotationLines = requestForQuotationLines;
-    }
-
-    public Set<Quotation> getQuotations() {
-        return quotations;
-    }
-
-    public void setQuotations(Set<Quotation> quotations) {
-        this.quotations = quotations;
     }
 
     public Category getCategory() {

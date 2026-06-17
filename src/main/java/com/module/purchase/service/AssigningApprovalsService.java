@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,6 +50,7 @@ public class AssigningApprovalsService {
     private NeedsService needsService;
 
     @Autowired
+    @Lazy
     private PurchaseRequestHeaderService purchaseRequestHeaderService;
 
     @Autowired
@@ -56,6 +58,9 @@ public class AssigningApprovalsService {
 
     @Autowired
     private PurchaseOrderHeaderService purchaseOrderHeaderService;
+
+    @Autowired
+    private PurchaseOrderLineService purchaseOrderLineService;
 
     @Autowired
     private DepartmentBudgetService departmentBudgetService;
@@ -87,15 +92,11 @@ public class AssigningApprovalsService {
         return exist.get();
     }
 
-    public Page<AssigningApprovalsDTO> getPurchaseRequestApprovalsForMyGroup(
-            AssigningApprovalsDTO assigningApprovalsDTO,
-            EmployeeGroup group,
-            int page,
+    public Page<AssigningApprovalsDTO> getPurchaseRequestApprovalsForMyGroup( AssigningApprovalsDTO assigningApprovalsDTO, EmployeeGroup group, int page,
             int size) {
 
         Specification<AssigningApprovals> spec = Specification
-                .where(AssigningApprovalsSpecification
-                        .hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
+                .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
                 .and(AssigningApprovalsSpecification.hasEmployeeGroup(group))
                 .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
                 .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
@@ -133,48 +134,51 @@ public class AssigningApprovalsService {
         if (assigningApprovals.getApprovalType().equals(ApprovalType.PURCHASE_REQUEST)) {
             PurchaseRequestHeader purchaseRequestHeader = purchaseRequestHeaderService
                     .getPurchaseRequestHeaderById(exist.getReferenceId()).get();
-            if (assigningApprovals.getStatus() == Status.APPROVED) {
-                log.setAction(Action.APPROVE);
-                if (purchaseRequestHeader.getLevel() > assigningApprovals.getLevel()) {
-                    AssigningApprovals next = getAssigningApprovalByTypeAndReferIdAndLevle(
-                            ApprovalType.PURCHASE_REQUEST,
-                            purchaseRequestHeader.getPurchaseRequestId(),
-                            assigningApprovals.getLevel() + 1);
-                    next.setStatus(Status.WAITING_APPROVAL);
-                    saveAssigningApproval(next);
-                } else {
-                    purchaseRequestHeader.setStatus(Status.APPROVED);
+            switch (assigningApprovals.getStatus()) {
+                case APPROVED -> {
+                    log.setAction(Action.APPROVE);
+                    if (purchaseRequestHeader.getLevel() > assigningApprovals.getLevel()) {
+                        AssigningApprovals next = getAssigningApprovalByTypeAndReferIdAndLevle(
+                                ApprovalType.PURCHASE_REQUEST,
+                                purchaseRequestHeader.getPurchaseRequestId(),
+                                assigningApprovals.getLevel() + 1);
+                        next.setStatus(Status.WAITING_APPROVAL);
+                        saveAssigningApproval(next);
+                    } else {
+                        purchaseRequestHeader.setStatus(Status.APPROVED);
+                        purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader, null);
+                    }
+                }
+                case REJECTED -> {
+                    log.setAction(Action.REJECT);
+                    purchaseRequestHeader.setStatus(Status.REJECTED);
                     purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader, null);
                 }
-            } else if (assigningApprovals.getStatus() == Status.REJECTED) {
-                log.setAction(Action.REJECT);
-                purchaseRequestHeader.setStatus(Status.REJECTED);
-                purchaseRequestHeaderService.updatePurchaseRequestHeader(purchaseRequestHeader, null);
-            } else {
-                log.setAction(Action.UPDATE);
+                default -> log.setAction(Action.UPDATE);
             }
         } else if (assigningApprovals.getApprovalType().equals(ApprovalType.PURCHASE_ORDER)) {
             PurchaseOrderHeader purchaseOrderHeader = purchaseOrderHeaderService.getPurchaseOrderHeaderById(exist.getReferenceId()).get();
-            if (assigningApprovals.getStatus() == Status.APPROVED) {
-                log.setAction(Action.APPROVE);
-
-                if (purchaseOrderHeader.getLevel() > assigningApprovals.getLevel()) {
-                    AssigningApprovals next = getAssigningApprovalByTypeAndReferIdAndLevle(
-                            ApprovalType.PURCHASE_ORDER,
-                            purchaseOrderHeader.getPurchaseOrderId(),
-                            assigningApprovals.getLevel() + 1);
-                    next.setStatus(Status.WAITING_APPROVAL);
-                    saveAssigningApproval(next);
-                } else {
-                    purchaseOrderHeader.setStatus(Status.ORDERED);
+            switch (assigningApprovals.getStatus()) {
+                case APPROVED -> {
+                    log.setAction(Action.APPROVE);
+                    if (purchaseOrderHeader.getLevel() > assigningApprovals.getLevel()) {
+                        AssigningApprovals next = getAssigningApprovalByTypeAndReferIdAndLevle(
+                                ApprovalType.PURCHASE_ORDER,
+                                purchaseOrderHeader.getPurchaseOrderId(),
+                                assigningApprovals.getLevel() + 1);
+                        next.setStatus(Status.WAITING_APPROVAL);
+                        saveAssigningApproval(next);
+                    } else {
+                        purchaseOrderHeader.setStatus(Status.ORDERED);
+                        purchaseOrderHeaderService.updatePurchaseOrderHeader(purchaseOrderHeader, null);
+                    }
+                }
+                case REJECTED -> {
+                    log.setAction(Action.REJECT);
+                    purchaseOrderHeader.setStatus(Status.REJECTED);
                     purchaseOrderHeaderService.updatePurchaseOrderHeader(purchaseOrderHeader, null);
                 }
-            } else if (assigningApprovals.getStatus() == Status.REJECTED) {
-                log.setAction(Action.REJECT);
-                purchaseOrderHeader.setStatus(Status.REJECTED);
-                purchaseOrderHeaderService.updatePurchaseOrderHeader(purchaseOrderHeader, null);
-            } else {
-                log.setAction(Action.UPDATE);
+                default -> log.setAction(Action.UPDATE);
             }
         }
         log.setEntityType(EntityType.ASSIGNING_APPROVAL);
@@ -185,9 +189,11 @@ public class AssigningApprovalsService {
         return saveAssigningApproval(assigningApprovals);
     }
 
-    public void CalculateDepartmentBudget(PurchaseOrderHeader purchaseorder)
-    {    
-        for(PurchaseOrderLine line:purchaseorder.getPurchaseOrderLines())
+    public void CalculateDepartmentBudget(PurchaseOrderHeader purchaseOrder)
+    {      
+        PurchaseOrderLine purchaseOrderLine=new PurchaseOrderLine();
+        purchaseOrderLine.setPurchaseOrderHeader(purchaseOrder);
+        for(PurchaseOrderLine line:purchaseOrderLineService.getPurchaseOrderList(purchaseOrderLine))
         {
             for(PurchaseRequestLine prLine:purchaseRequestLineService.getPurchaseRequestLineByOrder(line))
             {
@@ -202,5 +208,28 @@ public class AssigningApprovalsService {
             }
         }
        
+    }
+
+    public List<AssigningApprovals> getApprovalsList( AssigningApprovalsDTO assigningApprovalsDTO) {
+        Specification<AssigningApprovals> spec = Specification
+                .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
+                .and(AssigningApprovalsSpecification.hasEmployeeGroup(assigningApprovalsDTO.getEmployeeGroup()))
+                .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
+                .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
+                .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
+
+        return assigningApprovalsRepository.findAll(spec);
+    }
+
+    public Long getCountApprovals( AssigningApprovalsDTO assigningApprovalsDTO) {
+
+        Specification<AssigningApprovals> spec = Specification
+                .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
+                .and(AssigningApprovalsSpecification.hasEmployeeGroup(assigningApprovalsDTO.getEmployeeGroup()))
+                .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
+                .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
+                .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
+
+        return assigningApprovalsRepository.count(spec);
     }
 }

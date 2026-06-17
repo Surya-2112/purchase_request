@@ -191,7 +191,9 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements HasUrlPa
     }
 
     private void loadAssociatedLineDatasets() {
-        List<PurchaseOrderLine> itemLines = poLineService.getPurchaseOrderLineByHeader(poHeader);
+         PurchaseOrderLine poline=new PurchaseOrderLine();
+        poline.setPurchaseOrderHeader(poHeader);
+        List<PurchaseOrderLine> itemLines = poLineService.getPurchaseOrderList(poline);
         itemsGrid.setItems(itemLines);
 
         List<AssigningApprovals> approvalLogs = approvalsService.getAssigningApprovalByTypeAndReferId(

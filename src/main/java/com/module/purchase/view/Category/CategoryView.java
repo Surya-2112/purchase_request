@@ -174,11 +174,9 @@ public class CategoryView extends VerticalLayout {
         currentFilter = new Category();
 
         currentFilter.setCategoryId(id);
-        
-        // Pass empty inputs down as null references cleanly
+    
         currentFilter.setCategoryName(categoryNameField.isEmpty() ? null : categoryNameField.getValue().trim());
 
-        // Standard clean null evaluations
         currentFilter.setRepeatable(repeatableField.getValue() == null ? null : repeatableField.getValue().equals("Yes"));
 
         currentFilter.setAutoRfq(

@@ -10,9 +10,11 @@ import com.module.purchase.repository.DepartmentRepository;
 import com.module.purchase.specification.DepartmentSpecification;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Department;
+import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entityDTO.DepartmentDTO;
-
+import com.module.purchase.entityDTO.EmployeeDTO;
+import com.module.purchase.entityDTO.PurchaseRequestDTO;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.Action;
 
@@ -47,6 +49,12 @@ public class DepartmentService {
 
     @Autowired
     private AuditLogsService auditLogsService;
+
+    @Autowired
+    private DepartmentBudgetService departmentBudgetService;
+
+    @Autowired
+    private PurchaseRequestHeaderService purchaseRequestService;
 
     public Department saveDepartment(Department department) {
         return departmentRepository.save(department);
@@ -137,15 +145,25 @@ public class DepartmentService {
     {
         Department existingDepartment=getDepartmentById(departmentId).get();
 
-        if(existingDepartment.getDepartmentBudgets()!=null && !existingDepartment.getDepartmentBudgets().isEmpty())
+        List<DepartmentBudget> departmentbugets=departmentBudgetService.getDepartmentBudgetByDepartment(existingDepartment);
+
+        EmployeeDTO emp=new EmployeeDTO();
+        emp.setDepartment(existingDepartment);
+        Long employeesCount=employeeSerivce.getCountEmployees(emp);
+
+        PurchaseRequestDTO pr=new PurchaseRequestDTO();
+        pr.setForDepartment(existingDepartment);
+        Long prHeadersCount=purchaseRequestService.getCountPurchaseRequest(pr);
+
+        if(departmentbugets!=null && !departmentbugets.isEmpty())
         {
             throw new ResourceAlreadyUsedException("Cannot delete department with associated department budgets");
         }
-        if(existingDepartment.getEmployees()!=null && !existingDepartment.getEmployees().isEmpty())
+        if(employeesCount>0)
         {
             throw new ResourceAlreadyUsedException("Cannot delete department with associated employee");
         }
-        if(existingDepartment.getPurchaseRequestHeaders()!=null && !existingDepartment.getPurchaseRequestHeaders().isEmpty())
+        if(prHeadersCount > 0)
         {
             throw new ResourceAlreadyUsedException("Cannot delete department with associated purchase request headers");
         }

@@ -10,7 +10,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "repeated_period")
 public class RepeatedPeriod {
 
     @Id
@@ -20,24 +19,24 @@ public class RepeatedPeriod {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "refer_type", nullable = false)
+    @Column(name = "refer_type")
     private RepeatedPeriodReferType referType;
 
     @NotNull
-    @Column(name = "refer_id", nullable = false)
+    @Column(name = "refer_id")
     private Long referId;
 
     @NotNull
-    @Column(name = "frequency_period", nullable = false)
+    @Column(name = "frequency_period")
     private Integer frequencyPeriod;
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(name = "frequency_type", nullable = false)
+    @Column(name = "frequency_type")
     private FrequencyType frequencyType;
 
     @NotNull
-    @Column(name = "from_date", nullable = false)
+    @Column(name = "from_date")
     private LocalDate fromDate;
 
     @Column(name = "to_date")

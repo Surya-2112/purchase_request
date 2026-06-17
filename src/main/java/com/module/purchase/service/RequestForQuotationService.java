@@ -23,6 +23,7 @@ import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.repository.RequestForQuotationLineRepository;
 import com.module.purchase.repository.RequestForQuotationRepository;
+import com.module.purchase.specification.RequestForQuotationLineSpecification;
 import com.module.purchase.specification.RequestForQuotationSpecification;
 
 @Service
@@ -117,9 +118,14 @@ public class RequestForQuotationService {
     }
 
     public void deleteRequestForQuotationById(Long id, Employee employee) {
-        RequestForQuotation existingRfq = rfqRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Request For Quotation not found for deletion with id: " + id));
+
+
+        RequestForQuotation existingRfq =getRequestForQuotationById(id).get();
+
+        RequestForQuotationLine RfqLine=new RequestForQuotationLine();
+        RfqLine.setRequestForQuotation(existingRfq);
+
+        List<RequestForQuotationLine> rfqLines=getRequestForQuotationLineList(RfqLine);
 
         if (existingRfq.getStatus() != RequestForQuotationStatus.DRAFT) {
             throw new IllegalStateException(
@@ -133,8 +139,8 @@ public class RequestForQuotationService {
                 purchaseRequestLineService.updatePurchaseRequestLine(prLine,employee);
             }
         }
-        if (existingRfq.getRequestForQuotationLines() != null && !existingRfq.getRequestForQuotationLines().isEmpty()) {
-            rfqLineRepository.deleteAll(existingRfq.getRequestForQuotationLines());
+        if ( rfqLines!= null && !rfqLines.isEmpty()) {
+            rfqLineRepository.deleteAll(rfqLines);
         }
 
         rfqRepository.deleteById(id);
@@ -169,4 +175,25 @@ public class RequestForQuotationService {
             rfqLineRepository.deleteAll(activeLines);
         }
     }
+
+    public Long getCountRequestForQuotationLineList(RequestForQuotationLine requestForQuotationLine) {
+
+        Specification<RequestForQuotationLine> spec = Specification
+                .where(RequestForQuotationLineSpecification.hasId(requestForQuotationLine.getId()))
+                .and(RequestForQuotationLineSpecification.hasRequestForQuotation(requestForQuotationLine.getRequestForQuotation()))
+                .and(RequestForQuotationLineSpecification.hasItemVariant(requestForQuotationLine.getItemVariant()));
+
+        return rfqLineRepository.count(spec);
+    }
+
+    public List<RequestForQuotationLine> getRequestForQuotationLineList(RequestForQuotationLine requestForQuotationLine) {
+
+        Specification<RequestForQuotationLine> spec = Specification
+                .where(RequestForQuotationLineSpecification.hasId(requestForQuotationLine.getId()))
+                .and(RequestForQuotationLineSpecification.hasRequestForQuotation(requestForQuotationLine.getRequestForQuotation()))
+                .and(RequestForQuotationLineSpecification.hasItemVariant(requestForQuotationLine.getItemVariant()));
+
+        return rfqLineRepository.findAll(spec);
+    }
+
 }

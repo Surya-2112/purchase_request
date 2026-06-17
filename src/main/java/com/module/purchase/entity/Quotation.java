@@ -1,7 +1,6 @@
 package com.module.purchase.entity;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 import com.module.purchase.enums.Status;
 
@@ -14,7 +13,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -29,29 +27,26 @@ public class Quotation {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "request_for_quotation_id", referencedColumnName = "request_for_quotation_id", nullable = false)
+    @JoinColumn(name = "request_for_quotation_id")
     private RequestForQuotation requestForQuotation;
 
     @ManyToOne
-    @JoinColumn(name = "vendor_id", referencedColumnName = "vendor_id", nullable = false)
+    @JoinColumn(name = "vendor_id", referencedColumnName = "vendor_id")
     private Vendor vendor;
 
     @NotNull
     @Positive
-    @Column(name = "total_amount", nullable = false)
+    @Column(name = "total_amount")
     private Double totalAmount;
 
     @NotNull
-    @Column(name = "quotation_date", nullable = false)
+    @Column(name = "quotation_date")
     private LocalDate quotationDate;
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(name = "status", nullable = false)
+    @Column(name = "status")
     private Status status;
-
-    @OneToMany(mappedBy = "quotation")
-    private Set<QuotationLine> quotationLines;
 
     public Long getId() {
         return id;
@@ -99,13 +94,5 @@ public class Quotation {
 
     public void setStatus(Status status) {
         this.status = status;
-    }
-
-    public Set<QuotationLine> getQuotationLines() {
-        return quotationLines;
-    }
-
-    public void setQuotationLines(Set<QuotationLine> quotationLines) {
-        this.quotationLines = quotationLines;
     }
 }

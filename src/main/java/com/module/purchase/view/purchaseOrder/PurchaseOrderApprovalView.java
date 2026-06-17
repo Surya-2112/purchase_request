@@ -212,7 +212,9 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
     }
 
     private void refreshFormMetricsAndDataset() {
-        List<PurchaseOrderLine> poLines = poLineService.getPurchaseOrderLineByHeader(poHeader);
+         PurchaseOrderLine poline=new PurchaseOrderLine();
+        poline.setPurchaseOrderHeader(poHeader);
+        List<PurchaseOrderLine> poLines = poLineService.getPurchaseOrderList(poline);
         itemsGrid.setItems(poLines);
 
         double totalPoValue = poHeader.getTotalAmount() != null ? poHeader.getTotalAmount() : 0.0;

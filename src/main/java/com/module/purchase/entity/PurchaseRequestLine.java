@@ -12,17 +12,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
 @Table(
-     name = "purchase_request_line",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"purchase_request_id", "variant_id"})
-    }
+     name = "purchase_request_line"
 )
 public class PurchaseRequestLine {
 
@@ -32,23 +28,23 @@ public class PurchaseRequestLine {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "purchase_request_id", nullable = false)
+    @JoinColumn(name = "purchase_request_id")
     private PurchaseRequestHeader purchaseRequestHeader;
 
     @ManyToOne
-    @JoinColumn(name = "variant_id", nullable = false) 
+    @JoinColumn(name = "variant_id") 
     private ItemVariant itemVariant;
 
     @Positive
     @Column(name = "item_unit_price") 
     private Double itemUnitPrice;
 
-    @Column(name = "description", length = 1000)
+    @Column(name = "description")
     private String description;
 
     @NotNull
     @Positive
-    @Column(name = "requested_quantity", nullable = false)
+    @Column(name = "requested_quantity")
     private Double requestedQuantity;
 
     @Column(name = "item_total_amount")

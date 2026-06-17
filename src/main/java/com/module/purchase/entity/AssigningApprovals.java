@@ -2,9 +2,6 @@ package com.module.purchase.entity;
 
 import java.time.LocalDate;
 
-import org.hibernate.annotations.ColumnDefault;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.module.purchase.enums.ApprovalSource;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
@@ -20,16 +17,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(
-    name = "assigning_approvals",
-    uniqueConstraints = {   
-    @UniqueConstraint(columnNames = {"employee_group", "approval_type", "reference_id"}),
-    @UniqueConstraint(columnNames = {"approval_level", "approval_type", "reference_id"}) }
+    name = "assigning_approvals"
 )
 public class AssigningApprovals {
 
@@ -38,53 +31,45 @@ public class AssigningApprovals {
     private Long assigningApprovalsId;
 
     @ManyToOne
-    @JoinColumn(name = "approver_id") 
-    @JsonIgnoreProperties({ "department","role","user"})
+    @JoinColumn(name = "approver_id")
     private Employee approver;
 
     @ManyToOne
     @JoinColumn(name = "assigned_by_id") 
-    @JsonIgnoreProperties({ "department","role","user"})
     private Employee assignedBy;
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(name="employee_group",nullable = false)
+    @Column(name="employee_group")
     private EmployeeGroup employeeGroup;
 
     @NotNull
-    @Column(name="approval_level",nullable = false)
+    @Column(name="approval_level")
     private Integer level;
 
     @Enumerated(EnumType.STRING)
      @NotNull
-    @Column(name="approval_type",nullable = false)
+    @Column(name="approval_type")
     private ApprovalType approvalType;
 
     @NotNull
-    @Column(name="reference_id",nullable = false)
+    @Column(name="reference_id")
     private Long referenceId;
 
     @NotNull
-    @Column(nullable = false)
     private LocalDate assignedDate;
 
     private LocalDate ApprovedDate;
 
     @Size(max=500)
-    @Column(length=500)
     private String comments;
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(nullable = false)
-    @ColumnDefault("'DRAFT'")
     private Status status;
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    @Column(nullable = false)
-    @ColumnDefault("'AUTO'")
     private ApprovalSource source;
 
     public ApprovalSource getSource() {
