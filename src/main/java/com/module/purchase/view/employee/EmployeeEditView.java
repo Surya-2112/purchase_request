@@ -33,22 +33,18 @@ public class EmployeeEditView extends VerticalLayout
 
         private final SecurityService securityService;
 
-        // BASIC DETAILS
         private final TextField employeeNameField = new TextField("Employee Name");
 
         private final EmailField employeeEmailField = new EmailField("Employee Email");
 
         private final TextField phoneField = new TextField("Phone Number");
 
-        // DEPARTMENT & ROLE
         private final ComboBox<Department> departmentField = new ComboBox<>("Department");
 
         private final ComboBox<Role> roleField = new ComboBox<>("Role");
 
-        // ACTIVE
         private final ComboBox<String> activeField = new ComboBox<>("Status");
 
-        // ADDRESS
         private final TextField addressLineField = new TextField("Address Line");
 
         private final TextField streetField = new TextField("Street");
@@ -63,10 +59,8 @@ public class EmployeeEditView extends VerticalLayout
 
         private Employee employee;
 
-        public EmployeeEditView(EmployeeService employeeService,
-                        DepartmentService departmentService,
-                        RoleService roleService,
-                        SecurityService securityService) {
+        public EmployeeEditView(EmployeeService employeeService, DepartmentService departmentService,
+                        RoleService roleService, SecurityService securityService) {
 
                 this.employeeService = employeeService;
                 this.securityService = securityService;
@@ -86,7 +80,6 @@ public class EmployeeEditView extends VerticalLayout
 
                 roleField.setItemLabelGenerator(Role::getRoleName);
 
-                // ACTIVE FIELD
                 activeField.setItems("Active", "Inactive");
 
                 activeField.setReadOnly(!securityService.canAccessView("employee-form"));
@@ -99,9 +92,16 @@ public class EmployeeEditView extends VerticalLayout
 
                 removeAll();
 
-                employee = employeeService
-                                .getEmployeeById(employeeId)
-                                .orElse(null);
+                if (securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(employeeId)
+                                || securityService.canAccessView("management-group")) {
+                        employee = employeeService.getEmployeeById(employeeId).get();
+                } else {
+                        event.forwardTo("");
+                        event.getUI().access(() -> {
+
+                        Notification.show("Access Denied",3000,Notification.Position.MIDDLE);
+                        });
+                }
 
                 if (employee == null) {
 
@@ -201,8 +201,8 @@ public class EmployeeEditView extends VerticalLayout
 
                         try {
 
-                               phoneField.setPattern("[0-9]{10}");
-                               phoneField.setErrorMessage("Enter valid 10 digit number");
+                                phoneField.setPattern("[0-9]{10}");
+                                phoneField.setErrorMessage("Enter valid 10 digit number");
 
                                 postalCodeField.setPattern("[0-9]{6}");
                                 postalCodeField.setErrorMessage("Enter vaild 6 digit postal code");
@@ -213,13 +213,14 @@ public class EmployeeEditView extends VerticalLayout
                                 employee.setEmployeeEmail(
                                                 employeeEmailField.getValue());
 
-                                String str=phoneField.getValue().trim().equals("") ? null: phoneField.getValue().trim();
+                                String str = phoneField.getValue().trim().equals("") ? null
+                                                : phoneField.getValue().trim();
                                 System.out.println(str);
                                 employee.setEmployeePhoneNumber(str);
 
-                                employee.setDepartment( departmentField.getValue());
+                                employee.setDepartment(departmentField.getValue());
 
-                                employee.setRole( roleField.getValue());
+                                employee.setRole(roleField.getValue());
 
                                 employee.setActive(
                                                 activeField.getValue().equals("Active"));
@@ -250,8 +251,8 @@ public class EmployeeEditView extends VerticalLayout
 
                                 employee.setAddress(updatedAddress);
 
-                                employee=employeeService.updateEmployee(employee,securityService.getLoggedInUser().getEmployee());
-
+                                employee = employeeService.updateEmployee(employee,
+                                                securityService.getLoggedInUser().getEmployee());
 
                                 Notification.show(
                                                 "Employee Updated Successfully",

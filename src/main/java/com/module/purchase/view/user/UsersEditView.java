@@ -38,26 +38,18 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
     private final TextField userNameField = new TextField("User Name");
     private final EmailField userEmailField = new EmailField("User Email");
 
-    private final PasswordField passwordField =
-            new PasswordField("New Password (optional)");
+    private final PasswordField passwordField = new PasswordField("New Password (optional)");
 
-    private final ComboBox<String> userTypeField =
-            new ComboBox<>("User Type");
+    private final ComboBox<String> userTypeField = new ComboBox<>("User Type");
 
-    private final ComboBox<Employee> employeeField =
-            new ComboBox<>("Employee");
+    private final ComboBox<Employee> employeeField = new ComboBox<>("Employee");
 
-    private final ComboBox<Vendor> vendorField =
-            new ComboBox<>("Vendor");
+    private final ComboBox<Vendor> vendorField =new ComboBox<>("Vendor");
 
-    private final ComboBox<String> activeField =
-            new ComboBox<>("Status");
+    private final ComboBox<String> activeField =new ComboBox<>("Status");
 
-    public UsersEditView(
-            UsersService usersService,
-            EmployeeService employeeService,
-            VendorService vendorService,
-            SecurityService securityService) {
+    public UsersEditView( UsersService usersService, EmployeeService employeeService,
+            VendorService vendorService, SecurityService securityService) {
 
         this.usersService = usersService;
         this.employeeService = employeeService;
@@ -83,7 +75,16 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
         removeAll();
 
+        if(securityService.getLoggedInUser().getUserId().equals(userId)||securityService.canAccessView("management-group"))
+        {
         user = usersService.getUserById(userId).orElse(null);
+        }else{
+            event.forwardTo("");
+            event.getUI().access(() -> { Notification.show("Access Denied",3000,Notification.Position.MIDDLE);
+            });
+        }
+
+
 
         if (user == null) {
             add(new H2("User Not Found"));
@@ -92,11 +93,9 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
         H2 title = new H2("Update User");
 
-        userNameField.setValue(
-                user.getUserName() == null ? "" : user.getUserName());
+        userNameField.setValue( user.getUserName() == null ? "" : user.getUserName());
 
-        userEmailField.setValue(
-                user.getUserEmail() == null ? "" : user.getUserEmail());
+        userEmailField.setValue(user.getUserEmail() == null ? "" : user.getUserEmail());
 
         userEmailField.setReadOnly(true);
 

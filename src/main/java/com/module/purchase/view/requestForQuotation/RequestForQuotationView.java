@@ -6,7 +6,9 @@ import org.springframework.data.domain.Pageable;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.RequestForQuotation;
+import com.module.purchase.entityDTO.QuotationDTO;
 import com.module.purchase.enums.RequestForQuotationStatus;
+import com.module.purchase.enums.Status;
 import com.module.purchase.service.QuotationService;
 import com.module.purchase.service.RequestForQuotationService;
 import com.module.purchase.view.MainLayout;
@@ -117,7 +119,13 @@ public class RequestForQuotationView extends VerticalLayout {
             if (rfq.getStatus() == RequestForQuotationStatus.DRAFT) {
                 return "-";
             }
-            return String.valueOf(quotationService.getCountByRFQ(rfq));
+            QuotationDTO quotation=new QuotationDTO();
+            quotation.setRequestForQuotation(rfq);
+            if(rfq.getStatus() == RequestForQuotationStatus.OPEN)
+            {
+            quotation.setStatus(Status.WAITING_APPROVAL);
+            }
+            return String.valueOf(quotationService.getCountQuotations(quotation));
         })
         .setHeader("Quotations Recv").setWidth("150px");
 

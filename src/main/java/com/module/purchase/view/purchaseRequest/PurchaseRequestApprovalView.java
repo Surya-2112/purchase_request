@@ -39,14 +39,14 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
     private final Button addBtn = new Button("Add Approver");
     private final Button saveBtn = new Button("Save");
 
-    public PurchaseRequestApprovalView( PurchaseRequestHeaderService headerService, AssigningConfigService configService,
-           PurchaseRequestLineService lineService,RepeatedPeriodService repeatedPeriodService,
-           SecurityService securityService, AssigningApprovalsService assigningApprovalsService) {
+    public PurchaseRequestApprovalView(PurchaseRequestHeaderService headerService, AssigningConfigService configService,
+            PurchaseRequestLineService lineService, RepeatedPeriodService repeatedPeriodService,
+            SecurityService securityService, AssigningApprovalsService assigningApprovalsService) {
 
         this.headerService = headerService;
         this.configService = configService;
-        this.lineService=lineService;
-        this.repeatedPeriodService=repeatedPeriodService;
+        this.lineService = lineService;
+        this.repeatedPeriodService = repeatedPeriodService;
         this.securityService = securityService;
         this.assigningApprovalsService = assigningApprovalsService;
 
@@ -61,8 +61,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
         add(
                 new H2("Purchase Request Approval Setup"),
                 new HorizontalLayout(addBtn, saveBtn),
-                grid
-        );
+                grid);
     }
 
     @Override
@@ -70,8 +69,29 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
         try {
             Long id = Long.valueOf(event.getRouteParameters().get("id").orElseThrow());
 
-            header = headerService.getPurchaseRequestHeaderById(id)
-                    .orElseThrow(() -> new RuntimeException("Request not found"));
+            try {
+                header = headerService.getPurchaseRequestHeaderById(id).get();
+            } catch (Exception ex) {
+                event.forwardTo("");
+                event.getUI().access(() -> {
+                    Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                });
+                return;
+            }
+
+            if (!header.getCreatedBy().getEmployeeId()
+                    .equals(securityService.getLoggedInUser().getEmployee().getEmployeeId())) {
+                event.forwardTo("purchase-request");
+                event.getUI().access(() -> {
+                    Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
+                });
+            }
+            if (!header.getStatus().equals(Status.DRAFT)) {
+                event.forwardTo("purchase-request");
+                event.getUI().access(() -> {
+                    Notification.show("Purchase Request approval form is not Open", 3000, Notification.Position.MIDDLE);
+                });
+            }
 
             loadAutoApprovals();
 
@@ -93,7 +113,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
                 Set<EmployeeGroup> allocatedGroups = approvals.stream()
                         .map(AssigningApprovals::getEmployeeGroup)
                         .filter(Objects::nonNull)
-                        .filter(group -> !group.equals(item.getEmployeeGroup())) 
+                        .filter(group -> !group.equals(item.getEmployeeGroup()))
                         .collect(Collectors.toSet());
 
                 List<EmployeeGroup> availableOptions = EmployeeGroup.getApprovalGroups().stream()
@@ -107,7 +127,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
 
             if (item.getSource() == ApprovalSource.AUTO) {
                 List<AssigningConfig> configs = configService.getConfigs(
-                        ApprovalType.PURCHASE_REQUEST, 
+                        ApprovalType.PURCHASE_REQUEST,
                         header != null ? header.getTotalAmount() : 0);
 
                 AssigningConfig config = configs.stream()
@@ -205,7 +225,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
         }
 
         Employee currentEmployee = securityService.getLoggedInUser().getEmployee();
-        int i=1;
+        int i = 1;
         for (AssigningApprovals a : approvals) {
             a.setReferenceId(header.getPurchaseRequestId());
             a.setStatus(Status.DRAFT);
@@ -219,14 +239,13 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
         header.setLevel(approvals.size());
         headerService.updatePurchaseRequestHeader(header, currentEmployee);
 
-       for(PurchaseRequestLine line: lineService.getPurchaseRequestLineByHeader(header))
-        {
+        for (PurchaseRequestLine line : lineService.getPurchaseRequestLineByHeader(header)) {
             line.setStatus(Status.WAITING_APPROVAL);
-            lineService.updatePurchaseRequestLine(line,currentEmployee);
-            if(line.getRepeatableId()!=null)
-            {   RepeatedPeriod  period=repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId()).get();
+            lineService.updatePurchaseRequestLine(line, currentEmployee);
+            if (line.getRepeatableId() != null) {
+                RepeatedPeriod period = repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId()).get();
                 period.setStatus(RequestForQuotationStatus.OPEN);
-                repeatedPeriodService.updateRepeatedPeriod( period,currentEmployee);
+                repeatedPeriodService.updateRepeatedPeriod(period, currentEmployee);
             }
         }
 

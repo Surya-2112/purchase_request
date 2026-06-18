@@ -68,7 +68,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
         private final Span createdBy = new Span();
         private final Span department = new Span();
         private final Span requestedTotalAmount = new Span();
-        private final Span approvedTotalAmount = new Span(); 
+        private final Span approvedTotalAmount = new Span();
         private final Span createdDate = new Span();
         private final Span level = new Span();
         private final Span status = new Span();
@@ -78,7 +78,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
         private final Span totalBudgetAmount = new Span();
         private final Span remainingBudgetAmount = new Span();
         private Double remainingBudget = 0.0;
-        private boolean isBudgetConfigured = false; 
+        private boolean isBudgetConfigured = false;
 
         private final Button approveBtn = new Button("Approve");
         private final Button rejectBtn = new Button("Reject");
@@ -86,7 +86,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
         private final Grid<PurchaseRequestLine> lineGrid = new Grid<>(PurchaseRequestLine.class, false);
         private final Grid<PurchaseRequestDocument> documentGrid = new Grid<>(PurchaseRequestDocument.class, false);
- 
+
         private final VerticalLayout recurringScheduleSection = new VerticalLayout();
         private final Grid<PurchaseRequestLine> scheduleGrid = new Grid<>(PurchaseRequestLine.class, false);
         private final Map<PurchaseRequestLine, RepeatedPeriod> workingSchedulesMap = new HashMap<>();
@@ -121,7 +121,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 comments.setPlaceholder("Enter reasons for partial approval modifications or rejections here...");
 
                 configureLineGrid();
-                configureScheduleGrid(); 
+                configureScheduleGrid();
                 configureDocumentGrid();
 
                 approveBtn.addThemeName("primary success");
@@ -163,11 +163,24 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
         public void beforeEnter(BeforeEnterEvent event) {
                 Long approvalId = Long.parseLong(event.getRouteParameters().get("id").get());
 
-                approval = approvalsService.getAssigningApprovalById(approvalId)
-                                .orElseThrow(() -> new RuntimeException("Approval task record not found"));
+                try {
+                        approval = approvalsService.getAssigningApprovalById(approvalId).get();
 
-                header = headerService.getPurchaseRequestHeaderById(approval.getReferenceId())
-                                .orElseThrow(() -> new RuntimeException("Associated Purchase Request not found"));
+                        header = headerService.getPurchaseRequestHeaderById(approval.getReferenceId()).get();
+                } catch (Exception ex) {
+                        event.forwardTo("");
+                        event.getUI().access(() -> {
+                                Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                        });
+                        return;
+                }
+                if(!securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(approval.getEmployeeGroup()))
+                {event.forwardTo("purchase-request");
+                        event.getUI().access(() -> {
+                                Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
+                        });
+                        return;
+                }
 
                 evaluateGroupAccessControlPermissions();
                 bindHeaderData();
@@ -177,7 +190,8 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
         }
 
         private VerticalLayout buildHeaderSection() {
-                VerticalLayout layout = new VerticalLayout(requestId, createdBy, department, requestedTotalAmount, approvedTotalAmount, createdDate, level, status);
+                VerticalLayout layout = new VerticalLayout(requestId, createdBy, department, requestedTotalAmount,
+                                approvedTotalAmount, createdDate, level, status);
                 layout.setSpacing(false);
                 layout.setPadding(true);
                 layout.getStyle().set("background", "#f5f5f5").set("border-radius", "6px");
@@ -185,7 +199,8 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
         }
 
         private VerticalLayout buildBudgetSection() {
-                VerticalLayout layout = new VerticalLayout(budgetTitle, budgetYear, totalBudgetAmount, remainingBudgetAmount);
+                VerticalLayout layout = new VerticalLayout(budgetTitle, budgetYear, totalBudgetAmount,
+                                remainingBudgetAmount);
                 layout.setSpacing(false);
                 layout.setPadding(true);
                 layout.getStyle().set("background", "#f0fdf4").set("border-radius", "6px").set("margin-top", "10px");
@@ -194,8 +209,11 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
         private void bindHeaderData() {
                 requestId.setText("Purchase Request ID : " + header.getPurchaseRequestId());
-                createdBy.setText("Created By : " + (header.getCreatedBy() != null ? header.getCreatedBy().getEmployeeName() : "-"));
-                department.setText("Department : " + (header.getForDepartment() != null ? header.getForDepartment().getDepartmentName() : "-"));
+                createdBy.setText("Created By : "
+                                + (header.getCreatedBy() != null ? header.getCreatedBy().getEmployeeName() : "-"));
+                department.setText("Department : "
+                                + (header.getForDepartment() != null ? header.getForDepartment().getDepartmentName()
+                                                : "-"));
                 requestedTotalAmount.setText("Total Amount Requested : " + header.getTotalAmount());
                 createdDate.setText("Created Date : " + header.getCreatedDate());
                 status.setText("Task Group Status : " + approval.getStatus());
@@ -208,7 +226,8 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 List<EmployeeGroup> currentUserGroup = currentEmployee.getRole().getEmployeeGroups();
 
                 boolean isTaskPending = approval.getStatus().equals(Status.WAITING_APPROVAL);
-                boolean isUserInAssignedGroup = currentUserGroup.contains(assignedGroupRequirement) || currentUserGroup.contains(EmployeeGroup.SUPER_ADMIN);
+                boolean isUserInAssignedGroup = currentUserGroup.contains(assignedGroupRequirement)
+                                || currentUserGroup.contains(EmployeeGroup.SUPER_ADMIN);
 
                 this.canUserModifyData = isTaskPending && isUserInAssignedGroup;
 
@@ -217,17 +236,19 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         rejectBtn.setVisible(true);
                         comments.setReadOnly(false);
                         comments.setValue(approval.getComments() == null ? "" : approval.getComments());
-                        
+
                         if (!isBudgetConfigured) {
                                 approveBtn.setEnabled(false);
-                                comments.setPlaceholder("CRITICAL: Approval blocked because the department budget ledger is not configured.");
+                                comments.setPlaceholder(
+                                                "CRITICAL: Approval blocked because the department budget ledger is not configured.");
                         } else {
                                 approveBtn.setEnabled(true);
                         }
                 } else {
                         approveBtn.setVisible(false);
                         rejectBtn.setVisible(false);
-                        comments.setValue(approval.getComments() == null ? "No comments provided." : approval.getComments());
+                        comments.setValue(approval.getComments() == null ? "No comments provided."
+                                        : approval.getComments());
                         comments.setReadOnly(true);
                 }
         }
@@ -238,7 +259,8 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         return;
                 }
 
-                DepartmentBudget budget = departmentBudgetService.getByDepartmentAndYear(header.getForDepartment(), Year.now());
+                DepartmentBudget budget = departmentBudgetService.getByDepartmentAndYear(header.getForDepartment(),
+                                Year.now());
 
                 if (budget == null) {
                         budgetTitle.setText("Department Budget Not Configured for " + Year.now().getValue());
@@ -246,7 +268,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         totalBudgetAmount.setText("");
                         remainingBudgetAmount.setText("");
                         remainingBudget = 0.0;
-                        isBudgetConfigured = false; 
+                        isBudgetConfigured = false;
                         return;
                 }
 
@@ -255,8 +277,8 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 totalBudgetAmount.setText("Total Allocated Budget : " + budget.getTotalBudgetAmount());
                 remainingBudgetAmount.setText("Available Balance : " + budget.getRemainingBudgetAmount());
                 remainingBudget = budget.getRemainingBudgetAmount();
-                isBudgetConfigured = true; 
-                
+                isBudgetConfigured = true;
+
                 evaluateGroupAccessControlPermissions();
         }
 
@@ -264,20 +286,27 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 lineGrid.removeAllColumns();
 
                 lineGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
-                                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item Name").setAutoWidth(true);
+                                ? line.getItemVariant().getItem().getItemName()
+                                : "").setHeader("Item Name").setAutoWidth(true);
 
-                lineGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
+                lineGrid.addColumn(
+                                line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                                 .setHeader("Specification").setAutoWidth(true);
 
-                lineGrid.addColumn(line -> (line.getItemVariant() != null && line.getItemVariant().getEstimatedUnitPrice() != null) 
-                                ? line.getItemVariant().getEstimatedUnitPrice() : 0.0)
+                lineGrid.addColumn(line -> (line.getItemVariant() != null
+                                && line.getItemVariant().getEstimatedUnitPrice() != null)
+                                                ? line.getItemVariant().getEstimatedUnitPrice()
+                                                : 0.0)
                                 .setHeader("Unit Price").setWidth("130px");
 
-                lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Requested Qty").setWidth("130px");
+                lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Requested Qty")
+                                .setWidth("130px");
 
                 lineGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
                                 && line.getItemVariant().getItem().getUnit() != null
-                                ? line.getItemVariant().getItem().getUnit().getCode() : "").setHeader("Unit").setWidth("90px");
+                                                ? line.getItemVariant().getItem().getUnit().getCode()
+                                                : "")
+                                .setHeader("Unit").setWidth("90px");
 
                 lineGrid.addComponentColumn(line -> {
                         NumberField approvedQtyField = new NumberField();
@@ -296,14 +325,16 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         approvedQtyField.addValueChangeListener(e -> {
                                 if (e.getValue() != null) {
                                         if (e.getValue() > line.getRequestedQuantity()) {
-                                                Notification.show("Approved quantity cannot exceed original requested levels.", 3000, Position.MIDDLE);
+                                                Notification.show(
+                                                                "Approved quantity cannot exceed original requested levels.",
+                                                                3000, Position.MIDDLE);
                                                 approvedQtyField.setValue(line.getRequestedQuantity());
                                                 line.setApprovedQuantity(line.getRequestedQuantity());
                                         } else {
                                                 line.setApprovedQuantity(e.getValue());
                                         }
                                         recalculateTotalApprovalEvaluationAmount();
-                                        scheduleGrid.getDataProvider().refreshAll(); 
+                                        scheduleGrid.getDataProvider().refreshAll();
                                 }
                         });
 
@@ -320,12 +351,15 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 scheduleGrid.removeAllColumns();
 
                 scheduleGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
-                                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Scheduled Item").setAutoWidth(true);
+                                ? line.getItemVariant().getItem().getItemName()
+                                : "").setHeader("Scheduled Item").setAutoWidth(true);
 
                 scheduleGrid.addColumn(line -> {
                         RepeatedPeriod p = workingSchedulesMap.get(line);
-                        if (p == null) return "No Schedule Active";
-                        return "Every " + p.getFrequencyPeriod() + " " + (p.getFrequencyType() != null ? p.getFrequencyType().name() : "");
+                        if (p == null)
+                                return "No Schedule Active";
+                        return "Every " + p.getFrequencyPeriod() + " "
+                                        + (p.getFrequencyType() != null ? p.getFrequencyType().name() : "");
                 }).setHeader("Recurrence Interval").setAutoWidth(true);
 
                 scheduleGrid.addColumn(line -> {
@@ -341,7 +375,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 scheduleGrid.addComponentColumn(line -> {
                         Button modifyScheduleBtn = new Button("Modify Schedule", e -> {
                                 RepeatedPeriod currentPeriod = workingSchedulesMap.get(line);
-                                AutoRfqScheduleDialog dialog = new AutoRfqScheduleDialog(updatedPeriod -> { 
+                                AutoRfqScheduleDialog dialog = new AutoRfqScheduleDialog(updatedPeriod -> {
                                         currentPeriod.setFrequencyPeriod(updatedPeriod.getFrequencyPeriod());
                                         currentPeriod.setFrequencyType(updatedPeriod.getFrequencyType());
                                         currentPeriod.setFromDate(updatedPeriod.getFromDate());
@@ -355,16 +389,16 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         });
                         modifyScheduleBtn.addThemeName("small primary");
                         modifyScheduleBtn.setEnabled(canUserModifyData && isBudgetConfigured);
-        
+
                         Button clearScheduleBtn = new Button("Remove", e -> {
-                                
+
                                 workingSchedulesMap.remove(line);
                                 scheduleGrid.getDataProvider().refreshAll();
                                 recurringScheduleSection.setVisible(!workingSchedulesMap.isEmpty());
                                 Notification.show("Repeated preriod removed successfully.");
                         });
                         clearScheduleBtn.addThemeName("small error");
-                        clearScheduleBtn.setEnabled(canUserModifyData && isBudgetConfigured );
+                        clearScheduleBtn.setEnabled(canUserModifyData && isBudgetConfigured);
 
                         return new HorizontalLayout(modifyScheduleBtn, clearScheduleBtn);
                 }).setHeader("Scheduling Maintenance Actions").setWidth("320px");
@@ -377,7 +411,8 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 documentGrid.removeAllColumns();
                 documentGrid.addColumn(PurchaseRequestDocument::getFileName).setHeader("File Name").setAutoWidth(true);
                 documentGrid.addColumn(PurchaseRequestDocument::getFileType).setHeader("File Type").setWidth("180px");
-                documentGrid.addColumn(doc -> doc.getFileSize() != null ? (doc.getFileSize() / 1024) + " KB" : "0 KB").setHeader("Size").setWidth("120px");
+                documentGrid.addColumn(doc -> doc.getFileSize() != null ? (doc.getFileSize() / 1024) + " KB" : "0 KB")
+                                .setHeader("Size").setWidth("120px");
 
                 documentGrid.addComponentColumn(document -> {
                         Button previewBtn = new Button("View Document");
@@ -393,20 +428,21 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
         private void loadLinesData() {
                 workingLinesList.clear();
                 workingSchedulesMap.clear();
-                
+
                 List<PurchaseRequestLine> dbLines = lineService.getPurchaseRequestLineByHeader(header);
                 workingLinesList.addAll(dbLines);
                 lineGrid.setItems(workingLinesList);
 
                 List<PurchaseRequestLine> repeatableLines = new ArrayList<>();
                 for (PurchaseRequestLine line : dbLines) {
-                        
+
                         if (line.getApprovedQuantity() == null) {
                                 line.setApprovedQuantity(line.getRequestedQuantity());
                         }
 
                         if (line.getRepeatableId() != null) {
-                                Optional<RepeatedPeriod> periodOpt = repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId());
+                                Optional<RepeatedPeriod> periodOpt = repeatedPeriodService
+                                                .getRepeatedPeriodById(line.getRepeatableId());
                                 if (periodOpt.isPresent()) {
                                         workingSchedulesMap.put(line, periodOpt.get());
                                         hasRepeatedPeriod.add(line);
@@ -434,11 +470,13 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 double liveRequestedTotal = 0.0;
 
                 for (PurchaseRequestLine line : workingLinesList) {
-                        double price = (line.getItemVariant() != null && line.getItemVariant().getEstimatedUnitPrice() != null) 
-                                        ? line.getItemVariant().getEstimatedUnitPrice() : 0.0;
-                        
+                        double price = (line.getItemVariant() != null
+                                        && line.getItemVariant().getEstimatedUnitPrice() != null)
+                                                        ? line.getItemVariant().getEstimatedUnitPrice()
+                                                        : 0.0;
+
                         double requestedQty = line.getRequestedQuantity() != null ? line.getRequestedQuantity() : 0.0;
-                        
+
                         if (line.getApprovedQuantity() == null) {
                                 line.setApprovedQuantity(requestedQty);
                         }
@@ -446,16 +484,16 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
                         line.setItemUnitPrice(price);
                         line.setItemTotalAmount(price * approvedQty);
-                   
+
                         liveAdjustedTotal += line.getItemTotalAmount();
                         liveRequestedTotal += (price * requestedQty);
                 }
-                
+
                 lineGrid.getDataProvider().refreshAll();
-                
+
                 requestedTotalAmount.setText("Total Amount Requested : " + liveRequestedTotal);
                 approvedTotalAmount.setText("Total Amount After Approval : " + liveAdjustedTotal);
-                
+
                 if (remainingBudget < liveAdjustedTotal) {
                         approvedTotalAmount.getStyle().set("color", "#d32f2f").set("font-weight", "bold");
                 } else {
@@ -471,7 +509,9 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
         private void approveRequest() {
                 if (!isBudgetConfigured) {
-                        Notification.show("Compliance Fault: Action rejected because the Department Budget ledger is missing.", 4000, Position.TOP_CENTER);
+                        Notification.show(
+                                        "Compliance Fault: Action rejected because the Department Budget ledger is missing.",
+                                        4000, Position.TOP_CENTER);
                         return;
                 }
 
@@ -479,7 +519,9 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 double finalAmount = getFinalCalculatedTotal();
 
                 if (remainingBudget < finalAmount) {
-                        Notification.show("Compliance Block: Total evaluated amount of " + finalAmount + " exceeds available Department Budget balance of " + remainingBudget + "!", 5000, Position.TOP_CENTER);
+                        Notification.show("Compliance Block: Total evaluated amount of " + finalAmount
+                                        + " exceeds available Department Budget balance of " + remainingBudget + "!",
+                                        5000, Position.TOP_CENTER);
                         return;
                 }
 
@@ -489,46 +531,55 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         for (PurchaseRequestLine approvedLine : workingLinesList) {
                                 if (approvedLine.getApprovedQuantity() == 0) {
                                         approvedLine.setStatus(Status.REJECTED);
-                                } 
+                                }
                                 if (workingSchedulesMap.containsKey(approvedLine)) {
                                         RepeatedPeriod activeSchedule = workingSchedulesMap.get(approvedLine);
                                         activeSchedule.setReferType(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE);
                                         activeSchedule.setReferId(approvedLine.getId());
-                                        RepeatedPeriod savedPeriod = repeatedPeriodService.addRepeatedPeriod(activeSchedule, actingEmployeeGroupMember);
+                                        RepeatedPeriod savedPeriod = repeatedPeriodService
+                                                        .addRepeatedPeriod(activeSchedule, actingEmployeeGroupMember);
                                         approvedLine.setRepeatableId(savedPeriod.getId());
-                                } 
-                                lineService.updatePurchaseRequestLine(approvedLine,actingEmployeeGroupMember);
+                                }
+                                lineService.updatePurchaseRequestLine(approvedLine, actingEmployeeGroupMember);
 
-                                if(hasRepeatedPeriod.contains(approvedLine))
-                                {    if(workingSchedulesMap.containsKey(approvedLine))
-                                        {
-                                           repeatedPeriodService.updateRepeatedPeriod(workingSchedulesMap.get(approvedLine), actingEmployeeGroupMember);
-                                        }else{
-                                             RepeatedPeriod period= repeatedPeriodService.getRepeatedPeriodById(approvedLine.getRepeatableId()).get();
+                                if (hasRepeatedPeriod.contains(approvedLine)) {
+                                        if (workingSchedulesMap.containsKey(approvedLine)) {
+                                                repeatedPeriodService.updateRepeatedPeriod(
+                                                                workingSchedulesMap.get(approvedLine),
+                                                                actingEmployeeGroupMember);
+                                        } else {
+                                                RepeatedPeriod period = repeatedPeriodService
+                                                                .getRepeatedPeriodById(approvedLine.getRepeatableId())
+                                                                .get();
                                                 period.setStatus(RequestForQuotationStatus.CANCELLED);
-                                            repeatedPeriodService.updateRepeatedPeriod(period, actingEmployeeGroupMember);
-                                        }  
+                                                repeatedPeriodService.updateRepeatedPeriod(period,
+                                                                actingEmployeeGroupMember);
+                                        }
                                 }
                         }
 
                         approval.setStatus(Status.APPROVED);
-                        approval.setComments(comments.getValue() != null ? comments.getValue().trim() : "Approved by group.");
+                        approval.setComments(comments.getValue() != null ? comments.getValue().trim()
+                                        : "Approved by group.");
                         approval.setApprovedDate(LocalDate.now());
                         approval.setApprover(actingEmployeeGroupMember);
 
                         approvalsService.updateApprovals(approval, actingEmployeeGroupMember);
 
-                        Notification.show("Task approved and line items updated successfully.", 3000, Position.TOP_CENTER);
+                        Notification.show("Task approved and line items updated successfully.", 3000,
+                                        Position.TOP_CENTER);
                         getUI().ifPresent(ui -> ui.navigate("purchase-request"));
 
                 } catch (Exception exception) {
-                        Notification.show("Error processing approval transaction: " + exception.getMessage(), 5000, Position.MIDDLE);
+                        Notification.show("Error processing approval transaction: " + exception.getMessage(), 5000,
+                                        Position.MIDDLE);
                 }
         }
 
         private void rejectRequest() {
                 if (comments.isEmpty()) {
-                        Notification.show("Rejection requires descriptive remarks input inside comments field.", 3000, Position.TOP_CENTER);
+                        Notification.show("Rejection requires descriptive remarks input inside comments field.", 3000,
+                                        Position.TOP_CENTER);
                         return;
                 }
 
@@ -539,16 +590,19 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                                 line.setApprovedQuantity(0.0);
                                 line.setItemTotalAmount(0.0);
                                 line.setStatus(Status.REJECTED);
-                                lineService.updatePurchaseRequestLine(line,actingEmployeeGroupMember);
-                                if(hasRepeatedPeriod.contains(line))
-                                {    if(workingSchedulesMap.containsKey(line))
-                                        {
-                                           repeatedPeriodService.updateRepeatedPeriod(workingSchedulesMap.get(line), actingEmployeeGroupMember);
-                                        }else{
-                                             RepeatedPeriod period= repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId()).get();
+                                lineService.updatePurchaseRequestLine(line, actingEmployeeGroupMember);
+                                if (hasRepeatedPeriod.contains(line)) {
+                                        if (workingSchedulesMap.containsKey(line)) {
+                                                repeatedPeriodService.updateRepeatedPeriod(
+                                                                workingSchedulesMap.get(line),
+                                                                actingEmployeeGroupMember);
+                                        } else {
+                                                RepeatedPeriod period = repeatedPeriodService
+                                                                .getRepeatedPeriodById(line.getRepeatableId()).get();
                                                 period.setStatus(RequestForQuotationStatus.CANCELLED);
-                                            repeatedPeriodService.updateRepeatedPeriod(period, actingEmployeeGroupMember);
-                                        }  
+                                                repeatedPeriodService.updateRepeatedPeriod(period,
+                                                                actingEmployeeGroupMember);
+                                        }
                                 }
                         }
 
@@ -559,11 +613,13 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
                         approvalsService.updateApprovals(approval, actingEmployeeGroupMember);
 
-                        Notification.show("Purchase request verification rejected successfully.", 3000, Position.TOP_CENTER);
+                        Notification.show("Purchase request verification rejected successfully.", 3000,
+                                        Position.TOP_CENTER);
                         getUI().ifPresent(ui -> ui.navigate("purchase-request"));
 
                 } catch (Exception exception) {
-                        Notification.show("Error processing rejection workflow: " + exception.getMessage(), 5000, Position.MIDDLE);
+                        Notification.show("Error processing rejection workflow: " + exception.getMessage(), 5000,
+                                        Position.MIDDLE);
                 }
         }
 
@@ -589,21 +645,25 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         String fileType = document.getFileType() != null ? document.getFileType().toLowerCase() : "";
 
                         if (fileType.startsWith("image/")) {
-                                com.vaadin.flow.component.html.Image image = new com.vaadin.flow.component.html.Image(url, document.getFileName());
+                                com.vaadin.flow.component.html.Image image = new com.vaadin.flow.component.html.Image(
+                                                url, document.getFileName());
                                 image.setWidthFull();
                                 image.setMaxHeight("75vh");
                                 image.getStyle().set("object-fit", "contain");
                                 dialogContent.add(closeButton, image);
                         } else if ("application/pdf".equals(fileType)) {
                                 com.vaadin.flow.component.Html pdfViewer = new com.vaadin.flow.component.Html(
-                                                "<object data='" + url + "' type='application/pdf' width='100%' height='100%' style='min-height:70vh;'></object>");
+                                                "<object data='" + url
+                                                                + "' type='application/pdf' width='100%' height='100%' style='min-height:70vh;'></object>");
                                 dialogContent.add(closeButton, pdfViewer);
                         } else {
                                 Button downloadButton = new Button("Download Document Attachment");
                                 downloadButton.addThemeName("success");
                                 downloadButton.addClickListener(e -> ui.getPage().open(url, "_blank"));
 
-                                dialogContent.add(closeButton, new Span("Inline display rendering engine is unavailable for this format extension."), downloadButton);
+                                dialogContent.add(closeButton, new Span(
+                                                "Inline display rendering engine is unavailable for this format extension."),
+                                                downloadButton);
                         }
 
                         previewDialog.add(dialogContent);

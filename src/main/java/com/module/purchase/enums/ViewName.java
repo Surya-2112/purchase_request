@@ -51,7 +51,7 @@ public enum ViewName {
     QUOTATION_COMPARISON_DASHBOARD("quotation-comparison"),
     QUOTATION_EVALUATION_MATRIX("quotation-evaluation-matrix"),
 
-   PURCHASE_ORDER("purchase-order"),
+    PURCHASE_ORDER("purchase-order"),
     PURCHASE_ORDER_DETAILS("purchase-order-details"),
     PURCHASE_ORDER_APPROVAL("purchase-order-approval"), 
     ASSIGNED_APPROVALS_ORDER_DETAILS("assigned-order-approvals-details"),
@@ -87,7 +87,9 @@ public enum ViewName {
     
     AUDIT_LOGS("audit-logs"),
 
-    PURCHASE_REQUEST_DEPARTMENT("");
+    PURCHASE_REQUEST_DEPARTMENT(""),
+
+    MANAGEMENT_GROUP("management-group");
 
     private final String route;
 

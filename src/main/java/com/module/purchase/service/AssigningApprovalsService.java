@@ -92,7 +92,7 @@ public class AssigningApprovalsService {
         return exist.get();
     }
 
-    public Page<AssigningApprovalsDTO> getPurchaseRequestApprovalsForMyGroup( AssigningApprovalsDTO assigningApprovalsDTO, EmployeeGroup group, int page,
+    public Page<AssigningApprovalsDTO> getPurchaseRequestApprovalsForMyGroup( AssigningApprovalsDTO assigningApprovalsDTO, List<EmployeeGroup> group, int page,
             int size) {
 
         Specification<AssigningApprovals> spec = Specification
@@ -211,21 +211,22 @@ public class AssigningApprovalsService {
     }
 
     public List<AssigningApprovals> getApprovalsList( AssigningApprovalsDTO assigningApprovalsDTO) {
-        Specification<AssigningApprovals> spec = Specification
-                .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
-                .and(AssigningApprovalsSpecification.hasEmployeeGroup(assigningApprovalsDTO.getEmployeeGroup()))
-                .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
-                .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
-                .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
+            
+            Specification<AssigningApprovals> spec = Specification
+            .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
+            .and(AssigningApprovalsSpecification.hasEmployeeGroup(List.of(assigningApprovalsDTO.getEmployeeGroup())))
+            .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
+            .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
+            .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
 
         return assigningApprovalsRepository.findAll(spec);
     }
 
-    public Long getCountApprovals( AssigningApprovalsDTO assigningApprovalsDTO) {
+    public Long getCountApprovals(AssigningApprovalsDTO assigningApprovalsDTO) {
 
         Specification<AssigningApprovals> spec = Specification
                 .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
-                .and(AssigningApprovalsSpecification.hasEmployeeGroup(assigningApprovalsDTO.getEmployeeGroup()))
+                .and(AssigningApprovalsSpecification.hasEmployeeGroup(List.of(assigningApprovalsDTO.getEmployeeGroup())))
                 .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
                 .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
                 .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));

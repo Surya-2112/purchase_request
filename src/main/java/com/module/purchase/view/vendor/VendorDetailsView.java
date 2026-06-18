@@ -24,163 +24,153 @@ import jakarta.annotation.security.PermitAll;
 @PermitAll
 public class VendorDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
 
-    private final VendorService vendorService;
-    private final SecurityService securityService;
+        private final VendorService vendorService;
+        private final SecurityService securityService;
 
-    public VendorDetailsView(VendorService vendorService, SecurityService securityService) {
-        this.vendorService = vendorService;
-        this.securityService = securityService;
+        Vendor vendor;
 
-        setSizeFull();
-        setPadding(true);
-        setSpacing(true);
-    }
+        public VendorDetailsView(VendorService vendorService, SecurityService securityService) {
+                this.vendorService = vendorService;
+                this.securityService = securityService;
 
-    @Override
-    public void setParameter(BeforeEvent event, Long vendorId) {
-
-        removeAll();
-
-        Vendor vendor = vendorService.getVendorById(vendorId).orElse(null);
-
-        if (vendor == null) {
-            add(new Span("Vendor not found"));
-            return;
+                setSizeFull();
+                setPadding(true);
+                setSpacing(true);
         }
 
-        H2 title = new H2("Vendor Details");
+        @Override
+        public void setParameter(BeforeEvent event, Long vendorId) {
 
-        FormLayout formLayout = new FormLayout();
-
-        // BASIC DETAILS
-        formLayout.addFormItem(
-                new Span(String.valueOf(vendor.getVendorId())),
-                "Vendor ID"
-        );
-
-        formLayout.addFormItem(
-                new Span(String.valueOf(vendor.getVendorName())),
-                "Vendor Name"
-        );
-
-        formLayout.addFormItem(
-                new Span(String.valueOf(vendor.getVendorEmail())),
-                "Email"
-        );
-
-        formLayout.addFormItem(
-                new Span(vendor.getVendorPhoneNumber()==null?null:String.valueOf(vendor.getVendorPhoneNumber())),
-                "Phone"
-        );
-
-        formLayout.addFormItem(
-                new Span(Boolean.TRUE.equals(vendor.getActive()) ? "Active" : "Inactive"),
-                "Status"
-        );
-
-        // CATEGORIES (NEW)
-        formLayout.addFormItem(
-                new Span(
-                        vendor.getCategories() == null
-                                ? ""
-                                : vendor.getCategories()
-                                        .stream()
-                                        .map(c -> c.getCategoryName())
-                                        .collect(Collectors.joining(", "))
-                ),
-                "Categories"
-        );
-
-        // ADDRESS
-        if (vendor.getVendorAddress() != null) {
-
-            formLayout.addFormItem(
-                    new Span(String.valueOf(vendor.getVendorAddress().getAddressLine())),
-                    "Address Line"
-            );
-
-            formLayout.addFormItem(
-                    new Span(String.valueOf(vendor.getVendorAddress().getStreet())),
-                    "Street"
-            );
-
-            formLayout.addFormItem(
-                    new Span(String.valueOf(vendor.getVendorAddress().getCity())),
-                    "City"
-            );
-
-            formLayout.addFormItem(
-                    new Span(String.valueOf(vendor.getVendorAddress().getState())),
-                    "State"
-            );
-
-            formLayout.addFormItem(
-                    new Span(String.valueOf(vendor.getVendorAddress().getCountry())),
-                    "Country"
-            );
-
-            formLayout.addFormItem(
-                    new Span(String.valueOf(vendor.getVendorAddress().getPostalCode())),
-                    "Pincode"
-            );
-        }
-
-        // UPDATE BUTTON
-        Button updateButton = new Button("Update", e ->
-                getUI().ifPresent(ui ->
-                        ui.navigate("vendor-edit/" + vendor.getVendorId())
-                )
-        );
-
-        // DELETE BUTTON
-        Button deleteButton = new Button("Delete");
-
-        deleteButton.addClickListener(e -> {
-
-            ConfirmDialog dialog = new ConfirmDialog();
-
-            dialog.setHeader("Delete Vendor");
-            dialog.setText("Are you sure you want to delete this vendor?");
-
-            dialog.setCancelable(true);
-            dialog.setConfirmText("Delete");
-            dialog.setConfirmButtonTheme("error primary");
-
-            dialog.addConfirmListener(confirmEvent -> {
-
-                try {
-
-                    vendorService.deleteVendorById(
-                            vendor.getVendorId(),
-                            securityService.getLoggedInUser().getEmployee()
-                    );
-
-                    Notification.show(
-                            "Vendor Deleted Successfully",
-                            3000,
-                            Notification.Position.TOP_CENTER
-                    );
-
-                    getUI().ifPresent(ui -> ui.navigate("vendor"));
-
-                } catch (Exception ex) {
-
-                    Notification.show(
-                            ex.getMessage(),
-                            5000,
-                            Notification.Position.TOP_CENTER
-                    );
+                removeAll();
+                if (securityService.getLoggedInUser().getVendor() != null) {
+                        if (!securityService.getLoggedInUser().getVendor().getVendorId().equals(vendorId)) {
+                                event.forwardTo("vendor");
+                                event.getUI().access(() -> {
+                                        Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
+                                });
+                                return ;
+                        }
                 }
-            });
+                try {
+                        vendor = vendorService.getVendorById(vendorId).get();
+                } catch (Exception ex) {
+                        event.forwardTo("vendor");
+                        event.getUI().access(() -> {
+                                Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                        });
+                        return ;
+                }
 
-            dialog.open();
-        });
+                if (vendor == null) {
+                        add(new Span("Vendor not found"));
+                        return;
+                }
 
-        updateButton.setVisible(securityService.canAccessView("vendor-edit"));
-        deleteButton.setVisible(securityService.canAccessView("vendor-form"));
+                H2 title = new H2("Vendor Details");
 
-        HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
+                FormLayout formLayout = new FormLayout();
 
-        add(title, formLayout, buttons);
-    }
+                formLayout.addFormItem(
+                                new Span(String.valueOf(vendor.getVendorId())),
+                                "Vendor ID");
+
+                formLayout.addFormItem(
+                                new Span(String.valueOf(vendor.getVendorName())),
+                                "Vendor Name");
+
+                formLayout.addFormItem(
+                                new Span(String.valueOf(vendor.getVendorEmail())),
+                                "Email");
+
+                formLayout.addFormItem(
+                                new Span(vendor.getVendorPhoneNumber() == null ? null
+                                                : String.valueOf(vendor.getVendorPhoneNumber())),
+                                "Phone");
+
+                formLayout.addFormItem(
+                                new Span(Boolean.TRUE.equals(vendor.getActive()) ? "Active" : "Inactive"),
+                                "Status");
+
+                formLayout.addFormItem(
+                                new Span(vendor.getCategories() == null ? ""
+                                : vendor.getCategories().stream().map(c -> c.getCategoryName()).collect(Collectors.joining(", "))),
+                                "Categories");
+
+                if (vendor.getVendorAddress() != null) {
+
+                        formLayout.addFormItem(
+                                        new Span(String.valueOf(vendor.getVendorAddress().getAddressLine())),
+                                        "Address Line");
+
+                        formLayout.addFormItem(
+                                        new Span(String.valueOf(vendor.getVendorAddress().getStreet())),
+                                        "Street");
+
+                        formLayout.addFormItem(
+                                        new Span(String.valueOf(vendor.getVendorAddress().getCity())),
+                                        "City");
+
+                        formLayout.addFormItem(
+                                        new Span(String.valueOf(vendor.getVendorAddress().getState())),
+                                        "State");
+
+                        formLayout.addFormItem(
+                                        new Span(String.valueOf(vendor.getVendorAddress().getCountry())),
+                                        "Country");
+
+                        formLayout.addFormItem(
+                                        new Span(String.valueOf(vendor.getVendorAddress().getPostalCode())),
+                                        "Pincode");
+                }
+
+                Button updateButton = new Button("Update",
+                                e -> getUI().ifPresent(ui -> ui.navigate("vendor-edit/" + vendor.getVendorId())));
+
+                Button deleteButton = new Button("Delete");
+
+                deleteButton.addClickListener(e -> {
+
+                        ConfirmDialog dialog = new ConfirmDialog();
+
+                        dialog.setHeader("Delete Vendor");
+                        dialog.setText("Are you sure you want to delete this vendor?");
+
+                        dialog.setCancelable(true);
+                        dialog.setConfirmText("Delete");
+                        dialog.setConfirmButtonTheme("error primary");
+
+                        dialog.addConfirmListener(confirmEvent -> {
+
+                                try {
+
+                                        vendorService.deleteVendorById(
+                                                        vendor.getVendorId(),
+                                                        securityService.getLoggedInUser().getEmployee());
+
+                                        Notification.show(
+                                                        "Vendor Deleted Successfully",
+                                                        3000,
+                                                        Notification.Position.TOP_CENTER);
+
+                                        getUI().ifPresent(ui -> ui.navigate("vendor"));
+
+                                } catch (Exception ex) {
+
+                                        Notification.show(
+                                                        ex.getMessage(),
+                                                        5000,
+                                                        Notification.Position.TOP_CENTER);
+                                }
+                        });
+
+                        dialog.open();
+                });
+
+                updateButton.setVisible(securityService.canAccessView("vendor-edit"));
+                deleteButton.setVisible(securityService.canAccessView("vendor-form"));
+
+                HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
+
+                add(title, formLayout, buttons);
+        }
 }

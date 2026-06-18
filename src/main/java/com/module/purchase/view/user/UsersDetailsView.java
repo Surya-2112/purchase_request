@@ -25,6 +25,8 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
     private final UsersService usersService;
     private final SecurityService securityService;
 
+     Users user;
+
     public UsersDetailsView(
             UsersService usersService,
             SecurityService securityService) {
@@ -42,10 +44,14 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
 
         removeAll();
 
-        Users user = usersService
-                .getUserById(userId)
-                .orElse(null);
-
+         if(securityService.getLoggedInUser().getUserId().equals(userId)||securityService.canAccessView("management-group"))
+        {
+        user = usersService.getUserById(userId).orElse(null);
+        }else{
+            event.forwardTo("");
+            event.getUI().access(() -> { Notification.show("Access Denied",3000,Notification.Position.MIDDLE);
+            });
+        }
         if (user == null) {
             add(new Span("User not found"));
             return;

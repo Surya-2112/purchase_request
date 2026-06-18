@@ -39,7 +39,7 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
 
     private final ComboBox<String> activeField = new ComboBox<>("Status");
 
-    private final MultiSelectComboBox<Category> categoryField =new MultiSelectComboBox<>("Categories");
+    private final MultiSelectComboBox<Category> categoryField = new MultiSelectComboBox<>("Categories");
 
     private final TextField addressLineField = new TextField("Address Line");
     private final TextField streetField = new TextField("Street");
@@ -73,7 +73,24 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
 
         removeAll();
 
-        vendor = vendorService.getVendorById(vendorId).orElse(null);
+        if (securityService.getLoggedInUser().getVendor() != null) {
+            if (!securityService.getLoggedInUser().getVendor().getVendorId().equals(vendorId)) {
+                event.forwardTo("vendor");
+                event.getUI().access(() -> {
+                    Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
+                });
+                return;
+            }
+        }
+        try {
+            vendor = vendorService.getVendorById(vendorId).get();
+        } catch (Exception ex) {
+            event.forwardTo("vendor");
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
+            });
+            return;
+        }
 
         if (vendor == null) {
             add(new H2("Vendor Not Found"));
@@ -119,12 +136,10 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
                 cityField,
                 stateField,
                 countryField,
-                postalCodeField
-        );
+                postalCodeField);
 
         formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2)
-        );
+                new FormLayout.ResponsiveStep("0", 2));
 
         // SAVE
         Button saveButton = new Button("Save", e -> {
@@ -132,7 +147,8 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
             try {
 
                 vendor.setVendorName(vendorNameField.getValue());
-                vendor.setVendorPhoneNumber(vendorPhoneField.getValue().trim().equals("")?null:vendorPhoneField.getValue().trim());
+                vendor.setVendorPhoneNumber(
+                        vendorPhoneField.getValue().trim().equals("") ? null : vendorPhoneField.getValue().trim());
                 vendor.setActive("Active".equals(activeField.getValue()));
 
                 vendor.setCategories(List.copyOf(categoryField.getValue()));
@@ -154,34 +170,26 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
 
                 vendorService.updateVendor(
                         vendor,
-                        securityService.getLoggedInUser().getEmployee()
-                );
+                        securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Vendor Updated Successfully",
                         3000,
-                        Notification.Position.TOP_CENTER
-                );
+                        Notification.Position.TOP_CENTER);
 
-                getUI().ifPresent(ui ->
-                        ui.navigate("vendor-details/" + vendor.getVendorId())
-                );
+                getUI().ifPresent(ui -> ui.navigate("vendor-details/" + vendor.getVendorId()));
 
             } catch (Exception ex) {
 
                 Notification.show(
                         ex.getMessage(),
                         5000,
-                        Notification.Position.TOP_CENTER
-                );
+                        Notification.Position.TOP_CENTER);
             }
         });
 
-        Button cancelButton = new Button("Cancel", e ->
-                getUI().ifPresent(ui ->
-                        ui.navigate("vendor-details/" + vendor.getVendorId())
-                )
-        );
+        Button cancelButton = new Button("Cancel",
+                e -> getUI().ifPresent(ui -> ui.navigate("vendor-details/" + vendor.getVendorId())));
 
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
 

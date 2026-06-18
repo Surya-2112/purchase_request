@@ -14,6 +14,7 @@ import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.entity.Vendor;
+import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.QuotationService;
 import com.module.purchase.service.RequestForQuotationService;
@@ -52,8 +53,7 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
     private final VendorService vendorService;
     private final SecurityService securityService;
 
-    // Tracking state context
-    private Quotation existingQuotation; 
+    private Quotation existingQuotation;
     private RequestForQuotation targetRfq;
     private Vendor selectedVendorContext;
     private boolean isVendorUser = false;
@@ -78,10 +78,8 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
     private final Button submitBidBtn = new Button("Submit Final Bid");
     private final Button cancelBtn = new Button("Cancel");
 
-    public QuotationFormView(RequestForQuotationService rfqService,
-                            QuotationService quotationService,
-                            VendorService vendorService,
-                            SecurityService securityService) {
+    public QuotationFormView(RequestForQuotationService rfqService, QuotationService quotationService,
+            VendorService vendorService, SecurityService securityService) {
         this.rfqService = rfqService;
         this.quotationService = quotationService;
         this.vendorService = vendorService;
@@ -132,8 +130,9 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         summaryFormLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 4));
 
         biddingGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
-                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item Name").setAutoWidth(true);
-        
+                ? line.getItemVariant().getItem().getItemName()
+                : "").setHeader("Item Name").setAutoWidth(true);
+
         biddingGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                 .setHeader("Specification Requirement").setAutoWidth(true);
 
@@ -173,7 +172,7 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                 clearDiscountSubPanel();
             }
         });
-        
+
         discountPanelHeader.getStyle().set("font-weight", "bold").set("color", "var(--lumo-secondary-text-color)");
 
         discountMatrixGrid.addComponentColumn(d -> {
@@ -274,8 +273,10 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
     @Override
     public void setParameter(BeforeEvent event, @WildcardParameter String parameter) {
         if (parameter == null) {
-            Notification.show("Invalid route context pathway configuration.", 3000, Position.MIDDLE);
-            backToDashboard();
+            event.forwardTo("request-for-quotation");
+            event.getUI().access(() -> {
+                Notification.show("Invalid route context pathway configuration.", 3000, Position.MIDDLE);
+            });
             return;
         }
 
@@ -292,6 +293,14 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                     this.targetRfq = rfq;
                     rfqIdField.setValue("RFQ REFERENCE #" + rfq.getId());
 
+                    if (!rfq.getStatus().equals(RequestForQuotationStatus.OPEN)) {
+                        event.forwardTo("request-for-quotation");
+                        event.getUI().access(() -> {
+                            Notification.show("Request For Quotation is not Open", 3000, Position.MIDDLE);
+                        });
+                        return;
+
+                    }
                     if (!isVendorUser) {
                         List<RequestForQuotationLine> requiredLines = rfqService.getLinesByRfqId(rfq.getId());
                         if (!requiredLines.isEmpty()) {
@@ -316,9 +325,12 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                     Notification.show("RFQ record data is missing.", 4000, Position.MIDDLE);
                     backToDashboard();
                 });
-            } catch (NumberFormatException nfe) {
-                Notification.show("Mal-formed numeric keys route parameter.", 3000, Position.MIDDLE);
-                backToDashboard();
+            } catch (Exception ex) {
+                event.forwardTo("request-for-quotation");
+                event.getUI().access(() -> {
+                    Notification.show(ex.getMessage(), 3000, Position.MIDDLE);
+                });
+                return;
             }
 
         } else if (parameter.startsWith("edit/")) {
@@ -331,14 +343,24 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                     this.targetRfq = quote.getRequestForQuotation();
                     this.selectedVendorContext = quote.getVendor();
 
+                    if (!quote.getStatus().equals(Status.DRAFT)) {
+                        event.forwardTo("quotations");
+                        event.getUI().access(() -> {
+                            Notification.show("Qutations is Finalized", 3000, Position.MIDDLE);
+                        });
+                        return;
+
+                    }
+
                     rfqIdField.setValue(targetRfq != null ? "RFQ REFERENCE #" + targetRfq.getId() : "-");
-                    quotationDateField.setValue(quote.getQuotationDate() != null ? quote.getQuotationDate().toString() : "-");
+                    quotationDateField
+                            .setValue(quote.getQuotationDate() != null ? quote.getQuotationDate().toString() : "-");
                     totalAmountField.setValue(quote.getTotalAmount());
 
                     if (!isVendorUser) {
                         vendorSelector.setItems(quote.getVendor());
                         vendorSelector.setValue(quote.getVendor());
-                        vendorSelector.setReadOnly(true); 
+                        vendorSelector.setReadOnly(true);
                     }
 
                     saveDraftBtn.setEnabled(true);
@@ -355,12 +377,16 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                     clearDiscountSubPanel();
 
                 }, () -> {
-                    Notification.show("Quotation draft missing or unmapped in storage registry.", 4000, Position.MIDDLE);
+                    Notification.show("Quotation draft missing or unmapped in storage registry.", 4000,
+                            Position.MIDDLE);
                     backToDashboard();
                 });
-            } catch (NumberFormatException nfe) {
-                Notification.show("Mal-formed operational key references passed.", 3000, Position.MIDDLE);
-                backToDashboard();
+            } catch (Exception ex) {
+                event.forwardTo("quotations");
+                event.getUI().access(() -> {
+                    Notification.show(ex.getMessage(), 3000, Position.MIDDLE);
+                });
+                return;
             }
         } else {
             Notification.show("Route signature pattern rejected.", 3000, Position.MIDDLE);
@@ -373,7 +399,8 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
         if (existingQuotation == null && targetRfq != null && selectedVendorContext != null) {
             if (quotationService.isDuplicateSubmission(targetRfq.getId(), selectedVendorContext.getVendorId())) {
                 Notification.show("Compliance Block: Vendor '" + selectedVendorContext.getVendorName()
-                        + "' already holds a pricing submission for RFQ-" + targetRfq.getId() + ".", 5000, Position.MIDDLE);
+                        + "' already holds a pricing submission for RFQ-" + targetRfq.getId() + ".", 5000,
+                        Position.MIDDLE);
                 saveDraftBtn.setEnabled(false);
                 submitBidBtn.setEnabled(false);
             } else {
@@ -414,20 +441,26 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
             return;
         }
 
-        if (existingQuotation == null && quotationService.isDuplicateSubmission(targetRfq.getId(), selectedVendorContext.getVendorId())) {
-            Notification.show("Transaction Cancelled: Unique contract constraints matching hit.", 4000, Position.MIDDLE);
+        if (existingQuotation == null
+                && quotationService.isDuplicateSubmission(targetRfq.getId(), selectedVendorContext.getVendorId())) {
+            Notification.show("Transaction Cancelled: Unique contract constraints matching hit.", 4000,
+                    Position.MIDDLE);
             return;
         }
 
         for (QuotationLine line : biddingDataset) {
             if (line.getUnitPrice() <= 0) {
-                Notification.show("Validation Fault: Every requested item variant line requires a valid, positive base price.", 4000, Position.MIDDLE);
+                Notification.show(
+                        "Validation Fault: Every requested item variant line requires a valid, positive base price.",
+                        4000, Position.MIDDLE);
                 return;
             }
 
             for (DiscountType discount : lineDiscountsMap.get(line)) {
                 if (discount.getFromQuantity() > discount.getToQuantity()) {
-                    Notification.show("Validation Fault: Volume slab start boundary must sit strictly below end limits.", 4000, Position.MIDDLE);
+                    Notification.show(
+                            "Validation Fault: Volume slab start boundary must sit strictly below end limits.", 4000,
+                            Position.MIDDLE);
                     return;
                 }
             }
@@ -440,7 +473,7 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
             masterProposal.setQuotationDate(LocalDate.now());
             masterProposal.setTotalAmount(totalAmountField.getValue());
             masterProposal.setStatus(targetedLifecycleState);
-            
+
             if (existingQuotation != null) {
                 quotationService.updateQuotation(masterProposal);
             } else {
@@ -458,15 +491,18 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                 }
             }
 
-            Notification.show("Financial proposal workflow successfully saved under status: " + targetedLifecycleState.name(), 3000, Position.TOP_CENTER);
+            Notification.show(
+                    "Financial proposal workflow successfully saved under status: " + targetedLifecycleState.name(),
+                    3000, Position.TOP_CENTER);
             backToDashboard();
 
         } catch (Exception ex) {
-            Notification.show("Database transaction rejected: Sourcing pipelines write failure -> " + ex.getMessage(), 5000, Position.MIDDLE);
+            Notification.show("Database transaction rejected: Sourcing pipelines write failure -> " + ex.getMessage(),
+                    5000, Position.MIDDLE);
         }
     }
 
     private void backToDashboard() {
-            getUI().ifPresent(ui -> ui.navigate("quotations"));
+        getUI().ifPresent(ui -> ui.navigate("quotations"));
     }
 }

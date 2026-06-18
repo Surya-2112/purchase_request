@@ -56,10 +56,6 @@ public class QuotationService {
         return quotationRepository.findAll();
     }
 
-    public Integer getCountByRFQ(RequestForQuotation rfq) {
-        return getQuotationsByRfq(rfq).size();
-    }
-
     public List<Quotation> getQuotationsByRfq(RequestForQuotation rfq) {
         return quotationRepository.findByRequestForQuotation(rfq);
     }
@@ -161,9 +157,7 @@ public class QuotationService {
 
         Specification<Quotation> spec = Specification
                 .where(QuotationSpecification.hasQuotationId(quotationDTO.getId()))
-                .and(QuotationSpecification.hasRequestForQuotationId(
-                        quotationDTO.getRequestForQuotation() != null ? quotationDTO.getRequestForQuotation().getId()
-                                : null))
+                .and(QuotationSpecification.hasRequestForQuotation( quotationDTO.getRequestForQuotation()))
                 .and(QuotationSpecification.hasVendor(quotationDTO.getVendor()))
                 .and(QuotationSpecification.hasStatus(quotationDTO.getStatus()));
 
@@ -171,6 +165,24 @@ public class QuotationService {
         Page<Quotation> quotationPage = quotationRepository.findAll(spec, pageable);
 
         return quotationPage.map(quotationMapper::toQuotationDTO);
+    }
+
+    public List<Quotation> getQuotations(QuotationDTO quotationDTO) {
+        Specification<Quotation> spec = Specification
+                .where(QuotationSpecification.hasQuotationId(quotationDTO.getId()))
+                .and(QuotationSpecification.hasRequestForQuotation( quotationDTO.getRequestForQuotation()))
+                .and(QuotationSpecification.hasVendor(quotationDTO.getVendor()))
+                .and(QuotationSpecification.hasStatus(quotationDTO.getStatus()));
+        return quotationRepository.findAll(spec);
+    }
+
+    public Long getCountQuotations(QuotationDTO quotationDTO) {
+        Specification<Quotation> spec = Specification
+                .where(QuotationSpecification.hasQuotationId(quotationDTO.getId()))
+                .and(QuotationSpecification.hasRequestForQuotation( quotationDTO.getRequestForQuotation()))
+                .and(QuotationSpecification.hasVendor(quotationDTO.getVendor()))
+                .and(QuotationSpecification.hasStatus(quotationDTO.getStatus()));
+        return quotationRepository.count(spec);
     }
 
     public Long countRFQForVendor(Vendor vendor) {

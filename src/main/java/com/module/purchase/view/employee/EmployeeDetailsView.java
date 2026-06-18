@@ -41,8 +41,23 @@ public class EmployeeDetailsView extends VerticalLayout implements HasUrlParamet
     public void setParameter(BeforeEvent event, Long employeeId) {
 
         removeAll();
+        Employee employee;
+        
+        if(securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(employeeId)||securityService.canAccessView("management-group"))
+        {
+            employee = employeeService.getEmployeeById(employeeId).get();
+        }
+        else {
+                employee = null;
+           event.forwardTo("");
+                event.getUI().access(() -> {
 
-        Employee employee = employeeService.getEmployeeById(employeeId).get();
+                    Notification.show(
+                            "Access Denied",
+                            3000,
+                            Notification.Position.MIDDLE);
+                });
+        }
 
         if (employee == null) {
 

@@ -73,7 +73,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
         public PurchaseRequestDetailsView(PurchaseRequestHeaderService headerService,
                         AssigningApprovalsService assigningApprovalsService,
                         PurchaseRequestLineService purchaseRequestLineService,
-                        PurchaseRequestDocumentService documentService, 
+                        PurchaseRequestDocumentService documentService,
                         SecurityService securityService,
                         NeedsService needService,
                         RepeatedPeriodService repeatedPeriodService) {
@@ -83,7 +83,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 this.purchaseRequestLineService = purchaseRequestLineService;
                 this.documentService = documentService;
                 this.securityService = securityService;
-                this.needService= needService;
+                this.needService = needService;
                 this.repeatedPeriodService = repeatedPeriodService;
 
                 setSizeFull();
@@ -91,7 +91,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 setSpacing(false);
 
                 configureGrids();
-                configureRepeatedPeriodsGrid(); 
+                configureRepeatedPeriodsGrid();
 
                 VerticalLayout headerSection = buildHeaderSection();
                 headerSection.setWidthFull();
@@ -99,7 +99,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 repeatedPeriodsSection.add(new H3("Associated Active Recurring Task Schedules"), repeatedPeriodsGrid);
                 repeatedPeriodsSection.setPadding(false);
                 repeatedPeriodsSection.setSpacing(true);
-                repeatedPeriodsSection.setVisible(false); 
+                repeatedPeriodsSection.setVisible(false);
 
                 VerticalLayout content = new VerticalLayout(
                                 new H2("Purchase Request Details"),
@@ -107,12 +107,11 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                 actionLayout,
                                 new H3("Line Items"),
                                 lineGrid,
-                                repeatedPeriodsSection, 
+                                repeatedPeriodsSection,
                                 new H3("Approval Flow"),
                                 approvalGrid,
                                 new H3("Documents"),
-                                documentGrid
-                );
+                                documentGrid);
 
                 content.setWidthFull();
                 content.setPadding(true);
@@ -131,10 +130,26 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
         @Override
         public void beforeEnter(BeforeEnterEvent event) {
                 Long id = Long.parseLong(event.getRouteParameters().get("id").get());
-
-                header = headerService.getPurchaseRequestHeaderById(id)
-                                .orElseThrow(() -> new RuntimeException("Request not found"));
-
+                try{
+                header = headerService.getPurchaseRequestHeaderById(id).get();
+                }catch(Exception ex)
+                {
+                          event.forwardTo("");
+                        event.getUI().access(() -> {
+                                Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                        });
+                        return ;
+                }
+                if (!(header.getCreatedBy().getEmployeeId().equals(securityService.getLoggedInUser().getEmployee().getEmployeeId())
+                                || securityService.canAccessView("management-group")
+                                || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups()
+                                                .contains(EmployeeGroup.PURCHASE))) {
+                        event.forwardTo("");
+                        event.getUI().access(() -> {
+                                Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
+                        });
+                }
+               
                 bindHeader();
                 loadGrids();
                 loadDocuments();
@@ -147,8 +162,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                 createdBy,
                                 department,
                                 createdDate,
-                                status
-                );
+                                status);
 
                 layout.setPadding(true);
                 layout.setSpacing(false);
@@ -168,7 +182,8 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                 + (header.getCreatedBy() != null ? header.getCreatedBy().getEmployeeName() : "-"));
 
                 department.setText("Department : "
-                                + (header.getForDepartment() != null ? header.getForDepartment().getDepartmentName() : "-"));
+                                + (header.getForDepartment() != null ? header.getForDepartment().getDepartmentName()
+                                                : "-"));
 
                 createdDate.setText("Created Date : " + header.getCreatedDate());
                 status.setText("Status : " + (header.getStatus() != null ? header.getStatus().getDisplayName() : "-"));
@@ -177,20 +192,23 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
         private void configureActions() {
                 actionLayout.removeAll();
 
-                EmployeeGroup currentUserGroup = securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().iterator().next();
+                EmployeeGroup currentUserGroup = securityService.getLoggedInUser().getEmployee().getRole()
+                                .getEmployeeGroups().iterator().next();
 
                 if (header.getStatus() == Status.DRAFT
-                                && (securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(header.getCreatedBy().getEmployeeId())
-                                || currentUserGroup == EmployeeGroup.SUPER_ADMIN
-                                || currentUserGroup == EmployeeGroup.MANAGER)) {
+                                && (securityService.getLoggedInUser().getEmployee().getEmployeeId()
+                                                .equals(header.getCreatedBy().getEmployeeId())
+                                                || currentUserGroup == EmployeeGroup.SUPER_ADMIN
+                                                || currentUserGroup == EmployeeGroup.MANAGER)) {
 
                         Button editButton = new Button("Edit Request");
-                        editButton.addClickListener(e -> getUI().ifPresent(ui -> 
-                                ui.navigate("purchase-request-form/" + header.getPurchaseRequestId())));
+                        editButton.addClickListener(e -> getUI().ifPresent(
+                                        ui -> ui.navigate("purchase-request-form/" + header.getPurchaseRequestId())));
 
                         Button deleteButton = new Button("Delete Request");
                         deleteButton.addClickListener(e -> {
-                                headerService.deletePurchaseRequestHeaderById( header.getPurchaseRequestId(), securityService.getLoggedInUser().getEmployee());
+                                headerService.deletePurchaseRequestHeaderById(header.getPurchaseRequestId(),
+                                                securityService.getLoggedInUser().getEmployee());
 
                                 Notification.show("Purchase Request Deleted");
                                 getUI().ifPresent(ui -> ui.navigate("purchase-request"));
@@ -199,15 +217,17 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                         actionLayout.add(editButton, deleteButton);
                 }
 
-                if (header.getStatus() == Status.WAITING_APPROVAL 
-                                && (securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(header.getCreatedBy().getEmployeeId())
-                                || currentUserGroup == EmployeeGroup.SUPER_ADMIN
-                                || currentUserGroup == EmployeeGroup.MANAGER)) {
+                if (header.getStatus() == Status.WAITING_APPROVAL
+                                && (securityService.getLoggedInUser().getEmployee().getEmployeeId()
+                                                .equals(header.getCreatedBy().getEmployeeId())
+                                                || currentUserGroup == EmployeeGroup.SUPER_ADMIN
+                                                || currentUserGroup == EmployeeGroup.MANAGER)) {
 
                         Button cancelButton = new Button("Cancel Request");
                         cancelButton.addClickListener(e -> {
                                 header.setStatus(Status.CANCELLED);
-                                headerService.updatePurchaseRequestHeader(header, securityService.getLoggedInUser().getEmployee());
+                                headerService.updatePurchaseRequestHeader(header,
+                                                securityService.getLoggedInUser().getEmployee());
                                 Notification.show("Purchase Request Cancelled");
                                 bindHeader();
                                 configureActions();
@@ -219,22 +239,26 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
         private void configureGrids() {
                 lineGrid.removeAllColumns();
-                
+
                 lineGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
-                                ? line.getItemVariant().getItem().getItemName() : "")
+                                ? line.getItemVariant().getItem().getItemName()
+                                : "")
                                 .setHeader("Item").setAutoWidth(true);
 
-                lineGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
+                lineGrid.addColumn(
+                                line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                                 .setHeader("Specification").setAutoWidth(true);
 
-                lineGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
-                                && line.getItemVariant().getItem().getUnit() != null 
-                                ? line.getItemVariant().getItem().getUnit().getCode() : "")
+                lineGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
+                                && line.getItemVariant().getItem().getUnit() != null
+                                                ? line.getItemVariant().getItem().getUnit().getCode()
+                                                : "")
                                 .setHeader("Unit").setWidth("100px");
 
-                lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Requested Qty").setWidth("120px");
+                lineGrid.addColumn(PurchaseRequestLine::getRequestedQuantity).setHeader("Requested Qty")
+                                .setWidth("120px");
                 lineGrid.addColumn(PurchaseRequestLine::getOrderedQuantity).setHeader("Order Qty").setWidth("120px");
-                
+
                 lineGrid.addColumn(line -> line.getApprovedQuantity() != null ? line.getApprovedQuantity() : "-")
                                 .setHeader("Approved Qty").setWidth("130px");
 
@@ -246,13 +270,15 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
                 approvalGrid.removeAllColumns();
                 approvalGrid.addColumn(AssigningApprovals::getLevel).setHeader("Level").setWidth("80px");
-                
-                approvalGrid.addColumn(a -> a.getEmployeeGroup() != null 
-                                ? a.getEmployeeGroup().getDisplayName() : "")
+
+                approvalGrid.addColumn(a -> a.getEmployeeGroup() != null
+                                ? a.getEmployeeGroup().getDisplayName()
+                                : "")
                                 .setHeader("Approver Group").setAutoWidth(true);
 
-                approvalGrid.addColumn(AssigningApprovals::getAssignedDate).setHeader("Assigned Date").setWidth("160px");
-                
+                approvalGrid.addColumn(AssigningApprovals::getAssignedDate).setHeader("Assigned Date")
+                                .setWidth("160px");
+
                 approvalGrid.addColumn(a -> a.getStatus() != null ? a.getStatus().getDisplayName() : "")
                                 .setHeader("Status").setWidth("150px");
 
@@ -263,12 +289,13 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 documentGrid.removeAllColumns();
                 documentGrid.addColumn(PurchaseRequestDocument::getFileName).setHeader("File Name").setAutoWidth(true);
                 documentGrid.addColumn(PurchaseRequestDocument::getFileType).setHeader("Type").setWidth("150px");
-                documentGrid.addColumn(doc -> doc.getFileSize() != null ? (doc.getFileSize() / 1024) + " KB" : "0 KB").setHeader("Size").setWidth("120px");
+                documentGrid.addColumn(doc -> doc.getFileSize() != null ? (doc.getFileSize() / 1024) + " KB" : "0 KB")
+                                .setHeader("Size").setWidth("120px");
 
                 documentGrid.addComponentColumn(document -> {
                         Button viewButton = new Button("View / Download");
                         viewButton.addThemeName("small primary");
-                        
+
                         viewButton.addClickListener(clickEvent -> {
                                 getUI().ifPresent(ui -> {
                                         StreamResource resource = new StreamResource(
@@ -276,8 +303,9 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                                         () -> new ByteArrayInputStream(document.getDocumentData()));
 
                                         resource.setContentType(document.getFileType());
-                                        
-                                        var registration = ui.getSession().getResourceRegistry().registerResource(resource);
+
+                                        var registration = ui.getSession().getResourceRegistry()
+                                                        .registerResource(resource);
                                         String url = registration.getResourceUri().toString();
 
                                         previewDialog.setWidth("75vw");
@@ -291,15 +319,20 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                         dialogContent.setPadding(true);
                                         dialogContent.setSpacing(true);
 
-                                        String fileType = document.getFileType() != null ? document.getFileType().toLowerCase() : "";
+                                        String fileType = document.getFileType() != null
+                                                        ? document.getFileType().toLowerCase()
+                                                        : "";
 
                                         if (fileType.startsWith("image/")) {
-                                                com.vaadin.flow.component.html.Image image = new com.vaadin.flow.component.html.Image(url, document.getFileName());
-                                                image.getStyle().set("max-width", "100%").set("max-height", "70vh").set("object-fit", "contain");
+                                                com.vaadin.flow.component.html.Image image = new com.vaadin.flow.component.html.Image(
+                                                                url, document.getFileName());
+                                                image.getStyle().set("max-width", "100%").set("max-height", "70vh")
+                                                                .set("object-fit", "contain");
                                                 dialogContent.add(closeButton, image);
                                         } else if ("application/pdf".equals(fileType)) {
                                                 com.vaadin.flow.component.Html pdfViewer = new com.vaadin.flow.component.Html(
-                                                                "<object data='" + url + "' type='application/pdf' width='100%' height='100%' style='min-height:70vh;'></object>");
+                                                                "<object data='" + url
+                                                                                + "' type='application/pdf' width='100%' height='100%' style='min-height:70vh;'></object>");
                                                 dialogContent.add(closeButton, pdfViewer);
                                         } else {
                                                 Button downloadLinkBtn = new Button("Download Document");
@@ -308,7 +341,8 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
                                                 dialogContent.add(
                                                                 closeButton,
-                                                                new Span("Inline preview is unavailable for this specific extension file type (" + fileType + ")."),
+                                                                new Span("Inline preview is unavailable for this specific extension file type ("
+                                                                                + fileType + ")."),
                                                                 downloadLinkBtn);
                                         }
 
@@ -328,36 +362,47 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
         private void configureRepeatedPeriodsGrid() {
                 repeatedPeriodsGrid.removeAllColumns();
 
-                repeatedPeriodsGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
-                                ? line.getItemVariant().getItem().getItemName() : "")
+                repeatedPeriodsGrid.addColumn(
+                                line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
+                                                ? line.getItemVariant().getItem().getItemName()
+                                                : "")
                                 .setHeader("Scheduled Item").setAutoWidth(true);
 
                 repeatedPeriodsGrid.addColumn(line -> {
-                        if (line.getRepeatableId() == null) return "-";
-                        Optional<RepeatedPeriod> periodOpt = repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId());
+                        if (line.getRepeatableId() == null)
+                                return "-";
+                        Optional<RepeatedPeriod> periodOpt = repeatedPeriodService
+                                        .getRepeatedPeriodById(line.getRepeatableId());
                         if (periodOpt.isPresent()) {
                                 RepeatedPeriod p = periodOpt.get();
-                                return "Every " + p.getFrequencyPeriod() + " " + (p.getFrequencyType() != null ? p.getFrequencyType().name() : "");
+                                return "Every " + p.getFrequencyPeriod() + " "
+                                                + (p.getFrequencyType() != null ? p.getFrequencyType().name() : "");
                         }
                         return "Configuration Missing";
                 }).setHeader("Recurrence Pattern").setAutoWidth(true);
 
                 repeatedPeriodsGrid.addColumn(line -> {
-                        if (line.getRepeatableId() == null) return "-";
+                        if (line.getRepeatableId() == null)
+                                return "-";
                         return repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId())
-                                        .map(p -> p.getFromDate() != null ? p.getFromDate().toString() : "-").orElse("-");
+                                        .map(p -> p.getFromDate() != null ? p.getFromDate().toString() : "-")
+                                        .orElse("-");
                 }).setHeader("Start Date").setWidth("140px");
 
                 repeatedPeriodsGrid.addColumn(line -> {
-                        if (line.getRepeatableId() == null) return "-";
+                        if (line.getRepeatableId() == null)
+                                return "-";
                         return repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId())
-                                        .map(p -> p.getToDate() != null ? p.getToDate().toString() : "Indefinite").orElse("Indefinite");
+                                        .map(p -> p.getToDate() != null ? p.getToDate().toString() : "Indefinite")
+                                        .orElse("Indefinite");
                 }).setHeader("End Date").setWidth("140px");
 
                 repeatedPeriodsGrid.addColumn(line -> {
-                        if (line.getRepeatableId() == null) return "-";
+                        if (line.getRepeatableId() == null)
+                                return "-";
                         return repeatedPeriodService.getRepeatedPeriodById(line.getRepeatableId())
-                                        .map(p -> p.getNextDate() != null ? p.getNextDate().toString() : "Processing").orElse("-");
+                                        .map(p -> p.getNextDate() != null ? p.getNextDate().toString() : "Processing")
+                                        .orElse("-");
                 }).setHeader("Next Scheduled Run").setWidth("160px");
 
                 repeatedPeriodsGrid.setWidthFull();
@@ -367,16 +412,15 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
         private void loadGrids() {
                 List<PurchaseRequestLine> prLines = purchaseRequestLineService.getPurchaseRequestLineByHeader(header);
-                 List<Needs> requestNeeds= needService.getSpecificNeedRecord(EntityType.ITEM,header.getPurchaseRequestId());
-                 for(Needs line:requestNeeds)
-                 {   
-                  PurchaseRequestLine prLine = new PurchaseRequestLine();
-                   prLine.setDescription(line.getNeedLine());
-                    prLines.add(prLine);
-                 }
+                List<Needs> requestNeeds = needService.getSpecificNeedRecord(EntityType.ITEM,
+                                header.getPurchaseRequestId());
+                for (Needs line : requestNeeds) {
+                        PurchaseRequestLine prLine = new PurchaseRequestLine();
+                        prLine.setDescription(line.getNeedLine());
+                        prLines.add(prLine);
+                }
 
                 lineGrid.setItems(prLines);
-
 
                 List<PurchaseRequestLine> repeatableLines = new ArrayList<>();
                 for (PurchaseRequestLine line : prLines) {
@@ -391,7 +435,6 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 } else {
                         repeatedPeriodsSection.setVisible(false);
                 }
-
 
                 approvalGrid.setItems(assigningApprovalsService.getAssigningApprovalByTypeAndReferId(
                                 ApprovalType.PURCHASE_REQUEST,

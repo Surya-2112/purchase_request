@@ -17,11 +17,10 @@ public class QuotationSpecification {
                         : cb.equal(root.get("id"), quotationId);
     }
 
-    public static Specification<Quotation> hasRequestForQuotationId(Long rfqId) {
+    public static Specification<Quotation> hasRequestForQuotation(RequestForQuotation rfq) {
         return (root, query, cb) -> {
-            if (rfqId == null) return null;
-            Join<Quotation, RequestForQuotation> rfqJoin = root.join("requestForQuotation");
-            return cb.equal(rfqJoin.get("id"), rfqId);
+            if (rfq == null) return null;
+            return cb.equal(root.get("requestForQuotation"), rfq);
         };
     }
 

@@ -63,15 +63,12 @@ public class UsersView extends VerticalLayout {
 
         userIdField.setWidth("100px");
 
-        // Employee
         employeeField.setItems(employeeService.getEmployees());
         employeeField.setItemLabelGenerator(Employee::getEmployeeName);
 
-        // Vendor
         vendorField.setItems(vendorService.getVendors());
         vendorField.setItemLabelGenerator(Vendor::getVendorName);
 
-        // User Type
         userTypeField.setItems("Employee", "Vendor");
 
         employeeField.setVisible(false);
@@ -99,10 +96,8 @@ public class UsersView extends VerticalLayout {
             }
         });
 
-        // Active
         activeField.setItems("Yes", "No");
         activeField.setWidth("80px");
-        // Page Size
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);
@@ -113,7 +108,6 @@ public class UsersView extends VerticalLayout {
             loadUsers();
         });
 
-        // Pagination
         Button previousButton = new Button("Previous", e -> {
             if (currentPage > 0) {
                 currentPage--;
@@ -137,7 +131,6 @@ public class UsersView extends VerticalLayout {
         paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         paginationLayout.setAlignItems(Alignment.CENTER);
 
-        // Header
         H2 title = new H2("Users List");
 
         Button addButton = new Button("Add User", e -> {
@@ -151,22 +144,17 @@ public class UsersView extends VerticalLayout {
             form.open();
         });
 
-        addButton.setVisible(
-                securityService.canAccessView("user-form"));
+        addButton.setVisible(securityService.canAccessView("user-form"));
 
-        HorizontalLayout headerLayout =
-                new HorizontalLayout(title, addButton);
+        HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
 
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(
                 JustifyContentMode.BETWEEN);
 
-        // Search Buttons
-        Button searchButton =
-                new Button("Search", e -> applyFilter());
+        Button searchButton =new Button("Search", e -> applyFilter());
 
-        Button clearButton =
-                new Button("Clear", e -> clearFilter());
+        Button clearButton =new Button("Clear", e -> clearFilter());
 
         HorizontalLayout filterLayout =
                 new HorizontalLayout(

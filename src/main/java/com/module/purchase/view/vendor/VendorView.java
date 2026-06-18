@@ -20,7 +20,10 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
+
 import java.util.List;
+
+import com.vaadin.flow.component.textfield.BigDecimalField;
 
 import jakarta.annotation.security.PermitAll;
 
@@ -29,17 +32,16 @@ import jakarta.annotation.security.PermitAll;
 public class VendorView extends VerticalLayout {
 
     private final VendorService vendorService;
+private final SecurityService securityService;
 
     private final Grid<VendorDTO> vendorGrid = new Grid<>(VendorDTO.class, false);
-
-    private final TextField vendorIdField = new TextField("Vendor ID");
+     
+    private final BigDecimalField vendorIdField = new BigDecimalField("Vendor ID");
     private final TextField vendorNameField = new TextField("Vendor Name");
 
-    private final ComboBox<Category> categoryField =
-            new ComboBox<>("Category");
+    private final ComboBox<Category> categoryField = new ComboBox<>("Category");
 
-    private final ComboBox<String> activeField =
-            new ComboBox<>("Active");
+    private final ComboBox<String> activeField =new ComboBox<>("Active");
 
     private int currentPage = 0;
     private int pageSize = 25;
@@ -49,12 +51,10 @@ public class VendorView extends VerticalLayout {
 
     private VendorDTO currentFilter = new VendorDTO();
 
-    public VendorView(
-            VendorService vendorService,
-            CategoryService categoryService,
-            SecurityService securityService) {
+    public VendorView( VendorService vendorService,CategoryService categoryService,SecurityService securityService) {
 
         this.vendorService = vendorService;
+        this.securityService=securityService;
 
         setSizeFull();
         setPadding(true);
@@ -77,11 +77,9 @@ public class VendorView extends VerticalLayout {
             form.open();
         });
 
-        addButton.setVisible(
-                securityService.canAccessView("vendor-form"));
+        addButton.setVisible(securityService.canAccessView("vendor-form"));
 
-        HorizontalLayout headerLayout =
-                new HorizontalLayout(title, addButton);
+        HorizontalLayout headerLayout =new HorizontalLayout(title, addButton);
 
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(
@@ -101,6 +99,12 @@ public class VendorView extends VerticalLayout {
 
         filterLayout.setWidthFull();
         filterLayout.setAlignItems(Alignment.END);
+
+         if(securityService.getLoggedInUser().getVendor()!=null)
+         {
+                filterLayout.setVisible(false);
+                currentFilter.setVendorId(securityService.getLoggedInUser().getVendor().getVendorId());
+         }
 
         vendorGrid.addColumn(VendorDTO::getVendorId)
                 .setHeader("Vendor ID")
@@ -195,18 +199,12 @@ public class VendorView extends VerticalLayout {
 
     private void applyFilter() {
 
-        Long vendorId = null;
-
-        if (!vendorIdField.getValue().isEmpty()) {
-            vendorId = Long.valueOf(vendorIdField.getValue().trim());
-        }
-
         currentFilter = new VendorDTO();
-        currentFilter.setVendorId(vendorId);
+        currentFilter.setVendorId(vendorIdField.getValue()==null? null : vendorIdField.getValue().longValue());
         currentFilter.setVendorName(vendorNameField.getValue());
 
        if (categoryField.getValue() != null) {
-    currentFilter.setCategories(
+                currentFilter.setCategories(
             List.of(categoryField.getValue())
     );
 } else {

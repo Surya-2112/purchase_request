@@ -51,8 +51,7 @@ public class EmployeeForm extends VerticalLayout {
 
     private final TextField postalCodeField =  new TextField("Pincode");
 
-    public EmployeeForm(
-            EmployeeService employeeService,
+    public EmployeeForm(EmployeeService employeeService,
             DepartmentService departmentService,
             RoleService roleService,
             SecurityService securityService) {
@@ -66,15 +65,12 @@ public class EmployeeForm extends VerticalLayout {
 
         H2 title = new H2("Add Employee");
 
-        // LOAD DATA
-        departmentField.setItems(
-                departmentService.getDepartments());
+        departmentField.setItems( departmentService.getDepartments());
 
         departmentField.setItemLabelGenerator(
                 Department::getDepartmentName);
 
-        roleField.setItems(
-                roleService.getRoles());
+        roleField.setItems( roleService.getRoles());
 
         roleField.setItemLabelGenerator(
                 Role::getRoleName);
@@ -83,14 +79,12 @@ public class EmployeeForm extends VerticalLayout {
         phoneNumberField.setErrorMessage("Enter valid 10 digit number");
         postalCodeField.setPattern("[0-9]{6}");
         postalCodeField.setErrorMessage("Enter vaild 6 digit postal code");
-        
-        // REQUIRED
+
         employeeNameField.setRequired(true);
         employeeEmailField.setRequired(true);
         departmentField.setRequired(true);
         roleField.setRequired(true);
 
-        // FORM
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
@@ -111,7 +105,6 @@ public class EmployeeForm extends VerticalLayout {
                 new FormLayout.ResponsiveStep("0", 2)
         );
 
-        // BUTTONS
         Button saveButton = new Button("Save");
         Button cancelButton = new Button("Cancel");
 

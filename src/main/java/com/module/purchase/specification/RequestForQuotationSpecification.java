@@ -47,7 +47,7 @@ public class RequestForQuotationSpecification {
 
     public static Specification<RequestForQuotation> belongsToVendorCategories(Vendor vendor) {
         return (root, query, criteriaBuilder) -> 
-             vendor == null ? null
+             vendor == null ? null 
             : root.get("category").in(vendor.getCategories());
     }
 }

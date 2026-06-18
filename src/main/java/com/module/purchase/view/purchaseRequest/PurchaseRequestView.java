@@ -1,5 +1,6 @@
 package com.module.purchase.view.purchaseRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -90,6 +91,7 @@ public class PurchaseRequestView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
+        assignFilter.setApprovalType(ApprovalType.PURCHASE_REQUEST);
         assignFilter.setStatus(Status.WAITING_APPROVAL);
 
         buildUI();
@@ -237,16 +239,20 @@ public class PurchaseRequestView extends VerticalLayout {
         Page<PurchaseRequestDTO> createdPage = prService.getCreatedByUser(
                 new PurchaseRequestDTO(), user.getUserId(), 0, 1);
         boolean hasCreatedRequests = createdPage.getTotalElements() > 0;
-
+        
         boolean hasAssignedTasks = false;
-        for (EmployeeGroup singleGroup : userGroups) {
-            Page<AssigningApprovalsDTO> assignedPage = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(
-                    new AssigningApprovalsDTO(), singleGroup, 0, 1);
-            if (assignedPage.getTotalElements() > 0) {
+
+            for (EmployeeGroup singleGroup : userGroups) {
+                assignFilter.setEmployeeGroup(singleGroup);
+                assignFilter.setStatus(null);
+                if(assigningApprovalsService.getCountApprovals(assignFilter)>0){
                 hasAssignedTasks = true;
-                break; 
-            }
-        }
+                break;
+                }
+
+            } 
+            assignFilter.setStatus(Status.WAITING_APPROVAL);
+    
 
         if (isManagementGroup) {
             allBtn.setVisible(true);
@@ -317,17 +323,14 @@ public class PurchaseRequestView extends VerticalLayout {
                     ? currentEmployee.getRole().getEmployeeGroups() 
                     : List.of();
 
-            EmployeeGroup groupToQuery = EmployeeGroup.MANAGER; 
+            List<EmployeeGroup> groupToQuery = new ArrayList<>(); 
             for (EmployeeGroup singleGroup : userGroups) {
                  assignFilter.setApprovalType(ApprovalType.PURCHASE_REQUEST);
-                Page<AssigningApprovalsDTO> testPage = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(
-                        assignFilter, singleGroup, currentPage, pageSize);
-                if (testPage.getTotalElements() > 0) {
-                    groupToQuery = singleGroup;
-                    break;
+                 assignFilter.setEmployeeGroup(singleGroup);
+                if (assigningApprovalsService.getCountApprovals(assignFilter)>0) {
+                    groupToQuery.add(singleGroup);
                 }
-            }
-
+            } 
             Page<AssigningApprovalsDTO> page = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(
                     assignFilter, groupToQuery, currentPage, pageSize);
 

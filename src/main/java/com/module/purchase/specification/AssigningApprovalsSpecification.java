@@ -1,5 +1,7 @@
 package com.module.purchase.specification;
 
+import java.util.List;
+
 import org.springframework.data.jpa.domain.Specification;
 
 import com.module.purchase.entity.AssigningApprovals;
@@ -46,12 +48,12 @@ public class AssigningApprovalsSpecification {
          : cb.equal(root.get("status"),status);
     }
 
-    public static Specification<AssigningApprovals> hasEmployeeGroup(EmployeeGroup group) {
+    public static Specification<AssigningApprovals> hasEmployeeGroup(List<EmployeeGroup> group) {
         return (root, query, cb) -> {
             if (group == null) {
                 return null;
             }
-            return cb.equal(root.get("employeeGroup"), group);
+            return root.get("employeeGroup").in(group);
         };
     }
 }

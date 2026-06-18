@@ -3,7 +3,6 @@ package com.module.purchase.view.item;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Item;
 import com.module.purchase.service.ItemService;
-import com.module.purchase.service.NeedsService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;

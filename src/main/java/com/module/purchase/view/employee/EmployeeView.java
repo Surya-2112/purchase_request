@@ -198,7 +198,7 @@ public class EmployeeView extends VerticalLayout {
         }
 
         private void loadEmployees() {
-                boolean hasFormAccess = securityService.canAccessView("employee-form");
+                boolean hasFormAccess = securityService.canAccessView("management-group");
 
                 if (hasFormAccess) {
                         Page<EmployeeDTO> employeePage = employeeService.getAllEmployees(currentFilter, currentPage, pageSize);

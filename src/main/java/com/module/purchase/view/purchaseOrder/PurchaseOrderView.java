@@ -1,5 +1,6 @@
 package com.module.purchase.view.purchaseOrder;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.domain.Page;
 
@@ -83,6 +84,7 @@ public class PurchaseOrderView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
+        assignFilter.setApprovalType(ApprovalType.PURCHASE_ORDER);
         assignFilter.setStatus(Status.WAITING_APPROVAL);
 
         buildUI();
@@ -232,14 +234,16 @@ public class PurchaseOrderView extends VerticalLayout {
         boolean hasCreatedRequests = createdPage.getTotalElements() > 0;
 
         boolean hasAssignedTasks = false;
-        for (EmployeeGroup singleGroup : userGroups) {
-            Page<AssigningApprovalsDTO> assignedPage = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(
-                    new AssigningApprovalsDTO(), singleGroup, 0, 1); 
-            if (assignedPage.getTotalElements() > 0) {
+         for (EmployeeGroup singleGroup : userGroups) {
+                assignFilter.setEmployeeGroup(singleGroup);
+                assignFilter.setStatus(null);
+                if(assigningApprovalsService.getCountApprovals(assignFilter)>0){
                 hasAssignedTasks = true;
-                break; 
-            }
-        }
+                break;
+                }
+
+            } 
+            assignFilter.setStatus(Status.WAITING_APPROVAL);
 
         if (isManagementGroup) {
             allBtn.setVisible(true);
@@ -305,23 +309,21 @@ public class PurchaseOrderView extends VerticalLayout {
             assignGrid.setVisible(true);
             assignFilters.setVisible(true);
 
-            Employee currentEmployee = user.getEmployee();
+           Employee currentEmployee = user.getEmployee();
             List<EmployeeGroup> userGroups = (currentEmployee.getRole() != null) 
                     ? currentEmployee.getRole().getEmployeeGroups() 
                     : List.of();
 
-            EmployeeGroup groupToQuery = EmployeeGroup.MANAGER; 
+            List<EmployeeGroup> groupToQuery = new ArrayList<>(); 
             for (EmployeeGroup singleGroup : userGroups) {
-                assignFilter.setApprovalType(ApprovalType.PURCHASE_ORDER);
-                Page<AssigningApprovalsDTO> testPage = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(
-                        assignFilter, singleGroup, currentPage, pageSize);
-                if (testPage.getTotalElements() > 0) {
-                    groupToQuery = singleGroup;
-                    break;
+                 assignFilter.setApprovalType(ApprovalType.PURCHASE_ORDER);
+                 assignFilter.setEmployeeGroup(singleGroup);
+                if (assigningApprovalsService.getCountApprovals(assignFilter)>0) {
+                    groupToQuery.add(singleGroup);
                 }
-            }
-
-            Page<AssigningApprovalsDTO> page = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(assignFilter, groupToQuery, currentPage, pageSize);
+            } 
+            Page<AssigningApprovalsDTO> page = assigningApprovalsService.getPurchaseRequestApprovalsForMyGroup(
+                    assignFilter, groupToQuery, currentPage, pageSize);
 
             assignGrid.setItems(page.getContent());
             this.totalPages = page.getTotalPages() > 0 ? page.getTotalPages() : 1;
@@ -407,12 +409,9 @@ public class PurchaseOrderView extends VerticalLayout {
     }
 
     private void clearAssignFilter() {
-        assignIdField.clear();
-        referenceIdField.clear();
-        assignStatusField.setValue(Status.WAITING_APPROVAL);
-        assignFilter.setApprovalType(ApprovalType.PURCHASE_ORDER);
         assignFilter = new AssigningApprovalsDTO();
         assignFilter.setStatus(Status.WAITING_APPROVAL);
+        assignFilter.setApprovalType(ApprovalType.PURCHASE_ORDER);
         currentPage = 0;
         loadData();
     }

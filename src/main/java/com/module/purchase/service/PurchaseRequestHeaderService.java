@@ -72,7 +72,7 @@ public class PurchaseRequestHeaderService {
 
     public Long countAll() {
         return purchaseRequestHeaderRepository.count();
-    }
+    } 
 
     public Long countByStatus(Status status) {
         return purchaseRequestHeaderRepository.countByStatus(status);

@@ -3,8 +3,10 @@ package com.module.purchase.view.requestForQuotation;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.module.purchase.config.SecurityService;
+import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.Quotation;
@@ -12,9 +14,9 @@ import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.entity.Vendor;
 import com.module.purchase.enums.RequestForQuotationStatus;
-import com.module.purchase.enums.Status; 
+import com.module.purchase.enums.Status;
 import com.module.purchase.service.PurchaseRequestLineService;
-import com.module.purchase.service.QuotationService; 
+import com.module.purchase.service.QuotationService;
 import com.module.purchase.service.RequestForQuotationService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -46,7 +48,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
 
     private final RequestForQuotationService rfqService;
     private final PurchaseRequestLineService prLineService;
-    private final QuotationService quotationService; 
+    private final QuotationService quotationService;
     private final SecurityService securityService;
 
     private RequestForQuotation currentRfq;
@@ -55,7 +57,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
 
     private final TextField rfqIdField = new TextField("RFQ Reference ID");
     private final TextField requestedDateField = new TextField("Requested Date");
-    
+
     private final DatePicker requestEndDateField = new DatePicker("Quotation Closing / End Date");
     private final Button updateDateBtn = new Button("Extend / Adjust Closing Date");
     private final HorizontalLayout statusBadgeContainer = new HorizontalLayout();
@@ -65,15 +67,15 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
 
     private final Button backBtn = new Button("Back to Dashboard");
     private final Button editBtn = new Button("Edit Draft Layout");
-    private final Button closeRfqBtn = new Button("Close RFQ"); 
-    private final Button cancelRfqBtn = new Button("Cancel RFQ"); 
-    private final Button addQuotationBtn = new Button("Add Quotation Bid"); 
-    private final Button createQuotationBtn = new Button("Submit Quotation Bid"); 
+    private final Button closeRfqBtn = new Button("Close RFQ");
+    private final Button cancelRfqBtn = new Button("Cancel RFQ");
+    private final Button addQuotationBtn = new Button("Add Quotation Bid");
+    private final Button createQuotationBtn = new Button("Submit Quotation Bid");
 
-    public RequestForQuotationDetailsView(RequestForQuotationService rfqService, 
-                                         PurchaseRequestLineService prLineService,
-                                         QuotationService quotationService,
-                                         SecurityService securityService) {
+    public RequestForQuotationDetailsView(RequestForQuotationService rfqService,
+            PurchaseRequestLineService prLineService,
+            QuotationService quotationService,
+            SecurityService securityService) {
         this.rfqService = rfqService;
         this.prLineService = prLineService;
         this.quotationService = quotationService;
@@ -104,15 +106,15 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
 
         rfqIdField.setReadOnly(true);
         requestedDateField.setReadOnly(true);
-        requestEndDateField.setReadOnly(true); 
-        requestEndDateField.setMin(LocalDate.now().plusDays(1)); 
+        requestEndDateField.setReadOnly(true);
+        requestEndDateField.setMin(LocalDate.now().plusDays(1));
 
         FormLayout headerLayout = new FormLayout(rfqIdField, requestedDateField, requestEndDateField);
         headerLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 3));
 
         updateDateBtn.addThemeName("primary small");
         updateDateBtn.setIcon(VaadinIcon.CHECK.create());
-        updateDateBtn.setVisible(false); 
+        updateDateBtn.setVisible(false);
         updateDateBtn.addClickListener(e -> saveClosingDateExtension());
 
         HorizontalLayout dateAdjustmentRow = new HorizontalLayout(updateDateBtn);
@@ -122,11 +124,14 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         HorizontalLayout statusSection = new HorizontalLayout(new Span("Status: "), statusBadgeContainer);
         statusSection.setAlignItems(Alignment.CENTER);
 
-        detailsLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
-                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item").setAutoWidth(true);
-        detailsLinesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
+        detailsLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
+                ? line.getItemVariant().getItem().getItemName()
+                : "").setHeader("Item").setAutoWidth(true);
+        detailsLinesGrid
+                .addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                 .setHeader("Specification Detail").setAutoWidth(true);
-        detailsLinesGrid.addColumn(RequestForQuotationLine::getRequestedQuantity).setHeader("Quantity").setWidth("160px");
+        detailsLinesGrid.addColumn(RequestForQuotationLine::getRequestedQuantity).setHeader("Quantity")
+                .setWidth("160px");
 
         detailsLinesGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         detailsLinesGrid.setAllRowsVisible(true);
@@ -135,7 +140,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         backBtn.addClickListener(e -> backToDashboard());
 
         editBtn.addThemeName("primary warning");
-        editBtn.setVisible(false); 
+        editBtn.setVisible(false);
 
         closeRfqBtn.addThemeName("primary success");
         closeRfqBtn.setVisible(false);
@@ -153,11 +158,12 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         createQuotationBtn.setVisible(false);
         createQuotationBtn.addClickListener(e -> navigateToQuotationForm());
 
-        HorizontalLayout actionsLayout = new HorizontalLayout(backBtn, editBtn, closeRfqBtn, cancelRfqBtn, addQuotationBtn, createQuotationBtn);
+        HorizontalLayout actionsLayout = new HorizontalLayout(backBtn, editBtn, closeRfqBtn, cancelRfqBtn,
+                addQuotationBtn, createQuotationBtn);
         actionsLayout.setSpacing(true);
 
-        scrollContent.add(pageTitle, headerLayout, dateAdjustmentRow, statusSection, new Hr(), 
-                           new H3("Request for Quotations Items"), detailsLinesGrid, actionsLayout);
+        scrollContent.add(pageTitle, headerLayout, dateAdjustmentRow, statusSection, new Hr(),
+                new H3("Request for Quotations Items"), detailsLinesGrid, actionsLayout);
 
         Scroller scroller = new Scroller(scrollContent);
         scroller.setSizeFull();
@@ -171,64 +177,97 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
             return;
         }
 
-        rfqService.getRequestForQuotationById(id).ifPresentOrElse(rfq -> {
-            this.currentRfq = rfq;
+        try {
+            rfqService.getRequestForQuotationById(id).ifPresentOrElse(rfq -> {
+                this.currentRfq = rfq;
 
-            rfqIdField.setValue("RFQ-" + rfq.getId());
-            requestedDateField.setValue(rfq.getRequestedDate() != null ? rfq.getRequestedDate().toString() : "-");
-            requestEndDateField.setValue(rfq.getRequestEndDate());
+                rfqIdField.setValue("RFQ-" + rfq.getId());
+                requestedDateField.setValue(rfq.getRequestedDate() != null ? rfq.getRequestedDate().toString() : "-");
+                requestEndDateField.setValue(rfq.getRequestEndDate());
 
-            renderStatusBadge(rfq.getStatus());
+                renderStatusBadge(rfq.getStatus());
 
-            linesDataset.clear();
-            linesDataset.addAll(rfqService.getLinesByRfqId(rfq.getId()));
-            detailsLinesGrid.setItems(linesDataset);
+                linesDataset.clear();
+                linesDataset.addAll(rfqService.getLinesByRfqId(rfq.getId()));
+                detailsLinesGrid.setItems(linesDataset);
 
-            if (isVendorUser) {
-                editBtn.setVisible(false);
-                closeRfqBtn.setVisible(false);
-                cancelRfqBtn.setVisible(false);
-                addQuotationBtn.setVisible(false);
-                updateDateBtn.setVisible(false);
-                requestEndDateField.setReadOnly(true);
-                
-                createQuotationBtn.setVisible(rfq.getStatus() == RequestForQuotationStatus.OPEN);
-            } else {
-                createQuotationBtn.setVisible(false); 
-                
-                switch (rfq.getStatus()) {
-                    case DRAFT -> {
-                        editBtn.setVisible(true);
-                        editBtn.addClickListener(click -> getUI().ifPresent(ui -> ui.navigate("rfq-form/" + rfq.getId())));
-                        closeRfqBtn.setVisible(false);
-                        cancelRfqBtn.setVisible(false);
-                        addQuotationBtn.setVisible(false);
-                        requestEndDateField.setReadOnly(true);
-                        updateDateBtn.setVisible(false);
+                if (isVendorUser) {
+                    editBtn.setVisible(false);
+                    closeRfqBtn.setVisible(false);
+                    cancelRfqBtn.setVisible(false);
+                    addQuotationBtn.setVisible(false);
+                    updateDateBtn.setVisible(false);
+                    requestEndDateField.setReadOnly(true);
+
+                    boolean rfqOpen = rfq.getStatus().equals(RequestForQuotationStatus.OPEN);
+                    createQuotationBtn.setVisible(rfqOpen);
+                    if (!rfqOpen ) {
+                        event.forwardTo("request-for-quotation");
+                        event.getUI().access(
+                            () -> Notification.show("Requested Quotation is not Open.", 4000, Position.MIDDLE));
                     }
-                    case OPEN -> {
-                        editBtn.setVisible(false);
-                        closeRfqBtn.setVisible(true);   
-                        cancelRfqBtn.setVisible(true); 
-                        addQuotationBtn.setVisible(true); 
-                        requestEndDateField.setReadOnly(false); 
-                        updateDateBtn.setVisible(true);
+                    boolean asCategory=false;
+                    for(Category c :loggedInVendor.getCategories())
+                    {
+                        if(c.getCategoryId().equals(rfq.getCategory().getCategoryId()))
+                        {
+                            asCategory=true;
+                        }
                     }
-                    default -> { 
-                        editBtn.setVisible(false);
-                        closeRfqBtn.setVisible(false);
-                        cancelRfqBtn.setVisible(false);
-                        addQuotationBtn.setVisible(false);
-                        requestEndDateField.setReadOnly(true);
-                        updateDateBtn.setVisible(false);
+                    if(!asCategory)
+                    {
+                        event.forwardTo("request-for-quotation");
+                        event.getUI().access(
+                            () -> Notification.show("Requested Quotation Not Yours.", 4000, Position.MIDDLE));
+                    }
+
+                } else {
+                    createQuotationBtn.setVisible(false);
+
+                    switch (rfq.getStatus()) {
+                        case DRAFT -> {
+                            editBtn.setVisible(true);
+                            editBtn.addClickListener(
+                                    click -> getUI().ifPresent(ui -> ui.navigate("rfq-form/" + rfq.getId())));
+                            closeRfqBtn.setVisible(false);
+                            cancelRfqBtn.setVisible(false);
+                            addQuotationBtn.setVisible(false);
+                            requestEndDateField.setReadOnly(true);
+                            updateDateBtn.setVisible(false);
+                        }
+                        case OPEN -> {
+                            editBtn.setVisible(false);
+                            closeRfqBtn.setVisible(true);
+                            cancelRfqBtn.setVisible(true);
+                            addQuotationBtn.setVisible(true);
+                            requestEndDateField.setReadOnly(false);
+                            updateDateBtn.setVisible(true);
+                        }
+                        default -> {
+                            editBtn.setVisible(false);
+                            closeRfqBtn.setVisible(false);
+                            cancelRfqBtn.setVisible(false);
+                            addQuotationBtn.setVisible(false);
+                            requestEndDateField.setReadOnly(true);
+                            updateDateBtn.setVisible(false);
+                        }
                     }
                 }
-            }
 
-        }, () -> {
-            Notification.show("Requested profile data missing.", 4000, Position.MIDDLE);
-            backToDashboard();
-        });
+            }, () -> {
+                event.forwardTo("request-for-quotation");
+                event.getUI().access(() -> {
+                    Notification.show("Requested profile data missing.", 4000, Position.MIDDLE);
+                });
+            });
+        } catch (Exception ex) {
+            event.forwardTo("request-for-quotation");
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 4000, Position.MIDDLE);
+            });
+            return;
+
+        }
     }
 
     private void navigateToQuotationForm() {
@@ -255,26 +294,29 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
     }
 
     private void executeCloseRfqRoutine() {
-        if (this.currentRfq == null || this.currentRfq.getId() == null) return;
+        if (this.currentRfq == null || this.currentRfq.getId() == null)
+            return;
 
         try {
             Employee actor = securityService.getLoggedInUser().getEmployee();
 
             currentRfq.setRequestEndDate(LocalDate.now());
             currentRfq.setStatus(RequestForQuotationStatus.CLOSED);
-            
+
             rfqService.updateRequestForQuotation(currentRfq, actor);
 
-            Notification.show("RFQ Timeline frozen. Document has been securely marked as CLOSED.", 4000, Position.TOP_CENTER);
+            Notification.show("RFQ Timeline frozen. Document has been securely marked as CLOSED.", 4000,
+                    Position.TOP_CENTER);
             backToDashboard();
 
         } catch (Exception ex) {
             Notification.show("Closing pipeline routine hit an issue: " + ex.getMessage(), 5000, Position.MIDDLE);
         }
     }
-    
+
     private void executeCancelRfqRoutine() {
-        if (this.currentRfq == null || this.currentRfq.getId() == null) return;
+        if (this.currentRfq == null || this.currentRfq.getId() == null)
+            return;
 
         try {
             Employee actor = securityService.getLoggedInUser().getEmployee();
@@ -282,21 +324,22 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
             List<PurchaseRequestLine> connectedPrLines = prLineService.getRequestForQuotation(currentRfq);
             for (PurchaseRequestLine prLine : connectedPrLines) {
                 prLine.setRequestForQuotation(null);
-                prLineService.updatePurchaseRequestLine(prLine,actor);
+                prLineService.updatePurchaseRequestLine(prLine, actor);
             }
 
             List<Quotation> associatedQuotations = quotationService.getQuotationsByRfq(currentRfq);
             for (Quotation quotation : associatedQuotations) {
                 if (quotation.getStatus() != Status.REJECTED) {
-                    quotation.setStatus(Status.CANCELLED); 
-                    quotationService.updateQuotation(quotation); 
+                    quotation.setStatus(Status.CANCELLED);
+                    quotationService.updateQuotation(quotation);
                 }
             }
 
             currentRfq.setStatus(RequestForQuotationStatus.CANCELLED);
             rfqService.updateRequestForQuotation(currentRfq, actor);
 
-            Notification.show("Request for Quotation successfully cancelled. Demands unmapped safely.", 4000, Position.TOP_CENTER);
+            Notification.show("Request for Quotation successfully cancelled. Demands unmapped safely.", 4000,
+                    Position.TOP_CENTER);
             backToDashboard();
 
         } catch (Exception ex) {
@@ -308,8 +351,8 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         statusBadgeContainer.removeAll();
         Span badge = new Span(status != null ? status.name() : "UNKNOWN");
         badge.getStyle()
-             .set("padding", "4px 12px").set("border-radius", "12px")
-             .set("font-weight", "bold").set("font-size", "13px");
+                .set("padding", "4px 12px").set("border-radius", "12px")
+                .set("font-weight", "bold").set("font-size", "13px");
 
         if (status == RequestForQuotationStatus.DRAFT) {
             badge.getStyle().set("background-color", "#f1f5f9").set("color", "#475569");
@@ -318,7 +361,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         } else if (status == RequestForQuotationStatus.CLOSED) {
             badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
         } else if (status == RequestForQuotationStatus.CANCELLED) {
-            badge.getStyle().set("background-color", "#fef3c7").set("color", "#d97706"); 
+            badge.getStyle().set("background-color", "#fef3c7").set("color", "#d97706");
         }
         statusBadgeContainer.add(badge);
     }
