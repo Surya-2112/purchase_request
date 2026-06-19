@@ -7,6 +7,8 @@ import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.DiscountType;
 import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.QuotationLine;
+import com.module.purchase.entity.Vendor;
+import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.QuotationService;
 import com.module.purchase.view.MainLayout;
@@ -41,6 +43,7 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
 
     private Quotation currentQuotation;
     private boolean isVendorUser = false;
+    private Vendor vendorContext = null;
 
     private final TextField quoteIdField = new TextField("Quotation ID Reference");
     private final TextField rfqIdField = new TextField("Source RFQ Reference");
@@ -75,6 +78,7 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
     private void evaluateUserRoleContext() {
         if (securityService.getLoggedInUser() != null && securityService.getLoggedInUser().getVendor() != null) {
             this.isVendorUser = true;
+            this.vendorContext = securityService.getLoggedInUser().getVendor();
         }
     }
 
@@ -181,39 +185,64 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
             return;
         }
 
-        quotationService.getQuotationById(id).ifPresentOrElse(quote -> {
-            this.currentQuotation = quote;
+        try {
+            quotationService.getQuotationById(id).ifPresentOrElse(quote -> {
+                this.currentQuotation = quote;
 
-            quoteIdField.setValue("QUOTE-" + quote.getId());
-            rfqIdField.setValue(
-                    quote.getRequestForQuotation() != null ? "RFQ-" + quote.getRequestForQuotation().getId() : "-");
-            vendorNameField.setValue(quote.getVendor() != null ? quote.getVendor().getVendorName() : "-");
-            dateField.setValue(quote.getQuotationDate() != null ? quote.getQuotationDate().toString() : "-");
-            grossTotalField.setValue(String.format("%.2f INR", quote.getTotalAmount()));
-            categoryField.setValue(quote.getRequestForQuotation().getCategory().getCategoryName());
+                if (isVendorUser && !vendorContext.getVendorId().equals(quote.getVendor().getVendorId())) {
+                    event.forwardTo("quotations");
+                    event.getUI().access(() -> {
+                        Notification.show("This is not Your Quotations", 4000, Position.MIDDLE);
+                    });
+                    return;
 
-            renderStatusBadge(quote.getStatus());
+                }
 
-            linesDataset.clear();
-            linesDataset.addAll(quotationService.getLinesByQuotation(quote));
-            linesGrid.setItems(linesDataset);
+                quoteIdField.setValue("QUOTE-" + quote.getId());
+                rfqIdField.setValue(
+                        quote.getRequestForQuotation() != null ? "RFQ-" + quote.getRequestForQuotation().getId() : "-");
+                vendorNameField.setValue(quote.getVendor() != null ? quote.getVendor().getVendorName() : "-");
+                dateField.setValue(quote.getQuotationDate() != null ? quote.getQuotationDate().toString() : "-");
+                grossTotalField.setValue(String.format("%.2f INR", quote.getTotalAmount()));
+                categoryField.setValue(quote.getRequestForQuotation().getCategory().getCategoryName());
 
-            discountMatrixGrid.setItems(new ArrayList<>());
-            if (quote.getStatus() == Status.DRAFT) {
-                editBtn.setVisible(true);
-                submitFinalBtn.setVisible(true);
-                deleteBtn.setVisible(true);
-            } else {
-                editBtn.setVisible(false);
-                submitFinalBtn.setVisible(false);
-                deleteBtn.setVisible(false);
-            }
+                renderStatusBadge(quote.getStatus());
 
-        }, () -> {
-            Notification.show("The selected proposal mapping is missing from active storage logs.", 4000,
-                    Position.MIDDLE);
-            backToDashboard();
-        });
+                linesDataset.clear();
+                linesDataset.addAll(quotationService.getLinesByQuotation(quote));
+                linesGrid.setItems(linesDataset);
+
+                discountMatrixGrid.setItems(new ArrayList<>());
+
+                if (quote.getStatus() == Status.DRAFT
+                        && quote.getRequestForQuotation().getStatus().equals(RequestForQuotationStatus.OPEN)) {
+                    deleteBtn.setVisible(true);
+                    editBtn.setVisible(true);
+                    submitFinalBtn.setVisible(true);
+                } else if (quote.getStatus() == Status.DRAFT && !quote.getRequestForQuotation().getStatus().equals(RequestForQuotationStatus.OPEN)) {
+                    deleteBtn.setVisible(true);
+                    Notification.show("The Request For Quotation is closed", 4000, Position.MIDDLE);
+                    editBtn.setVisible(false);
+                    submitFinalBtn.setVisible(false);
+                } else {
+                    editBtn.setVisible(false);
+                    submitFinalBtn.setVisible(false);
+                    deleteBtn.setVisible(false);
+                }
+
+            }, () -> {
+                Notification.show("The selected proposal mapping is missing from active storage logs.", 4000,
+                        Position.MIDDLE);
+                backToDashboard();
+            });
+        } catch (Exception ex) {
+            event.forwardTo("quotations");
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 4000, Position.MIDDLE);
+            });
+            return;
+        }
+
     }
 
     private void loadDiscountSlabBreakdownMatrix(QuotationLine line) {
@@ -256,7 +285,7 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
                 .set("font-weight", "bold").set("font-size", "13px");
 
         if (status == Status.DRAFT) {
-            badge.getStyle().set("background-color", "#f1f5f9").set("color", "#475569");
+            badge.getStyle().set("background-color", "#f1f5f9").set("color", "#0a70ff");
         } else if (status == Status.APPROVED) {
             badge.getStyle().set("background-color", "#dcfce7").set("color", "#15803d");
         } else if (status == Status.REJECTED) {

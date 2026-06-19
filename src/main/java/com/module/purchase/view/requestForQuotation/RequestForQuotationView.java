@@ -123,9 +123,13 @@ public class RequestForQuotationView extends VerticalLayout {
             quotation.setRequestForQuotation(rfq);
             if(rfq.getStatus() == RequestForQuotationStatus.OPEN)
             {
-            quotation.setStatus(Status.WAITING_APPROVAL);
+              quotation.setStatus(Status.WAITING_APPROVAL);
             }
-            return String.valueOf(quotationService.getCountQuotations(quotation));
+            if(rfq.getStatus() == RequestForQuotationStatus.CLOSED)
+            {
+                quotation.setStatus(Status.REJECTED);
+            }
+            return String.valueOf(rfq.getStatus() == RequestForQuotationStatus.CLOSED ? quotationService.getCountQuotations(quotation)+1:quotationService.getCountQuotations(quotation));
         })
         .setHeader("Quotations Recv").setWidth("150px");
 

@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.RequestForQuotation;
+import com.module.purchase.entityDTO.QuotationDTO;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.QuotationService;
@@ -121,8 +122,12 @@ public class QuotationComparisonView extends VerticalLayout {
         grid.addColumn(rfq -> rfq.getRequestEndDate() != null ? rfq.getRequestEndDate().toString() : "-")
                 .setHeader("Closing / End Date").setAutoWidth(true);
 
-        grid.addColumn(rfq -> quotationService.getQuotationsByRfq(rfq).size()).setHeader("Quotations Received")
-                .setAutoWidth(true).setSortable(true);
+        grid.addColumn(rfq ->  {   QuotationDTO quotationDTO=new QuotationDTO();
+                quotationDTO.setRequestForQuotation(rfq);
+                quotationDTO.setStatus(Status.WAITING_APPROVAL);
+                quotationService.getCountQuotations(quotationDTO);
+                //TODO ::  
+            }).setHeader("Quotations Received").setAutoWidth(true).setSortable(true);
     }
 
     private HorizontalLayout createFilterHeaderRow(TextField idField, DatePicker dateField, TextField countField) {

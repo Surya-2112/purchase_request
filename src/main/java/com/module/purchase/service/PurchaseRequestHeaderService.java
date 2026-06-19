@@ -139,7 +139,7 @@ public class PurchaseRequestHeaderService {
 
         PurchaseRequestLine purchaseRequestLine=new PurchaseRequestLine();
         purchaseRequestLine.setPurchaseRequestHeader(purchaseRequestHeader);
-
+        purchaseRequestLine.setStatus(null);
         List<PurchaseRequestLine> purchaseRequestLines = purchaseRequestLineSerivce.getPurchaseRequestLineList(purchaseRequestLine);
 
         switch (purchaseRequestHeader.getStatus()) {

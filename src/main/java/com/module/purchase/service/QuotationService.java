@@ -14,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.DiscountType;
 import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.QuotationLine;
@@ -49,7 +50,13 @@ public class QuotationService {
     private PurchaseOrderHeaderService purchaseOrderService;
 
     public Optional<Quotation> getQuotationById(Long id) {
-        return quotationRepository.findById(id);
+        Optional<Quotation> quot=quotationRepository.findById(id);
+        if(quot.isEmpty())
+        {
+            throw new ResourceNotFoundException("Quotations is not found");
+        }
+
+        return quot;
     }
 
     public List<Quotation> getAllQuotations() {

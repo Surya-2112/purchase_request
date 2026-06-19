@@ -3,7 +3,6 @@ package com.module.purchase.view.requestForQuotation;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Category;
@@ -13,6 +12,7 @@ import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.entity.Vendor;
+import com.module.purchase.entityDTO.QuotationDTO;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
 import com.module.purchase.service.PurchaseRequestLineService;
@@ -265,8 +265,6 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
             event.getUI().access(() -> {
                 Notification.show(ex.getMessage(), 4000, Position.MIDDLE);
             });
-            return;
-
         }
     }
 
@@ -298,8 +296,15 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
             return;
 
         try {
+            QuotationDTO quotationDTO=new QuotationDTO();
+            quotationDTO.setRequestForQuotation(currentRfq);
+            quotationDTO.setStatus(Status.WAITING_APPROVAL);
+            if(quotationService.getCountQuotations(quotationDTO)==0)
+            {
+                Notification.show("Cannot close the request for Quotation because there is no quotation", 5000, Position.MIDDLE);
+                return ;
+            }
             Employee actor = securityService.getLoggedInUser().getEmployee();
-
             currentRfq.setRequestEndDate(LocalDate.now());
             currentRfq.setStatus(RequestForQuotationStatus.CLOSED);
 
@@ -354,14 +359,12 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
                 .set("padding", "4px 12px").set("border-radius", "12px")
                 .set("font-weight", "bold").set("font-size", "13px");
 
-        if (status == RequestForQuotationStatus.DRAFT) {
-            badge.getStyle().set("background-color", "#f1f5f9").set("color", "#475569");
-        } else if (status == RequestForQuotationStatus.OPEN) {
-            badge.getStyle().set("background-color", "#e0f2fe").set("color", "#0369a1");
-        } else if (status == RequestForQuotationStatus.CLOSED) {
-            badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
-        } else if (status == RequestForQuotationStatus.CANCELLED) {
-            badge.getStyle().set("background-color", "#fef3c7").set("color", "#d97706");
+        switch (status) {
+            case DRAFT -> badge.getStyle().set("background-color", "#f1f5f9").set("color", "#475569");
+            case OPEN -> badge.getStyle().set("background-color", "#e0f2fe").set("color", "#0369a1");
+            case CLOSED -> badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
+            case CANCELLED -> badge.getStyle().set("background-color", "#fef3c7").set("color", "#d97706");
+            case null -> badge.getStyle().set("background-color", "#f8fafc").set("color", "#334155");
         }
         statusBadgeContainer.add(badge);
     }

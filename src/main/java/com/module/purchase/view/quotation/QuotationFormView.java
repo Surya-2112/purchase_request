@@ -341,15 +341,20 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                 quotationService.getQuotationById(quoteId).ifPresentOrElse(quote -> {
                     this.existingQuotation = quote;
                     this.targetRfq = quote.getRequestForQuotation();
-                    this.selectedVendorContext = quote.getVendor();
+
+                    if(isVendorUser&& !quote.getVendor().getVendorId().equals(selectedVendorContext.getVendorId()))
+                    {  event.forwardTo("quotations");
+                        event.getUI().access(() -> {
+                            Notification.show("This is not your Quotations", 3000, Position.MIDDLE);
+                        });
+                    }
 
                     if (!quote.getStatus().equals(Status.DRAFT)) {
                         event.forwardTo("quotations");
                         event.getUI().access(() -> {
-                            Notification.show("Qutations is Finalized", 3000, Position.MIDDLE);
+                            Notification.show("Quotations is Finalized", 3000, Position.MIDDLE);
                         });
                         return;
-
                     }
 
                     rfqIdField.setValue(targetRfq != null ? "RFQ REFERENCE #" + targetRfq.getId() : "-");
@@ -363,8 +368,15 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
                         vendorSelector.setReadOnly(true);
                     }
 
-                    saveDraftBtn.setEnabled(true);
+                    if(!quote.getRequestForQuotation().getStatus().equals(RequestForQuotationStatus.OPEN)) 
+                     {
+                    saveDraftBtn.setEnabled(false);
+                    submitBidBtn.setEnabled(false);
+                     Notification.show("Request For Quotation is closed ", 4000, Position.MIDDLE);
+                     }else{
+                     saveDraftBtn.setEnabled(true);
                     submitBidBtn.setEnabled(true);
+                     }
 
                     List<QuotationLine> savedLines = quotationService.getLinesByQuotation(quote);
                     for (QuotationLine line : savedLines) {
@@ -395,7 +407,6 @@ public class QuotationFormView extends VerticalLayout implements HasUrlParameter
     }
 
     private void checkSubmissionComplianceGuard() {
-        // Only run check constraints during New Insertion actions
         if (existingQuotation == null && targetRfq != null && selectedVendorContext != null) {
             if (quotationService.isDuplicateSubmission(targetRfq.getId(), selectedVendorContext.getVendorId())) {
                 Notification.show("Compliance Block: Vendor '" + selectedVendorContext.getVendorName()
