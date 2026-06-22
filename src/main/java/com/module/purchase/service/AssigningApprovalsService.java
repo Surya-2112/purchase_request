@@ -26,7 +26,7 @@ import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.ApprovalType;
-import com.module.purchase.enums.EmployeeGroup; 
+import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.Status;
 import com.module.purchase.mapper.AssigningApprovalsMapper;
@@ -92,11 +92,13 @@ public class AssigningApprovalsService {
         return exist.get();
     }
 
-    public Page<AssigningApprovalsDTO> getPurchaseRequestApprovalsForMyGroup( AssigningApprovalsDTO assigningApprovalsDTO, List<EmployeeGroup> group, int page,
+    public Page<AssigningApprovalsDTO> getPurchaseRequestApprovalsForMyGroup(
+            AssigningApprovalsDTO assigningApprovalsDTO, List<EmployeeGroup> group, int page,
             int size) {
 
         Specification<AssigningApprovals> spec = Specification
-                .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
+                .where(AssigningApprovalsSpecification
+                        .hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
                 .and(AssigningApprovalsSpecification.hasEmployeeGroup(group))
                 .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
                 .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
@@ -157,7 +159,8 @@ public class AssigningApprovalsService {
                 default -> log.setAction(Action.UPDATE);
             }
         } else if (assigningApprovals.getApprovalType().equals(ApprovalType.PURCHASE_ORDER)) {
-            PurchaseOrderHeader purchaseOrderHeader = purchaseOrderHeaderService.getPurchaseOrderHeaderById(exist.getReferenceId()).get();
+            PurchaseOrderHeader purchaseOrderHeader = purchaseOrderHeaderService
+                    .getPurchaseOrderHeaderById(exist.getReferenceId()).get();
             switch (assigningApprovals.getStatus()) {
                 case APPROVED -> {
                     log.setAction(Action.APPROVE);
@@ -171,6 +174,7 @@ public class AssigningApprovalsService {
                     } else {
                         purchaseOrderHeader.setStatus(Status.ORDERED);
                         purchaseOrderHeaderService.updatePurchaseOrderHeader(purchaseOrderHeader, null);
+                        calculateDepartmentBudget(purchaseOrderHeader);
                     }
                 }
                 case REJECTED -> {
@@ -189,7 +193,7 @@ public class AssigningApprovalsService {
         return saveAssigningApproval(assigningApprovals);
     }
 
-    public void CalculateDepartmentBudget(PurchaseOrderHeader purchaseOrder)
+    public void calculateDepartmentBudget(PurchaseOrderHeader purchaseOrder)
     {      
         PurchaseOrderLine purchaseOrderLine=new PurchaseOrderLine();
         purchaseOrderLine.setPurchaseOrderHeader(purchaseOrder);
@@ -207,17 +211,17 @@ public class AssigningApprovalsService {
               departmentBudgetService.updateDepartmentBudget(budget,null);
             }
         }
-       
     }
+    public List<AssigningApprovals> getApprovalsList(AssigningApprovalsDTO assigningApprovalsDTO) {
 
-    public List<AssigningApprovals> getApprovalsList( AssigningApprovalsDTO assigningApprovalsDTO) {
-            
-            Specification<AssigningApprovals> spec = Specification
-            .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
-            .and(AssigningApprovalsSpecification.hasEmployeeGroup(List.of(assigningApprovalsDTO.getEmployeeGroup())))
-            .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
-            .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
-            .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
+        Specification<AssigningApprovals> spec = Specification
+                .where(AssigningApprovalsSpecification
+                        .hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
+                .and(AssigningApprovalsSpecification
+                        .hasEmployeeGroup(List.of(assigningApprovalsDTO.getEmployeeGroup())))
+                .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
+                .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
+                .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));
 
         return assigningApprovalsRepository.findAll(spec);
     }
@@ -225,8 +229,10 @@ public class AssigningApprovalsService {
     public Long getCountApprovals(AssigningApprovalsDTO assigningApprovalsDTO) {
 
         Specification<AssigningApprovals> spec = Specification
-                .where(AssigningApprovalsSpecification.hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
-                .and(AssigningApprovalsSpecification.hasEmployeeGroup(List.of(assigningApprovalsDTO.getEmployeeGroup())))
+                .where(AssigningApprovalsSpecification
+                        .hasAssigningApprovalsId(assigningApprovalsDTO.getAssigningApprovalsId()))
+                .and(AssigningApprovalsSpecification
+                        .hasEmployeeGroup(List.of(assigningApprovalsDTO.getEmployeeGroup())))
                 .and(AssigningApprovalsSpecification.hasApprovalType(assigningApprovalsDTO.getApprovalType()))
                 .and(AssigningApprovalsSpecification.hasStatus(assigningApprovalsDTO.getStatus()))
                 .and(AssigningApprovalsSpecification.hasReferenceId(assigningApprovalsDTO.getReferenceId()));

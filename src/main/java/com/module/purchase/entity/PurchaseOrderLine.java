@@ -28,11 +28,11 @@ public class PurchaseOrderLine {
     private Double unitPrice;
 
     @NotNull
-    @Positive
+    @PositiveOrZero
     private Double quantity;
 
     @Column(name = "total_amount")
-    @Positive
+    @PositiveOrZero
     private Double totalAmount;
 
     @Column(name = "discount_amount")

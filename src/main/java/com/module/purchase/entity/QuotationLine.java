@@ -35,6 +35,8 @@ public class QuotationLine {
     @JoinColumn(name = "request_for_quotation_line_id")
     private RequestForQuotationLine requestForQuotationLine;
 
+    private Double discount;
+
     public Long getId() {
         return id;
     }
@@ -73,5 +75,15 @@ public class QuotationLine {
 
     public void setRequestForQuotationLine(RequestForQuotationLine requestForQuotationLine) {
         this.requestForQuotationLine = requestForQuotationLine;
+    }
+
+    public void setDiscount(Double discount)
+    {
+        this.discount=discount;
+    }
+
+    public Double getDiscount()
+    {
+        return discount;
     }
 }

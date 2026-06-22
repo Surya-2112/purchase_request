@@ -51,10 +51,8 @@ public class EmployeeForm extends VerticalLayout {
 
     private final TextField postalCodeField =  new TextField("Pincode");
 
-    public EmployeeForm(EmployeeService employeeService,
-            DepartmentService departmentService,
-            RoleService roleService,
-            SecurityService securityService) {
+    public EmployeeForm(EmployeeService employeeService,  DepartmentService departmentService,
+            RoleService roleService,  SecurityService securityService) {
 
         this.employeeService = employeeService;
         this.securityService = securityService;
@@ -67,18 +65,16 @@ public class EmployeeForm extends VerticalLayout {
 
         departmentField.setItems( departmentService.getDepartments());
 
-        departmentField.setItemLabelGenerator(
-                Department::getDepartmentName);
+        departmentField.setItemLabelGenerator(  Department::getDepartmentName);
 
         roleField.setItems( roleService.getRoles());
 
-        roleField.setItemLabelGenerator(
-                Role::getRoleName);
+        roleField.setItemLabelGenerator(Role::getRoleName);
 
-        phoneNumberField.setPattern("[0-9]{10}");
-        phoneNumberField.setErrorMessage("Enter valid 10 digit number");
-        postalCodeField.setPattern("[0-9]{6}");
-        postalCodeField.setErrorMessage("Enter vaild 6 digit postal code");
+        phoneNumberField.setPattern("[0-9]{4,15}");
+        phoneNumberField.setErrorMessage("Enter valid mobile number 4 to 15");
+        postalCodeField.setPattern("[0-9a-zA-Z]{3,10}");
+        postalCodeField.setErrorMessage("Enter vaild 3-10 digit postal code");
 
         employeeNameField.setRequired(true);
         employeeEmailField.setRequired(true);
@@ -131,7 +127,7 @@ public class EmployeeForm extends VerticalLayout {
                     || roleField.isEmpty()) {
 
                 Notification.show(
-                        "Please fill all required fields"
+                        "Please fill all required fields",3000,Notification.Position.MIDDLE
                 );
 
                 return;
@@ -139,45 +135,35 @@ public class EmployeeForm extends VerticalLayout {
 
             Employee employee = new Employee();
 
-            employee.setEmployeeName(
-                    employeeNameField.getValue());
+            employee.setEmployeeName(employeeNameField.getValue());
 
             employee.setEmployeeEmail(employeeEmailField.getValue());
 
             employee.setEmployeePhoneNumber(phoneNumberField.getValue().trim().equals("")?null:phoneNumberField.getValue());
+ 
+            employee.setDepartment( departmentField.getValue());
 
-            employee.setDepartment(
-                    departmentField.getValue());
-
-            employee.setRole(
-                    roleField.getValue());
+            employee.setRole(roleField.getValue());
 
             employee.setActive(true);
 
             Address address = new Address();
 
-            address.setAddressLine(
-                    addressLineField.getValue());
+            address.setAddressLine(addressLineField.getValue());
 
-            address.setStreet(
-                    streetField.getValue());
+            address.setStreet(streetField.getValue());
 
-            address.setCity(
-                    cityField.getValue());
+            address.setCity( cityField.getValue());
 
-            address.setState(
-                    stateField.getValue());
+            address.setState(stateField.getValue());
 
-            address.setCountry(
-                    countryField.getValue());
+            address.setCountry( countryField.getValue());
 
-            address.setPostalCode(
-                    postalCodeField.getValue());
+            address.setPostalCode(postalCodeField.getValue());
 
             employee.setAddress(address);
 
-            Employee createdBy =
-                    securityService
+            Employee createdBy =securityService
                             .getLoggedInUser()
                             .getEmployee();
 
@@ -192,8 +178,7 @@ public class EmployeeForm extends VerticalLayout {
                     Notification.Position.TOP_CENTER
             );
 
-            getUI().ifPresent(ui ->
-                    ui.navigate("employee"));
+            getUI().ifPresent(ui -> ui.navigate("employee"));
 
         } catch (Exception e) {
 

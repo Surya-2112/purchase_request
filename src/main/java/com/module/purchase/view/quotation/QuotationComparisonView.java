@@ -78,8 +78,8 @@ public class QuotationComparisonView extends VerticalLayout {
                 createFilterHeaderRow(filterAssignedRfqId, filterAssignedDate, filterAssignedQuoteCount), assignedGrid);
         assignedTabContent.setSizeFull();
         assignedTabContent.setPadding(false);
-        assignedTabContent.setVisible(false); 
-        
+        assignedTabContent.setVisible(false);
+
         navigationTabs.addSelectedChangeListener(event -> {
             boolean isUnassignedActive = event.getSelectedTab().equals(unassignedTab);
             unassignedTabContent.setVisible(isUnassignedActive);
@@ -92,12 +92,12 @@ public class QuotationComparisonView extends VerticalLayout {
     }
 
     private void configureGridsBaseLayouts() {
-       
+
         setupGridColumnsTemplate(unassignedGrid);
         unassignedGrid.addComponentColumn(rfq -> {
             Button analyzeBtn = new Button("Compare Quotations", VaadinIcon.BAR_CHART.create());
             analyzeBtn.addThemeName("primary small");
-         
+
             analyzeBtn.addClickListener(
                     e -> getUI().ifPresent(ui -> ui.navigate("quotation-evaluation-matrix/" + rfq.getId())));
             return analyzeBtn;
@@ -122,12 +122,12 @@ public class QuotationComparisonView extends VerticalLayout {
         grid.addColumn(rfq -> rfq.getRequestEndDate() != null ? rfq.getRequestEndDate().toString() : "-")
                 .setHeader("Closing / End Date").setAutoWidth(true);
 
-        grid.addColumn(rfq ->  {   QuotationDTO quotationDTO=new QuotationDTO();
-                quotationDTO.setRequestForQuotation(rfq);
-                quotationDTO.setStatus(Status.WAITING_APPROVAL);
-                quotationService.getCountQuotations(quotationDTO);
-                //TODO ::  
-            }).setHeader("Quotations Received").setAutoWidth(true).setSortable(true);
+        grid.addColumn(rfq -> {
+            QuotationDTO quotationDTO = new QuotationDTO();
+            quotationDTO.setRequestForQuotation(rfq);
+            quotationDTO.setStatus(Status.WAITING_APPROVAL);
+            return String.valueOf(quotationService.getCountQuotations(quotationDTO));
+        }).setHeader("Quotations Received").setAutoWidth(true).setSortable(true);
     }
 
     private HorizontalLayout createFilterHeaderRow(TextField idField, DatePicker dateField, TextField countField) {

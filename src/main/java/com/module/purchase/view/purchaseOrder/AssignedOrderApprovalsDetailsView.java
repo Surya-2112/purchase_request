@@ -13,11 +13,11 @@ import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
-import com.module.purchase.entity.DiscountType;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
 import com.module.purchase.entity.PurchaseRequestLine;
+import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
@@ -81,17 +81,14 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
     private final List<PurchaseRequestLine> workingPrLinesList = new ArrayList<>();
     private final List<Department> workingBudgetList = new ArrayList<>();
 
-    // Keep instance level references for live dynamic column rendering lookups
     private final Map<Long, Double> costAllocationMap = new HashMap<>();
 
     private boolean canUserActionApproval = false;
     private boolean isAnyDepartmentOverrun = false;
 
-    public AssignedOrderApprovalsDetailsView(
-            PurchaseOrderHeaderService poHeaderService,
+    public AssignedOrderApprovalsDetailsView(PurchaseOrderHeaderService poHeaderService,
             PurchaseOrderLineService poLineService,
-            PurchaseRequestLineService prLineService,
-            AssigningApprovalsService approvalsService,
+            PurchaseRequestLineService prLineService, AssigningApprovalsService approvalsService,
             DepartmentBudgetService departmentBudgetService,
             SecurityService securityService,
             QuotationService quotationService) {
@@ -134,17 +131,16 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
                 new H2("Purchase Order Approval Workspace"),
                 headerCard,
                 new Hr(),
-                new H3("1. Cost Center Budgets Ledger Analysis (PO Linked Pricing)"),
+                new H3("1. Cost Center Budgets Ledger"),
                 budgetGrid,
                 new Hr(),
-                new H3("2. Consolidated Purchase Order Lines Summary"),
+                new H3("2. Purchase Order Lines Summary"),
                 poLinesGrid,
                 new Hr(),
-                new H3("3. Originating Purchase Request Source Line Items"),
+                new H3("3. Purchase Request Source Line Items"),
                 prLinesGrid,
                 commentsField,
-                actionToolbar
-        );
+                actionToolbar);
         layoutScrollerContent.setWidthFull();
         layoutScrollerContent.setPadding(false);
 
@@ -171,7 +167,8 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
     private void bindHeaderMetadata() {
         poIdText.setText("Purchase Order ID : PO-" + poHeader.getPurchaseOrderId());
         poIdText.getStyle().set("font-weight", "bold");
-        vendorText.setText("Contracted Winning Vendor : " + (poHeader.getVendor() != null ? poHeader.getVendor().getVendorName() : "-"));
+        vendorText.setText("Contracted Winning Vendor : "
+                + (poHeader.getVendor() != null ? poHeader.getVendor().getVendorName() : "-"));
         workflowLevelText.setText("Active Authorization Step : Tier " + approvalTask.getLevel());
     }
 
@@ -181,7 +178,8 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
         List<EmployeeGroup> associatedUserGroups = activeEmployeeProfile.getRole().getEmployeeGroups();
 
         boolean isTaskPending = approvalTask.getStatus().equals(Status.WAITING_APPROVAL);
-        this.canUserActionApproval = isTaskPending && (associatedUserGroups.contains(targetedGroup) || associatedUserGroups.contains(EmployeeGroup.SUPER_ADMIN));
+        this.canUserActionApproval = isTaskPending && (associatedUserGroups.contains(targetedGroup)
+                || associatedUserGroups.contains(EmployeeGroup.SUPER_ADMIN));
 
         if (canUserActionApproval) {
             approveBtn.setVisible(true);
@@ -192,31 +190,36 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
             approveBtn.setVisible(false);
             rejectBtn.setVisible(false);
             commentsField.setReadOnly(true);
-            commentsField.setValue(approvalTask.getComments() == null ? "No review comments logged." : approvalTask.getComments());
+            commentsField.setValue(
+                    approvalTask.getComments() == null ? "No review comments logged." : approvalTask.getComments());
         }
     }
 
     private void configureBudgetGrid() {
         budgetGrid.removeAllColumns();
-        
+
         budgetGrid.addColumn(Department::getDepartmentName).setHeader("Cost Center Department").setAutoWidth(true);
-        
+
         budgetGrid.addColumn(dept -> {
             DepartmentBudget accountLedger = departmentBudgetService.getByDepartmentAndYear(dept, Year.now());
-            double available = (accountLedger != null && accountLedger.getRemainingBudgetAmount() != null) ? accountLedger.getRemainingBudgetAmount() : 0.0;
-            return String.format("%.2f INR", available);
+            double available = (accountLedger != null && accountLedger.getRemainingBudgetAmount() != null)
+                    ? accountLedger.getRemainingBudgetAmount()
+                    : 0.0;
+            return String.format("%.2f ", available);
         }).setHeader("Available Budget").setAutoWidth(true);
-        
+
         budgetGrid.addColumn(dept -> {
             double needed = costAllocationMap.getOrDefault(dept.getDepartmentId(), 0.0);
-            return String.format("%.2f INR", needed);
+            return String.format("%.2f ", needed);
         }).setHeader("Needed Amount (PO Pricing)").setAutoWidth(true);
-        
+
         budgetGrid.addColumn(dept -> {
             DepartmentBudget accountLedger = departmentBudgetService.getByDepartmentAndYear(dept, Year.now());
-            double available = (accountLedger != null && accountLedger.getRemainingBudgetAmount() != null) ? accountLedger.getRemainingBudgetAmount() : 0.0;
+            double available = (accountLedger != null && accountLedger.getRemainingBudgetAmount() != null)
+                    ? accountLedger.getRemainingBudgetAmount()
+                    : 0.0;
             double needed = costAllocationMap.getOrDefault(dept.getDepartmentId(), 0.0);
-            return String.format("%.2f INR", available - needed);
+            return String.format("%.2f ", available - needed);
         }).setHeader("Remaining Balance").setAutoWidth(true);
 
         budgetGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
@@ -224,27 +227,36 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
 
         budgetGrid.setClassNameGenerator(dept -> {
             DepartmentBudget accountLedger = departmentBudgetService.getByDepartmentAndYear(dept, Year.now());
-            double available = (accountLedger != null && accountLedger.getRemainingBudgetAmount() != null) ? accountLedger.getRemainingBudgetAmount() : 0.0;
+            double available = (accountLedger != null && accountLedger.getRemainingBudgetAmount() != null)
+                    ? accountLedger.getRemainingBudgetAmount()
+                    : 0.0;
             double needed = costAllocationMap.getOrDefault(dept.getDepartmentId(), 0.0);
             return (available - needed < 0 || accountLedger == null) ? "error-budget-row" : "";
         });
 
         budgetGrid.getElement().executeJs(
-            "const style = document.createElement('style');" +
-            "style.innerHTML = '.error-budget-row { background-color: #fee2e2 !important; color: #b91c1c !important; font-weight: bold; }';" +
-            "document.head.appendChild(style);"
-        );
+                "const style = document.createElement('style');" +
+                        "style.innerHTML = '.error-budget-row { background-color: #fee2e2 !important; color: #b91c1c !important; font-weight: bold; }';"
+                        +
+                        "document.head.appendChild(style);");
     }
 
     private void configurePoLinesGrid() {
         poLinesGrid.removeAllColumns();
         poLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
-                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item Name").setAutoWidth(true);
-        poLinesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "").setHeader("Item Variant").setAutoWidth(true);
+                ? line.getItemVariant().getItem().getItemName()
+                : "").setHeader("Item Name").setAutoWidth(true);
+        poLinesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
+                .setHeader("Item Variant").setAutoWidth(true);
         poLinesGrid.addColumn(PurchaseOrderLine::getQuantity).setHeader("Quantity").setWidth("110px");
-        poLinesGrid.addColumn(line -> String.format("%.2f INR", line.getUnitPrice() != null ? line.getUnitPrice() : 0.0)).setHeader("Unit Price").setWidth("130px");
-        poLinesGrid.addColumn(line -> String.format("%.2f INR", line.getDiscountAmount() != null ? line.getDiscountAmount() : 0.0)).setHeader("Slab Discount").setWidth("150px");
-        poLinesGrid.addColumn(line -> String.format("%.2f INR", line.getTotalAmount() != null ? line.getTotalAmount() : 0.0)).setHeader("Line Total").setWidth("150px");
+        poLinesGrid.addColumn(line -> String.format("%.2f ", line.getUnitPrice() != null ? line.getUnitPrice() : 0.0))
+                .setHeader("Unit Price").setWidth("130px");
+        poLinesGrid.addColumn(
+                line -> String.format("%.2f ", line.getDiscountAmount() != null ? line.getDiscountAmount() : 0.0))
+                .setHeader("Slab Discount").setWidth("150px");
+        poLinesGrid
+                .addColumn(line -> String.format("%.2f ", line.getTotalAmount() != null ? line.getTotalAmount() : 0.0))
+                .setHeader("Line Total").setWidth("150px");
 
         poLinesGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         poLinesGrid.setAllRowsVisible(true);
@@ -253,20 +265,25 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
     private void configurePrLinesGrid() {
         prLinesGrid.removeAllColumns();
         prLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
-                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item Name").setAutoWidth(true);
-        prLinesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "").setHeader("Variation").setAutoWidth(true);
-        prLinesGrid.addColumn(line -> line.getPurchaseRequestHeader() != null && line.getPurchaseRequestHeader().getForDepartment() != null
-                ? line.getPurchaseRequestHeader().getForDepartment().getDepartmentName() : "-").setHeader("Department Name").setAutoWidth(true);
+                ? line.getItemVariant().getItem().getItemName()
+                : "").setHeader("Item Name").setAutoWidth(true);
+        prLinesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
+                .setHeader("Variation").setAutoWidth(true);
+        prLinesGrid.addColumn(line -> line.getPurchaseRequestHeader() != null
+                && line.getPurchaseRequestHeader().getForDepartment() != null
+                        ? line.getPurchaseRequestHeader().getForDepartment().getDepartmentName()
+                        : "-")
+                .setHeader("Department Name").setAutoWidth(true);
         prLinesGrid.addColumn(PurchaseRequestLine::getApprovedQuantity).setHeader("Approved Qty").setWidth("110px");
 
         prLinesGrid.addComponentColumn(prLine -> {
             NumberField orderQtyField = new NumberField();
             orderQtyField.setWidth("130px");
-            
+
             if (prLine.getOrderedQuantity() == null) {
                 prLine.setOrderedQuantity(prLine.getApprovedQuantity());
             }
-            
+
             orderQtyField.setValue(prLine.getOrderedQuantity());
             orderQtyField.setMin(0.0);
             double maxAllowed = prLine.getApprovedQuantity() != null ? prLine.getApprovedQuantity() : 0.0;
@@ -283,21 +300,26 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
                     } else {
                         prLine.setOrderedQuantity(event.getValue());
                     }
-                    synchronizeMasterPurchaseOrderLinesFromPrChanges(prLine);
+                    poLinesFromPrLineChanges(prLine);
                 }
             });
 
             return orderQtyField;
         }).setHeader("Order Qty (Edit)").setWidth("160px");
 
-        prLinesGrid.addColumn(line -> line.getPurchaseOrderLine() != null && line.getPurchaseOrderLine().getUnitPrice() != null
-                ? String.format("%.2f INR", line.getPurchaseOrderLine().getUnitPrice()) 
-                : "0.00 INR").setHeader("Contract Unit Price").setWidth("140px");
+        prLinesGrid.addColumn(
+                line -> line.getPurchaseOrderLine() != null && line.getPurchaseOrderLine().getUnitPrice() != null
+                        ? String.format("%.2f INR", line.getPurchaseOrderLine().getUnitPrice())
+                        : "0.00 INR")
+                .setHeader("Contract Unit Price").setWidth("140px");
 
         prLinesGrid.addColumn(line -> {
-            double finalPrice = (line.getPurchaseOrderLine() != null && line.getPurchaseOrderLine().getUnitPrice() != null) 
-                    ? line.getPurchaseOrderLine().getUnitPrice() : 0.0;
-            double currentQty = line.getOrderedQuantity() != null ? line.getOrderedQuantity() : 0.0;
+            double finalPrice = (line.getPurchaseOrderLine() != null
+                    && line.getPurchaseOrderLine().getUnitPrice() != null)
+                            ? line.getPurchaseOrderLine().getUnitPrice()
+                            : 0.0;
+            Double orderedQty = line.getOrderedQuantity();
+            double currentQty = orderedQty != null ? orderedQty.doubleValue() : 0.0;
             return String.format("%.2f INR", finalPrice * currentQty);
         }).setHeader("Gross Total").setWidth("140px");
 
@@ -309,7 +331,7 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
         workingPoLinesList.clear();
         workingPrLinesList.clear();
 
-        PurchaseOrderLine poline=new PurchaseOrderLine();
+        PurchaseOrderLine poline = new PurchaseOrderLine();
         poline.setPurchaseOrderHeader(poHeader);
         List<PurchaseOrderLine> poLines = poLineService.getPurchaseOrderList(poline);
         workingPoLinesList.addAll(poLines);
@@ -329,69 +351,40 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
         refreshBudgetTrackersAnalysis();
     }
 
-    private void synchronizeMasterPurchaseOrderLinesFromPrChanges(PurchaseRequestLine changedPrLine) {
-        if (changedPrLine.getPurchaseOrderLine() == null) return;
-        
-        Long targetPoLineId = changedPrLine.getPurchaseOrderLine().getId();
+    private void poLinesFromPrLineChanges(PurchaseRequestLine changedPrLine) { // TODO :
 
-        PurchaseOrderLine parentPoLine = null;
-        for (PurchaseOrderLine line : workingPoLinesList) {
-            if (Objects.equals(line.getId(), targetPoLineId)) {
-                parentPoLine = line;
+        List<QuotationLine> quotationLines = quotationService.getLinesByQuotation(poHeader.getQuotation());
+
+        QuotationLine quotationLine=null;
+        for (QuotationLine line : quotationLines) {
+            if (changedPrLine.getItemVariant().getId().equals(line.getItemVariant().getId())) {
+                quotationLine = line;
                 break;
             }
         }
 
-        if (parentPoLine == null) return;
-
-        double directAggregatedQuantity = 0.0;
-        for (PurchaseRequestLine prl : workingPrLinesList) {
-            if (prl.getPurchaseOrderLine() != null && Objects.equals(prl.getPurchaseOrderLine().getId(), targetPoLineId)) {
-                directAggregatedQuantity += prl.getOrderedQuantity() != null ? prl.getOrderedQuantity() : 0.0;
+        PurchaseOrderLine purchaseOrderLine = null;
+        for (PurchaseOrderLine line : workingPoLinesList) {
+            if (line.getId().equals(changedPrLine.getPurchaseOrderLine().getId())) {
+                purchaseOrderLine = line;
+                break;
             }
         }
-
-        parentPoLine.setQuantity(directAggregatedQuantity);
-
-        double appropriateSlabDiscount = 0.0;
-        if (poHeader.getQuotation() != null) {
-            List<QuotationLine> catalogRules = quotationService.getLinesByQuotation(poHeader.getQuotation());
-            QuotationLine matchRuleRow = null;
-            for (QuotationLine ql : catalogRules) {
-                if (ql.getItemVariant() != null && parentPoLine.getItemVariant() != null 
-                        && Objects.equals(ql.getItemVariant().getId(), parentPoLine.getItemVariant().getId())) {
-                    matchRuleRow = ql;
-                    break;
-                }
-            }
-
-            if (matchRuleRow != null && quotationService.getDiscountsByLine(matchRuleRow) != null) {
-                for (DiscountType slab : quotationService.getDiscountsByLine(matchRuleRow)) {
-                    double fromQty = slab.getFromQuantity() != null ? slab.getFromQuantity() : 0.0;
-                    Double toQtyObj = slab.getToQuantity();
-
-                    boolean lowBound = directAggregatedQuantity >= fromQty;
-                    boolean upBound = (toQtyObj == null) || (directAggregatedQuantity <= toQtyObj);
-
-                    if (lowBound && upBound) {
-                        appropriateSlabDiscount = slab.getDiscountPercentage() != null ? slab.getDiscountPercentage() : 0.0;
-                        break;
-                    }
-                }
-            }
+        if (purchaseOrderLine == null || quotationLine == null) {
+            return;
         }
 
-        double baseUnitPrice = parentPoLine.getUnitPrice() != null ? parentPoLine.getUnitPrice() : 0.0;
-        double calculatedGrossCost = baseUnitPrice * directAggregatedQuantity;
-        double netDiscountDeduction = calculatedGrossCost * (appropriateSlabDiscount / 100.0);
-
-        parentPoLine.setDiscountAmount(netDiscountDeduction);
-        parentPoLine.setTotalAmount(calculatedGrossCost - netDiscountDeduction);
-
-        poLinesGrid.getDataProvider().refreshItem(parentPoLine);
+        Double qty=0.0;
+        for (PurchaseRequestLine line : workingPrLinesList) {
+            if (line.getPurchaseOrderLine().getId().equals(purchaseOrderLine.getId())) {
+                qty+=line.getOrderedQuantity();
+            }
+        }
+        purchaseOrderLine.setQuantity(qty);
+        purchaseOrderLine.setDiscountAmount(qty*(quotationLine.getUnitPrice()*(quotationLine.getDiscount()/100.0)));
+        purchaseOrderLine.setTotalAmount((qty*quotationLine.getUnitPrice())-purchaseOrderLine.getDiscountAmount());
+        poLinesGrid.getDataProvider().refreshItem(purchaseOrderLine);
         poLinesGrid.getDataProvider().refreshAll();
-        prLinesGrid.getDataProvider().refreshAll();
-        
         refreshBudgetTrackersAnalysis();
     }
 
@@ -403,30 +396,36 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
         Map<Long, Department> departmentRefMap = new HashMap<>();
 
         for (PurchaseRequestLine prLine : workingPrLinesList) {
-            if (prLine.getPurchaseRequestHeader() != null && prLine.getPurchaseRequestHeader().getForDepartment() != null) {
+            if (prLine.getPurchaseRequestHeader() != null
+                    && prLine.getPurchaseRequestHeader().getForDepartment() != null) {
                 Department dept = prLine.getPurchaseRequestHeader().getForDepartment();
                 Long deptId = dept.getDepartmentId();
 
                 PurchaseOrderLine polInstance = null;
                 for (PurchaseOrderLine l : workingPoLinesList) {
-                    if (prLine.getPurchaseOrderLine() != null && Objects.equals(l.getId(), prLine.getPurchaseOrderLine().getId())) {
+                    if (prLine.getPurchaseOrderLine() != null
+                            && Objects.equals(l.getId(), prLine.getPurchaseOrderLine().getId())) {
                         polInstance = l;
                         break;
                     }
                 }
 
-                double poContractUnitPrice = polInstance != null && polInstance.getUnitPrice() != null ? polInstance.getUnitPrice() : 0.0;
+                double poContractUnitPrice = polInstance != null && polInstance.getUnitPrice() != null
+                        ? polInstance.getUnitPrice()
+                        : 0.0;
                 double activeOrderedQty = prLine.getOrderedQuantity() != null ? prLine.getOrderedQuantity() : 0.0;
                 double basePrLineGrossValue = poContractUnitPrice * activeOrderedQty;
-                
+
                 if (polInstance != null && polInstance.getQuantity() != null && polInstance.getQuantity() > 0) {
                     double poLineQty = polInstance.getQuantity();
-                    double poLineDiscountAmt = polInstance.getDiscountAmount() != null ? polInstance.getDiscountAmount() : 0.0;
+                    double poLineDiscountAmt = polInstance.getDiscountAmount() != null ? polInstance.getDiscountAmount()
+                            : 0.0;
 
                     double totalPoLineGrossValue = poContractUnitPrice * poLineQty;
                     double discountWeightRatio = poLineDiscountAmt / totalPoLineGrossValue;
-                    
-                    basePrLineGrossValue = basePrLineGrossValue - (basePrLineGrossValue * (Double.isNaN(discountWeightRatio) ? 0.0 : discountWeightRatio));
+
+                    basePrLineGrossValue = basePrLineGrossValue
+                            - (basePrLineGrossValue * (Double.isNaN(discountWeightRatio) ? 0.0 : discountWeightRatio));
                 }
 
                 costAllocationMap.put(deptId, costAllocationMap.getOrDefault(deptId, 0.0) + basePrLineGrossValue);
@@ -440,7 +439,8 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
             }
         }
 
-        poTotalAmountText.setText("Consolidated Purchase Order Net Total: " + String.format("%.2f INR", accumulatedGrossDocumentCost));
+        poTotalAmountText.setText(
+                "Consolidated Purchase Order Net Total: " + String.format("%.2f INR", accumulatedGrossDocumentCost));
         poTotalAmountText.getStyle().set("font-weight", "bold").set("font-size", "16px");
 
         workingBudgetList.clear();
@@ -450,8 +450,9 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
             Double totalNeededAmt = datasetEntry.getValue();
 
             DepartmentBudget accountLedger = departmentBudgetService.getByDepartmentAndYear(deptObj, Year.now());
-            double availableCapital = (accountLedger != null && accountLedger.getRemainingBudgetAmount() != null) 
-                    ? accountLedger.getRemainingBudgetAmount() : 0.0;
+            double availableCapital = (accountLedger != null && accountLedger.getRemainingBudgetAmount() != null)
+                    ? accountLedger.getRemainingBudgetAmount()
+                    : 0.0;
             double evaluatedBalanceLeft = availableCapital - totalNeededAmt;
 
             if (evaluatedBalanceLeft < 0 || accountLedger == null) {
@@ -475,7 +476,8 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
 
     private void executeLevelApprovalTransaction() {
         if (isAnyDepartmentOverrun) {
-            Notification.show("Compliance Block: Action rejected due to department general ledger overruns.", 4000, Position.TOP_CENTER);
+            Notification.show("Compliance Block: Action rejected due to department general ledger overruns.", 4000,
+                    Position.TOP_CENTER);
             return;
         }
 
@@ -502,7 +504,8 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
             approvalTask.setApprover(actionActor);
             approvalsService.updateApprovals(approvalTask, actionActor);
 
-            Notification.show("Level sign-off registered. Advanced to next workflow authority tier.", 4000, Position.TOP_CENTER);
+            Notification.show("Level sign-off registered. Advanced to next workflow authority tier.", 4000,
+                    Position.TOP_CENTER);
             getUI().ifPresent(ui -> ui.navigate("purchase-order"));
 
         } catch (Exception ex) {
@@ -522,14 +525,14 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
                 prline.setOrderedQuantity(0.0);
                 prLineService.updatePurchaseRequestLine(prline, actionActor);
             }
-            
+
             for (PurchaseOrderLine poline : workingPoLinesList) {
                 poline.setQuantity(0.0);
                 poline.setDiscountAmount(0.0);
                 poline.setTotalAmount(0.0);
                 poLineService.savePurchaseOrderLine(poline);
             }
-            
+
             poHeader.setTotalAmount(0.0);
             poHeader.setStatus(Status.REJECTED);
             poHeaderService.savePurchaseOrderHeader(poHeader);
@@ -540,7 +543,8 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
             approvalTask.setApprover(actionActor);
             approvalsService.updateApprovals(approvalTask, actionActor);
 
-            Notification.show("Purchase Order document rejected back to modification pools.", 3000, Position.TOP_CENTER);
+            Notification.show("Purchase Order document rejected back to modification pools.", 3000,
+                    Position.TOP_CENTER);
             getUI().ifPresent(ui -> ui.navigate("purchase-order"));
 
         } catch (Exception ex) {

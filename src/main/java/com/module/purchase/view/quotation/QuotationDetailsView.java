@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.DiscountType;
 import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.entity.Vendor;
@@ -26,6 +25,7 @@ import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -51,12 +51,12 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
     private final TextField dateField = new TextField("Date of Submission");
     private final TextField grossTotalField = new TextField("Total Cost Offer");
     private final TextField categoryField = new TextField("Category");
+    private final NumberField totalDiscountField = new NumberField("Total Discount Amount");
+    private final NumberField totalAmountAfterDiscountField = new NumberField("Total Amount After Discount");
     private final HorizontalLayout statusBadgeContainer = new HorizontalLayout();
 
     private final Grid<QuotationLine> linesGrid = new Grid<>(QuotationLine.class, false);
     private final List<QuotationLine> linesDataset = new ArrayList<>();
-
-    private final Grid<DiscountType> discountMatrixGrid = new Grid<>(DiscountType.class, false);
 
     private final Button backBtn = new Button("Back");
     private final Button editBtn = new Button("Edit Draft Workspace");
@@ -96,14 +96,16 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
         dateField.setReadOnly(true);
         grossTotalField.setReadOnly(true);
         categoryField.setReadOnly(true);
+        totalDiscountField.setReadOnly(true);
+        totalAmountAfterDiscountField.setReadOnly(true);
 
         FormLayout summaryLayout = new FormLayout();
         summaryLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 3));
 
         if (isVendorUser) {
-            summaryLayout.add(quoteIdField, rfqIdField, dateField, grossTotalField, categoryField);
+            summaryLayout.add(quoteIdField, rfqIdField, dateField, grossTotalField, totalDiscountField, totalAmountAfterDiscountField, categoryField);
         } else {
-            summaryLayout.add(quoteIdField, rfqIdField, vendorNameField, dateField, grossTotalField, categoryField);
+            summaryLayout.add(quoteIdField, rfqIdField, vendorNameField, dateField, grossTotalField, totalDiscountField , totalAmountAfterDiscountField,categoryField);
         }
 
         statusBadgeContainer.setAlignItems(Alignment.CENTER);
@@ -117,29 +119,14 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
         linesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
                 .setHeader("Specification Detail").setAutoWidth(true);
 
-        linesGrid.addColumn(line -> String.format("%.2f INR", line.getUnitPrice())).setHeader("Offered Unit Price")
+        linesGrid.addColumn(line -> String.format("%.2f", line.getUnitPrice())).setHeader("Offered Unit Price")
                 .setWidth("160px");
+
+        linesGrid.addColumn(line -> String.format("%.2f", line.getDiscount())).setHeader("Offered Discount Percentage"); 
 
         linesGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         linesGrid.setAllRowsVisible(true);
         linesGrid.setWidthFull();
-
-        linesGrid.addSelectionListener(selection -> {
-            if (selection.getFirstSelectedItem().isPresent()) {
-                loadDiscountSlabBreakdownMatrix(selection.getFirstSelectedItem().get());
-            } else {
-                discountMatrixGrid.setItems(new ArrayList<>());
-            }
-        });
-
-        discountMatrixGrid.addColumn(DiscountType::getFromQuantity).setHeader("From Quantity").setAutoWidth(true);
-        discountMatrixGrid.addColumn(DiscountType::getToQuantity).setHeader("To Quantity").setAutoWidth(true);
-        discountMatrixGrid.addColumn(d -> String.format("%.1f %%", d.getDiscountPercentage()))
-                .setHeader("Discount Percentage").setAutoWidth(true);
-
-        discountMatrixGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
-        discountMatrixGrid.setAllRowsVisible(true);
-        discountMatrixGrid.setWidthFull();
 
         backBtn.setIcon(VaadinIcon.ARROW_LEFT.create());
         backBtn.addClickListener(e -> backToDashboard());
@@ -168,9 +155,7 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
 
         scrollContent.add(pageTitle, summaryLayout, statusSection, new Hr(),
                 new H3("Quotation Items"),
-                new Span("Click any row below to get Discounts structure "),
-                linesGrid, new Hr(),
-                new H3("Discount Slab"), discountMatrixGrid,
+                linesGrid,
                 new Hr(), actionsLayout);
 
         Scroller viewScroller = new Scroller(scrollContent);
@@ -205,14 +190,22 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
                 dateField.setValue(quote.getQuotationDate() != null ? quote.getQuotationDate().toString() : "-");
                 grossTotalField.setValue(String.format("%.2f INR", quote.getTotalAmount()));
                 categoryField.setValue(quote.getRequestForQuotation().getCategory().getCategoryName());
+                
+                double discount=0.0;
+                for(QuotationLine line:quotationService.getLinesByQuotation(quote))
+                { 
+
+                    double qty=line.getRequestForQuotationLine().getRequestedQuantity();
+                    discount+=(qty*((line.getUnitPrice()*line.getDiscount())/100));
+                }
+                totalDiscountField.setValue(discount);
+                totalAmountAfterDiscountField.setValue(quote.getTotalAmount()-discount);
 
                 renderStatusBadge(quote.getStatus());
 
                 linesDataset.clear();
                 linesDataset.addAll(quotationService.getLinesByQuotation(quote));
                 linesGrid.setItems(linesDataset);
-
-                discountMatrixGrid.setItems(new ArrayList<>());
 
                 if (quote.getStatus() == Status.DRAFT
                         && quote.getRequestForQuotation().getStatus().equals(RequestForQuotationStatus.OPEN)) {
@@ -243,11 +236,6 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
             return;
         }
 
-    }
-
-    private void loadDiscountSlabBreakdownMatrix(QuotationLine line) {
-        List<DiscountType> activeDiscounts = quotationService.getDiscountsByLine(line);
-        discountMatrixGrid.setItems(activeDiscounts);
     }
 
     private void executeFinalizeDraftWorkflow() {

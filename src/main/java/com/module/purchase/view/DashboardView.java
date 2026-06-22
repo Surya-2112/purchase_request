@@ -87,6 +87,7 @@ public class DashboardView extends VerticalLayout {
                         {
                             isManagement = true;
                         }
+                        add(createEmployeeSelfSummaryCards(currentEmployee));
 
                         if (isManagement) {
                             add(createManagementSummaryCards());
@@ -96,11 +97,8 @@ public class DashboardView extends VerticalLayout {
                             }
                             
                             add(createGlobalRecentPurchaseRequests());
-                        } 
-                        else {
-                            add(createEmployeeSelfSummaryCards(currentEmployee));
+                        }    
                             add(createEmployeeRecentPurchaseRequests(currentEmployee));
-                        }
                     }
                 }
             }
@@ -215,10 +213,6 @@ public class DashboardView extends VerticalLayout {
         grid.setAllRowsVisible(true);
         return layout;
     }
-
-    // ==========================================
-    // COMMON HELPERS
-    // ==========================================
 
     private Div createCard(String title, String value, Icon icon, String navigationUrl) {
         H3 valueText = new H3(value);

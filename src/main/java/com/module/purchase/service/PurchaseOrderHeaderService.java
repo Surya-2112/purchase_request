@@ -20,7 +20,6 @@ import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.Quotation;
-import com.module.purchase.entity.DiscountType;
 import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.entityDTO.PurchaseOrderDTO;
 import com.module.purchase.enums.Action;
@@ -160,21 +159,8 @@ public class PurchaseOrderHeaderService {
                     : 0.0;
             poline.setQuantity(quantity);
 
-            double matchedDiscountPercentage = 0.0;
-            List<DiscountType> availableSlabs = quotationService.getDiscountsByLine(line);
-
-            for (DiscountType discount : availableSlabs) {
-                boolean matchesLowerBound = quantity >= discount.getFromQuantity();
-                boolean matchesUpperBound = (discount.getToQuantity() == null) || (quantity <= discount.getToQuantity());
-
-                if (matchesLowerBound && matchesUpperBound) {
-                    matchedDiscountPercentage = discount.getDiscountPercentage();
-                    break;
-                }
-            }
-
             double baseLineGrossCost = poline.getUnitPrice() * poline.getQuantity();
-            double finalCalculatedDiscountValue = baseLineGrossCost * (matchedDiscountPercentage / 100.0);
+            double finalCalculatedDiscountValue = baseLineGrossCost * (line.getDiscount() / 100.0);
             double accurateLineNetTotal = baseLineGrossCost - finalCalculatedDiscountValue;
 
             poline.setDiscountAmount(finalCalculatedDiscountValue);

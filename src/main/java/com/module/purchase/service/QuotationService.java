@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ResourceNotFoundException;
-import com.module.purchase.entity.DiscountType;
 import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.entity.RequestForQuotation;
@@ -23,7 +22,6 @@ import com.module.purchase.entity.Vendor;
 import com.module.purchase.entityDTO.QuotationDTO;
 import com.module.purchase.enums.Status;
 import com.module.purchase.mapper.QuotationMapper;
-import com.module.purchase.repository.DiscountTypeRepository;
 import com.module.purchase.repository.QuotationLineRepository;
 import com.module.purchase.repository.QuotationRepository;
 import com.module.purchase.specification.QuotationLineSpecification;
@@ -38,9 +36,6 @@ public class QuotationService {
 
     @Autowired
     private QuotationLineRepository quotationLineRepository;
-
-    @Autowired
-    private DiscountTypeRepository discountTypeRepository;
 
     @Autowired
     private QuotationMapper quotationMapper;
@@ -99,10 +94,6 @@ public class QuotationService {
     public void deleteQuotation(Long id) {
         quotationRepository.findById(id).ifPresent(quotation -> {
             if (quotation.getStatus() == Status.DRAFT) {
-                List<QuotationLine> lines = quotationLineRepository.findByQuotation(quotation);
-                for (QuotationLine line : lines) {
-                    discountTypeRepository.deleteByQuotationLine(line);
-                }
                 quotationLineRepository.deleteByQuotation(quotation);
                 quotationRepository.delete(quotation);
             } else {
@@ -124,40 +115,7 @@ public class QuotationService {
     @Transactional
     public void clearLinesByQuotation(Quotation quotation) {
         List<QuotationLine> lines = quotationLineRepository.findByQuotation(quotation);
-        for (QuotationLine line : lines) {
-            discountTypeRepository.deleteByQuotationLine(line);
-        }
         quotationLineRepository.deleteByQuotation(quotation);
-    }
-
-    public List<DiscountType> getDiscountsByLine(QuotationLine line) {
-        List<DiscountType> discounts = discountTypeRepository.findByQuotationLine(line);
-        if (discounts == null) {
-            discounts = new ArrayList<DiscountType>();
-        }
-        return discounts;
-    }
-
-    @Transactional
-    public DiscountType saveDiscountType(DiscountType discountType) {
-
-        if (discountType.getFromQuantity() >= discountType.getToQuantity()) {
-            throw new IllegalArgumentException(
-                    "Validation Fault: 'From Quantity' slab boundary must sit below 'To Quantity' metrics.");
-        }
-        return discountTypeRepository.save(discountType);
-    }
-
-    @Transactional
-    public void deleteDiscountType(Long id) {
-        discountTypeRepository.deleteById(id);
-    }
-
-    public boolean isDuplicateSubmission(Long rfqId, Long vendorId) {
-        if (rfqId == null || vendorId == null) {
-            return false;
-        }
-        return !quotationRepository.findByRfqAndVendor(rfqId, vendorId).isEmpty();
     }
 
     public Page<QuotationDTO> getAllQuotations(QuotationDTO quotationDTO, int page, int size) {
@@ -190,6 +148,13 @@ public class QuotationService {
                 .and(QuotationSpecification.hasVendor(quotationDTO.getVendor()))
                 .and(QuotationSpecification.hasStatus(quotationDTO.getStatus()));
         return quotationRepository.count(spec);
+    }
+
+       public boolean isDuplicateSubmission(Long rfqId, Long vendorId) {
+        if (rfqId == null || vendorId == null) {
+            return false;
+        }
+        return !quotationRepository.findByRfqAndVendor(rfqId, vendorId).isEmpty();
     }
 
     public Long countRFQForVendor(Vendor vendor) {

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.module.purchase.config.SecurityService;
-import com.module.purchase.entity.DiscountType;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.AssigningConfig;
@@ -52,7 +51,6 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
 
     private final VerticalLayout quotationCardsStackContainer = new VerticalLayout();
     private final Button backBtn = new Button("Back");
-    private final Span systemicNoticeMessage = new Span();
 
     public QuotationEvaluationMatrixView(RequestForQuotationService rfqService, 
                                         QuotationService quotationService,
@@ -70,17 +68,12 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
         backBtn.setIcon(VaadinIcon.ARROW_LEFT.create());
         backBtn.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("quotation-comparison")));
 
-        systemicNoticeMessage.getStyle()
-                .set("font-style", "italic")
-                .set("color", "var(--lumo-secondary-text-color)");
-
         quotationCardsStackContainer.setWidthFull();
         quotationCardsStackContainer.setSpacing(true);
         quotationCardsStackContainer.setPadding(false);
 
         VerticalLayout scrollContent = new VerticalLayout(
                 new H2("Received Quotations"),
-                systemicNoticeMessage,
                 new Hr(),
                 quotationCardsStackContainer,
                 new Hr(),
@@ -118,13 +111,6 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
                 .filter(q -> q.getStatus() != Status.DRAFT && q.getStatus() != Status.CANCELLED)
                 .collect(Collectors.toList());
 
-        if (bidsDataset.isEmpty()) {
-            systemicNoticeMessage.setText("No  Quotations as Received for RFQ-" + rfq.getId());
-            return;
-        }
-
-        systemicNoticeMessage.setText(" Double-click any line row item within a vendor's pricing grid sheet below to review Discounts Slab.");
-
         for (Quotation quotation : bidsDataset) {
             quotationCardsStackContainer.add(createStandaloneVendorBidCardBlock(quotation));
         }
@@ -142,11 +128,18 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
 
         String vendorName = quotation.getVendor() != null ? quotation.getVendor().getVendorName() : "Unknown Supplier";
         String docDate = quotation.getQuotationDate() != null ? quotation.getQuotationDate().toString() : "-";
-        String grossValue = String.format("%.2f INR", quotation.getTotalAmount());
+        String grossValue = String.format("%.2f ", quotation.getTotalAmount());
 
-        Span metaInfoText = new Span(String.format("Supplier: %s   |   Filed Date: %s   |   Total amount: %s",
-                vendorName, docDate, grossValue));
-        metaInfoText.getStyle().set("font-weight", "bold").set("font-size", "15px");
+        double discount=0;
+        for(QuotationLine line:quotationService.getLinesByQuotation(quotation))
+        { 
+            double qty=line.getRequestForQuotationLine().getRequestedQuantity();
+            discount+=(qty*((line.getDiscount()*line.getUnitPrice())/100));
+        }
+
+        Span metaInfoText = new Span(String.format("Supplier: %s   |   Filed Date: %s   |   Total amount: %s  |\n  Total Discount Amount: %.2f  | Total Amount After Discount: %.2f" ,
+                vendorName, docDate, grossValue,discount,quotation.getTotalAmount()-discount));
+        metaInfoText.getStyle().set("font-weight", "bold").set("font-size", "15px").set("white-space", "pre-line");
 
         Button approveBtn = new Button("Approve Vendor Quotations");
         approveBtn.addThemeName("success primary small");
@@ -218,17 +211,11 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
                     .findFirst().orElse("0.00");
         }).setHeader("Qty Needed").setWidth("110px");
 
-        linesGrid.addColumn(line -> String.format("%.2f INR", line.getUnitPrice())).setHeader("Offered Unit Price").setWidth("140px");
+        linesGrid.addColumn(line -> String.format("%.2f", line.getUnitPrice())).setHeader("Offered Unit Price").setWidth("140px");
+        linesGrid.addColumn(line-> line.getDiscount()==null?0.0:line.getDiscount()).setHeader("Offered Discount Percentage").setWidth("140px");
 
         List<QuotationLine> quotationLines = quotationService.getLinesByQuotation(quotation);
         linesGrid.setItems(quotationLines);
-
-        linesGrid.addItemDoubleClickListener(event -> {
-            QuotationLine clickedPricingLine = event.getItem();
-            if (clickedPricingLine != null) {
-                openTieredSlabsBreakdownModalDialog(clickedPricingLine);
-            }
-        });
 
         cardContainer.add(toolbarHeader, new Hr(), linesGrid);
         return cardContainer;
@@ -302,42 +289,6 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
             Notification.show("Workflow engine failed to evaluate assignment criteria: " + ex.getMessage(), 5000, Position.MIDDLE);
         }
     }
-
-    private void openTieredSlabsBreakdownModalDialog(QuotationLine line) {
-        Dialog slabsModalOverlay = new Dialog();
-        slabsModalOverlay.setHeaderTitle("Discount Slabs ");
-        slabsModalOverlay.setWidth("600px");
-
-        String itemName = line.getItemVariant() != null ? line.getItemVariant().getItem().getItemName() : "Selected Item";
-        VerticalLayout modalLayout = new VerticalLayout(new H3("Discounts Item : " + itemName));
-        modalLayout.setPadding(false);
-
-        Grid<DiscountType> modalSlabsGrid = new Grid<>();
-        modalSlabsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
-        modalSlabsGrid.setAllRowsVisible(true);
-        modalSlabsGrid.setWidthFull();
-
-        modalSlabsGrid.addColumn(DiscountType::getFromQuantity).setHeader("From Quantity").setAutoWidth(true);
-        modalSlabsGrid.addColumn(DiscountType::getToQuantity).setHeader("To Quantity").setAutoWidth(true);
-        modalSlabsGrid.addColumn(d -> String.format("%.2f %%", d.getDiscountPercentage())).setHeader("Applied Discount %").setAutoWidth(true);
-
-        List<DiscountType> detailedSlabsList = quotationService.getDiscountsByLine(line);
-        modalSlabsGrid.setItems(detailedSlabsList);
-
-        if (detailedSlabsList.isEmpty()) {
-            modalLayout.add(new Span("discount slabs were not registered for this row item."));
-        } else {
-            modalLayout.add(modalSlabsGrid);
-        }
-
-        Button closeOverlayBtn = new Button("Close View", e -> slabsModalOverlay.close());
-        closeOverlayBtn.addThemeName("tertiary");
-        slabsModalOverlay.getFooter().add(closeOverlayBtn);
-
-        slabsModalOverlay.add(modalLayout);
-        slabsModalOverlay.open();
-    }
-
     private boolean isAnyBidApprovedInThread() {
         return quotationService.getQuotationsByRfq(targetRfq).stream()
                 .anyMatch(q -> q.getStatus() == Status.APPROVED);
