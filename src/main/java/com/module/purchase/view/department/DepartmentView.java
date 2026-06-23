@@ -24,8 +24,6 @@ import jakarta.annotation.security.PermitAll;
 @PermitAll
 public class DepartmentView extends VerticalLayout {
 
-//     private EmployeeService employeeService;
-//     private SecurityService securityService;
     private DepartmentService departmentService;
 
     private final Grid<DepartmentDTO> departmentGrid = new Grid<>(DepartmentDTO.class, false);

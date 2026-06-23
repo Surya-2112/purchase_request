@@ -130,80 +130,44 @@ public class ViewPermissionView extends VerticalLayout {
             }
         });
 
-        HorizontalLayout filterLayout =
-                new HorizontalLayout(
-                        viewField,
-                        employeeGroupField,
-                        searchButton,
-                        clearButton,
-                        addButton);
+        HorizontalLayout filterLayout = new HorizontalLayout( viewField, employeeGroupField, searchButton, clearButton, addButton);
 
         filterLayout.setWidthFull();
 
-        filterLayout.setAlignItems(
-                Alignment.END);
+        filterLayout.setAlignItems( Alignment.END);
 
-        grid.addColumn(ViewPermission::getId)
-                .setHeader("ID")
-                .setAutoWidth(true);
+        grid.addColumn(ViewPermission::getId).setHeader("ID").setAutoWidth(true);
 
-        grid.addColumn(permission ->
-                permission.getViewName() == null
-                        ? ""
-                        : permission.getViewName().name())
-                .setHeader("View")
-                .setAutoWidth(true);
+        grid.addColumn(permission -> permission.getViewName() == null? "" : permission.getViewName().name()).setHeader("View").setAutoWidth(true);
 
-        grid.addColumn(permission ->
-                permission.getEmployeeGroup() == null
-                        ? ""
-                        : permission.getEmployeeGroup().name())
-                .setHeader("Role Group")
-                .setAutoWidth(true);
+        grid.addColumn(permission ->  permission.getEmployeeGroup() == null ? "": permission.getEmployeeGroup().name()).setHeader("Role Group").setAutoWidth(true);
 
-        // DELETE BUTTON
         grid.addComponentColumn(permission -> {
 
-            Button deleteButton =
-                    new Button("Delete");
+            Button deleteButton = new Button("Delete");
 
             deleteButton.addClickListener(event -> {
 
-                ConfirmDialog dialog =
-                        new ConfirmDialog();
+                ConfirmDialog dialog = new ConfirmDialog();
 
-                dialog.setHeader(
-                        "Delete Permission");
-
-                dialog.setText(
-                        "Are you sure you want to delete this permission?");
-
+                dialog.setHeader("Delete Permission");
+                dialog.setText("Are you sure you want to delete this permission?");
                 dialog.setCancelable(true);
-
                 dialog.setConfirmText("Delete");
-
-                dialog.setConfirmButtonTheme(
-                        "error primary");
-
+                dialog.setConfirmButtonTheme( "error primary");
                 dialog.addConfirmListener(confirmEvent -> {
 
                     try {
 
                         viewPermissionService.deleteById(permission.getId(),securityService.getLoggedInUser().getEmployee());
 
-                        Notification.show(
-                                "Permission Deleted",
-                                3000,
-                                Notification.Position.TOP_CENTER);
+                        Notification.show( "Permission Deleted", 3000, Notification.Position.TOP_CENTER);
 
                         loadPermissions();
 
                     } catch (Exception exception) {
 
-                        Notification.show(
-                                exception.getMessage(),
-                                5000,
-                                Notification.Position.TOP_CENTER);
+                        Notification.show( exception.getMessage(), 5000, Notification.Position.TOP_CENTER);
                     }
                 });
 
@@ -214,8 +178,7 @@ public class ViewPermissionView extends VerticalLayout {
 
         }).setHeader("Delete");
 
-        grid.addThemeVariants(
-                GridVariant.LUMO_ROW_STRIPES);
+        grid.addThemeVariants( GridVariant.LUMO_ROW_STRIPES);
 
         grid.setSizeFull();
 
@@ -223,88 +186,50 @@ public class ViewPermissionView extends VerticalLayout {
 
         Button nextButton = new Button("Next");
 
-        ComboBox<Integer> pageSizeField =
-                new ComboBox<>();
+        ComboBox<Integer> pageSizeField = new ComboBox<>();
 
-        pageSizeField.setItems(
-                10,
-                25,
-                50,
-                100);
+        pageSizeField.setItems( 10, 25, 50, 100);
 
         pageSizeField.setValue(25);
 
         pageSizeField.addValueChangeListener(event -> {
 
-            pageSize =
-                    event.getValue();
-
+            pageSize =event.getValue();
             currentPage = 0;
-
             loadPermissions();
         });
 
         previousButton.addClickListener(event -> {
 
             if (currentPage > 0) {
-
                 currentPage--;
-
                 loadPermissions();
             }
         });
 
         nextButton.addClickListener(event -> {
-
             currentPage++;
-
             loadPermissions();
         });
 
-        HorizontalLayout paginationLayout =
-                new HorizontalLayout(
-                        previousButton,
-                        pageInfo,
-                        nextButton,
-                        new Span("Page Size"),
-                        pageSizeField);
+        HorizontalLayout paginationLayout = new HorizontalLayout( previousButton, pageInfo, nextButton, new Span("Page Size"), pageSizeField);
 
         paginationLayout.setWidthFull();
 
-        paginationLayout.setJustifyContentMode(
-                JustifyContentMode.CENTER);
+        paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
 
         paginationLayout.setAlignItems(Alignment.CENTER);
 
         loadPermissions();
 
-        add(
-                headerLayout,
-                filterLayout,
-                grid,
-                paginationLayout);
-
+        add(headerLayout, filterLayout, grid, paginationLayout);
         expand(grid);
     }
 
     private void loadPermissions() {
-
-        Page<ViewPermission> permissionPage =
-                viewPermissionService
-                        .getAllPermissions(
-                                viewField.getValue(),
-                                employeeGroupField.getValue(),
-                                currentPage,
-                                pageSize);
-
-        grid.setItems(
-                permissionPage.getContent());
-
-        pageInfo.setText(
-                "Page "
-                        + (currentPage + 1)
-                        + " of "
-                        + permissionPage.getTotalPages());
+        Page<ViewPermission> permissionPage =viewPermissionService.getAllPermissions( viewField.getValue(), employeeGroupField.getValue(), currentPage, pageSize);
+        grid.setItems(permissionPage.getContent());
+        pageInfo.setText("Page " + (currentPage + 1) + " of " + permissionPage.getTotalPages());
     }
 
     public ComboBox<ViewName> getViewField() {

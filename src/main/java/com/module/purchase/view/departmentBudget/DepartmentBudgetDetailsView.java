@@ -20,8 +20,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "department-budget-details", layout = MainLayout.class)
 @PermitAll
-public class DepartmentBudgetDetailsView extends VerticalLayout
-        implements HasUrlParameter<Long> {
+public class DepartmentBudgetDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final DepartmentBudgetService departmentBudgetService;
 
@@ -40,17 +39,12 @@ public class DepartmentBudgetDetailsView extends VerticalLayout
     }
 
     @Override
-    public void setParameter(
-            BeforeEvent event,
-            Long departmentBudgetId) {
+    public void setParameter( BeforeEvent event,Long departmentBudgetId) {
 
         removeAll();
 
-        DepartmentBudget departmentBudget =
-                departmentBudgetService
-                        .getDepartmentBudgetById(
-                                departmentBudgetId)
-                        .orElse(null);
+        try{
+        DepartmentBudget departmentBudget = departmentBudgetService.getDepartmentBudgetById(departmentBudgetId).orElse(null);
 
         if (departmentBudget == null) {
 
@@ -63,105 +57,49 @@ public class DepartmentBudgetDetailsView extends VerticalLayout
 
         FormLayout formLayout = new FormLayout();
 
-        // BUDGET ID
-        formLayout.addFormItem(
-                new Span(
-                        String.valueOf(
-                                departmentBudget
-                                        .getDepartmentBudgetId())),
-                "Department Budget ID");
+        formLayout.addFormItem(new Span( String.valueOf(departmentBudget.getDepartmentBudgetId())), "Department Budget ID");
 
-        // DEPARTMENT
-        formLayout.addFormItem(
-                new Span(
-                        departmentBudget.getDepartment() == null
-                                ? ""
-                                : departmentBudget
-                                        .getDepartment()
-                                        .getDepartmentName()),
-                "Department");
+        formLayout.addFormItem( new Span( departmentBudget.getDepartment() == null? "" : departmentBudget.getDepartment().getDepartmentName()), "Department");
 
-        // TOTAL BUDGET
-        formLayout.addFormItem(
-                new Span(
-                        String.valueOf(
-                                departmentBudget
-                                        .getTotalBudgetAmount())),
-                "Total Budget Amount");
+        formLayout.addFormItem(new Span(String.valueOf(departmentBudget.getTotalBudgetAmount())), "Total Budget Amount");
 
-        // REMAINING BUDGET
-        formLayout.addFormItem(
-                new Span(
-                        String.valueOf(
-                                departmentBudget
-                                        .getRemainingBudgetAmount())),
-                "Remaining Budget Amount");
+        formLayout.addFormItem( new Span( String.valueOf(departmentBudget.getRemainingBudgetAmount())),"Remaining Budget Amount");
 
-        // YEAR
-        formLayout.addFormItem(
-                new Span(
-                        departmentBudget.getYear() == null
-                                ? ""
-                                : departmentBudget
-                                        .getYear()
-                                        .toString()),
-                "Year");
+        formLayout.addFormItem(new Span(departmentBudget.getYear() == null? "": departmentBudget.getYear().toString()),"Year");
 
-        // UPDATE BUTTON
-        Button updateButton =
-                new Button("Update");
+        Button updateButton = new Button("Update");
 
         updateButton.addClickListener(clickEvent -> {
-
-            getUI().ifPresent(ui ->
-                    ui.navigate(
-                            "department-budget-edit/"
-                                    + departmentBudget
-                                            .getDepartmentBudgetId()));
+            getUI().ifPresent(ui -> ui.navigate("department-budget-edit/"+ departmentBudget.getDepartmentBudgetId()));
         });
 
-        // DELETE BUTTON
-        Button deleteButton =
-                new Button("Delete");
+        Button deleteButton =new Button("Delete");
 
         deleteButton.addClickListener(clickEvent -> {
 
-            ConfirmDialog dialog =
-                    new ConfirmDialog();
+            ConfirmDialog dialog = new ConfirmDialog();
 
-            dialog.setHeader(
-                    "Delete Department Budget");
+            dialog.setHeader("Delete Department Budget");
 
-            dialog.setText(
-                    "Are you sure you want to delete this department budget?");
+            dialog.setText("Are you sure you want to delete this department budget?");
 
             dialog.setCancelable(true);
 
             dialog.setConfirmText("Delete");
 
-            dialog.setConfirmButtonTheme(
-                    "error primary");
+            dialog.setConfirmButtonTheme("error primary");
 
             dialog.addConfirmListener(confirmEvent -> {
 
                 try {
+                    departmentBudgetService.deleteDepartmentBudgetById(departmentBudget.getDepartmentBudgetId(),securityService.getLoggedInUser().getEmployee());
 
-                    departmentBudgetService
-                            .deleteDepartmentBudgetById(departmentBudget.getDepartmentBudgetId(),securityService.getLoggedInUser().getEmployee());
+                    Notification.show("Department Budget Deleted Successfully");
 
-                    Notification.show(
-                            "Department Budget Deleted Successfully");
-
-                    getUI().ifPresent(ui ->
-                            ui.navigate(
-                                    "department-budget"));
+                    getUI().ifPresent(ui -> ui.navigate("department-budget"));
 
                 } catch (Exception exception) {
-
-                    Notification.show(
-                            exception.getMessage(),
-                            5000,
-                            Notification.Position.TOP_CENTER);
+                    Notification.show( exception.getMessage(), 5000, Notification.Position.TOP_CENTER);
                 }
 
             });
@@ -172,11 +110,13 @@ public class DepartmentBudgetDetailsView extends VerticalLayout
         updateButton.setVisible(securityService.canAccessView("department-budget-edit"));
         deleteButton.setVisible(securityService.canAccessView("department-budget-form"));
 
-        HorizontalLayout buttonLayout =
-                new HorizontalLayout(
-                        updateButton,
-                        deleteButton);
+        HorizontalLayout buttonLayout = new HorizontalLayout( updateButton, deleteButton);
 
         add(title, formLayout, buttonLayout);
+        }catch(Exception ex){ 
+                event.forwardTo("department-budget");
+                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+                return;
+        }
     }
 }

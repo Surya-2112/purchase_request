@@ -37,12 +37,10 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
         private final RepeatedPeriodService repeatedPeriodService;
         private final SecurityService securityService;
 
-        // ================= CATEGORY FIELDS =================
         private final TextField categoryNameField = new TextField("Category Name");
         private final Checkbox repeatableField = new Checkbox("Is Repeatable Category?");
         private final Checkbox autoRfqField = new Checkbox("Send RFQ Automatically?");
 
-        // ================= EMBEDDED REPEATED PERIOD FIELDS =================
         private final VerticalLayout scheduleSection = new VerticalLayout();
         private final IntegerField frequencyPeriodField = new IntegerField("Repeat Every");
         private final ComboBox<FrequencyType> frequencyTypeField = new ComboBox<>("Interval Type");
@@ -51,8 +49,7 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
 
         private Category category;
 
-        public CategoryEditView(CategoryService categoryService, 
-                                RepeatedPeriodService repeatedPeriodService, 
+        public CategoryEditView(CategoryService categoryService, RepeatedPeriodService repeatedPeriodService, 
                                 SecurityService securityService) {
                 this.categoryService = categoryService;
                 this.repeatedPeriodService = repeatedPeriodService;
@@ -64,13 +61,11 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
                 categoryNameField.setRequired(true);
                 categoryNameField.setRequiredIndicatorVisible(true);
 
-                // Configure Embedded Scheduler Fields
                 frequencyPeriodField.setMin(1);
                 frequencyPeriodField.setValue(1);
                 frequencyTypeField.setItems(FrequencyType.values());
                 frequencyTypeField.setItemLabelGenerator(FrequencyType::name);
 
-                // Enforce staleness restriction limits on current timeline draws
                 fromDateField.setMin(LocalDate.now());
                 fromDateField.setRequired(true);
 
@@ -82,12 +77,8 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
                         }
                 });
 
-                FormLayout scheduleFormLayout = new FormLayout(
-                        frequencyPeriodField, 
-                        frequencyTypeField, 
-                        fromDateField, 
-                        toDateField
-                );
+                FormLayout scheduleFormLayout = new FormLayout(frequencyPeriodField, frequencyTypeField, 
+                        fromDateField, toDateField);
                 scheduleFormLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
                 scheduleSection.add(new H3("Automated RFQ Schedule Setup"), scheduleFormLayout);
@@ -95,7 +86,6 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
                 scheduleSection.setSpacing(true);
                 scheduleSection.setVisible(false);
 
-                // Wire responsive change visualization mechanics
                 autoRfqField.addValueChangeListener(event -> {
                         boolean isRfqEnabled = event.getValue();
                         scheduleSection.setVisible(isRfqEnabled);
@@ -109,7 +99,7 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
         public void setParameter(BeforeEvent event, Long categoryId) {
 
                 removeAll();
-
+                try{
                 category = categoryService.getCategoryById(categoryId).orElse(null);
 
                 if (category == null) {
@@ -123,7 +113,6 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
                 repeatableField.setValue(category.isRepeatable());
                 autoRfqField.setValue(category.isAutoRfq());
 
-                // Fetch database profile values for the scheduler if currently active
                 if (category.isAutoRfq()) {
                         Optional<RepeatedPeriod> periodOpt = repeatedPeriodService
                                         .findByReferTypeAndReferId(RepeatedPeriodReferType.CATEGORY, category.getCategoryId());
@@ -133,7 +122,6 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
                                 frequencyPeriodField.setValue(period.getFrequencyPeriod());
                                 frequencyTypeField.setValue(period.getFrequencyType());
                                 
-                                // Maintain selection compatibility if date resides in the past
                                 if (period.getFromDate() != null && period.getFromDate().isBefore(LocalDate.now())) {
                                         fromDateField.setMin(period.getFromDate());
                                 }
@@ -170,15 +158,12 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
                                                 return;
                                         }
                                 }
-
                                 category.setCategoryName(categoryNameField.getValue().trim());
                                 category.setRepeatable(repeatableField.getValue());
                                 category.setAutoRfq(autoRfqField.getValue());
 
-                                // 1. Process Master Domain Model Updates First
                                 categoryService.updateCategory(category, securityService.getLoggedInUser().getEmployee());
 
-                                // 2. Perform Cascading Scheduler Synchronizations
                                 if (category.isAutoRfq()) {
                                         RepeatedPeriod period = repeatedPeriodService
                                                         .findByReferTypeAndReferId(RepeatedPeriodReferType.CATEGORY, category.getCategoryId())
@@ -216,6 +201,13 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
                 HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
 
                 add(title, baseFormLayout, scheduleSection, buttons);
+        }catch(Exception ex)
+                {      event.forwardTo("category");
+                       event.getUI().access(() -> {
+                        Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);
+                        });
+                                return;
+                }
         }
 
         private void clearScheduleFields() {

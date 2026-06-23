@@ -27,9 +27,6 @@ public class RoleView extends VerticalLayout {
 
     private final RoleService roleService;
 
-  //  private final SecurityService securityService;
-
-
     private final Grid<Role> roleGrid = new Grid<>(Role.class, false);
 
     // FILTERS

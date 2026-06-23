@@ -20,8 +20,6 @@ public class RoleForm extends Dialog {
 
     private final SecurityService securityService;
 
-
-    // FIELDS
     private final TextField roleNameField = new TextField("Role Name");
 
     private final CheckboxGroup<EmployeeGroup> employeeGroupField = new CheckboxGroup<>();
@@ -35,40 +33,31 @@ public class RoleForm extends Dialog {
 
         setWidth("700px");
 
-        // REQUIRED
         roleNameField.setRequiredIndicatorVisible(true);
+        roleNameField.setPattern("[a-zA-Z]{2-50}");
+        roleNameField.setErrorMessage("Enter a valid role name");
+        roleNameField.setMaxLength(50);
 
         employeeGroupField.setLabel("Role Groups");
 
         employeeGroupField.setRequiredIndicatorVisible(true);
 
-        // LOAD EMPLOYEE GROUPS
-        employeeGroupField.setItems(
-                EmployeeGroup.values());
+        employeeGroupField.setItems(EmployeeGroup.values());
 
-        // FORM
-        FormLayout formLayout =
-                new FormLayout();
+        FormLayout formLayout =new FormLayout();
 
-        formLayout.add(
-                roleNameField,
-                employeeGroupField);
+        formLayout.add(roleNameField,employeeGroupField);
 
         formLayout.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 2));
 
-        // BUTTONS
-        Button saveButton =
-                new Button("Save");
+        Button saveButton =new Button("Save");
 
-        Button cancelButton =
-                new Button("Cancel");
+        Button cancelButton = new Button("Cancel");
 
-        saveButton.addClickListener(
-                event -> saveRole());
+        saveButton.addClickListener(event -> saveRole());
 
-        cancelButton.addClickListener(
-                event -> close());
+        cancelButton.addClickListener( event -> close());
 
         HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
 
@@ -76,47 +65,25 @@ public class RoleForm extends Dialog {
     }
 
     private void saveRole() {
-
         try {
-
-            // VALIDATION
-            if (roleNameField.isEmpty()
-                    || employeeGroupField.getValue().isEmpty()) {
-
-                Notification.show(
-                        "Please fill all required fields",
-                        3000,
-                        Notification.Position.TOP_CENTER);
-
+            if (roleNameField.isEmpty() || employeeGroupField.getValue().isEmpty()) {
+                Notification.show( "Please fill all required fields", 3000, Notification.Position.TOP_CENTER);
                 return;
             }
+            if(roleNameField.isInvalid())
+            {
+                Notification.show("Please correct validation errors",3000,Notification.Position.TOP_CENTER);
+            }
 
-            Role role =
-                    new Role();
-
-            // SET VALUES
-            role.setRoleName(
-                    roleNameField.getValue());
-
+            Role role = new Role();
+            role.setRoleName( roleNameField.getValue());
             role.setEmployeeGroups( List.copyOf( employeeGroupField.getValue()));
-
-            // SAVE
             roleService.addRole(role,securityService.getLoggedInUser().getEmployee());
-
-            Notification.show(
-                    "Role Saved Successfully",
-                    3000,
-                    Notification.Position.TOP_CENTER);
-
+            Notification.show("Role Saved Successfully", 3000, Notification.Position.TOP_CENTER);
             close();
 
         } catch (Exception exception) {
-
-            Notification.show(
-                    "Error : "
-                            + exception.getMessage(),
-                    5000,
-                    Notification.Position.TOP_CENTER);
+            Notification.show( "Error : "+ exception.getMessage(), 5000, Notification.Position.TOP_CENTER);
         }
     }
 }

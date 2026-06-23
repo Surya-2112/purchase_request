@@ -19,20 +19,13 @@ public class ItemVariantForm extends Dialog {
     private final ItemVariantService itemVariantService;
     private final SecurityService securityService;
 
-    // FIELDS
-    private final ComboBox<Item> itemField =
-            new ComboBox<>("Item");
+    private final ComboBox<Item> itemField = new ComboBox<>("Item");
 
-    private final TextArea specificationField =
-            new TextArea("Specification");
+    private final TextArea specificationField = new TextArea("Specification");
 
-    private final NumberField estimatedPriceField =
-            new NumberField("Estimated Unit Price");
+    private final NumberField estimatedPriceField = new NumberField("Estimated Unit Price");
 
-    public ItemVariantForm(
-            ItemVariantService itemVariantService,
-            ItemService itemService,
-            SecurityService securityService) {
+    public ItemVariantForm(ItemVariantService itemVariantService, ItemService itemService, SecurityService securityService) {
 
         this.itemVariantService = itemVariantService;
         this.securityService = securityService;
@@ -40,26 +33,19 @@ public class ItemVariantForm extends Dialog {
         setHeaderTitle("Add Item Variant");
         setWidth("700px");
 
-        // ITEM
         itemField.setItems(itemService.getItems());
         itemField.setItemLabelGenerator(Item::getItemName);
         itemField.setRequired(true);
 
-        // SPECIFICATION
         specificationField.setWidthFull();
         specificationField.setMinHeight("120px");
         specificationField.setRequired(true);
 
-        // PRICE
         estimatedPriceField.setMin(0);
 
         FormLayout formLayout = new FormLayout();
 
-        formLayout.add(
-                itemField,
-                estimatedPriceField,
-                specificationField
-        );
+        formLayout.add( itemField,estimatedPriceField,specificationField );
 
         formLayout.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 2)

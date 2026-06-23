@@ -62,6 +62,39 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
         setSizeFull();
         setPadding(true);
 
+        vendorNameField.setRequired(true);
+        vendorNameField.setPattern("^(?=.{3,72}$)[A-Za-z]+(?:[ '.][A-Za-z]+)*$");
+        vendorNameField.setMaxLength(72);
+        vendorNameField.setErrorMessage(
+                "Enter a valid vendor name. Only letters, spaces, apostrophe and dot are allowed.");
+
+        vendorEmailField.setMaxLength(100);
+
+        vendorPhoneField.setPattern("^\\+?[0-9]{4,15}$");
+        vendorPhoneField.setMaxLength(16);
+        vendorPhoneField.setErrorMessage(
+                "Enter a valid phone number with 4 to 15 digits");
+
+        postalCodeField.setPattern("[0-9a-zA-Z]{3,10}");
+        postalCodeField.setMaxLength(10);
+        postalCodeField.setErrorMessage(
+                "Enter a valid postal code (3-10 characters)");
+
+        countryField.setPattern("^(?=.{2,50}$)[A-Za-z]+(?:\\s[A-Za-z]+)*$");
+        countryField.setMaxLength(50);
+        countryField.setErrorMessage("Enter a valid country name");
+
+        stateField.setPattern("^(?=.{2,100}$)[A-Za-z]+(?:\\s[A-Za-z]+)*$");
+        stateField.setMaxLength(100);
+        stateField.setErrorMessage("Enter a valid state name");
+
+        cityField.setPattern("^(?=.{2,150}$)[A-Za-z]+(?:\\s[A-Za-z]+)*$");
+        cityField.setMaxLength(150);
+        cityField.setErrorMessage("Enter a valid city name");
+
+        activeField.setRequired(true);
+        categoryField.setRequired(true);
+
         activeField.setItems("Active", "Inactive");
 
         categoryField.setItems(categoryService.getCategories());
@@ -122,7 +155,6 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
             postalCodeField.setValue(address.getPostalCode() == null ? "" : address.getPostalCode());
         }
 
-        // FORM
         FormLayout formLayout = new FormLayout();
 
         formLayout.add(
@@ -141,16 +173,27 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
         formLayout.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 2));
 
-        // SAVE
         Button saveButton = new Button("Save", e -> {
 
             try {
 
-                vendor.setVendorName(vendorNameField.getValue());
-                vendor.setVendorPhoneNumber(
-                        vendorPhoneField.getValue().trim().equals("") ? null : vendorPhoneField.getValue().trim());
-                vendor.setActive("Active".equals(activeField.getValue()));
+                if (vendorNameField.isEmpty() || activeField.isEmpty()) {
 
+                    Notification.show("Please fill all required fields", 3000, Notification.Position.MIDDLE);
+                    return;
+                }
+
+                if (vendorNameField.isInvalid() || vendorPhoneField.isInvalid() || postalCodeField.isInvalid()
+                    || cityField.isInvalid() || stateField.isInvalid() || countryField.isInvalid()) {
+
+                    Notification.show("Please correct validation errors", 3000, Notification.Position.MIDDLE);
+                    return;
+                }
+
+               vendor.setVendorName(vendorNameField.getValue().trim());
+
+                vendor.setVendorPhoneNumber(vendorPhoneField.getValue().trim().isEmpty() ? null: vendorPhoneField.getValue().trim());
+                vendor.setActive("Active".equals(activeField.getValue()));
                 vendor.setCategories(List.copyOf(categoryField.getValue()));
 
                 Address updatedAddress = vendor.getVendorAddress();
@@ -159,32 +202,30 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
                     updatedAddress = new Address();
                 }
 
-                updatedAddress.setAddressLine(addressLineField.getValue());
-                updatedAddress.setStreet(streetField.getValue());
-                updatedAddress.setCity(cityField.getValue());
-                updatedAddress.setState(stateField.getValue());
-                updatedAddress.setCountry(countryField.getValue());
-                updatedAddress.setPostalCode(postalCodeField.getValue());
+               
+
+                updatedAddress.setAddressLine(addressLineField.getValue().trim());
+
+                updatedAddress.setStreet(streetField.getValue().trim());
+
+                updatedAddress.setCity(cityField.getValue().trim());
+
+                updatedAddress.setState(stateField.getValue().trim());
+
+                updatedAddress.setCountry(countryField.getValue().trim());
+
+                updatedAddress.setPostalCode(postalCodeField.getValue().trim());
 
                 vendor.setVendorAddress(updatedAddress);
 
-                vendorService.updateVendor(
-                        vendor,
-                        securityService.getLoggedInUser().getEmployee());
+                vendorService.updateVendor(vendor, securityService.getLoggedInUser().getEmployee());
 
-                Notification.show(
-                        "Vendor Updated Successfully",
-                        3000,
-                        Notification.Position.TOP_CENTER);
+                Notification.show("Vendor Updated Successfully", 3000, Notification.Position.TOP_CENTER);
 
                 getUI().ifPresent(ui -> ui.navigate("vendor-details/" + vendor.getVendorId()));
 
             } catch (Exception ex) {
-
-                Notification.show(
-                        ex.getMessage(),
-                        5000,
-                        Notification.Position.TOP_CENTER);
+                Notification.show(ex.getMessage(), 5000, Notification.Position.TOP_CENTER);
             }
         });
 

@@ -25,168 +25,190 @@ import jakarta.annotation.security.PermitAll;
 @Route(value = "employee-form", layout = MainLayout.class)
 @PermitAll
 public class EmployeeForm extends VerticalLayout {
-   
-    private final EmployeeService employeeService;
-    private final SecurityService securityService;
 
-    private final TextField employeeNameField = new TextField("Employee Name");
+        private final EmployeeService employeeService;
+        private final SecurityService securityService;
 
-    private final EmailField employeeEmailField =new EmailField("Employee Email");
+        private final TextField employeeNameField = new TextField("Employee Name");
 
-    private final TextField phoneNumberField = new TextField("Phone Number");
+        private final EmailField employeeEmailField = new EmailField("Employee Email");
 
-    private final ComboBox<Department> departmentField = new ComboBox<>("Department");
+        private final TextField phoneNumberField = new TextField("Phone Number");
 
-    private final ComboBox<Role> roleField =  new ComboBox<>("Role");
+        private final ComboBox<Department> departmentField = new ComboBox<>("Department");
 
-    private final TextField addressLineField = new TextField("Address Line");
+        private final ComboBox<Role> roleField = new ComboBox<>("Role");
 
-    private final TextField streetField =  new TextField("Street");
+        private final TextField addressLineField = new TextField("Address Line");
 
-    private final TextField cityField = new TextField("City");
+        private final TextField streetField = new TextField("Street");
 
-    private final TextField stateField =new TextField("State");
+        private final TextField cityField = new TextField("City");
 
-    private final TextField countryField = new TextField("Country");
+        private final TextField stateField = new TextField("State");
 
-    private final TextField postalCodeField =  new TextField("Pincode");
+        private final TextField countryField = new TextField("Country");
 
-    public EmployeeForm(EmployeeService employeeService,  DepartmentService departmentService,
-            RoleService roleService,  SecurityService securityService) {
+        private final TextField postalCodeField = new TextField("Pincode");
 
-        this.employeeService = employeeService;
-        this.securityService = securityService;
+        public EmployeeForm(EmployeeService employeeService, DepartmentService departmentService,
+                        RoleService roleService, SecurityService securityService) {
 
-        setSizeFull();
-        setPadding(true);
-        setSpacing(true);
+                this.employeeService = employeeService;
+                this.securityService = securityService;
 
-        H2 title = new H2("Add Employee");
+                setSizeFull();
+                setPadding(true);
+                setSpacing(true);
 
-        departmentField.setItems( departmentService.getDepartments());
+                H2 title = new H2("Add Employee");
 
-        departmentField.setItemLabelGenerator(  Department::getDepartmentName);
+                departmentField.setItems(departmentService.getDepartments());
 
-        roleField.setItems( roleService.getRoles());
+                departmentField.setItemLabelGenerator(Department::getDepartmentName);
 
-        roleField.setItemLabelGenerator(Role::getRoleName);
+                roleField.setItems(roleService.getRoles());
 
-        phoneNumberField.setPattern("[0-9]{4,15}");
-        phoneNumberField.setErrorMessage("Enter valid mobile number 4 to 15");
-        postalCodeField.setPattern("[0-9a-zA-Z]{3,10}");
-        postalCodeField.setErrorMessage("Enter vaild 3-10 digit postal code");
+                roleField.setItemLabelGenerator(Role::getRoleName);
 
-        employeeNameField.setRequired(true);
-        employeeEmailField.setRequired(true);
-        departmentField.setRequired(true);
-        roleField.setRequired(true);
+                phoneNumberField.setPattern("^\\+?[0-9]{4,15}$");
+                phoneNumberField.setErrorMessage("Enter valid mobile number 4 to 15");
+                phoneNumberField.setMaxLength(16);
+                postalCodeField.setPattern("[0-9a-zA-Z]{3,10}");
+                postalCodeField.setErrorMessage("Enter 3-10 vaild postal code");
+                postalCodeField.setMaxLength(10);
 
-        FormLayout formLayout = new FormLayout();
+                employeeNameField.setRequired(true);
+                employeeNameField.setPattern("^(?=.{3,72}$)[A-Za-z]+(?:[ '.][A-Za-z]+)*$");
+                employeeNameField.setMaxLength(72);
+                employeeNameField.setErrorMessage("Enter the valid name, it only allows letters, spaces and dot");
 
-        formLayout.add(
-                employeeNameField,
-                employeeEmailField,
-                phoneNumberField,
-                departmentField,
-                roleField,
-                addressLineField,
-                streetField,
-                cityField,
-                stateField,
-                countryField,
-                postalCodeField
-        );
+                employeeEmailField.setRequired(true);
+                employeeEmailField.setErrorMessage("Enter a valid email");
+                employeeEmailField.setMaxLength(100);
 
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2)
-        );
+                countryField.setPattern("^(?=.{2,50}$)[A-Za-z]+(?:\\s[A-Za-z]+)*$");
+                countryField.setMaxLength(50);
+                countryField.setErrorMessage("Enter a valid country name");
 
-        Button saveButton = new Button("Save");
-        Button cancelButton = new Button("Cancel");
+                stateField.setPattern("^(?=.{2,100}$)[A-Za-z]+(?:\\s[A-Za-z]+)*$");
+                stateField.setMaxLength(100);
+                stateField.setErrorMessage("Enter a valid State name");
 
-        saveButton.addClickListener(e -> saveEmployee());
+                cityField.setPattern("^(?=.{2,150}$)[A-Za-z]+(?:\\s[A-Za-z]+)*$");
+                cityField.setMaxLength(150);
+                cityField.setErrorMessage("Enter a valid city name");
 
-        cancelButton.addClickListener(e ->
-                getUI().ifPresent(ui ->
-                        ui.navigate("employee"))
-        );
+                departmentField.setRequired(true);
+                roleField.setRequired(true);
 
-        HorizontalLayout buttons =
-                new HorizontalLayout(saveButton, cancelButton);
+                FormLayout formLayout = new FormLayout();
 
-        add(title, formLayout, buttons);
-    }
+                formLayout.add(
+                                employeeNameField,
+                                employeeEmailField,
+                                phoneNumberField,
+                                departmentField,
+                                roleField,
+                                addressLineField,
+                                streetField,
+                                cityField,
+                                stateField,
+                                countryField,
+                                postalCodeField);
 
-    private void saveEmployee() {
+                formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
-        try {
+                Button saveButton = new Button("Save");
+                Button cancelButton = new Button("Cancel");
 
-            if (employeeNameField.isEmpty()
-                    || employeeEmailField.isEmpty()
-                    || departmentField.isEmpty()
-                    || roleField.isEmpty()) {
+                saveButton.addClickListener(e -> saveEmployee());
 
-                Notification.show(
-                        "Please fill all required fields",3000,Notification.Position.MIDDLE
-                );
+                cancelButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("employee")));
 
-                return;
-            }
+                HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
 
-            Employee employee = new Employee();
-
-            employee.setEmployeeName(employeeNameField.getValue());
-
-            employee.setEmployeeEmail(employeeEmailField.getValue());
-
-            employee.setEmployeePhoneNumber(phoneNumberField.getValue().trim().equals("")?null:phoneNumberField.getValue());
- 
-            employee.setDepartment( departmentField.getValue());
-
-            employee.setRole(roleField.getValue());
-
-            employee.setActive(true);
-
-            Address address = new Address();
-
-            address.setAddressLine(addressLineField.getValue());
-
-            address.setStreet(streetField.getValue());
-
-            address.setCity( cityField.getValue());
-
-            address.setState(stateField.getValue());
-
-            address.setCountry( countryField.getValue());
-
-            address.setPostalCode(postalCodeField.getValue());
-
-            employee.setAddress(address);
-
-            Employee createdBy =securityService
-                            .getLoggedInUser()
-                            .getEmployee();
-
-            employeeService.addEmployee(
-                    employee,
-                    createdBy
-            );
-
-            Notification.show(
-                    "Employee Saved Successfully",
-                    3000,
-                    Notification.Position.TOP_CENTER
-            );
-
-            getUI().ifPresent(ui -> ui.navigate("employee"));
-
-        } catch (Exception e) {
-
-            Notification.show(
-                    "Error : " + e.getMessage(),
-                    5000,
-                    Notification.Position.TOP_CENTER
-            );
+                add(title, formLayout, buttons);
         }
-    }
+
+        private void saveEmployee() {
+
+                try {
+                        if (employeeNameField.isInvalid()
+                                        || employeeEmailField.isInvalid()
+                                        || phoneNumberField.isInvalid()
+                                        || postalCodeField.isInvalid()
+                                        || cityField.isInvalid()
+                                        || stateField.isInvalid()
+                                        || countryField.isInvalid()) {
+
+                                Notification.show(
+                                                "Please correct validation errors",
+                                                3000,
+                                                Notification.Position.MIDDLE);
+                                return;
+                        }
+
+                        if (employeeNameField.isEmpty()|| employeeEmailField.isEmpty() || departmentField.isEmpty() || roleField.isEmpty()) {
+
+                                Notification.show(
+                                                "Please fill all required fields", 3000, Notification.Position.MIDDLE);
+
+                                return;
+                        }
+
+                        Employee employee = new Employee();
+
+                        employee.setEmployeeName(employeeNameField.getValue().trim());
+
+                        employee.setEmployeeEmail(employeeEmailField.getValue().trim());
+
+                        employee.setEmployeePhoneNumber(phoneNumberField.getValue().trim().equals("") ? null
+                                        : phoneNumberField.getValue());
+
+                        employee.setDepartment(departmentField.getValue());
+
+                        employee.setRole(roleField.getValue());
+
+                        employee.setActive(true);
+
+                        Address address = new Address();
+
+                        address.setAddressLine(addressLineField.getValue().trim());
+
+                        address.setStreet(streetField.getValue().trim());
+
+                        address.setCity(cityField.getValue().trim());
+
+                        address.setState(stateField.getValue().trim());
+
+                        address.setCountry(countryField.getValue().trim());
+
+                        address.setPostalCode(postalCodeField.getValue().trim());
+
+                        employee.setAddress(address);
+
+                        Employee createdBy = securityService
+                                        .getLoggedInUser()
+                                        .getEmployee();
+
+                        employeeService.addEmployee(
+                                        employee,
+                                        createdBy);
+
+                        Notification.show(
+                                        "Employee Saved Successfully",
+                                        3000,
+                                        Notification.Position.TOP_CENTER);
+
+                        getUI().ifPresent(ui -> ui.navigate("employee"));
+
+                } catch (Exception e) {
+
+                        Notification.show(
+                                        "Error : " + e.getMessage(),
+                                        5000,
+                                        Notification.Position.TOP_CENTER);
+                }
+        }
 }

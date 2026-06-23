@@ -18,11 +18,9 @@ import com.module.purchase.service.QuotationService;
 import com.module.purchase.service.RequestForQuotationService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -52,10 +50,8 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
     private final VerticalLayout quotationCardsStackContainer = new VerticalLayout();
     private final Button backBtn = new Button("Back");
 
-    public QuotationEvaluationMatrixView(RequestForQuotationService rfqService, 
-                                        QuotationService quotationService,
-                                        SecurityService securityService, 
-                                        AssigningConfigService assigningConfigService) {
+    public QuotationEvaluationMatrixView(RequestForQuotationService rfqService, QuotationService quotationService,
+                                        SecurityService securityService,  AssigningConfigService assigningConfigService) {
         this.rfqService = rfqService;
         this.quotationService = quotationService;
         this.securityService = securityService;
@@ -89,12 +85,13 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
 
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
+
         if (id == null) {
             Notification.show("No valid RFQ parameter keys passed.", 3000, Position.MIDDLE);
             getUI().ifPresent(ui -> ui.navigate("quotation-comparison"));
             return;
         }
-
+        try{
         rfqService.getRequestForQuotationById(id).ifPresentOrElse(rfq -> {
             this.targetRfq = rfq;
             buildStackedQuotationAnalysisSheets(rfq);
@@ -102,6 +99,11 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
             Notification.show("The requested RFQ reference file is missing.", 4000, Position.MIDDLE);
             getUI().ifPresent(ui -> ui.navigate("quotation-comparison"));
         });
+        }catch (Exception ex) {
+            event.forwardTo("quotation-comparison");
+            event.getUI().access(() -> { Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);});
+            return;
+        }
     }
 
     private void buildStackedQuotationAnalysisSheets(RequestForQuotation rfq) {

@@ -39,7 +39,7 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
     public void setParameter(BeforeEvent event, Long itemId) {
 
         removeAll();
-
+        try{
         Item item = itemService.getItemById(itemId).orElse(null);
 
         if (item == null) {
@@ -51,53 +51,15 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
 
         FormLayout formLayout = new FormLayout();
 
-        formLayout.addFormItem(
-                new Span(String.valueOf(item.getItemId())),
-                "Item ID"
-        );
-
-        formLayout.addFormItem(
-                new Span(
-                        item.getItemName() == null
-                                ? ""
-                                : item.getItemName()
-                ),
-                "Item Name"
-        );
-
-        formLayout.addFormItem(
-                new Span(
-                        item.getItemCode() == null
-                                ? ""
-                                : item.getItemCode()
-                ),
-                "Item Code"
-        );
-
-        formLayout.addFormItem(
-                new Span(
-                        item.getCategory() == null
-                                ? ""
-                                : item.getCategory().getCategoryName()
-                ),
-                "Category"
-        );
-
-        formLayout.addFormItem(
-                new Span(item.getUnit() == null
-                                ? ""
-                                : item.getUnit().getName()
-                ),
-                "Unit"
-        );
+        formLayout.addFormItem(new Span(String.valueOf(item.getItemId())),"Item ID" );
+        formLayout.addFormItem( new Span(item.getItemName() == null ? "": item.getItemName()), "Item Name");
+        formLayout.addFormItem(new Span( item.getItemCode() == null ? "" : item.getItemCode()),"Item Code");
+        formLayout.addFormItem(new Span( item.getCategory() == null ? "": item.getCategory().getCategoryName()), "Category");
+        formLayout.addFormItem( new Span(item.getUnit() == null? "": item.getUnit().getName()), "Unit" );
 
         Button updateButton = new Button("Update");
 
-        updateButton.addClickListener(e ->
-                getUI().ifPresent(ui ->
-                        ui.navigate("item-edit/" + item.getItemId())
-                )
-        );
+        updateButton.addClickListener(e ->getUI().ifPresent(ui -> ui.navigate("item-edit/" + item.getItemId())));
 
         Button deleteButton = new Button("Delete");
 
@@ -115,44 +77,29 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
             dialog.addConfirmListener(confirmEvent -> {
 
                 try {
-
-                    itemService.deleteItemById(
-                            item.getItemId(),
-                            securityService.getLoggedInUser().getEmployee()
-                    );
-
-                    Notification.show(
-                            "Item Deleted Successfully",
-                            3000,
-                            Notification.Position.TOP_CENTER
-                    );
+                    itemService.deleteItemById( item.getItemId(), securityService.getLoggedInUser().getEmployee());
+                    Notification.show( "Item Deleted Successfully", 3000, Notification.Position.TOP_CENTER );
 
                     getUI().ifPresent(ui -> ui.navigate("item"));
 
                 } catch (Exception ex) {
-
-                    Notification.show(
-                            ex.getMessage(),
-                            5000,
-                            Notification.Position.TOP_CENTER
-                    );
+                    Notification.show(ex.getMessage(),5000, Notification.Position.TOP_CENTER);
                 }
             });
 
             dialog.open();
         });
 
-        updateButton.setVisible(
-                securityService.canAccessView("item-edit")
-        );
+        updateButton.setVisible(securityService.canAccessView("item-edit"));
+        deleteButton.setVisible(securityService.canAccessView("item-form"));
 
-        deleteButton.setVisible(
-                securityService.canAccessView("item-form")
-        );
-
-        HorizontalLayout buttons =
-                new HorizontalLayout(updateButton, deleteButton);
+        HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 
         add(title, formLayout, buttons);
+        }catch(Exception ex){ 
+                event.forwardTo("item");
+                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+                return;
+        }
     }
 }

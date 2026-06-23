@@ -24,157 +24,89 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "role-edit", layout = MainLayout.class)
 @PermitAll
-public class RoleEditView extends VerticalLayout
-        implements HasUrlParameter<Long> {
+public class RoleEditView extends VerticalLayout implements HasUrlParameter<Long> {
 
-    private final RoleService roleService;
+        private final RoleService roleService;
 
-    private final SecurityService securityService;
+        private final SecurityService securityService;
 
-    // FIELDS
-    private final TextField roleNameField =
-            new TextField("Role Name");
+        private final TextField roleNameField = new TextField("Role Name");
 
-    private final CheckboxGroup<EmployeeGroup> employeeGroupField =
-            new CheckboxGroup<>();
+        private final CheckboxGroup<EmployeeGroup> employeeGroupField = new CheckboxGroup<>();
 
-    private Role role;
+        private Role role;
 
-    public RoleEditView(RoleService roleService, SecurityService securityService) {
+        public RoleEditView(RoleService roleService, SecurityService securityService) {
 
-        this.roleService = roleService;
-        this.securityService=securityService;
+                this.roleService = roleService;
+                this.securityService = securityService;
 
-        setSizeFull();
+                setSizeFull();
 
-        setPadding(true);
+                setPadding(true);
 
-        roleNameField.setReadOnly(true);
+                roleNameField.setReadOnly(true);
 
-        employeeGroupField.setLabel(
-                "Role Groups");
+                employeeGroupField.setLabel("Role Groups");
 
-        // LOAD EMPLOYEE GROUPS
-        employeeGroupField.setItems(
-                EmployeeGroup.values());
-    }
-
-    @Override
-    public void setParameter(
-            BeforeEvent event,
-            Long roleId) {
-
-        removeAll();
-
-        role =
-                roleService
-                        .getRoleById(roleId)
-                        .orElse(null);
-
-        if (role == null) {
-
-            add(new H2("Role Not Found"));
-
-            return;
+                employeeGroupField.setItems( EmployeeGroup.values());
         }
 
-        H2 title =
-                new H2("Update Role");
+        @Override
+        public void setParameter( BeforeEvent event,Long roleId) {
 
-        // SET VALUES
-        roleNameField.setValue(
-                role.getRoleName() == null
-                        ? ""
-                        : role.getRoleName());
-
-        if (role.getEmployeeGroups() != null) {
-
-            employeeGroupField.setValue( Set.copyOf(role.getEmployeeGroups()));
-        }
-
-        // FORM
-        FormLayout formLayout =
-                new FormLayout();
-
-        formLayout.add(
-                roleNameField,
-                employeeGroupField);
-
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2));
-
-        // SAVE BUTTON
-        Button saveButton =
-                new Button("Save");
-
-        saveButton.addClickListener(clickEvent -> {
-
-            try {
-
-                // VALIDATION
-                if (roleNameField.isEmpty()
-                        || employeeGroupField.isEmpty()) {
-
-                    Notification.show(
-                            "Please fill all required fields",
-                            3000,
-                            Notification.Position.TOP_CENTER);
-
-                    return;
+                removeAll();
+                try{
+                role = roleService.getRoleById(roleId).orElse(null);
+                if (role == null) {
+                        add(new H2("Role Not Found"));
+                        return;
                 }
 
-                // UPDATE VALUES
-                role.setRoleName(
-                        roleNameField.getValue());
+                H2 title = new H2("Update Role");
 
-                role.setEmployeeGroups(
-                        List.copyOf(
-                                employeeGroupField.getValue()));
+                roleNameField.setValue(role.getRoleName() == null? "" : role.getRoleName());
 
-                // UPDATE
-                roleService.updateRole(role,securityService.getLoggedInUser().getEmployee());
+                if (role.getEmployeeGroups() != null) {
+                        employeeGroupField.setValue(Set.copyOf(role.getEmployeeGroups()));
+                }
+                FormLayout formLayout = new FormLayout();
+                formLayout.add(roleNameField, employeeGroupField);
 
-                Notification.show(
-                        "Role Updated Successfully",
-                        3000,
-                        Notification.Position.TOP_CENTER);
+                formLayout.setResponsiveSteps( new FormLayout.ResponsiveStep("0", 2));
 
-                getUI().ifPresent(ui ->
-                        ui.navigate(
-                                "role-details/"
-                                        + role.getRoleId()));
+                Button saveButton = new Button("Save");
 
-            } catch (Exception exception) {
+                saveButton.addClickListener(clickEvent -> {
+                try {
+                        if (roleNameField.isEmpty()|| employeeGroupField.isEmpty()) {
+                                Notification.show("Please fill all required fields", 3000, Notification.Position.TOP_CENTER);
+                                return;
+                        }
+                        if (roleNameField.isInvalid()) {
+                                 Notification.show("Please correct validation errors", 3000,Notification.Position.TOP_CENTER);
+                        }
+                        role.setRoleName(roleNameField.getValue());
 
-                Notification.show(
-                        exception.getMessage(),
-                        5000,
-                        Notification.Position.TOP_CENTER);
-            }
-
-        });
-
-        // CANCEL BUTTON
-        Button cancelButton =
-                new Button("Cancel");
-
-        cancelButton.addClickListener(clickEvent -> {
-
-            getUI().ifPresent(ui ->
-                    ui.navigate(
-                            "role-details/"
-                                    + role.getRoleId()));
-
-        });
-
-        HorizontalLayout buttonLayout =
-                new HorizontalLayout(
-                        saveButton,
-                        cancelButton);
-
-        add(
-                title,
-                formLayout,
-                buttonLayout);
-    }
+                        role.setEmployeeGroups(List.copyOf(employeeGroupField.getValue()));
+                        roleService.updateRole(role, securityService.getLoggedInUser().getEmployee());
+                        Notification.show("Role Updated Successfully", 3000, Notification.Position.TOP_CENTER);
+                        getUI().ifPresent(ui -> ui.navigate("role-details/"+ role.getRoleId()));
+                        } catch (Exception exception) {
+                                Notification.show(exception.getMessage(),5000,Notification.Position.TOP_CENTER);
+                        }
+                });
+                Button cancelButton = new Button("Cancel");
+                cancelButton.addClickListener(clickEvent -> {
+                        getUI().ifPresent(ui -> ui.navigate("role-details/"+ role.getRoleId()));
+                });
+                HorizontalLayout buttonLayout = new HorizontalLayout( saveButton,cancelButton);
+                add(title,formLayout,buttonLayout);
+                
+        }catch (Exception ex) {
+            event.forwardTo("role");
+            event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);});
+            return;
+        }       
+        }
 }

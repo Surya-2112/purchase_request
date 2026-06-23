@@ -26,15 +26,13 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "category-details", layout = MainLayout.class)
 @PermitAll
-public class CategoryDetailsView extends VerticalLayout
-                implements HasUrlParameter<Long> {
+public class CategoryDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
 
         private final CategoryService categoryService;
         private final RepeatedPeriodService repeatedPeriodService;
         private final SecurityService securityService;
 
-        public CategoryDetailsView(CategoryService categoryService, 
-                                   RepeatedPeriodService repeatedPeriodService, 
+        public CategoryDetailsView(CategoryService categoryService, RepeatedPeriodService repeatedPeriodService, 
                                    SecurityService securityService) {
                 this.categoryService = categoryService;
                 this.repeatedPeriodService = repeatedPeriodService;
@@ -49,9 +47,8 @@ public class CategoryDetailsView extends VerticalLayout
         public void setParameter(BeforeEvent event, Long categoryId) {
 
                 removeAll();
-
+                try{
                 Category category = categoryService.getCategoryById(categoryId).orElse(null);
-
                 if (category == null) {
                         add(new Span("Category Not Found"));
                         return;
@@ -59,22 +56,16 @@ public class CategoryDetailsView extends VerticalLayout
 
                 H2 title = new H2("Category Details");
 
-                // ================= BASE CONFIGURATION FORM =================
                 FormLayout baseFormLayout = new FormLayout();
 
-                baseFormLayout.addFormItem(new Span(String.valueOf(category.getCategoryId())),
-                                "Category ID");
+                baseFormLayout.addFormItem(new Span(String.valueOf(category.getCategoryId())), "Category ID");
 
-                baseFormLayout.addFormItem(new Span(category.getCategoryName() == null ? "" : category.getCategoryName()),
-                                "Category Name");
+                baseFormLayout.addFormItem(new Span(category.getCategoryName() == null ? "" : category.getCategoryName()), "Category Name");
 
-                baseFormLayout.addFormItem(new Span(category.isRepeatable() ? "Yes" : "No"),
-                                "Is Repeatable Category");
+                baseFormLayout.addFormItem(new Span(category.isRepeatable() ? "Yes" : "No"),  "Is Repeatable Category");
 
-                baseFormLayout.addFormItem(new Span(category.isAutoRfq() ? "Yes" : "No"),
-                                "Send RFQ Automatically");
+                baseFormLayout.addFormItem(new Span(category.isAutoRfq() ? "Yes" : "No"), "Send RFQ Automatically");
 
-                // ================= CONDITIONAL SCHEDULER BLOCK =================
                 VerticalLayout scheduleContainer = new VerticalLayout();
                 scheduleContainer.setPadding(false);
                 scheduleContainer.setSpacing(true);
@@ -105,7 +96,6 @@ public class CategoryDetailsView extends VerticalLayout
                         }
                 }
 
-                // ================= BUTTON ACTIONS =================
                 Button updateButton = new Button("Update");
                 updateButton.addClickListener(e -> getUI()
                                 .ifPresent(ui -> ui.navigate("category-edit/" + category.getCategoryId())));
@@ -140,7 +130,14 @@ public class CategoryDetailsView extends VerticalLayout
 
                 HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 
-                // Add elements sequentially inside the component hierarchy
                 add(title, baseFormLayout, scheduleContainer, buttons);
+                }catch(Exception ex)
+                {      event.forwardTo("category");
+                       event.getUI().access(() -> {
+                        Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);
+                        });
+                                return;
+                }
+
         }
 }

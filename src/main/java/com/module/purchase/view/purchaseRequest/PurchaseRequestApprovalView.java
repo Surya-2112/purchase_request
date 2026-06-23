@@ -73,8 +73,7 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
                 header = headerService.getPurchaseRequestHeaderById(id).get();
             } catch (Exception ex) {
                 event.forwardTo("");
-                event.getUI().access(() -> {
-                    Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                event.getUI().access(() -> { Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
                 });
                 return;
             }

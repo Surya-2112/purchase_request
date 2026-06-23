@@ -151,10 +151,10 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        try{
         Long approvalId = Long.parseLong(event.getRouteParameters().get("id").get());
 
-        approvalTask = approvalsService.getAssigningApprovalById(approvalId)
-                .orElseThrow(() -> new RuntimeException("Approval task trace reference is missing."));
+        approvalTask = approvalsService.getAssigningApprovalById(approvalId) .orElseThrow(() -> new RuntimeException("Approval task trace reference is missing."));
 
         poHeader = poHeaderService.getPurchaseOrderHeaderById(approvalTask.getReferenceId())
                 .orElseThrow(() -> new RuntimeException("Linked parent Purchase Order file missing."));
@@ -162,6 +162,10 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
         evaluateAccessPrivileges();
         bindHeaderMetadata();
         loadMasterDataPipelines();
+        } catch (Exception ex) {
+            Notification.show(ex.getMessage(), 4000, Position.TOP_CENTER);
+            getUI().ifPresent(ui -> ui.navigate("purchase-order"));
+        }
     }
 
     private void bindHeaderMetadata() {

@@ -42,20 +42,15 @@ public class EmployeeDetailsView extends VerticalLayout implements HasUrlParamet
 
         removeAll();
         Employee employee;
-        
+        try{
         if(securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(employeeId)||securityService.canAccessView("management-group"))
         {
             employee = employeeService.getEmployeeById(employeeId).get();
         }
         else {
-                employee = null;
+           employee = null;
            event.forwardTo("");
-                event.getUI().access(() -> {
-
-                    Notification.show(
-                            "Access Denied",
-                            3000,
-                            Notification.Position.MIDDLE);
+            event.getUI().access(() -> { Notification.show( "Access Denied",3000, Notification.Position.MIDDLE);
                 });
         }
 
@@ -69,68 +64,26 @@ public class EmployeeDetailsView extends VerticalLayout implements HasUrlParamet
 
         FormLayout formLayout = new FormLayout();
 
-        formLayout.addFormItem(
-                new Span(String.valueOf(employee.getEmployeeId())),
-                "Employee ID");
-
-        formLayout.addFormItem(
-                new Span(employee.getEmployeeName()),
-                "Employee Name");
-
-        formLayout.addFormItem(
-                new Span(employee.getEmployeeEmail()),
-                "Email");
-
-        formLayout.addFormItem(
-                new Span(employee.getEmployeePhoneNumber()),
-                "Phone");
-
-        formLayout.addFormItem(
-                new Span(
-                        employee.getDepartment() == null
-                                ? ""
-                                : employee.getDepartment().getDepartmentName()),
-                "Department");
-
-        formLayout.addFormItem(
-                new Span(
-                        employee.getRole() == null
-                                ? ""
-                                : employee.getRole().getRoleName()),
-                "Role");
-
-        formLayout.addFormItem(
-                new Span(
-                        employee.getActive() ? "Active" : "Inactive"),
-                "Status");
+        formLayout.addFormItem(new Span(String.valueOf(employee.getEmployeeId())), "Employee ID");
+        formLayout.addFormItem( new Span(employee.getEmployeeName()), "Employee Name");
+        formLayout.addFormItem( new Span(employee.getEmployeeEmail()), "Email");
+        formLayout.addFormItem( new Span(employee.getEmployeePhoneNumber()), "Phone");
+        formLayout.addFormItem(new Span( employee.getDepartment() == null ? "": employee.getDepartment().getDepartmentName()),"Department");
+        formLayout.addFormItem(new Span( employee.getRole() == null ? "": employee.getRole().getRoleName()),"Role");
+        formLayout.addFormItem( new Span(employee.getActive() ? "Active" : "Inactive"),"Status");
 
         if (employee.getAddress() != null) {
 
-            formLayout.addFormItem(
-                    new Span(employee.getAddress().getStreet()),
-                    "Street");
-
-            formLayout.addFormItem(
-                    new Span(employee.getAddress().getCity()),
-                    "City");
-
-            formLayout.addFormItem(
-                    new Span(employee.getAddress().getState()),
-                    "State");
-
-            formLayout.addFormItem(
-                    new Span(employee.getAddress().getCountry()),
-                    "Country");
-
-            formLayout.addFormItem(
-                    new Span(employee.getAddress().getPostalCode()),
-                    "Pincode");
+            formLayout.addFormItem(new Span(employee.getAddress().getStreet()), "Street");
+            formLayout.addFormItem( new Span(employee.getAddress().getCity()), "City");
+            formLayout.addFormItem(new Span(employee.getAddress().getState()),"State");
+            formLayout.addFormItem( new Span(employee.getAddress().getCountry()), "Country");
+            formLayout.addFormItem(new Span(employee.getAddress().getPostalCode()),"Pincode");
         }
 
         Button updateButton = new Button("Update");
 
         updateButton.addClickListener(clickEvent -> {
-
             getUI().ifPresent(ui -> ui.navigate("employee-edit/" + employee.getEmployeeId()));
 
         });
@@ -154,7 +107,6 @@ public class EmployeeDetailsView extends VerticalLayout implements HasUrlParamet
             dialog.addConfirmListener(confirmEvent -> {
 
                 try {
-
                     employeeService.deleteEmployeeById(employee.getEmployeeId(),securityService.getLoggedInUser().getEmployee());
 
                     Notification.show( "Employee Deleted Successfully");
@@ -163,10 +115,7 @@ public class EmployeeDetailsView extends VerticalLayout implements HasUrlParamet
 
                 } catch (Exception exception) {
 
-                    Notification.show(
-                            exception.getMessage(),
-                            5000,
-                            Notification.Position.TOP_CENTER);
+                    Notification.show( exception.getMessage(),5000, Notification.Position.TOP_CENTER);
                 }
 
             });
@@ -180,5 +129,10 @@ public class EmployeeDetailsView extends VerticalLayout implements HasUrlParamet
         HorizontalLayout buttonLayout = new HorizontalLayout(updateButton, deleteButton);
 
         add(title, formLayout, buttonLayout);
+        }catch(Exception ex){ 
+                event.forwardTo("employee");
+                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+                return;
+        }
     }
 }

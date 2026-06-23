@@ -20,15 +20,12 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "unit-details", layout = MainLayout.class)
 @PermitAll
-public class UnitDetailsView extends VerticalLayout
-        implements HasUrlParameter<Integer> {
+public class UnitDetailsView extends VerticalLayout implements HasUrlParameter<Integer> {
 
     private final UnitService unitService;
     private final SecurityService securityService;
 
-    public UnitDetailsView(
-            UnitService unitService,
-            SecurityService securityService) {
+    public UnitDetailsView(UnitService unitService, SecurityService securityService) {
 
         this.unitService = unitService;
         this.securityService = securityService;
@@ -42,7 +39,7 @@ public class UnitDetailsView extends VerticalLayout
     public void setParameter(BeforeEvent event, Integer unitId) {
 
         removeAll();
-
+        try{
         Unit unit = unitService.getUnitById(unitId).orElse(null);
 
         if (unit == null) {
@@ -54,27 +51,13 @@ public class UnitDetailsView extends VerticalLayout
 
         FormLayout formLayout = new FormLayout();
 
-        formLayout.addFormItem(
-                new Span(String.valueOf(unit.getId())),
-                "Unit ID"
-        );
-
-        formLayout.addFormItem(
-                new Span(unit.getName() == null ? "" : unit.getName()),
-                "Unit Name"
-        );
-
-        formLayout.addFormItem(
-                new Span(unit.getCode() == null ? "" : unit.getCode()),
-                "Unit Code"
-        );
+        formLayout.addFormItem(new Span(String.valueOf(unit.getId())),"Unit ID");
+        formLayout.addFormItem(new Span(unit.getName() == null ? "" : unit.getName()),"Unit Name");
+        formLayout.addFormItem(new Span(unit.getCode() == null ? "" : unit.getCode()),"Unit Code");
 
         Button updateButton = new Button("Update");
 
-        updateButton.addClickListener(e ->
-                getUI().ifPresent(ui ->
-                        ui.navigate("unit-edit/" + unit.getId()))
-        );
+        updateButton.addClickListener(e -> getUI().ifPresent(ui ->ui.navigate("unit-edit/" + unit.getId())));
 
         Button deleteButton = new Button("Delete");
 
@@ -93,41 +76,31 @@ public class UnitDetailsView extends VerticalLayout
 
                 try {
 
-                    unitService.deleteUnitById(
-                            unit.getId(),
-                            securityService.getLoggedInUser().getEmployee()
-                    );
+                    unitService.deleteUnitById( unit.getId(), securityService.getLoggedInUser().getEmployee());
 
-                    Notification.show(
-                            "Unit deleted successfully",
-                            3000,
-                            Notification.Position.TOP_CENTER
-                    );
+                    Notification.show( "Unit deleted successfully", 3000, Notification.Position.TOP_CENTER);
 
                     getUI().ifPresent(ui -> ui.navigate("unit"));
 
                 } catch (Exception ex) {
-
-                    Notification.show(
-                            ex.getMessage(),
-                            5000,
-                            Notification.Position.TOP_CENTER
-                    );
+                    Notification.show(ex.getMessage(),5000, Notification.Position.TOP_CENTER);
                 }
             });
 
             dialog.open();
         });
 
-        updateButton.setVisible(
-                securityService.canAccessView("unit-edit"));
+        updateButton.setVisible( securityService.canAccessView("unit-edit"));
 
-        deleteButton.setVisible(
-                securityService.canAccessView("unit-form"));
+        deleteButton.setVisible( securityService.canAccessView("unit-form"));
 
-        HorizontalLayout buttons =
-                new HorizontalLayout(updateButton, deleteButton);
+        HorizontalLayout buttons =new HorizontalLayout(updateButton, deleteButton);
 
         add(title, formLayout, buttons);
+        }catch (Exception ex) {
+            event.forwardTo("unit");
+            event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);});
+            return;
+        }
     }
 }

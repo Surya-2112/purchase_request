@@ -23,35 +23,20 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "item-variant-edit", layout = MainLayout.class)
 @PermitAll
-public class ItemVariantEditView extends VerticalLayout
-        implements HasUrlParameter<Long> {
+public class ItemVariantEditView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final ItemVariantService itemVariantService;
-    private final ItemService itemService;
     private final SecurityService securityService;
-
-    // FIELDS
-    private final ComboBox<Item> itemField =
-            new ComboBox<>("Item");
-
-    private final TextArea specificationField =
-            new TextArea("Specification");
-
-    private final NumberField estimatedPriceField =
-            new NumberField("Estimated Unit Price");
-
-    private final ComboBox<String> activeField =
-            new ComboBox<>("Status");
+    private final ComboBox<Item> itemField = new ComboBox<>("Item");
+    private final TextArea specificationField = new TextArea("Specification");
+    private final NumberField estimatedPriceField = new NumberField("Estimated Unit Price");
+    private final ComboBox<String> activeField = new ComboBox<>("Status");
 
     private ItemVariant itemVariant;
 
-    public ItemVariantEditView(
-            ItemVariantService itemVariantService,
-            ItemService itemService,
-            SecurityService securityService) {
+    public ItemVariantEditView(ItemVariantService itemVariantService,ItemService itemService, SecurityService securityService) {
 
         this.itemVariantService = itemVariantService;
-        this.itemService = itemService;
         this.securityService = securityService;
 
         setSizeFull();
@@ -68,9 +53,8 @@ public class ItemVariantEditView extends VerticalLayout
 
         removeAll();
 
-        itemVariant = itemVariantService
-                .getItemVariantById(variantId)
-                .orElse(null);
+        try{
+        itemVariant = itemVariantService.getItemVariantById(variantId).orElse(null);
 
         if (itemVariant == null) {
 
@@ -83,109 +67,56 @@ public class ItemVariantEditView extends VerticalLayout
         itemField.setValue(itemVariant.getItem());
         itemField.setReadOnly(true);
 
-        specificationField.setValue( itemVariant.getSpecification() == null
-                        ? ""
-                        : itemVariant.getSpecification());
+        specificationField.setValue( itemVariant.getSpecification() == null? "": itemVariant.getSpecification());
         specificationField.setReadOnly(true);
 
         if (itemVariant.getEstimatedUnitPrice() != null) {
-
-            estimatedPriceField.setValue(
-                    itemVariant.getEstimatedUnitPrice());
+            estimatedPriceField.setValue( itemVariant.getEstimatedUnitPrice());
         }
-
-        activeField.setValue(Boolean.TRUE.equals(itemVariant.getActive())
-                        ? "Active"
-                        : "Inactive");
+        activeField.setValue(Boolean.TRUE.equals(itemVariant.getActive())? "Active": "Inactive");
         if(itemVariantService.getItemVariantsByItem(itemVariant.getItem()).size()<2 && itemVariant.getActive())
-        {  activeField.setReadOnly(true);       
-        }
+        {  activeField.setReadOnly(true);}
 
         FormLayout formLayout = new FormLayout();
 
-        formLayout.add(
-                itemField,
-                activeField,
-                estimatedPriceField,
-                specificationField
-        );
-
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2)
-        );
-
-        // SAVE BUTTON
+        formLayout.add(itemField, activeField, estimatedPriceField, specificationField);
+        formLayout.setResponsiveSteps( new FormLayout.ResponsiveStep("0", 2));
 
         Button saveButton = new Button("Save");
 
         saveButton.addClickListener(e -> {
 
             try {
-
                 if (itemField.isEmpty()) {
-
-                    Notification.show(
-                            "Please select an Item",
-                            3000,
-                            Notification.Position.TOP_CENTER);
-
+                    Notification.show("Please select an Item",3000,Notification.Position.TOP_CENTER);
                     return;
                 }
 
-                itemVariant.setItem(
-                        itemField.getValue());
+                itemVariant.setItem( itemField.getValue());
+                itemVariant.setSpecification(specificationField.getValue());
+                itemVariant.setActive( activeField.getValue().equals("Active"));
+                itemVariant.setEstimatedUnitPrice(estimatedPriceField.getValue());
+                itemVariantService.updateItemVariant(itemVariant,securityService.getLoggedInUser().getEmployee());
 
-                itemVariant.setSpecification(
-                        specificationField.getValue());
+                Notification.show("Item Variant Updated Successfully", 3000, Notification.Position.TOP_CENTER);
 
-                itemVariant.setActive(
-                        activeField.getValue()
-                                .equals("Active"));
-
-                itemVariant.setEstimatedUnitPrice(
-                        estimatedPriceField.getValue());
-
-                itemVariantService.updateItemVariant(
-                        itemVariant,
-                        securityService
-                                .getLoggedInUser()
-                                .getEmployee());
-
-                Notification.show(
-                        "Item Variant Updated Successfully",
-                        3000,
-                        Notification.Position.TOP_CENTER);
-
-                getUI().ifPresent(ui ->
-                        ui.navigate(
-                                "item-variant-details/"
-                                        + itemVariant.getId()));
+                getUI().ifPresent(ui ->ui.navigate("item-variant-details/"+ itemVariant.getId()));
 
             } catch (Exception ex) {
-
-                Notification.show(
-                        ex.getMessage(),
-                        5000,
-                        Notification.Position.TOP_CENTER);
+                Notification.show(ex.getMessage(), 5000,Notification.Position.TOP_CENTER);
             }
         });
 
-        // CANCEL BUTTON
-
         Button cancelButton = new Button("Cancel");
 
-        cancelButton.addClickListener(e ->
-                getUI().ifPresent(ui ->
-                        ui.navigate(
-                                "item-variant-details/"
-                                        + itemVariant.getId()))
-        );
+        cancelButton.addClickListener(e ->getUI().ifPresent(ui ->ui.navigate( "item-variant-details/"+ itemVariant.getId())));
 
-        HorizontalLayout buttons =
-                new HorizontalLayout(
-                        saveButton,
-                        cancelButton);
-
+        HorizontalLayout buttons =new HorizontalLayout(saveButton,cancelButton);
         add(title, formLayout, buttons);
+        }catch(Exception ex){ 
+                event.forwardTo("item-variant");
+                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+                return;
+        }
     }
 }

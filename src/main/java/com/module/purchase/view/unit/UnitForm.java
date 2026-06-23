@@ -18,7 +18,6 @@ public class UnitForm extends Dialog {
 
     private Unit unit;
 
-    // FIELDS
     private final TextField unitNameField = new TextField("Unit Name");
     private final TextField unitCodeField = new TextField("Unit Code");
 
@@ -31,14 +30,19 @@ public class UnitForm extends Dialog {
 
         H2 title = new H2("Add Unit");
 
+        unitNameField.setPattern("[a-zA-Z]{3,50}");
         unitNameField.setRequired(true);
+        unitNameField.setMaxLength(50);
+        unitNameField.setErrorMessage("Enter vaild Unit name.3 to 50 letters");
+        unitCodeField.setPattern("[a-zA-Z0-9]{1,10}");
         unitCodeField.setRequired(true);
+        unitCodeField.setMaxLength(10);
+        unitCodeField.setErrorMessage("Enter vaild Unit Code.Maximum length is 10, numbers and letters");
 
         FormLayout formLayout = new FormLayout();
         formLayout.add(unitNameField, unitCodeField);
         formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 1)
-        );
+                new FormLayout.ResponsiveStep("0", 1));
 
         Button saveButton = new Button("Save", e -> saveUnit());
         Button cancelButton = new Button("Cancel", e -> close());
@@ -48,7 +52,6 @@ public class UnitForm extends Dialog {
         add(title, formLayout, buttons);
     }
 
-    // ===== EDIT MODE =====
     public void setUnit(Unit unit) {
 
         this.unit = unit;
@@ -59,18 +62,17 @@ public class UnitForm extends Dialog {
         }
     }
 
-    // ===== SAVE =====
     private void saveUnit() {
 
         try {
 
             if (unitNameField.isEmpty() || unitCodeField.isEmpty()) {
-                Notification.show(
-                        "Please fill all required fields",
-                        3000,
-                        Notification.Position.TOP_CENTER
-                );
+                Notification.show("Please fill all required fields", 3000, Notification.Position.TOP_CENTER);
                 return;
+            }
+
+            if (unitNameField.isInvalid() || unitCodeField.isInvalid()) {
+                Notification.show("Please correct validation errors", 3000, Notification.Position.TOP_CENTER);
             }
 
             if (unit == null) {
@@ -84,27 +86,23 @@ public class UnitForm extends Dialog {
 
                 unitService.addUnit(
                         unit,
-                        securityService.getLoggedInUser().getEmployee()
-                );
+                        securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Unit Created Successfully",
                         3000,
-                        Notification.Position.TOP_CENTER
-                );
+                        Notification.Position.TOP_CENTER);
 
             } else {
 
                 unitService.updateUnit(
                         unit,
-                        securityService.getLoggedInUser().getEmployee()
-                );
+                        securityService.getLoggedInUser().getEmployee());
 
                 Notification.show(
                         "Unit Updated Successfully",
                         3000,
-                        Notification.Position.TOP_CENTER
-                );
+                        Notification.Position.TOP_CENTER);
             }
 
             close();
@@ -114,8 +112,7 @@ public class UnitForm extends Dialog {
             Notification.show(
                     ex.getMessage(),
                     5000,
-                    Notification.Position.TOP_CENTER
-            );
+                    Notification.Position.TOP_CENTER);
         }
     }
 }

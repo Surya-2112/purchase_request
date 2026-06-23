@@ -28,10 +28,8 @@ public class AssigningConfigView extends VerticalLayout {
 
     private final AssigningConfigService assigningConfigService;
 
-    private final Grid<AssigningConfigDTO> assigningConfigGrid =
-            new Grid<>(AssigningConfigDTO.class, false);
+    private final Grid<AssigningConfigDTO> assigningConfigGrid = new Grid<>(AssigningConfigDTO.class, false);
 
-    // FILTERS
     private final TextField idField =
             new TextField("Config ID");
 

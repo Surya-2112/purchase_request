@@ -343,8 +343,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
             currentRfq.setStatus(RequestForQuotationStatus.CANCELLED);
             rfqService.updateRequestForQuotation(currentRfq, actor);
 
-            Notification.show("Request for Quotation successfully cancelled. Demands unmapped safely.", 4000,
-                    Position.TOP_CENTER);
+            Notification.show("Request for Quotation successfully cancelled. Demands unmapped safely.", 4000, Position.TOP_CENTER);
             backToDashboard();
 
         } catch (Exception ex) {

@@ -24,19 +24,14 @@ public class ItemForm extends Dialog {
     private final ItemVariantService itemVariantService;
     private final SecurityService securityService;
 
-    // ================= FIELDS =================
     private final TextField itemNameField = new TextField("Item Name");
     private final TextField itemCodeField = new TextField("Item Code");
     private final ComboBox<Category> categoryField = new ComboBox<>("Category");
     private final ComboBox<Unit> unitField = new ComboBox<>("Unit");
     private final NumberField estimatedPriceField = new NumberField("Estimated Price");
 
-    public ItemForm(
-            ItemService itemService,
-            ItemVariantService itemVariantService,
-            CategoryService categoryService,
-            UnitService unitService,
-            SecurityService securityService) {
+    public ItemForm( ItemService itemService, ItemVariantService itemVariantService, CategoryService categoryService,
+            UnitService unitService, SecurityService securityService) {
 
         this.itemService = itemService;
         this.itemVariantService = itemVariantService;
@@ -46,8 +41,15 @@ public class ItemForm extends Dialog {
         setWidth("700px");
 
         itemNameField.setRequired(true);
-        itemCodeField.setRequired(true);
+        itemNameField.setPattern("^(?=.{2,100}$)[A-Za-z0-9]+(?:[ A-Za-z0-9'.-])*?$");
+        itemNameField.setMaxLength(100);
+        itemNameField.setErrorMessage("Enter a vaild Item name");
 
+        itemCodeField.setPattern("^[A-Za-z0-9-]{4,20}$");
+        itemCodeField.setMaxLength(20);
+        itemCodeField.setErrorMessage("Enter a valid item code (4-20 characters, letters, numbers and hyphen only)");
+        itemCodeField.setRequired(true);
+        
         categoryField.setItems(categoryService.getCategories());
         categoryField.setItemLabelGenerator(Category::getCategoryName);
         categoryField.setRequired(true);
@@ -61,17 +63,9 @@ public class ItemForm extends Dialog {
         estimatedPriceField.setPlaceholder("0.00");
 
         FormLayout formLayout = new FormLayout();
-        formLayout.add(
-                itemNameField,
-                itemCodeField,
-                categoryField,
-                unitField,
-                estimatedPriceField
-        );
+        formLayout.add(itemNameField, itemCodeField, categoryField,unitField,estimatedPriceField);
 
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2)
-        );
+        formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
         Button saveButton = new Button("Save");
         Button cancelButton = new Button("Cancel");
@@ -85,64 +79,41 @@ public class ItemForm extends Dialog {
 
     private void saveItem() {
         try {
-            if (itemNameField.isEmpty()
-                    || itemCodeField.isEmpty()
-                    || categoryField.isEmpty()
-                    || unitField.isEmpty()
-                    || estimatedPriceField.isEmpty()) {
+            if (itemNameField.isEmpty() || itemCodeField.isEmpty() || categoryField.isEmpty()
+                    || unitField.isEmpty() || estimatedPriceField.isEmpty()) {
 
-                Notification.show(
-                        "Please fill all required fields",
-                        3000,
-                        Notification.Position.TOP_CENTER
-                );
+                Notification.show("Please fill all required fields",3000,Notification.Position.TOP_CENTER);
+                return;
+            }
+
+            if(itemNameField.isInvalid() || itemCodeField.isInvalid())
+            {   Notification.show("Please correct validation errors",3000,Notification.Position.TOP_CENTER);
                 return;
             }
 
             if (estimatedPriceField.getValue() < 0) {
-                Notification.show(
-                        "Estimated Price cannot be negative",
-                        3000,
-                        Notification.Position.TOP_CENTER
-                );
+                Notification.show("Estimated Price cannot be negative",3000,Notification.Position.TOP_CENTER);
                 return;
             }
 
-            // 1. Create and populate the core master Item
             Item item = new Item();
             item.setItemName(itemNameField.getValue().trim());
             item.setItemCode(itemCodeField.getValue().trim());
             item.setCategory(categoryField.getValue());
             item.setUnit(unitField.getValue());
 
-            // Save parent item architecture record reference
-            Item savedItem = itemService.addItem(
-                    item,
-                    securityService.getLoggedInUser().getEmployee()
-            );
-
-            // 2. Automatically generate the downstream baseline variant profile
+            Item savedItem = itemService.addItem(item, securityService.getLoggedInUser().getEmployee());
             ItemVariant defaultVariant = new ItemVariant();
             defaultVariant.setItem(savedItem);
             defaultVariant.setSpecification("Default");
             defaultVariant.setEstimatedUnitPrice(estimatedPriceField.getValue());
-
             itemVariantService.addItemVariant(defaultVariant,securityService.getLoggedInUser().getEmployee());
 
-            Notification.show(
-                    "Item and Default Variant Saved Successfully",
-                    3000,
-                    Notification.Position.TOP_CENTER
-            );
-
+            Notification.show( "Item and Default Variant Saved Successfully", 3000, Notification.Position.TOP_CENTER);
             close();
 
         } catch (Exception ex) {
-            Notification.show(
-                    ex.getMessage(),
-                    5000,
-                    Notification.Position.TOP_CENTER
-            );
+            Notification.show(ex.getMessage(),5000, Notification.Position.TOP_CENTER);
         }
     }
 }

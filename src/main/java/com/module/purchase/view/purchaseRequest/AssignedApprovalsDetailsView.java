@@ -168,7 +168,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
                         header = headerService.getPurchaseRequestHeaderById(approval.getReferenceId()).get();
                 } catch (Exception ex) {
-                        event.forwardTo("");
+                        event.forwardTo("purchase-request");
                         event.getUI().access(() -> {
                                 Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
                         });

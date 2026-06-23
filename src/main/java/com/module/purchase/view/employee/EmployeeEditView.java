@@ -68,6 +68,42 @@ public class EmployeeEditView extends VerticalLayout
                 setSizeFull();
                 setPadding(true);
 
+                employeeNameField.setRequired(true);
+                employeeNameField.setPattern("^(?=.{3,72}$)[A-Za-z]+(?:[ '.][A-Za-z]+)*$");
+                employeeNameField.setMaxLength(72);
+                employeeNameField.setErrorMessage(
+                                "Enter a valid name. Only letters, spaces, apostrophe and dot are allowed.");
+
+                employeeEmailField.setRequired(true);
+                employeeEmailField.setMaxLength(100);
+                employeeEmailField.setErrorMessage("Enter a valid email");
+
+                phoneField.setPattern("^\\+?[0-9]{4,15}$");
+                phoneField.setMaxLength(16);
+                phoneField.setErrorMessage(
+                                "Enter a valid phone number with 4 to 15 digits");
+
+                postalCodeField.setPattern("[0-9a-zA-Z]{3,10}");
+                postalCodeField.setMaxLength(10);
+                postalCodeField.setErrorMessage(
+                                "Enter a valid postal code (3-10 characters)");
+
+                countryField.setPattern("^(?=.{2,50}$)[A-Za-z]+(?:\\s[A-Za-z]+)*$");
+                countryField.setMaxLength(50);
+                countryField.setErrorMessage("Enter a valid country name");
+
+                stateField.setPattern("^(?=.{2,100}$)[A-Za-z]+(?:\\s[A-Za-z]+)*$");
+                stateField.setMaxLength(100);
+                stateField.setErrorMessage("Enter a valid state name");
+
+                cityField.setPattern("^(?=.{2,150}$)[A-Za-z]+(?:\\s[A-Za-z]+)*$");
+                cityField.setMaxLength(150);
+                cityField.setErrorMessage("Enter a valid city name");
+
+                departmentField.setRequired(true);
+                roleField.setRequired(true);
+                activeField.setRequired(true);
+
                 departmentField.setItems(departmentService.getDepartments());
 
                 departmentField.setItemLabelGenerator(Department::getDepartmentName);
@@ -91,15 +127,14 @@ public class EmployeeEditView extends VerticalLayout
         public void setParameter(BeforeEvent event, Long employeeId) {
 
                 removeAll();
-
-                if (securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(employeeId)
-                                || securityService.canAccessView("management-group")) {
+                try{
+                if (securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(employeeId) || securityService.canAccessView("management-group")) {
                         employee = employeeService.getEmployeeById(employeeId).get();
                 } else {
                         event.forwardTo("");
                         event.getUI().access(() -> {
 
-                        Notification.show("Access Denied",3000,Notification.Position.MIDDLE);
+                                Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
                         });
                 }
 
@@ -111,75 +146,33 @@ public class EmployeeEditView extends VerticalLayout
 
                 H2 title = new H2("Update Employee");
 
-                // SET VALUES
-                employeeNameField.setValue(
-                                employee.getEmployeeName() == null
-                                                ? ""
-                                                : employee.getEmployeeName());
+                employeeNameField.setValue( employee.getEmployeeName() == null? "" : employee.getEmployeeName());
 
-                employeeEmailField.setValue(
-                                employee.getEmployeeEmail() == null
-                                                ? ""
-                                                : employee.getEmployeeEmail());
+                employeeEmailField.setValue( employee.getEmployeeEmail() == null? "" : employee.getEmployeeEmail());
 
-                phoneField.setValue(
-                                employee.getEmployeePhoneNumber() == null
-                                                ? ""
-                                                : employee.getEmployeePhoneNumber());
+                phoneField.setValue( employee.getEmployeePhoneNumber() == null? "": employee.getEmployeePhoneNumber());
 
-                departmentField.setValue(
-                                employee.getDepartment());
+                departmentField.setValue(employee.getDepartment());
 
-                roleField.setValue(
-                                employee.getRole());
+                roleField.setValue( employee.getRole());
 
-                activeField.setValue(
-                                employee.getActive() != null
-                                                && employee.getActive()
-                                                                ? "Active"
-                                                                : "Inactive");
+                activeField.setValue( employee.getActive() != null && employee.getActive()? "Active" : "Inactive");
 
-                // ADDRESS
                 Address address = employee.getAddress();
 
                 if (address != null) {
 
-                        addressLineField.setValue(
-                                        address.getAddressLine() == null
-                                                        ? ""
-                                                        : address.getAddressLine());
-
-                        streetField.setValue(
-                                        address.getStreet() == null
-                                                        ? ""
-                                                        : address.getStreet());
-
-                        cityField.setValue(
-                                        address.getCity() == null
-                                                        ? ""
-                                                        : address.getCity());
-
-                        stateField.setValue(
-                                        address.getState() == null
-                                                        ? ""
-                                                        : address.getState());
-
-                        countryField.setValue(
-                                        address.getCountry() == null
-                                                        ? ""
-                                                        : address.getCountry());
-
-                        postalCodeField.setValue(
-                                        address.getPostalCode() == null
-                                                        ? ""
-                                                        : address.getPostalCode());
+                        addressLineField.setValue(address.getAddressLine() == null ? "" : address.getAddressLine());
+                        streetField.setValue(address.getStreet() == null ? "" : address.getStreet());
+                        cityField.setValue(address.getCity() == null ? "" : address.getCity());
+                        stateField.setValue(address.getState() == null ? "" : address.getState());
+                        countryField.setValue(address.getCountry() == null ? "" : address.getCountry());
+                        postalCodeField.setValue(address.getPostalCode() == null ? "" : address.getPostalCode());
                 }
 
-                // FORM
                 FormLayout formLayout = new FormLayout();
 
-                formLayout.add(
-                                employeeNameField,
+                formLayout.add( employeeNameField, 
                                 employeeEmailField,
                                 phoneField,
                                 departmentField,
@@ -192,30 +185,24 @@ public class EmployeeEditView extends VerticalLayout
                                 countryField,
                                 postalCodeField);
 
-                formLayout.setResponsiveSteps(
-                                new FormLayout.ResponsiveStep("0", 2));
+                formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
                 Button saveButton = new Button("Save");
 
                 saveButton.addClickListener(clickEvent -> {
 
                         try {
+                                if (employeeNameField.isInvalid() || employeeEmailField.isInvalid() || phoneField.isInvalid() || postalCodeField.isInvalid()
+                                                || cityField.isInvalid() || stateField.isInvalid() || countryField.isInvalid()) {
+                                        Notification.show("Please correct validation errors",3000, Notification.Position.MIDDLE);
+                                        return;
+                                }
+                                employee.setEmployeeName(employeeNameField.getValue());
 
-                                phoneField.setPattern("[0-9]{10}");
-                                phoneField.setErrorMessage("Enter valid 10 digit number");
-
-                                postalCodeField.setPattern("[0-9]{6}");
-                                postalCodeField.setErrorMessage("Enter vaild 6 digit postal code");
-
-                                employee.setEmployeeName(
-                                                employeeNameField.getValue());
-
-                                employee.setEmployeeEmail(
-                                                employeeEmailField.getValue());
+                                employee.setEmployeeEmail(employeeEmailField.getValue());
 
                                 String str = phoneField.getValue().trim().equals("") ? null
                                                 : phoneField.getValue().trim();
-                                System.out.println(str);
                                 employee.setEmployeePhoneNumber(str);
 
                                 employee.setDepartment(departmentField.getValue());
@@ -231,61 +218,34 @@ public class EmployeeEditView extends VerticalLayout
                                         updatedAddress = new Address();
                                 }
 
-                                updatedAddress.setAddressLine(
-                                                addressLineField.getValue());
-
-                                updatedAddress.setStreet(
-                                                streetField.getValue());
-
-                                updatedAddress.setCity(
-                                                cityField.getValue());
-
-                                updatedAddress.setState(
-                                                stateField.getValue());
-
-                                updatedAddress.setCountry(
-                                                countryField.getValue());
-
-                                updatedAddress.setPostalCode(
-                                                postalCodeField.getValue());
+                                updatedAddress.setAddressLine(addressLineField.getValue());
+                                updatedAddress.setStreet(streetField.getValue());
+                                updatedAddress.setCity(cityField.getValue());
+                                updatedAddress.setState(stateField.getValue());
+                                updatedAddress.setCountry(countryField.getValue());
+                                updatedAddress.setPostalCode(postalCodeField.getValue());
 
                                 employee.setAddress(updatedAddress);
-
                                 employee = employeeService.updateEmployee(employee,
                                                 securityService.getLoggedInUser().getEmployee());
-
-                                Notification.show(
-                                                "Employee Updated Successfully",
-                                                3000,
+                                Notification.show("Employee Updated Successfully", 3000,
                                                 Notification.Position.TOP_CENTER);
-
-                                getUI().ifPresent(ui -> ui.navigate(
-                                                "employee-details/"
-                                                                + employee.getEmployeeId()));
+                                getUI().ifPresent(ui -> ui.navigate("employee-details/" + employee.getEmployeeId()));
 
                         } catch (Exception exception) {
-
-                                Notification.show(
-                                                exception.getMessage(),
-                                                5000,
-                                                Notification.Position.TOP_CENTER);
+                                Notification.show(exception.getMessage(), 5000, Notification.Position.TOP_CENTER);
                         }
-
                 });
                 Button cancelButton = new Button("Cancel");
-
                 cancelButton.addClickListener(clickEvent -> {
-
-                        getUI().ifPresent(ui -> ui.navigate(
-                                        "employee-details/"
-                                                        + employee.getEmployeeId()));
-
+                        getUI().ifPresent(ui -> ui.navigate("employee-details/" + employee.getEmployeeId()));
                 });
-
-                HorizontalLayout buttonLayout = new HorizontalLayout(
-                                saveButton,
-                                cancelButton);
-
+                HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
                 add(title, formLayout, buttonLayout);
+        }catch(Exception ex){ 
+                event.forwardTo("employee");
+                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+                return;
+        }    
         }
 }

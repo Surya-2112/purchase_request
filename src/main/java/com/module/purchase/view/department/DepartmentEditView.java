@@ -64,8 +64,8 @@ public class DepartmentEditView extends VerticalLayout
 
         removeAll();
 
-        department = departmentService.getDepartmentById(departmentId)
-                .orElse(null);
+        try{
+        department = departmentService.getDepartmentById(departmentId).orElse(null);
 
         if (department == null) {
 
@@ -76,49 +76,28 @@ public class DepartmentEditView extends VerticalLayout
 
         H2 title = new H2("Update Department");
 
-        departmentNameField.setValue(
-                department.getDepartmentName() == null ? ""
-                        : department.getDepartmentName());
+        departmentNameField.setValue(department.getDepartmentName() == null ? "" : department.getDepartmentName());
 
-        departmentCodeField.setValue(
-                department.getDepartmentCode() == null ? ""
-                        : department.getDepartmentCode());
+        departmentCodeField.setValue(department.getDepartmentCode() == null ? "": department.getDepartmentCode());
 
         departmentCodeField.setReadOnly(true);
 
         departmentHeadField.setValue(department.getHeadEmployee());
 
-        activeField.setValue(
-                department.getActive() != null
-                        && department.getActive()
-                                ? "Active": "Inactive");
+        activeField.setValue(department.getActive() != null && department.getActive()? "Active": "Inactive");
 
         FormLayout formLayout = new FormLayout();
 
-        formLayout.add(
-                departmentNameField,
-                departmentCodeField,
-                departmentHeadField,
-                activeField);
-
+        formLayout.add(departmentNameField,departmentCodeField,departmentHeadField, activeField);
         formLayout.setResponsiveSteps( new FormLayout.ResponsiveStep("0", 2));
 
-        // SAVE BUTTON
         Button saveButton = new Button("Save");
 
         saveButton.addClickListener(clickEvent -> {
 
             try {
-
-                // VALIDATION
-                if (departmentNameField.isEmpty()
-                        || departmentCodeField.isEmpty()) {
-
-                    Notification.show(
-                            "Please fill all required fields",
-                            3000,
-                            Notification.Position.TOP_CENTER);
-
+                if (departmentNameField.isEmpty() || departmentCodeField.isEmpty()) {
+                    Notification.show( "Please fill all required fields",3000,Notification.Position.TOP_CENTER);
                     return;
                 }
 
@@ -128,37 +107,22 @@ public class DepartmentEditView extends VerticalLayout
                 departmentCodeField.setErrorMessage("Department code must be higher then 3");
             }
 
-                department.setDepartmentName(
-                        departmentNameField.getValue());
+                department.setDepartmentName(departmentNameField.getValue());
 
-                department.setDepartmentCode(
-                        departmentCodeField.getValue());
+                department.setDepartmentCode(departmentCodeField.getValue());
 
                 department.setHeadEmployee(departmentHeadField.getValue());
 
-                department.setActive(
-                        activeField.getValue()
-                                .equals("Active"));
+                department.setActive( activeField.getValue() .equals("Active"));
 
                 departmentService.updateDepartment(department,securityService.getLoggedInUser().getEmployee());
 
-                Notification.show(
-                        "Department Updated Successfully",
-                        3000,
-                        Notification.Position.TOP_CENTER);
+                Notification.show("Department Updated Successfully", 3000, Notification.Position.TOP_CENTER);
 
-                getUI().ifPresent(ui ->
-                        ui.navigate(
-                                "department-details/"
-                                        + department
-                                                .getDepartmentId()));
+                getUI().ifPresent(ui ->ui.navigate("department-details/"+ department.getDepartmentId()));
 
             } catch (Exception exception) {
-
-                Notification.show(
-                        exception.getMessage(),
-                        5000,
-                        Notification.Position.TOP_CENTER);
+                Notification.show( exception.getMessage(), 5000, Notification.Position.TOP_CENTER);
             }
 
         });
@@ -166,20 +130,17 @@ public class DepartmentEditView extends VerticalLayout
         Button cancelButton = new Button("Cancel");
 
         cancelButton.addClickListener(clickEvent -> {
-
-            getUI().ifPresent(ui ->
-                    ui.navigate(
-                            "department-details/"
-                                    + department
-                                            .getDepartmentId()));
+            getUI().ifPresent(ui -> ui.navigate("department-details/"+ department.getDepartmentId()));
 
         });
 
-        HorizontalLayout buttonLayout =
-                new HorizontalLayout(
-                        saveButton,
-                        cancelButton);
+        HorizontalLayout buttonLayout =new HorizontalLayout(saveButton,cancelButton);
 
         add(title, formLayout, buttonLayout);
+        }catch(Exception ex)
+        {       event.forwardTo("department");
+                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+                return;
+        }
     }
 }

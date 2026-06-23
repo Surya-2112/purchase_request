@@ -43,12 +43,10 @@ public class ItemVariantDetailsView extends VerticalLayout
 
         removeAll();
 
-        ItemVariant variant =
-                itemVariantService.getItemVariantById(variantId)
-                        .orElse(null);
+        try{
+        ItemVariant variant =itemVariantService.getItemVariantById(variantId).orElse(null);
 
         if (variant == null) {
-
             add(new Span("Item Variant Not Found"));
             return;
         }
@@ -57,54 +55,16 @@ public class ItemVariantDetailsView extends VerticalLayout
 
         FormLayout formLayout = new FormLayout();
 
-        // ID
-        formLayout.addFormItem(
-                new Span(String.valueOf(variant.getId())),
-                "Variant ID");
+        formLayout.addFormItem(new Span(String.valueOf(variant.getId())),"Variant ID");
+        formLayout.addFormItem(new Span(variant.getItem() == null ? "": variant.getItem().getItemName()),"Item");
+        formLayout.addFormItem(new Span(variant.getSpecification() == null? "": variant.getSpecification()),"Specification");
+        formLayout.addFormItem(new Span(variant.getEstimatedUnitPrice() == null ? "": variant.getEstimatedUnitPrice().toString()),"Estimated Unit Price");
+        formLayout.addFormItem(new Span(Boolean.TRUE.equals(variant.getActive()) ? "Active": "Inactive"),"Status");
 
-        // ITEM
-        formLayout.addFormItem(
-                new Span(
-                        variant.getItem() == null
-                                ? ""
-                                : variant.getItem().getItemName()),
-                "Item");
-
-        // SPECIFICATION
-        formLayout.addFormItem(
-                new Span(
-                        variant.getSpecification() == null
-                                ? ""
-                                : variant.getSpecification()),
-                "Specification");
-
-        // ESTIMATED PRICE
-        formLayout.addFormItem(
-                new Span(
-                        variant.getEstimatedUnitPrice() == null
-                                ? ""
-                                : variant.getEstimatedUnitPrice().toString()),
-                "Estimated Unit Price");
-
-        // ACTIVE
-        formLayout.addFormItem(
-                new Span(
-                        Boolean.TRUE.equals(variant.getActive())
-                                ? "Active"
-                                : "Inactive"),
-                "Status");
-
-        // UPDATE BUTTON
         Button updateButton = new Button("Update");
 
-        updateButton.addClickListener(e ->
-                getUI().ifPresent(ui ->
-                        ui.navigate(
-                                "item-variant-edit/"
-                                        + variant.getId()))
-        );
+        updateButton.addClickListener(e ->getUI().ifPresent(ui ->ui.navigate("item-variant-edit/" + variant.getId())));
 
-        // DELETE BUTTON
         Button deleteButton = new Button("Delete");
 
         deleteButton.addClickListener(e -> {
@@ -113,8 +73,7 @@ public class ItemVariantDetailsView extends VerticalLayout
 
             dialog.setHeader("Delete Item Variant");
 
-            dialog.setText(
-                    "Are you sure you want to delete this Item Variant?");
+            dialog.setText("Are you sure you want to delete this Item Variant?");
 
             dialog.setCancelable(true);
 
@@ -126,44 +85,30 @@ public class ItemVariantDetailsView extends VerticalLayout
 
                 try {
 
-                    itemVariantService.deleteItemVariantById(
-                            variant.getId(),
-                            securityService.getLoggedInUser()
-                                    .getEmployee());
+                    itemVariantService.deleteItemVariantById( variant.getId(), securityService.getLoggedInUser().getEmployee());
 
-                    Notification.show(
-                            "Item Variant Deleted Successfully",
-                            3000,
-                            Notification.Position.TOP_CENTER);
+                    Notification.show("Item Variant Deleted Successfully", 3000, Notification.Position.TOP_CENTER);
 
-                    getUI().ifPresent(ui ->
-                            ui.navigate("item-variant"));
-
+                    getUI().ifPresent(ui -> ui.navigate("item-variant"));
                 } catch (Exception ex) {
-
-                    Notification.show(
-                            ex.getMessage(),
-                            5000,
-                            Notification.Position.TOP_CENTER);
+                    Notification.show(ex.getMessage(),5000,Notification.Position.TOP_CENTER);
                 }
             });
 
             dialog.open();
         });
 
-        updateButton.setVisible(
-                securityService.canAccessView(
-                        "item-variant-edit"));
+        updateButton.setVisible(securityService.canAccessView( "item-variant-edit"));
 
-        deleteButton.setVisible(
-                securityService.canAccessView(
-                        "item-variant-form"));
+        deleteButton.setVisible(securityService.canAccessView("item-variant-form"));
 
-        HorizontalLayout buttons =
-                new HorizontalLayout(
-                        updateButton,
-                        deleteButton);
+        HorizontalLayout buttons =new HorizontalLayout(updateButton, deleteButton);
 
         add(title, formLayout, buttons);
+        }catch(Exception ex){ 
+                event.forwardTo("item-variant");
+                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+                return;
+        }
     }
 }

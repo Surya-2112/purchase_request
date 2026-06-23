@@ -24,8 +24,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "assigning-config-edit", layout = MainLayout.class)
 @PermitAll
-public class AssigningConfigEditView extends VerticalLayout
-                implements HasUrlParameter<Long> {
+public class AssigningConfigEditView extends VerticalLayout implements HasUrlParameter<Long> {
 
         private final AssigningConfigService assigningConfigService;
 
@@ -45,9 +44,7 @@ public class AssigningConfigEditView extends VerticalLayout
 
         private AssigningConfig assigningConfig;
 
-        public AssigningConfigEditView(
-                        AssigningConfigService assigningConfigService,
-                        SecurityService securityService) {
+        public AssigningConfigEditView( AssigningConfigService assigningConfigService, SecurityService securityService) {
 
                 this.assigningConfigService = assigningConfigService;
                 this.securityService = securityService;
@@ -66,76 +63,55 @@ public class AssigningConfigEditView extends VerticalLayout
 
                 removeAll();
 
-                assigningConfig = assigningConfigService
-                                .getAssigningConfigById(assigningConfigId)
-                                .orElse(null);
+                try{
+                assigningConfig = assigningConfigService.getAssigningConfigById(assigningConfigId).orElse(null);
 
                 if (assigningConfig == null) {
-
                         add(new H2("Assigning Config Not Found"));
                         return;
                 }
 
                 H2 title = new H2("Update Assigning Config");
 
-                // SET VALUES
-                approvalTypeField.setValue(
-                                assigningConfig.getApprovalType());
+                approvalTypeField.setValue(assigningConfig.getApprovalType());
 
-                levelField.setValue(
-                                assigningConfig.getLevel());
+                levelField.setValue( assigningConfig.getLevel());
 
-                employeeGroupField.setValue(
-                                assigningConfig.getEmployeeGroup());
+                employeeGroupField.setValue( assigningConfig.getEmployeeGroup());
 
-                minAmountField.setValue(
-                                assigningConfig.getMinAmount());
+                minAmountField.setValue(assigningConfig.getMinAmount());
 
-                maxAmountField.setValue(
-                                assigningConfig.getMaxAmount());
+                maxAmountField.setValue(assigningConfig.getMaxAmount());
 
-                marginDifferencePercentageField.setValue(
-                                assigningConfig.getMarginDifferencePercentage());
+                marginDifferencePercentageField.setValue( assigningConfig.getMarginDifferencePercentage());
 
                 FormLayout formLayout = new FormLayout();
 
-                formLayout.add(
-                                approvalTypeField,
+                formLayout.add(approvalTypeField,
                                 levelField,
                                 employeeGroupField,
                                 minAmountField,
                                 maxAmountField,
                                 marginDifferencePercentageField);
 
-                formLayout.setResponsiveSteps(
-                                new FormLayout.ResponsiveStep("0", 2));
+                formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
                 Button saveButton = new Button("Save");
 
                 saveButton.addClickListener(clickEvent -> {
 
                         try {
+                                if (approvalTypeField.isEmpty()|| levelField.isEmpty() || employeeGroupField.isEmpty()
+                                   || minAmountField.isEmpty()|| maxAmountField.isEmpty() || marginDifferencePercentageField.isEmpty()) {
 
-                                if (approvalTypeField.isEmpty()
-                                                || levelField.isEmpty()
-                                                || employeeGroupField.isEmpty()
-                                                || minAmountField.isEmpty()
-                                                || maxAmountField.isEmpty()
-                                                || marginDifferencePercentageField.isEmpty()) {
-
-                                        Notification.show(
-                                                        "Please fill all required fields",
-                                                        3000,
-                                                        Notification.Position.TOP_CENTER);
-
+                                        Notification.show("Please fill all required fields", 3000, Notification.Position.TOP_CENTER);
                                         return;
                                 }
 
                                 if (levelField.getValue() < 1) {
 
                                         levelField.setInvalid(true);
-                                        levelField.setErrorMessage(
-                                                        "Level must be greater than 0");
+                                        levelField.setErrorMessage("Level must be greater than 0");
 
                                         return;
                                 }
@@ -143,18 +119,15 @@ public class AssigningConfigEditView extends VerticalLayout
                                 if (minAmountField.getValue() < 0) {
 
                                         minAmountField.setInvalid(true);
-                                        minAmountField.setErrorMessage(
-                                                        "Minimum amount cannot be negative");
+                                        minAmountField.setErrorMessage( "Minimum amount cannot be negative");
 
                                         return;
                                 }
 
-                                if (maxAmountField.getValue() != null
-                                                && maxAmountField.getValue() <= minAmountField.getValue()) {
+                                if (maxAmountField.getValue() != null && maxAmountField.getValue() <= minAmountField.getValue()) {
 
                                         maxAmountField.setInvalid(true);
-                                        maxAmountField.setErrorMessage(
-                                                        "Maximum amount must be greater than minimum amount");
+                                        maxAmountField.setErrorMessage( "Maximum amount must be greater than minimum amount");
 
                                         return;
                                 }
@@ -163,66 +136,46 @@ public class AssigningConfigEditView extends VerticalLayout
 
                                         marginDifferencePercentageField.setInvalid(true);
 
-                                        marginDifferencePercentageField.setErrorMessage(
-                                                        "Margin Difference cannot be negative");
+                                        marginDifferencePercentageField.setErrorMessage("Margin Difference cannot be negative");
 
                                         return;
                                 }
 
-                                assigningConfig.setApprovalType(
-                                                approvalTypeField.getValue());
+                                assigningConfig.setApprovalType( approvalTypeField.getValue());
 
-                                assigningConfig.setLevel(
-                                                levelField.getValue());
+                                assigningConfig.setLevel( levelField.getValue());
 
-                                assigningConfig.setEmployeeGroup(
-                                                employeeGroupField.getValue());
+                                assigningConfig.setEmployeeGroup( employeeGroupField.getValue());
 
-                                assigningConfig.setMinAmount(
-                                                minAmountField.getValue());
+                                assigningConfig.setMinAmount( minAmountField.getValue());
 
-                                assigningConfig.setMaxAmount(
-                                                maxAmountField.getValue());
+                                assigningConfig.setMaxAmount( maxAmountField.getValue());
 
-                                assigningConfigService.updateAssigningConfig(
-                                                assigningConfig,
-                                                securityService
-                                                                .getLoggedInUser()
-                                                                .getEmployee());
+                                assigningConfigService.updateAssigningConfig(assigningConfig,securityService.getLoggedInUser().getEmployee());
 
-                                Notification.show(
-                                                "Assigning Config Updated Successfully",
-                                                3000,
-                                                Notification.Position.TOP_CENTER);
+                                Notification.show("Assigning Config Updated Successfully", 3000, Notification.Position.TOP_CENTER);
 
-                                getUI().ifPresent(ui -> ui.navigate(
-                                                ViewName.ASSIGNING_CONFIG_DETAILS.getRoute()
-                                                                + "/"
-                                                                + assigningConfig.getId()));
+                                getUI().ifPresent(ui -> ui.navigate(ViewName.ASSIGNING_CONFIG_DETAILS.getRoute() + "/" + assigningConfig.getId()));
 
                         } catch (Exception exception) {
-
-                                Notification.show(
-                                                exception.getMessage(),
-                                                5000,
-                                                Notification.Position.TOP_CENTER);
+                                Notification.show(exception.getMessage(),5000, Notification.Position.TOP_CENTER);
                         }
                 });
 
                 Button cancelButton = new Button("Cancel");
 
-                cancelButton.addClickListener(clickEvent -> getUI().ifPresent(ui -> ui.navigate(
-                                ViewName.ASSIGNING_CONFIG_DETAILS.getRoute()
-                                                + "/"
-                                                + assigningConfig.getId())));
+                cancelButton.addClickListener(clickEvent -> getUI().ifPresent(ui -> ui.navigate(ViewName.ASSIGNING_CONFIG_DETAILS.getRoute() + "/" + assigningConfig.getId())));
 
-                HorizontalLayout buttonLayout = new HorizontalLayout(
-                                saveButton,
-                                cancelButton);
+                HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
 
-                add(
-                                title,
-                                formLayout,
-                                buttonLayout);
+                add(title, formLayout, buttonLayout);
+
+                }catch(Exception ex)
+                {      event.forwardTo("assigning-config");
+                       event.getUI().access(() -> {
+                        Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);
+                        });
+                                return;
+                }
         }
 }

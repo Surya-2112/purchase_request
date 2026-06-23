@@ -42,7 +42,8 @@ public class DepartmentDetailsView extends VerticalLayout implements HasUrlParam
     public void setParameter( BeforeEvent event, Long departmentId) {
 
         removeAll();
-
+        
+        try{
         Optional<Department> optionalDepartment = departmentService.getDepartmentById(departmentId);
 
         if (optionalDepartment.isEmpty()) {
@@ -59,37 +60,15 @@ public class DepartmentDetailsView extends VerticalLayout implements HasUrlParam
         FormLayout formLayout = new FormLayout();
 
         formLayout.addFormItem(new Span(String.valueOf( department.getDepartmentId())),"Department ID");
-
-        formLayout.addFormItem(
-                new Span(
-                        department.getDepartmentName()),
-                "Department Name");
-
-        formLayout.addFormItem(
-                new Span(department.getDepartmentCode()),
-                "Department Code");
-
-        formLayout.addFormItem(
-                new Span(department.getHeadEmployee() == null? ""
-                                : department.getHeadEmployee()
-                                        .getEmployeeName()),
-                "Department Head");
-
-        formLayout.addFormItem(
-                new Span(
-                        department.getActive()
-                                ? "Active"
-                                : "Inactive"),
-                "Status");
+        formLayout.addFormItem(new Span( department.getDepartmentName()), "Department Name");
+        formLayout.addFormItem(new Span(department.getDepartmentCode()), "Department Code");
+        formLayout.addFormItem(new Span(department.getHeadEmployee() == null? "" : department.getHeadEmployee().getEmployeeName()),"Department Head");
+        formLayout.addFormItem(new Span( department.getActive() ? "Active": "Inactive"),"Status");
 
         Button updateButton = new Button("Update");
 
         updateButton.addClickListener(clickEvent -> {
-
-            getUI().ifPresent(ui ->
-                    ui.navigate(
-                            "department-edit/"
-                                    + department.getDepartmentId()));
+            getUI().ifPresent(ui ->ui.navigate("department-edit/"+ department.getDepartmentId()));
         });
 
         Button deleteButton = new Button("Delete");
@@ -100,8 +79,7 @@ public class DepartmentDetailsView extends VerticalLayout implements HasUrlParam
 
             dialog.setHeader("Delete Department");
 
-            dialog.setText(
-                    "Are you sure you want to delete this department?");
+            dialog.setText("Are you sure you want to delete this department?");
 
             dialog.setCancelable(true);
 
@@ -112,22 +90,12 @@ public class DepartmentDetailsView extends VerticalLayout implements HasUrlParam
             dialog.addConfirmListener(confirmEvent -> {
 
                 try {
-
-                    departmentService.deleteDepartmentById(department.getDepartmentId(),securityService.getLoggedInUser().getEmployee()
-);
-
-                    Notification.show(
-                            "Department Deleted Successfully");
-
-                    getUI().ifPresent(ui ->
-                            ui.navigate("department"));
+                    departmentService.deleteDepartmentById(department.getDepartmentId(),securityService.getLoggedInUser().getEmployee());
+                    Notification.show( "Department Deleted Successfully");
+                    getUI().ifPresent(ui ->ui.navigate("department"));
 
                 } catch (Exception exception) {
-
-                    Notification.show(
-                            exception.getMessage(),
-                            5000,
-                            Notification.Position.TOP_CENTER);
+                    Notification.show(exception.getMessage(),5000,Notification.Position.TOP_CENTER);
                 }
 
             });
@@ -139,11 +107,13 @@ public class DepartmentDetailsView extends VerticalLayout implements HasUrlParam
 
         deleteButton.setVisible(securityService.canAccessView("department-form"));
 
-        HorizontalLayout buttonLayout =
-                new HorizontalLayout(
-                        updateButton,
-                        deleteButton);
+        HorizontalLayout buttonLayout =new HorizontalLayout( updateButton, deleteButton);
 
         add(title, formLayout, buttonLayout);
+        }catch(Exception ex)
+        {       event.forwardTo("department");
+                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+                return;
+        }
     }
 }

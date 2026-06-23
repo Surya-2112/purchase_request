@@ -26,13 +26,11 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "department-budget-edit", layout = MainLayout.class)
 @PermitAll
-public class DepartmentBudgetEditView extends VerticalLayout
-                implements HasUrlParameter<Long> {
+public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlParameter<Long> {
 
         private final DepartmentBudgetService departmentBudgetService;
         private final SecurityService securityService;
 
-        // FIELDS
         private final ComboBox<Department> departmentField = new ComboBox<>("Department");
 
         private final NumberField totalBudgetAmountField = new NumberField("Total Budget Amount");
@@ -43,8 +41,7 @@ public class DepartmentBudgetEditView extends VerticalLayout
 
         private DepartmentBudget departmentBudget;
 
-        public DepartmentBudgetEditView(SecurityService securityService,
-                        DepartmentBudgetService departmentBudgetService,
+        public DepartmentBudgetEditView(SecurityService securityService, DepartmentBudgetService departmentBudgetService,
                         DepartmentService departmentService) {
 
                 this.departmentBudgetService = departmentBudgetService;
@@ -54,93 +51,58 @@ public class DepartmentBudgetEditView extends VerticalLayout
 
                 setPadding(true);
 
-                // LOAD DEPARTMENTS
                 List<Department> departments = departmentService.getDepartments();
 
                 departmentField.setItems(departments);
 
-                departmentField.setItemLabelGenerator(
-                                Department::getDepartmentName);
+                departmentField.setItemLabelGenerator( Department::getDepartmentName);
 
                 departmentField.setReadOnly(true);
 
-                // LOAD YEARS
                 List<Year> years = new ArrayList<>();
-
                 for (int year = 2000; year <= 2100; year++) {
-
                         years.add(Year.of(year));
                 }
-
                 yearField.setItems(years);
-
-                yearField.setItemLabelGenerator(
-                                year -> String.valueOf(year.getValue()));
+                yearField.setItemLabelGenerator( year -> String.valueOf(year.getValue()));
                 yearField.setReadOnly(true);
         }
 
         @Override
-        public void setParameter(
-                        BeforeEvent event,
-                        Long departmentBudgetId) {
+        public void setParameter(BeforeEvent event, Long departmentBudgetId) {
 
                 removeAll();
-
-                departmentBudget = departmentBudgetService
-                                .getDepartmentBudgetById(
-                                                departmentBudgetId)
-                                .orElse(null);
+                try{
+                departmentBudget = departmentBudgetService.getDepartmentBudgetById( departmentBudgetId).orElse(null);
 
                 if (departmentBudget == null) {
-
                         add(new H2("Department Budget Not Found"));
-
                         return;
                 }
 
                 H2 title = new H2("Update Department Budget");
 
-                // SET VALUES
-                departmentField.setValue(
-                                departmentBudget.getDepartment());
+                departmentField.setValue( departmentBudget.getDepartment());
 
                 totalBudgetAmountField.setValue(departmentBudget.getTotalBudgetAmount());
 
                 remainingBudgetAmountField.setValue(departmentBudget.getRemainingBudgetAmount());
 
-                yearField.setValue(
-                                departmentBudget.getYear());
+                yearField.setValue(departmentBudget.getYear());
 
-                // FORM
                 FormLayout formLayout = new FormLayout();
 
-                formLayout.add(
-                                departmentField,
-                                totalBudgetAmountField,
-                                remainingBudgetAmountField,
-                                yearField);
+                formLayout.add(departmentField, totalBudgetAmountField, remainingBudgetAmountField, yearField);
 
-                formLayout.setResponsiveSteps(
-                                new FormLayout.ResponsiveStep("0", 2));
+                formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
-                // SAVE BUTTON
                 Button saveButton = new Button("Save");
 
                 saveButton.addClickListener(clickEvent -> {
 
                         try {
-
-                                // VALIDATION
-                                if (departmentField.isEmpty()
-                                                || totalBudgetAmountField.isEmpty()
-                                                || remainingBudgetAmountField.isEmpty()
-                                                || yearField.isEmpty()) {
-
-                                        Notification.show(
-                                                        "Please fill all required fields",
-                                                        3000,
-                                                        Notification.Position.TOP_CENTER);
-
+                                if (departmentField.isEmpty() || totalBudgetAmountField.isEmpty() || remainingBudgetAmountField.isEmpty() || yearField.isEmpty()) {
+                                        Notification.show("Please fill all required fields",3000, Notification.Position.TOP_CENTER);
                                         return;
                                 }
 
@@ -149,65 +111,42 @@ public class DepartmentBudgetEditView extends VerticalLayout
                                         totalBudgetAmountField.setErrorMessage("Total budgets must be greater then 0");
                                 }
 
-                                if (remainingBudgetAmountField.getValue() < 0 || totalBudgetAmountField
-                                                .getValue() >= remainingBudgetAmountField.getValue()) {
+                                if (remainingBudgetAmountField.getValue() < 0 || totalBudgetAmountField.getValue() >= remainingBudgetAmountField.getValue()) {
                                         remainingBudgetAmountField.setEnabled(true);
                                         remainingBudgetAmountField.setErrorMessage(
                                                         "Remaining amount must be postive and smaller then Total amount");
                                 }
 
-                                // UPDATE VALUES
-                                departmentBudget.setDepartment(
-                                                departmentField.getValue());
-
+                                departmentBudget.setDepartment(departmentField.getValue());
                                 departmentBudget.setTotalBudgetAmount(
-totalBudgetAmountField.getValue());
-
-                                departmentBudget.setRemainingBudgetAmount(
-                                                remainingBudgetAmountField.getValue());
-
+                                totalBudgetAmountField.getValue());
+                                departmentBudget.setRemainingBudgetAmount(remainingBudgetAmountField.getValue());
                                 departmentBudget.setYear(yearField.getValue());
+                                departmentBudgetService.updateDepartmentBudget(departmentBudget, securityService.getLoggedInUser().getEmployee());
 
-                                // UPDATE
-                                departmentBudgetService.updateDepartmentBudget(departmentBudget,
-                                                securityService.getLoggedInUser().getEmployee());
+                                Notification.show("Department Budget Updated Successfully", 3000, Notification.Position.TOP_CENTER);
 
-                                Notification.show(
-                                                "Department Budget Updated Successfully",
-                                                3000,
-                                                Notification.Position.TOP_CENTER);
-
-                                getUI().ifPresent(ui -> ui.navigate(
-                                                "department-budget-details/"
-                                                                + departmentBudget
-                                                                                .getDepartmentBudgetId()));
+                                getUI().ifPresent(ui -> ui.navigate("department-budget-details/"+ departmentBudget.getDepartmentBudgetId()));
 
                         } catch (Exception exception) {
-
-                                Notification.show(
-                                                exception.getMessage(),
-                                                5000,
-                                                Notification.Position.TOP_CENTER);
+                                Notification.show( exception.getMessage(), 5000, Notification.Position.TOP_CENTER);
                         }
 
                 });
 
-                // CANCEL BUTTON
                 Button cancelButton = new Button("Cancel");
 
                 cancelButton.addClickListener(clickEvent -> {
-
-                        getUI().ifPresent(ui -> ui.navigate(
-                                        "department-budget-details/"
-                                                        + departmentBudget
-                                                                        .getDepartmentBudgetId()));
-
+                        getUI().ifPresent(ui -> ui.navigate("department-budget-details/"+ departmentBudget.getDepartmentBudgetId()));
                 });
 
-                HorizontalLayout buttonLayout = new HorizontalLayout(
-                                saveButton,
-                                cancelButton);
-
+                HorizontalLayout buttonLayout = new HorizontalLayout( saveButton, cancelButton);
                 add(title, formLayout, buttonLayout);
+                
+         }catch(Exception ex){ 
+                event.forwardTo("department-budget");
+                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+                return;
+        }
         }
 }

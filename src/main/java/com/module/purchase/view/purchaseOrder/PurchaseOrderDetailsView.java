@@ -112,6 +112,7 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements HasUrlPa
 
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
+        try{
         if (id == null) {
             Notification.show("Invalid Request Context Key Passed.", 3000, Position.MIDDLE);
             getUI().ifPresent(ui -> ui.navigate("purchase-order"));
@@ -126,6 +127,10 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements HasUrlPa
             Notification.show("Target Purchase Order Document reference file missing.", 4000, Position.MIDDLE);
             getUI().ifPresent(ui -> ui.navigate("purchase-order"));
         });
+        } catch (Exception ex) {
+            Notification.show( ex.getMessage(), 4000, Position.TOP_CENTER);
+            getUI().ifPresent(ui -> ui.navigate("purchase-order"));
+        }
     }
 
     private void bindProfileData() {

@@ -27,8 +27,6 @@ import jakarta.annotation.security.PermitAll;
 public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final ItemService itemService;
-    private final CategoryService categoryService;
-    private final UnitService unitService;
     private final SecurityService securityService;
 
     private final TextField itemNameField = new TextField("Item Name");
@@ -49,8 +47,6 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
             SecurityService securityService) {
 
         this.itemService = itemService;
-        this.categoryService = categoryService;
-        this.unitService = unitService;
         this.securityService = securityService;
 
         setSizeFull();
@@ -71,7 +67,7 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
     public void setParameter(BeforeEvent event, Long itemId) {
 
         removeAll();
-
+        try{
         item = itemService.getItemById(itemId).orElse(null);
 
         if (item == null) {
@@ -81,27 +77,18 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
 
         H2 title = new H2("Update Item");
 
-        itemNameField.setValue(
-                item.getItemName() == null ? "" : item.getItemName());
+        itemNameField.setValue(item.getItemName() == null ? "" : item.getItemName());
 
-        itemCodeField.setValue(
-                item.getItemCode() == null ? "" : item.getItemCode());
+        itemCodeField.setValue( item.getItemCode() == null ? "" : item.getItemCode());
 
         categoryField.setValue(item.getCategory());
         unitField.setValue(item.getUnit());
 
         FormLayout formLayout = new FormLayout();
 
-        formLayout.add(
-                itemNameField,
-                itemCodeField,
-                categoryField,
-                unitField
-        );
+        formLayout.add( itemNameField,itemCodeField,categoryField, unitField);
 
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2)
-        );
+        formLayout.setResponsiveSteps( new FormLayout.ResponsiveStep("0", 2));
 
         Button saveButton = new Button("Save");
 
@@ -109,17 +96,8 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
 
             try {
 
-                if (itemNameField.isEmpty()
-                        || itemCodeField.isEmpty()
-                        || categoryField.isEmpty()
-                        || unitField.isEmpty()) {
-
-                    Notification.show(
-                            "Please fill all required fields",
-                            3000,
-                            Notification.Position.TOP_CENTER
-                    );
-
+                if (itemNameField.isEmpty()|| itemCodeField.isEmpty()|| categoryField.isEmpty() || unitField.isEmpty()) {
+                    Notification.show("Please fill all required fields",3000,Notification.Position.TOP_CENTER);
                     return;
                 }
 
@@ -128,42 +106,30 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Long
                 item.setCategory(categoryField.getValue());
                 item.setUnit(unitField.getValue());
 
-                itemService.updateItem(
-                        item,
-                        securityService.getLoggedInUser().getEmployee()
-                );
+                itemService.updateItem(item,securityService.getLoggedInUser().getEmployee());
 
-                Notification.show(
-                        "Item Updated Successfully",
-                        3000,
-                        Notification.Position.TOP_CENTER
-                );
+                Notification.show( "Item Updated Successfully",3000, Notification.Position.TOP_CENTER);
 
-                getUI().ifPresent(ui ->
-                        ui.navigate("item-details/" + item.getItemId())
-                );
+                getUI().ifPresent(ui -> ui.navigate("item-details/" + item.getItemId()));
 
             } catch (Exception ex) {
 
-                Notification.show(
-                        ex.getMessage(),
-                        5000,
-                        Notification.Position.TOP_CENTER
-                );
+                Notification.show(ex.getMessage(),5000, Notification.Position.TOP_CENTER);
             }
         });
 
         Button cancelButton = new Button("Cancel");
 
         cancelButton.addClickListener(e ->
-                getUI().ifPresent(ui ->
-                        ui.navigate("item-details/" + item.getItemId())
-                )
+                getUI().ifPresent(ui -> ui.navigate("item-details/" + item.getItemId()))
         );
 
-        HorizontalLayout buttons =
-                new HorizontalLayout(saveButton, cancelButton);
-
+        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
         add(title, formLayout, buttons);
+        }catch(Exception ex){ 
+                event.forwardTo("item");
+                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+                return;
+        }
     }
 }

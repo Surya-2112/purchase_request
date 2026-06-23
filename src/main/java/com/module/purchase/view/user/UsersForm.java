@@ -33,11 +33,7 @@ public class UsersForm extends Dialog {
     private final ComboBox<Employee> employeeField = new ComboBox<>("Employee");
     private final ComboBox<Vendor> vendorField = new ComboBox<>("Vendor");
 
-    public UsersForm(
-            UsersService usersService,
-            EmployeeService employeeService,
-            VendorService vendorService,
-            SecurityService securityService) {
+    public UsersForm( UsersService usersService,EmployeeService employeeService,VendorService vendorService, SecurityService securityService) {
 
         this.usersService = usersService;
         this.securityService = securityService;
@@ -45,21 +41,17 @@ public class UsersForm extends Dialog {
         setHeaderTitle("Add User");
         setWidth("600px");
 
-        // User Type
         userTypeField.setItems("Employee", "Vendor");
         userTypeField.setRequired(true);
 
-        // Employee
         employeeField.setItems(employeeService.getEmplyeesWithoutUsers());
         employeeField.setItemLabelGenerator(Employee::getEmployeeName);
         employeeField.setVisible(false);
 
-        // Vendor
         vendorField.setItems(vendorService.getVendorsWithoutUser());
         vendorField.setItemLabelGenerator(Vendor::getVendorName);
         vendorField.setVisible(false);
 
-        // Toggle Employee/Vendor field
         userTypeField.addValueChangeListener(event -> {
 
             employeeField.clear();
@@ -77,8 +69,12 @@ public class UsersForm extends Dialog {
             }
         });
 
+        userNameField.setPattern("[0-9a-zA-Z]{3,50}");
         userNameField.setRequired(true);
-        userEmailField.setRequired(true);
+        userNameField.setMaxLength(50);
+        userNameField.setErrorMessage("Enter a valid user name.Only letters, numbers");
+        userEmailField.setRequired(true); 
+        userEmailField.setErrorMessage("Enter a valid email");
         passwordField.setRequired(true);
         confirmPasswordField.setRequired(true);
 
@@ -94,16 +90,13 @@ public class UsersForm extends Dialog {
                 vendorField
         );
 
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2)
-        );
+        formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
         Button saveButton = new Button("Save", e -> saveUser());
 
         Button cancelButton = new Button("Cancel", e -> close());
 
-        HorizontalLayout buttonLayout =
-                new HorizontalLayout(saveButton, cancelButton);
+        HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
 
         add(formLayout, buttonLayout);
     }
@@ -112,28 +105,21 @@ public class UsersForm extends Dialog {
 
         try {
 
-            if (userNameField.isEmpty()
-                    || userEmailField.isEmpty()
-                    || passwordField.isEmpty()
-                    || confirmPasswordField.isEmpty()
-                    || userTypeField.isEmpty()) {
+            if (userNameField.isEmpty() || userEmailField.isEmpty() || passwordField.isEmpty()
+                    || confirmPasswordField.isEmpty() || userTypeField.isEmpty()) {
 
-                Notification.show(
-                        "Please fill all required fields",
-                        3000,
-                        Notification.Position.TOP_CENTER);
-
+                Notification.show( "Please fill all required fields",3000,Notification.Position.TOP_CENTER);
                 return;
             }
 
-            if (!passwordField.getValue()
-                    .equals(confirmPasswordField.getValue())) {
+            if(userNameField.isInvalid() || userEmailField.isInvalid())
+            {
+                Notification.show("Please correct validation errors",3000,Notification.Position.TOP_CENTER);
+            }
 
-                Notification.show(
-                        "Password and Confirm Password do not match",
-                        3000,
-                        Notification.Position.TOP_CENTER);
+            if (!passwordField.getValue().equals(confirmPasswordField.getValue())) {
 
+                Notification.show("Password and Confirm Password do not match",3000,Notification.Position.TOP_CENTER);
                 return;
             }
 
@@ -148,11 +134,7 @@ public class UsersForm extends Dialog {
 
                 if (employeeField.isEmpty()) {
 
-                    Notification.show(
-                            "Please select an employee",
-                            3000,
-                            Notification.Position.TOP_CENTER);
-
+                    Notification.show("Please select an employee",3000,Notification.Position.TOP_CENTER);
                     return;
                 }
 
@@ -162,32 +144,21 @@ public class UsersForm extends Dialog {
 
                 if (vendorField.isEmpty()) {
 
-                    Notification.show(
-                            "Please select a vendor",
-                            3000,
-                            Notification.Position.TOP_CENTER);
-
+                    Notification.show("Please select a vendor",3000,Notification.Position.TOP_CENTER);
                     return;
                 }
-
                 user.setVendor(vendorField.getValue());
             }
 
             usersService.addUsers( user, securityService.getLoggedInUser().getEmployee());
 
-            Notification.show(
-                    "User Created Successfully",
-                    3000,
-                    Notification.Position.TOP_CENTER);
+            Notification.show( "User Created Successfully", 3000, Notification.Position.TOP_CENTER);
 
             close();
 
         } catch (Exception e) {
 
-            Notification.show(
-                    "Error: " + e.getMessage(),
-                    5000,
-                    Notification.Position.TOP_CENTER);
+            Notification.show("Error: " + e.getMessage(), 5000, Notification.Position.TOP_CENTER);
         }
     }
 }

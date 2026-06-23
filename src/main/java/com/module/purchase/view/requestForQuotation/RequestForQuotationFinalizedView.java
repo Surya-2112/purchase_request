@@ -86,7 +86,6 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
         HorizontalLayout statusSection = new HorizontalLayout(new Span("Finalized Lifecycle State: "), statusBadgeContainer);
         statusSection.setAlignItems(Alignment.CENTER);
 
-        // Core demand table grid configuration
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null 
                 ? line.getItemVariant().getItem().getItemName() : "").setHeader("Sourced Item").setAutoWidth(true);
         detailsLinesGrid.addColumn(line -> line.getItemVariant() != null ? line.getItemVariant().getSpecification() : "")
@@ -136,7 +135,6 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
         grid.addColumn(q -> q.getQuotationDate() != null ? q.getQuotationDate().toString() : "-").setHeader("Submission Date").setWidth("150px");
         grid.addColumn(q -> String.format("%.2f INR", q.getTotalAmount())).setHeader("Total Offer").setWidth("160px");
         
-        // Add itemized details lookup redirect button link layer
         grid.addComponentColumn(q -> {
             Button inspectBtn = new Button("View Cost Sheet", VaadinIcon.SEARCH.create());
             inspectBtn.addThemeName("secondary small");
@@ -151,7 +149,7 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
             getUI().ifPresent(ui -> ui.navigate("quotation-comparison"));
             return;
         }
-
+        try{
         rfqService.getRequestForQuotationById(id).ifPresentOrElse(rfq -> {
             this.rfqIdField.setValue("RFQ-" + rfq.getId());
             this.requestedDate.setValue(rfq.getRequestedDate());
@@ -159,12 +157,10 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
 
             renderStatusBadge(rfq.getStatus().name());
 
-            // Load primary material line rows requirements entries 
             linesDataset.clear();
             linesDataset.addAll(rfqService.getLinesByRfqId(rfq.getId()));
             detailsLinesGrid.setItems(linesDataset);
 
-            // Fetch and isolate associated supplier bids directly using core Status properties
             List<Quotation> allQuotes = quotationService.getQuotationsByRfq(rfq);
 
             List<Quotation> approvedWinner = allQuotes.stream()
@@ -182,6 +178,11 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
             Notification.show("Requested profile data missing from database log.", 4000, Position.MIDDLE);
             getUI().ifPresent(ui -> ui.navigate("quotation-comparison"));
         });
+        }catch (Exception ex) {
+            event.forwardTo("quotation-comparison");
+            event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Position.MIDDLE);});
+            return;
+        }
     }
 
     private void renderStatusBadge(String statusName) {

@@ -41,20 +41,13 @@ public class RoleDetailsView extends VerticalLayout implements HasUrlParameter<L
         }
 
         @Override
-        public void setParameter(
-                        BeforeEvent event,
-                        Long roleId) {
+        public void setParameter(BeforeEvent event, Long roleId) {
 
                 removeAll();
-
-                Role role = roleService
-                                .getRoleById(roleId)
-                                .orElse(null);
-
+                try{
+                Role role = roleService.getRoleById(roleId).orElse(null);
                 if (role == null) {
-
                         add(new Span("Role Not Found"));
-
                         return;
                 }
 
@@ -62,37 +55,17 @@ public class RoleDetailsView extends VerticalLayout implements HasUrlParameter<L
 
                 FormLayout formLayout = new FormLayout();
 
-                // ROLE ID
-                formLayout.addFormItem(
-                                new Span(
-                                                String.valueOf(
-                                                                role.getRoleId())),
-                                "Role ID");
-
-                // ROLE NAME
+                formLayout.addFormItem(new Span(String.valueOf(role.getRoleId())), "Role ID");
                 formLayout.addFormItem( new Span( role.getRoleName() == null ? "" : role.getRoleName()), "Role Name");
-
-                // EMPLOYEE GROUPS
-                String employeeGroups = role.getEmployeeGroups() == null
-                                ? ""
-                                : role.getEmployeeGroups()
-                                                .stream()
-                                                .map(Enum::name)
-                                                .collect(Collectors.joining(", "));
-
+                String employeeGroups = role.getEmployeeGroups() == null? "" : role.getEmployeeGroups().stream().map(Enum::name).collect(Collectors.joining(", "));
                 formLayout.addFormItem( new Span(employeeGroups),"Role Groups");
 
-                // UPDATE BUTTON
                 Button updateButton = new Button("Update");
 
                 updateButton.addClickListener(clickEvent -> {
-
-                        getUI().ifPresent(ui -> ui.navigate(
-                                        "role-edit/"
-                                                        + role.getRoleId()));
+                        getUI().ifPresent(ui -> ui.navigate("role-edit/"+ role.getRoleId()));
                 });
 
-                // DELETE BUTTON
                 Button deleteButton = new Button("Delete");
 
                 deleteButton.addClickListener(clickEvent -> {
@@ -111,17 +84,11 @@ public class RoleDetailsView extends VerticalLayout implements HasUrlParameter<L
 
                         dialog.addConfirmListener(confirmEvent -> {
 
-                                try { // CALL SERVICE
+                                try { 
                                         roleService.deleteRoleById(role.getRoleId(),securityService.getLoggedInUser().getEmployee());
-
-                                        Notification.show("Role Deleted Successfully",
-                                                        3000,
-                                                        Notification.Position.TOP_CENTER);
-
+                                        Notification.show("Role Deleted Successfully",3000,  Notification.Position.TOP_CENTER);
                                         getUI().ifPresent(ui -> ui.navigate("role"));
-
                                 } catch (Exception exception) {
-
                                         Notification.show( exception.getMessage(), 5000,Notification.Position.TOP_CENTER);
                                 }
                         });
@@ -135,5 +102,10 @@ public class RoleDetailsView extends VerticalLayout implements HasUrlParameter<L
                 HorizontalLayout buttonLayout = new HorizontalLayout(updateButton,deleteButton);
 
                 add( title,formLayout, buttonLayout);
+        }catch (Exception ex) {
+            event.forwardTo("role");
+            event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);});
+            return;
+        }
         }
 }

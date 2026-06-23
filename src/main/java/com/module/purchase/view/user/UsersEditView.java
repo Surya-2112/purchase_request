@@ -29,8 +29,6 @@ import jakarta.annotation.security.PermitAll;
 public class UsersEditView extends VerticalLayout implements HasUrlParameter<Long> {
 
     private final UsersService usersService;
-    private final EmployeeService employeeService;
-    private final VendorService vendorService;
     private final SecurityService securityService;
 
     private Users user;
@@ -44,21 +42,22 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
     private final ComboBox<Employee> employeeField = new ComboBox<>("Employee");
 
-    private final ComboBox<Vendor> vendorField =new ComboBox<>("Vendor");
+    private final ComboBox<Vendor> vendorField = new ComboBox<>("Vendor");
 
-    private final ComboBox<String> activeField =new ComboBox<>("Status");
+    private final ComboBox<String> activeField = new ComboBox<>("Status");
 
-    public UsersEditView( UsersService usersService, EmployeeService employeeService,
+    public UsersEditView(UsersService usersService, EmployeeService employeeService,
             VendorService vendorService, SecurityService securityService) {
 
         this.usersService = usersService;
-        this.employeeService = employeeService;
-        this.vendorService = vendorService;
         this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
 
+        userNameField.setPattern("[0-9a-zA-Z]{3,50}");
+        userNameField.setRequired(true);
+        userNameField.setErrorMessage("Enter a valid user name. Only letters, numbers");
         employeeField.setItems(employeeService.getEmployees());
         employeeField.setItemLabelGenerator(Employee::getEmployeeName);
 
@@ -75,16 +74,15 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
         removeAll();
 
-        if(securityService.getLoggedInUser().getUserId().equals(userId)||securityService.canAccessView("management-group"))
-        {
-        user = usersService.getUserById(userId).orElse(null);
-        }else{
+        if (securityService.getLoggedInUser().getUserId().equals(userId)
+                || securityService.canAccessView("management-group")) {
+            user = usersService.getUserById(userId).orElse(null);
+        } else {
             event.forwardTo("");
-            event.getUI().access(() -> { Notification.show("Access Denied",3000,Notification.Position.MIDDLE);
+            event.getUI().access(() -> {
+                Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
             });
         }
-
-
 
         if (user == null) {
             add(new H2("User Not Found"));
@@ -93,7 +91,7 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
 
         H2 title = new H2("Update User");
 
-        userNameField.setValue( user.getUserName() == null ? "" : user.getUserName());
+        userNameField.setValue(user.getUserName() == null ? "" : user.getUserName());
 
         userEmailField.setValue(user.getUserEmail() == null ? "" : user.getUserEmail());
 
@@ -137,23 +135,29 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
                 userTypeField,
                 employeeField,
                 vendorField,
-                activeField
-        );
+                activeField);
 
         formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2)
-        );
+                new FormLayout.ResponsiveStep("0", 2));
 
         Button saveButton = new Button("Update");
 
         saveButton.addClickListener(e -> {
 
             try {
+                if (userNameField.isEmpty() || userEmailField.isEmpty() || passwordField.isEmpty()
+                        || userTypeField.isEmpty()) {
 
+                    Notification.show("Please fill all required fields", 3000, Notification.Position.TOP_CENTER);
+                    return;
+                }
+
+                if (userNameField.isInvalid() || userEmailField.isInvalid()) {
+                    Notification.show("Please correct validation errors", 3000, Notification.Position.TOP_CENTER);
+                }
                 user.setUserName(userNameField.getValue());
 
-                user.setActive(
-                        "Active".equals(activeField.getValue()));
+                user.setActive("Active".equals(activeField.getValue()));
 
                 if (!passwordField.isEmpty()) {
                     user.setPassword(passwordField.getValue());
@@ -161,39 +165,23 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
                     user.setPassword(null);
                 }
 
-                usersService.updateUser(
-                        user,
-                        securityService.getLoggedInUser().getEmployee());
+                usersService.updateUser(user,securityService.getLoggedInUser().getEmployee());
+                Notification.show( "User Updated Successfully",3000, Notification.Position.TOP_CENTER);
 
-                Notification.show(
-                        "User Updated Successfully",
-                        3000,
-                        Notification.Position.TOP_CENTER
-                );
+                getUI().ifPresent(ui -> ui.navigate("user-details/" + user.getUserId()));
 
-                getUI().ifPresent(ui ->
-                        ui.navigate(
-                                "user-details/" + user.getUserId()));
-
-            } catch (Exception ex) {
-
-                Notification.show(
-                        ex.getMessage(),
-                        5000,
-                        Notification.Position.TOP_CENTER
-                );
-            }
+            }catch (Exception ex) {
+            event.forwardTo("user");
+            event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);});
+            return;
+        }
         });
 
         Button cancelButton = new Button("Cancel");
 
-        cancelButton.addClickListener(e ->
-                getUI().ifPresent(ui ->
-                        ui.navigate("user-details/" + user.getUserId()))
-        );
+        cancelButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("user-details/" + user.getUserId())));
 
-        HorizontalLayout buttons =
-                new HorizontalLayout(saveButton, cancelButton);
+        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
 
         add(title, formLayout, buttons);
     }

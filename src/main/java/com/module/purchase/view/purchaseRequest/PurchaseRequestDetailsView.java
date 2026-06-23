@@ -134,7 +134,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 header = headerService.getPurchaseRequestHeaderById(id).get();
                 }catch(Exception ex)
                 {
-                          event.forwardTo("");
+                        event.forwardTo("");
                         event.getUI().access(() -> {
                                 Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
                         });

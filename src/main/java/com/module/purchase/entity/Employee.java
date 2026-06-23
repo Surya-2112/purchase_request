@@ -36,7 +36,7 @@ public class Employee {
     private String employeeEmail;
 
     @Column(name = "employee_phone_number")
-    @Size(min=4,max=15)
+    @Size(min=4,max=16)
     private String employeePhoneNumber;
 
     @ManyToOne

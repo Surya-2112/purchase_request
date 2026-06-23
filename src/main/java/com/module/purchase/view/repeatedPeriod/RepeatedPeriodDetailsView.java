@@ -44,8 +44,7 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
     private final Button backButton = new Button("Back to Schedules Grid");
     private final Button parentPrButton = new Button("Open Purchase Request");
 
-    public RepeatedPeriodDetailsView(RepeatedPeriodService repeatedPeriodService,
-                                     PurchaseRequestLineService lineService) {
+    public RepeatedPeriodDetailsView(RepeatedPeriodService repeatedPeriodService,PurchaseRequestLineService lineService) {
         this.repeatedPeriodService = repeatedPeriodService;
         this.lineService = lineService;
 
@@ -58,7 +57,6 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
 
     private void buildUI() {
         H2 pageTitle = new H2("Scheduled Information");
-
         VerticalLayout profileCard = new VerticalLayout(
                 new H3("Schedule Configuration"),
                 scheduleId, referenceModule, intervalPattern, executionDates
@@ -90,7 +88,7 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         Long recordId = Long.parseLong(event.getRouteParameters().get("id").get());
-
+        try{
         RepeatedPeriod record = repeatedPeriodService.getRepeatedPeriodById(recordId)
                 .orElseThrow(() -> new RuntimeException("Sourcing rule profile was completely removed."));
 
@@ -132,5 +130,12 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
                 Notification.show("Notice: The original target line item row has been purged from active tracking tables.", 4000, Position.MIDDLE);
             }
         }
+        }catch (Exception ex) {
+            event.forwardTo("repeated-periods");
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 4000, Position.MIDDLE);
+            });
+            return;
+        } 
     }
 }
