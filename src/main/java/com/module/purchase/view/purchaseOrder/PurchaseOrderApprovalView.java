@@ -18,6 +18,7 @@ import com.module.purchase.enums.ApprovalSource;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.AssigningConfigService;
 import com.module.purchase.service.PurchaseOrderHeaderService;
@@ -98,8 +99,7 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
                 new Hr(),
                 new H3("Add Approvers"),
                 new HorizontalLayout(addApproverBtn, submitPoBtn),
-                workflowGrid
-        );
+                workflowGrid);
         coreFormContainer.setWidthFull();
         coreFormContainer.setPadding(false);
 
@@ -119,22 +119,35 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
             }, () -> {
                 throw new RuntimeException("Target Purchase Order not found.");
             });
+        } catch (NumberFormatException e) {
+            event.forwardTo(ViewName.PURCHASE_ORDER.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
+            });
+            return;
         } catch (Exception ex) {
-            Notification.show("Failed to initialize verification panel: " + ex.getMessage(), 4000, Position.TOP_CENTER);
-            getUI().ifPresent(ui -> ui.navigate("purchase-order"));
+            event.forwardTo(ViewName.PURCHASE_ORDER.getRoute());
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
+            });
+            return;
         }
     }
 
     private void configureItemsGrid() {
         itemsGrid.removeAllColumns();
         itemsGrid.addColumn(line -> line.getItemVariant() != null && line.getItemVariant().getItem() != null
-                ? line.getItemVariant().getItem().getItemName() : "").setHeader("Item Name").setAutoWidth(true);
-        
+                ? line.getItemVariant().getItem().getItemName()
+                : "").setHeader("Item Name").setAutoWidth(true);
+
         itemsGrid.addColumn(PurchaseOrderLine::getQuantity).setHeader("Quantity").setWidth("120px");
-        itemsGrid.addColumn(line -> String.format("%.2f ", line.getUnitPrice())).setHeader("Unit Price").setWidth("140px");
-        itemsGrid.addColumn(line -> String.format("%.2f ", line.getDiscountAmount())).setHeader("Slab Discount").setWidth("140px");
-        itemsGrid.addColumn(line -> String.format("%.2f ", line.getTotalAmount())).setHeader("Total Amount").setWidth("150px");
-        
+        itemsGrid.addColumn(line -> String.format("%.2f ", line.getUnitPrice())).setHeader("Unit Price")
+                .setWidth("140px");
+        itemsGrid.addColumn(line -> String.format("%.2f ", line.getDiscountAmount())).setHeader("Slab Discount")
+                .setWidth("140px");
+        itemsGrid.addColumn(line -> String.format("%.2f ", line.getTotalAmount())).setHeader("Total Amount")
+                .setWidth("150px");
+
         itemsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         itemsGrid.setAllRowsVisible(true);
     }
@@ -165,7 +178,7 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
 
             if (item.getSource() == ApprovalSource.AUTO) {
                 List<AssigningConfig> systemConfigs = configService.getConfigs(
-                        ApprovalType.PURCHASE_ORDER, 
+                        ApprovalType.PURCHASE_ORDER,
                         poHeader != null ? poHeader.getTotalAmount() : 0.0);
 
                 AssigningConfig validMatch = systemConfigs.stream()
@@ -191,7 +204,8 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
             return groupCombo;
         }).setHeader("Assigned Role Group").setAutoWidth(true);
 
-        workflowGrid.addColumn(a -> a.getSource() != null ? a.getSource().name() : "").setHeader("Source").setWidth("140px");
+        workflowGrid.addColumn(a -> a.getSource() != null ? a.getSource().name() : "").setHeader("Source")
+                .setWidth("140px");
 
         workflowGrid.addComponentColumn(item -> {
             Button removeStepBtn = new Button("Remove");
@@ -212,7 +226,7 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
     }
 
     private void refreshFormMetricsAndDataset() {
-         PurchaseOrderLine poline=new PurchaseOrderLine();
+        PurchaseOrderLine poline = new PurchaseOrderLine();
         poline.setPurchaseOrderHeader(poHeader);
         List<PurchaseOrderLine> poLines = poLineService.getPurchaseOrderList(poline);
         itemsGrid.setItems(poLines);
@@ -268,37 +282,41 @@ public class PurchaseOrderApprovalView extends VerticalLayout implements BeforeE
 
     private void executeCommitAndSubmitWorkflow() {
         if (approvalTiersDataset.isEmpty()) {
-            Notification.show("Sourcing Constraint: You must allocate at least one configuration approval group.", 3000, Position.TOP_CENTER);
+            Notification.show("Sourcing Constraint: You must allocate at least one configuration approval group.", 3000,
+                    Position.TOP_CENTER);
             return;
         }
 
         for (AssigningApprovals validationRow : approvalTiersDataset) {
             if (validationRow.getEmployeeGroup() == null) {
-                Notification.show("Missing profile role group assignment at sequence index " + validationRow.getLevel(), 4000, Position.TOP_CENTER);
+                Notification.show("Missing profile role group assignment at sequence index " + validationRow.getLevel(),
+                        4000, Position.TOP_CENTER);
                 return;
             }
         }
 
         try {
             Employee loggedInBuyerActor = securityService.getLoggedInUser().getEmployee();
-            
+
             poHeader.setCreatedBy(loggedInBuyerActor);
-            poHeader.setStatus(Status.WAITING_APPROVAL); 
+            poHeader.setStatus(Status.WAITING_APPROVAL);
             poHeader.setLevel(approvalTiersDataset.size());
             poHeaderService.savePurchaseOrderHeader(poHeader);
 
             int finalSequenceCounter = 1;
             for (AssigningApprovals approvalTask : approvalTiersDataset) {
                 approvalTask.setReferenceId(poHeader.getPurchaseOrderId());
-                approvalTask.setStatus(Status.DRAFT); 
+                approvalTask.setStatus(Status.DRAFT);
                 approvalTask.setAssignedDate(LocalDate.now());
                 approvalTask.setAssignedBy(loggedInBuyerActor);
                 approvalTask.setLevel(finalSequenceCounter++);
-                
+
                 assigningApprovalsService.addApprovals(approvalTask, loggedInBuyerActor);
             }
 
-            Notification.show("Consolidated Purchase Order matrix finalized and successfully routed to workflow queues!", 4000, Position.TOP_CENTER);
+            Notification.show(
+                    "Consolidated Purchase Order matrix finalized and successfully routed to workflow queues!", 4000,
+                    Position.TOP_CENTER);
             getUI().ifPresent(ui -> ui.navigate("purchase-order"));
 
         } catch (Exception ex) {

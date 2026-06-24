@@ -16,18 +16,21 @@ import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.NeedsService;
 import com.module.purchase.service.PurchaseRequestDocumentService;
-import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.PurchaseRequestHeaderService;
+import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.RepeatedPeriodService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
@@ -129,12 +132,18 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
         @Override
         public void beforeEnter(BeforeEnterEvent event) {
+                 try{
                 Long id = Long.parseLong(event.getRouteParameters().get("id").get());
-                try{
+               
                 header = headerService.getPurchaseRequestHeaderById(id).get();
+                }catch (NumberFormatException e) {
+                        event.forwardTo(ViewName.PURCHASE_REQUEST.getRoute());
+                        event.getUI().access(() -> {
+                        Notification.show("url is not valid ," + e.getMessage(), 3000,Notification.Position.TOP_CENTER); });
+                        return;
                 }catch(Exception ex)
                 {
-                        event.forwardTo("");
+                        event.forwardTo("purchase-request");
                         event.getUI().access(() -> {
                                 Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
                         });

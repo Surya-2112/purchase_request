@@ -84,7 +84,7 @@ public class UnitView extends VerticalLayout {
 
         unitGrid.addItemDoubleClickListener(event -> {
             Unit unit = event.getItem();
-            getUI().ifPresent(ui -> ui.navigate("unit-edit/" + unit.getId()));
+            getUI().ifPresent(ui -> ui.navigate("unit-details/" + unit.getId()));
         });
 
         ComboBox<Integer> pageSizeField = new ComboBox<>();

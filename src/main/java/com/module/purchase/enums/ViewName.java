@@ -81,7 +81,7 @@ public enum ViewName {
     ROLE_EDIT("role-edit"),
     ROLE_FORM("role-form"),
 
-    REPEATED_PERIOD("repeated-period"),
+    REPEATED_PERIOD("repeated-periods"),
     REPEATED_PERIOD_DETAILS("repeated-period-details"),
     REPEATED_PERIOD_EDIT("repeated-period-edit"),
     

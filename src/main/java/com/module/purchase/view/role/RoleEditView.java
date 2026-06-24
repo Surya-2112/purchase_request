@@ -6,6 +6,7 @@ import java.util.Set;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Role;
 import com.module.purchase.enums.EmployeeGroup;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.RoleService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -24,7 +25,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "role-edit", layout = MainLayout.class)
 @PermitAll
-public class RoleEditView extends VerticalLayout implements HasUrlParameter<Long> {
+public class RoleEditView extends VerticalLayout implements HasUrlParameter<String> {
 
         private final RoleService roleService;
 
@@ -53,11 +54,11 @@ public class RoleEditView extends VerticalLayout implements HasUrlParameter<Long
         }
 
         @Override
-        public void setParameter( BeforeEvent event,Long roleId) {
+        public void setParameter( BeforeEvent event,String roleId) {
 
                 removeAll();
                 try{
-                role = roleService.getRoleById(roleId).orElse(null);
+                role = roleService.getRoleById(Long.parseLong(roleId)).orElse(null);
                 if (role == null) {
                         add(new H2("Role Not Found"));
                         return;
@@ -103,10 +104,15 @@ public class RoleEditView extends VerticalLayout implements HasUrlParameter<Long
                 HorizontalLayout buttonLayout = new HorizontalLayout( saveButton,cancelButton);
                 add(title,formLayout,buttonLayout);
                 
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.ROLE.getRoute());
+            event.getUI().access(() -> {
+            Notification.show("url is not valid ," + e.getMessage(), 3000,Notification.Position.TOP_CENTER);});
+            return;
         }catch (Exception ex) {
-            event.forwardTo("role");
+            event.forwardTo(ViewName.ROLE.getRoute());
             event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);});
             return;
-        }       
+        }      
         }
 }

@@ -21,7 +21,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "assigning-config-details", layout = MainLayout.class)
 @PermitAll
-public class AssigningConfigDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class AssigningConfigDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final AssigningConfigService assigningConfigService;
 
@@ -38,85 +38,102 @@ public class AssigningConfigDetailsView extends VerticalLayout implements HasUrl
     }
 
     @Override
-    public void setParameter( BeforeEvent event,Long assigningConfigId) {
+    public void setParameter(BeforeEvent event, String assigningConfigId) {
 
         removeAll();
 
-        try{
-        AssigningConfig assigningConfig =assigningConfigService.getAssigningConfigById(assigningConfigId).orElse(null);
+        try {
+            AssigningConfig assigningConfig = assigningConfigService
+                    .getAssigningConfigById(Long.parseLong(assigningConfigId)).orElse(null);
 
-        if (assigningConfig == null) {
+            if (assigningConfig == null) {
 
-            add(new Span("Assigning Config Not Found"));
+                add(new Span("Assigning Config Not Found"));
 
-            return;
-        }
+                return;
+            }
 
-        H2 title = new H2("Assigning Config Details");
+            H2 title = new H2("Assigning Config Details");
 
-        FormLayout formLayout = new FormLayout();
+            FormLayout formLayout = new FormLayout();
 
-        formLayout.setResponsiveSteps( new FormLayout.ResponsiveStep("0", 2));
+            formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
-        formLayout.addFormItem(new Span(String.valueOf(assigningConfig.getId())),"Config ID");
-        formLayout.addFormItem(new Span(assigningConfig.getApprovalType() == null ? "": assigningConfig.getApprovalType().name()), "Approval Type");
-        formLayout.addFormItem(new Span(assigningConfig.getLevel() == null? "": assigningConfig.getLevel().toString()),"Level");
-        formLayout.addFormItem(new Span(assigningConfig.getEmployeeGroup() == null ? "": assigningConfig.getEmployeeGroup().name()), "Employee Group");
-        formLayout.addFormItem(new Span(assigningConfig.getMinAmount() == null? "" : assigningConfig.getMinAmount().toString()),"Min Amount");
-        formLayout.addFormItem(new Span(assigningConfig.getMaxAmount() == null? "": assigningConfig.getMaxAmount().toString()), "Max Amount");
-        formLayout.addFormItem( new Span(assigningConfig.getMarginDifferencePercentage() == null ? "" : (assigningConfig.getMarginDifferencePercentage().toString()) +"%"),"Margin Difference");
+            formLayout.addFormItem(new Span(String.valueOf(assigningConfig.getId())), "Config ID");
+            formLayout.addFormItem(
+                    new Span(assigningConfig.getApprovalType() == null ? "" : assigningConfig.getApprovalType().name()),
+                    "Approval Type");
+            formLayout.addFormItem(
+                    new Span(assigningConfig.getLevel() == null ? "" : assigningConfig.getLevel().toString()), "Level");
+            formLayout.addFormItem(new Span(
+                    assigningConfig.getEmployeeGroup() == null ? "" : assigningConfig.getEmployeeGroup().name()),
+                    "Employee Group");
+            formLayout.addFormItem(
+                    new Span(assigningConfig.getMinAmount() == null ? "" : assigningConfig.getMinAmount().toString()),
+                    "Min Amount");
+            formLayout.addFormItem(
+                    new Span(assigningConfig.getMaxAmount() == null ? "" : assigningConfig.getMaxAmount().toString()),
+                    "Max Amount");
+            formLayout
+                    .addFormItem(
+                            new Span(assigningConfig.getMarginDifferencePercentage() == null ? ""
+                                    : (assigningConfig.getMarginDifferencePercentage().toString()) + "%"),
+                            "Margin Difference");
 
-        Button updateButton = new Button("Update");
+            Button updateButton = new Button("Update");
 
-        updateButton.addClickListener(clickEvent ->getUI().ifPresent(ui ->ui.navigate(ViewName.ASSIGNING_CONFIG_EDIT.getRoute()+ "/"+ assigningConfig.getId())));
+            updateButton.addClickListener(clickEvent -> getUI().ifPresent(
+                    ui -> ui.navigate(ViewName.ASSIGNING_CONFIG_EDIT.getRoute() + "/" + assigningConfig.getId())));
 
-        Button deleteButton = new Button("Delete");
+            Button deleteButton = new Button("Delete");
 
-        deleteButton.addClickListener(clickEvent -> {
+            deleteButton.addClickListener(clickEvent -> {
 
-            ConfirmDialog dialog = new ConfirmDialog();
+                ConfirmDialog dialog = new ConfirmDialog();
 
-            dialog.setHeader("Delete Assigning Config");
+                dialog.setHeader("Delete Assigning Config");
+                dialog.setText("Are you sure you want to delete this assigning config?");
+                dialog.setCancelable(true);
+                dialog.setConfirmText("Delete");
+                dialog.setConfirmButtonTheme("error primary");
+                dialog.addConfirmListener(confirmEvent -> {
 
-            dialog.setText("Are you sure you want to delete this assigning config?");
+                    try {
+                        assigningConfigService.deleteAssigningConfigById(assigningConfig.getId(),
+                                securityService.getLoggedInUser().getEmployee());
 
-            dialog.setCancelable(true);
+                        Notification.show("Assigning Config Deleted Successfully", 3000,
+                                Notification.Position.TOP_CENTER);
 
-            dialog.setConfirmText("Delete");
+                        getUI().ifPresent(ui -> ui.navigate(ViewName.ASSIGNING_CONFIG.getRoute()));
 
-            dialog.setConfirmButtonTheme("error primary");
+                    } catch (Exception exception) {
+                        Notification.show(exception.getMessage(), 5000, Notification.Position.TOP_CENTER);
+                    }
+                });
 
-            dialog.addConfirmListener(confirmEvent -> {
-
-                try {
-                    assigningConfigService.deleteAssigningConfigById( assigningConfig.getId(),securityService.getLoggedInUser().getEmployee());
-
-                    Notification.show("Assigning Config Deleted Successfully",3000,Notification.Position.TOP_CENTER);
-
-                    getUI().ifPresent(ui -> ui.navigate(ViewName.ASSIGNING_CONFIG.getRoute()));
-
-                } catch (Exception exception) {
-                    Notification.show(exception.getMessage(),5000,Notification.Position.TOP_CENTER);
-                }
+                dialog.open();
             });
 
-            dialog.open();
-        });
+            updateButton.setVisible(securityService.canAccessView("assigning-config-edit"));
 
-        updateButton.setVisible(securityService.canAccessView("assigning-config-edit"));
+            deleteButton.setVisible(securityService.canAccessView("assigning-config-form"));
 
-        deleteButton.setVisible(securityService.canAccessView("assigning-config-form"));
+            HorizontalLayout buttonLayout = new HorizontalLayout(updateButton, deleteButton);
 
-        HorizontalLayout buttonLayout =new HorizontalLayout(updateButton,deleteButton);
+            add(title, formLayout, buttonLayout);
 
-        add(title,formLayout, buttonLayout);
+        } catch (NumberFormatException e) {
+            event.forwardTo( ViewName.ASSIGNING_CONFIG.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ,"+e.getMessage(), 3000, Notification.Position.TOP_CENTER);});
+            return;
 
-        }catch(Exception ex){      
-                event.forwardTo("assigning-config");
-                event.getUI().access(() -> {
-                Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);
-        });
-                return;
+        } catch (Exception ex) {
+            event.forwardTo( ViewName.ASSIGNING_CONFIG.getRoute());
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 3000, Notification.Position.TOP_CENTER);});
+            return;
         }
     }
 }

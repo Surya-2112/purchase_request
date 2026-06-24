@@ -3,6 +3,7 @@ package com.module.purchase.view.department;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.view.MainLayout;
@@ -22,8 +23,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "department-edit", layout = MainLayout.class)
 @PermitAll
-public class DepartmentEditView extends VerticalLayout
-        implements HasUrlParameter<Long> {
+public class DepartmentEditView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final DepartmentService departmentService;
     private final SecurityService securityService;
@@ -41,31 +41,25 @@ public class DepartmentEditView extends VerticalLayout
     public DepartmentEditView( DepartmentService departmentService, EmployeeService employeeService,SecurityService securityService) {
 
         this.departmentService = departmentService;
-      //  this.employeeService = employeeService;
         this.securityService = securityService;
 
         setSizeFull();
         setPadding(true);
 
-        // LOAD EMPLOYEES
         departmentHeadField.setItems(employeeService.getEmployees());
 
-        departmentHeadField.setItemLabelGenerator(
-                employee -> String.valueOf(employee.getEmployeeName()));
+        departmentHeadField.setItemLabelGenerator( employee -> String.valueOf(employee.getEmployeeName()));
 
-        // STATUS
-        activeField.setItems(
-                "Active",
-                "Inactive");
+        activeField.setItems("Active","Inactive");
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Long departmentId) {
+    public void setParameter(BeforeEvent event, String departmentId) {
 
         removeAll();
 
         try{
-        department = departmentService.getDepartmentById(departmentId).orElse(null);
+        department = departmentService.getDepartmentById(Long.parseLong(departmentId)).orElse(null);
 
         if (department == null) {
 
@@ -137,6 +131,13 @@ public class DepartmentEditView extends VerticalLayout
         HorizontalLayout buttonLayout =new HorizontalLayout(saveButton,cancelButton);
 
         add(title, formLayout, buttonLayout);
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.DEPARTMENT.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
+            });
+            return;
+
         }catch(Exception ex)
         {       event.forwardTo("department");
                 event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});

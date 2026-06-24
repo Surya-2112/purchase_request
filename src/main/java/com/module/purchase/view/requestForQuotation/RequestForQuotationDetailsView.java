@@ -15,6 +15,7 @@ import com.module.purchase.entity.Vendor;
 import com.module.purchase.entityDTO.QuotationDTO;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.QuotationService;
 import com.module.purchase.service.RequestForQuotationService;
@@ -44,7 +45,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "request-for-quotation-details", layout = MainLayout.class)
 @PermitAll
-public class RequestForQuotationDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class RequestForQuotationDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final RequestForQuotationService rfqService;
     private final PurchaseRequestLineService prLineService;
@@ -171,14 +172,14 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
     }
 
     @Override
-    public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
+    public void setParameter(BeforeEvent event, @OptionalParameter String id) {
         if (id == null) {
             backToDashboard();
             return;
         }
 
         try {
-            rfqService.getRequestForQuotationById(id).ifPresentOrElse(rfq -> {
+            rfqService.getRequestForQuotationById(Long.parseLong(id)).ifPresentOrElse(rfq -> {
                 this.currentRfq = rfq;
 
                 rfqIdField.setValue("RFQ-" + rfq.getId());
@@ -260,8 +261,13 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
                     Notification.show("Requested profile data missing.", 4000, Position.MIDDLE);
                 });
             });
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.REQUEST_FOR_QUOTATION.getRoute());
+            event.getUI().access(() -> {
+            Notification.show("url is not valid ," + e.getMessage(), 3000,Notification.Position.TOP_CENTER);});
+            return;
         } catch (Exception ex) {
-            event.forwardTo("request-for-quotation");
+             event.forwardTo(ViewName.REQUEST_FOR_QUOTATION.getRoute());
             event.getUI().access(() -> {
                 Notification.show(ex.getMessage(), 4000, Position.MIDDLE);
             });

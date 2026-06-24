@@ -11,6 +11,7 @@ import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.AssigningConfigService;
@@ -38,7 +39,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "quotation-evaluation-matrix", layout = MainLayout.class)
 @PermitAll
-public class QuotationEvaluationMatrixView extends VerticalLayout implements HasUrlParameter<Long> {
+public class QuotationEvaluationMatrixView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final RequestForQuotationService rfqService;
     private final QuotationService quotationService;
@@ -84,7 +85,7 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
     }
 
     @Override
-    public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
+    public void setParameter(BeforeEvent event, @OptionalParameter String id) {
 
         if (id == null) {
             Notification.show("No valid RFQ parameter keys passed.", 3000, Position.MIDDLE);
@@ -92,15 +93,20 @@ public class QuotationEvaluationMatrixView extends VerticalLayout implements Has
             return;
         }
         try{
-        rfqService.getRequestForQuotationById(id).ifPresentOrElse(rfq -> {
+        rfqService.getRequestForQuotationById(Long.parseLong(id)).ifPresentOrElse(rfq -> {
             this.targetRfq = rfq;
             buildStackedQuotationAnalysisSheets(rfq);
         }, () -> {
             Notification.show("The requested RFQ reference file is missing.", 4000, Position.MIDDLE);
             getUI().ifPresent(ui -> ui.navigate("quotation-comparison"));
         });
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.QUOTATION_COMPARISON_DASHBOARD.getRoute());
+            event.getUI().access(() -> {
+            Notification.show("url is not valid ," + e.getMessage(), 3000,Notification.Position.TOP_CENTER);});
+            return ;
         }catch (Exception ex) {
-            event.forwardTo("quotation-comparison");
+            event.forwardTo(ViewName.QUOTATION_COMPARISON_DASHBOARD.getRoute());
             event.getUI().access(() -> { Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);});
             return;
         }

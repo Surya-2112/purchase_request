@@ -71,9 +71,16 @@ public class PurchaseRequestApprovalView extends VerticalLayout implements Befor
 
             try {
                 header = headerService.getPurchaseRequestHeaderById(id).get();
+            } catch (NumberFormatException e) {
+                event.forwardTo(ViewName.PURCHASE_REQUEST.getRoute());
+                event.getUI().access(() -> {
+                    Notification.show("url is not valid ," + e.getMessage(), 3000,Notification.Position.TOP_CENTER);
+                });
+                return;
             } catch (Exception ex) {
                 event.forwardTo("");
-                event.getUI().access(() -> { Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
+                event.getUI().access(() -> {
+                    Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
                 });
                 return;
             }

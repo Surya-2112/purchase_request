@@ -23,6 +23,7 @@ import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.service.ItemVariantService;
@@ -357,6 +358,13 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                         Long id = Long.valueOf(parameter.get());
                         try {
                                 editingHeader = headerService.getPurchaseRequestHeaderById(id).get();
+                        } catch (NumberFormatException e) {
+                                event.forwardTo(ViewName.PURCHASE_REQUEST.getRoute());
+                                event.getUI().access(() -> {
+                                        Notification.show("url is not valid ," + e.getMessage(), 3000,
+                                                        Notification.Position.TOP_CENTER);
+                                });
+                                return;
                         } catch (Exception ex) {
                                 event.forwardTo("");
                                 event.getUI().access(() -> {

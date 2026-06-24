@@ -31,16 +31,14 @@ public class SecurityService {
                         .getAuthentication()
                         .getName();
 
-        return userRepository.findByUserNameOrUserEmail(username, username)
-                .orElseThrow();
+        return userRepository.findByUserNameOrUserEmail(username, username).orElseThrow();
     }
 
     public boolean canAccessView(String viewName) {
 
         if(viewName.equals(""))
-        {
-           return true;
-        }
+        {return true;}
+
         try {
             Users user = getLoggedInUser();
 

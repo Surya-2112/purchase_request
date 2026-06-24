@@ -7,6 +7,7 @@ import java.util.List;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.view.MainLayout;
@@ -26,7 +27,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "department-budget-edit", layout = MainLayout.class)
 @PermitAll
-public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlParameter<Long> {
+public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlParameter<String> {
 
         private final DepartmentBudgetService departmentBudgetService;
         private final SecurityService securityService;
@@ -41,8 +42,7 @@ public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlPa
 
         private DepartmentBudget departmentBudget;
 
-        public DepartmentBudgetEditView(SecurityService securityService, DepartmentBudgetService departmentBudgetService,
-                        DepartmentService departmentService) {
+        public DepartmentBudgetEditView(SecurityService securityService, DepartmentBudgetService departmentBudgetService,  DepartmentService departmentService) {
 
                 this.departmentBudgetService = departmentBudgetService;
                 this.securityService = securityService;
@@ -69,11 +69,11 @@ public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlPa
         }
 
         @Override
-        public void setParameter(BeforeEvent event, Long departmentBudgetId) {
+        public void setParameter(BeforeEvent event, String departmentBudgetId) {
 
                 removeAll();
                 try{
-                departmentBudget = departmentBudgetService.getDepartmentBudgetById( departmentBudgetId).orElse(null);
+                departmentBudget = departmentBudgetService.getDepartmentBudgetById(Long.parseLong(departmentBudgetId)).orElse(null);
 
                 if (departmentBudget == null) {
                         add(new H2("Department Budget Not Found"));
@@ -143,8 +143,15 @@ public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlPa
                 HorizontalLayout buttonLayout = new HorizontalLayout( saveButton, cancelButton);
                 add(title, formLayout, buttonLayout);
                 
-         }catch(Exception ex){ 
-                event.forwardTo("department-budget");
+         }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.DEPARTMENT_BUDGET.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000,
+                        Notification.Position.TOP_CENTER);
+            });
+            return;
+        }catch(Exception ex){ 
+                event.forwardTo(ViewName.DEPARTMENT_BUDGET.getRoute());
                 event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
                 return;
         }

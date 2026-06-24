@@ -2,6 +2,7 @@ package com.module.purchase.view.user;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Users;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.UsersService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -20,7 +21,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "user-details", layout = MainLayout.class)
 @PermitAll
-public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final UsersService usersService;
     private final SecurityService securityService;
@@ -38,13 +39,13 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Long userId) {
+    public void setParameter(BeforeEvent event, String userId) {
 
         removeAll();
         try{
-        if(securityService.getLoggedInUser().getUserId().equals(userId)||securityService.canAccessView("management-group"))
+        if(securityService.getLoggedInUser().getUserId().equals(Long.parseLong(userId))||securityService.canAccessView("management-group"))
         {
-        user = usersService.getUserById(userId).orElse(null);
+        user = usersService.getUserById(Long.parseLong(userId)).orElse(null);
         }else{
             event.forwardTo("");
             event.getUI().access(() -> { Notification.show("Access Denied",3000,Notification.Position.MIDDLE);
@@ -132,8 +133,14 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
 
         add(title,formLayout,buttons);
 
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.USER.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
+            });
+            return;
         }catch (Exception ex) {
-            event.forwardTo("user");
+            event.forwardTo(ViewName.USER.getRoute());
             event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);});
             return;
         }

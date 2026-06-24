@@ -12,6 +12,7 @@ import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RequestForQuotation;
 import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.enums.RequestForQuotationStatus;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.RequestForQuotationService;
@@ -40,7 +41,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "rfq-form", layout = MainLayout.class)
 @PermitAll
-public class RequestForQuotationFormView extends VerticalLayout implements HasUrlParameter<Long> {
+public class RequestForQuotationFormView extends VerticalLayout implements HasUrlParameter<String> { 
 
     private final RequestForQuotationService rfqService;
     private final PurchaseRequestLineService prLineService;
@@ -284,16 +285,15 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
     }
 
     @Override
-    public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
+    public void setParameter(BeforeEvent event, @OptionalParameter String id) {
         temporaryImportedPrLinesList.clear();
-
+        try{
         if (id != null) {
-            rfqService.getRequestForQuotationById(id).ifPresent(rfq -> {
+            rfqService.getRequestForQuotationById(Long.parseLong(id)).ifPresent(rfq -> {
                 this.editingRfq = rfq;
                 requestedDate.setValue(rfq.getRequestedDate());
                 requestEndDate.setValue(rfq.getRequestEndDate());
 
-                // Show preserved category assignment inside database
                 categorySelector.setValue(rfq.getCategory());
 
                 rfqWorkingLinesList.clear();
@@ -333,6 +333,16 @@ public class RequestForQuotationFormView extends VerticalLayout implements HasUr
             saveDraftBtn.setVisible(true);
             saveAndOpenBtn.setVisible(true);
             deleteRfqBtn.setVisible(false);
+        }
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.REQUEST_FOR_QUOTATION.getRoute());
+            event.getUI().access(() -> {
+            Notification.show("url is not valid ," + e.getMessage(), 3000,Notification.Position.TOP_CENTER);});
+            return;
+        }catch (Exception ex) {
+            event.forwardTo(ViewName.REQUEST_FOR_QUOTATION.getRoute());
+            event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Position.MIDDLE);});
+            return;
         }
     }
 

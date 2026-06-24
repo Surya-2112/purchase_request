@@ -2,6 +2,7 @@ package com.module.purchase.view.itemvariant;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.ItemVariant;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.ItemVariantService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -20,8 +21,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "item-variant-details", layout = MainLayout.class)
 @PermitAll
-public class ItemVariantDetailsView extends VerticalLayout
-        implements HasUrlParameter<Long> {
+public class ItemVariantDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final ItemVariantService itemVariantService;
     private final SecurityService securityService;
@@ -39,12 +39,12 @@ public class ItemVariantDetailsView extends VerticalLayout
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Long variantId) {
+    public void setParameter(BeforeEvent event, String variantId) {
 
         removeAll();
 
         try{
-        ItemVariant variant =itemVariantService.getItemVariantById(variantId).orElse(null);
+        ItemVariant variant =itemVariantService.getItemVariantById(Long.parseLong(variantId)).orElse(null);
 
         if (variant == null) {
             add(new Span("Item Variant Not Found"));
@@ -105,8 +105,15 @@ public class ItemVariantDetailsView extends VerticalLayout
         HorizontalLayout buttons =new HorizontalLayout(updateButton, deleteButton);
 
         add(title, formLayout, buttons);
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.ITEM_VARIANT.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000,
+                        Notification.Position.TOP_CENTER);
+            });
+            return;
         }catch(Exception ex){ 
-                event.forwardTo("item-variant");
+            event.forwardTo(ViewName.ITEM_VARIANT.getRoute());
                 event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
                 return;
         }

@@ -4,6 +4,7 @@ import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Users;
 import com.module.purchase.entity.Vendor;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.UsersService;
 import com.module.purchase.service.VendorService;
@@ -26,7 +27,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "user-edit", layout = MainLayout.class)
 @PermitAll
-public class UsersEditView extends VerticalLayout implements HasUrlParameter<Long> {
+public class UsersEditView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final UsersService usersService;
     private final SecurityService securityService;
@@ -70,13 +71,13 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Long userId) {
+    public void setParameter(BeforeEvent event, String userId) {
 
         removeAll();
-
-        if (securityService.getLoggedInUser().getUserId().equals(userId)
+        try{
+        if (securityService.getLoggedInUser().getUserId().equals(Long.parseLong(userId))
                 || securityService.canAccessView("management-group")) {
-            user = usersService.getUserById(userId).orElse(null);
+            user = usersService.getUserById(Long.parseLong(userId)).orElse(null);
         } else {
             event.forwardTo("");
             event.getUI().access(() -> {
@@ -123,8 +124,7 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
                         ? "Active"
                         : "Inactive");
 
-        activeField.setReadOnly(
-                !securityService.canAccessView("user-form"));
+        activeField.setReadOnly(!securityService.canAccessView("user-form"));
 
         FormLayout formLayout = new FormLayout();
 
@@ -184,5 +184,16 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Lon
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
 
         add(title, formLayout, buttons);
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.USER.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
+            });
+            return;
+        }catch (Exception ex) {
+            event.forwardTo(ViewName.USER.getRoute());
+            event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);});
+            return;
+        }
     }
 }

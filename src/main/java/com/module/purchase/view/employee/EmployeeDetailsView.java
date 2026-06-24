@@ -2,7 +2,7 @@ package com.module.purchase.view.employee;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Employee;
-import com.module.purchase.enums.EmployeeGroup;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -21,7 +21,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "employee-details", layout = MainLayout.class)
 @PermitAll
-public class EmployeeDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class EmployeeDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final EmployeeService employeeService;
 
@@ -38,14 +38,14 @@ public class EmployeeDetailsView extends VerticalLayout implements HasUrlParamet
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Long employeeId) {
+    public void setParameter(BeforeEvent event, String employeeId) {
 
         removeAll();
         Employee employee;
         try{
-        if(securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(employeeId)||securityService.canAccessView("management-group"))
+        if(securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(Long.parseLong(employeeId))||securityService.canAccessView("management-group"))
         {
-            employee = employeeService.getEmployeeById(employeeId).get();
+            employee = employeeService.getEmployeeById(Long.parseLong(employeeId)).get();
         }
         else {
            employee = null;
@@ -129,8 +129,15 @@ public class EmployeeDetailsView extends VerticalLayout implements HasUrlParamet
         HorizontalLayout buttonLayout = new HorizontalLayout(updateButton, deleteButton);
 
         add(title, formLayout, buttonLayout);
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.EMPLOYEE.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000,
+                        Notification.Position.TOP_CENTER);
+            });
+            return;
         }catch(Exception ex){ 
-                event.forwardTo("employee");
+                event.forwardTo(ViewName.EMPLOYEE.getRoute());
                 event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
                 return;
         }

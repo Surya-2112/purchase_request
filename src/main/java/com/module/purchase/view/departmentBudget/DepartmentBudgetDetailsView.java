@@ -2,6 +2,7 @@ package com.module.purchase.view.departmentBudget;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.DepartmentBudget;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -20,7 +21,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "department-budget-details", layout = MainLayout.class)
 @PermitAll
-public class DepartmentBudgetDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class DepartmentBudgetDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final DepartmentBudgetService departmentBudgetService;
 
@@ -39,12 +40,12 @@ public class DepartmentBudgetDetailsView extends VerticalLayout implements HasUr
     }
 
     @Override
-    public void setParameter( BeforeEvent event,Long departmentBudgetId) {
+    public void setParameter( BeforeEvent event,String departmentBudgetId) {
 
         removeAll();
 
         try{
-        DepartmentBudget departmentBudget = departmentBudgetService.getDepartmentBudgetById(departmentBudgetId).orElse(null);
+        DepartmentBudget departmentBudget = departmentBudgetService.getDepartmentBudgetById(Long.parseLong(departmentBudgetId)).orElse(null);
 
         if (departmentBudget == null) {
 
@@ -113,8 +114,15 @@ public class DepartmentBudgetDetailsView extends VerticalLayout implements HasUr
         HorizontalLayout buttonLayout = new HorizontalLayout( updateButton, deleteButton);
 
         add(title, formLayout, buttonLayout);
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.DEPARTMENT_BUDGET.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000,
+                        Notification.Position.TOP_CENTER);
+            });
+            return;
         }catch(Exception ex){ 
-                event.forwardTo("department-budget");
+                event.forwardTo(ViewName.DEPARTMENT_BUDGET.getRoute());
                 event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
                 return;
         }

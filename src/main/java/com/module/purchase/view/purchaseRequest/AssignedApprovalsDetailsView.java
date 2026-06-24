@@ -21,6 +21,7 @@ import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.service.PurchaseRequestDocumentService;
@@ -161,21 +162,29 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
         @Override
         public void beforeEnter(BeforeEnterEvent event) {
-                Long approvalId = Long.parseLong(event.getRouteParameters().get("id").get());
-
                 try {
+                Long approvalId = Long.parseLong(event.getRouteParameters().get("id").get());
+               
                         approval = approvalsService.getAssigningApprovalById(approvalId).get();
 
                         header = headerService.getPurchaseRequestHeaderById(approval.getReferenceId()).get();
+                } catch (NumberFormatException e) {
+                        event.forwardTo(ViewName.PURCHASE_REQUEST.getRoute());
+                        event.getUI().access(() -> {
+                                Notification.show("url is not valid ," + e.getMessage(), 3000,
+                                                Notification.Position.TOP_CENTER);
+                        });
+                        return;
                 } catch (Exception ex) {
-                        event.forwardTo("purchase-request");
+                        event.forwardTo(ViewName.PURCHASE_REQUEST.getRoute());
                         event.getUI().access(() -> {
                                 Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
                         });
                         return;
                 }
-                if(!securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(approval.getEmployeeGroup()))
-                {event.forwardTo("purchase-request");
+                if (!securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups()
+                                .contains(approval.getEmployeeGroup())) {
+                        event.forwardTo("purchase-request");
                         event.getUI().access(() -> {
                                 Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
                         });

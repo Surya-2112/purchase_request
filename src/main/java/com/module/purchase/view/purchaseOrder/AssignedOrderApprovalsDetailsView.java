@@ -17,10 +17,10 @@ import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
 import com.module.purchase.entity.PurchaseRequestLine;
-import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.service.PurchaseOrderHeaderService;
@@ -151,20 +151,29 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        try{
-        Long approvalId = Long.parseLong(event.getRouteParameters().get("id").get());
+        try {
+            Long approvalId = Long.parseLong(event.getRouteParameters().get("id").get());
 
-        approvalTask = approvalsService.getAssigningApprovalById(approvalId) .orElseThrow(() -> new RuntimeException("Approval task trace reference is missing."));
+            approvalTask = approvalsService.getAssigningApprovalById(approvalId)
+                    .orElseThrow(() -> new RuntimeException("Approval task trace reference is missing."));
 
-        poHeader = poHeaderService.getPurchaseOrderHeaderById(approvalTask.getReferenceId())
-                .orElseThrow(() -> new RuntimeException("Linked parent Purchase Order file missing."));
+            poHeader = poHeaderService.getPurchaseOrderHeaderById(approvalTask.getReferenceId())
+                    .orElseThrow(() -> new RuntimeException("Linked parent Purchase Order file missing."));
 
-        evaluateAccessPrivileges();
-        bindHeaderMetadata();
-        loadMasterDataPipelines();
+            evaluateAccessPrivileges();
+            bindHeaderMetadata();
+            loadMasterDataPipelines();
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.PURCHASE_ORDER.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
+            });
+            return ;
         } catch (Exception ex) {
-            Notification.show(ex.getMessage(), 4000, Position.TOP_CENTER);
-            getUI().ifPresent(ui -> ui.navigate("purchase-order"));
+            event.forwardTo(ViewName.PURCHASE_ORDER.getRoute());
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);});
+            return;
         }
     }
 
@@ -359,7 +368,7 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
 
         List<QuotationLine> quotationLines = quotationService.getLinesByQuotation(poHeader.getQuotation());
 
-        QuotationLine quotationLine=null;
+        QuotationLine quotationLine = null;
         for (QuotationLine line : quotationLines) {
             if (changedPrLine.getItemVariant().getId().equals(line.getItemVariant().getId())) {
                 quotationLine = line;
@@ -378,15 +387,16 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
             return;
         }
 
-        Double qty=0.0;
+        Double qty = 0.0;
         for (PurchaseRequestLine line : workingPrLinesList) {
             if (line.getPurchaseOrderLine().getId().equals(purchaseOrderLine.getId())) {
-                qty+=line.getOrderedQuantity();
+                qty += line.getOrderedQuantity();
             }
         }
         purchaseOrderLine.setQuantity(qty);
-        purchaseOrderLine.setDiscountAmount(qty*(quotationLine.getUnitPrice()*(quotationLine.getDiscount()/100.0)));
-        purchaseOrderLine.setTotalAmount((qty*quotationLine.getUnitPrice())-purchaseOrderLine.getDiscountAmount());
+        purchaseOrderLine
+                .setDiscountAmount(qty * (quotationLine.getUnitPrice() * (quotationLine.getDiscount() / 100.0)));
+        purchaseOrderLine.setTotalAmount((qty * quotationLine.getUnitPrice()) - purchaseOrderLine.getDiscountAmount());
         poLinesGrid.getDataProvider().refreshItem(purchaseOrderLine);
         poLinesGrid.getDataProvider().refreshAll();
         refreshBudgetTrackersAnalysis();

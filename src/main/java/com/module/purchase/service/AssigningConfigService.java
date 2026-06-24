@@ -52,7 +52,7 @@ public class AssigningConfigService {
         {
             throw new ResourceAlreadyUsedException("AssigningConfig is already have this level for this approval type");
         }
-
+        
         assigningConfig=saveAssigningConfig(assigningConfig);
         AuditLogs log= new AuditLogs();
         log.setEntityType(EntityType.ASSIGNING_CONFIG);

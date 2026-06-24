@@ -2,6 +2,7 @@ package com.module.purchase.view.unit;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Unit;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.UnitService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -20,7 +21,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "unit-details", layout = MainLayout.class)
 @PermitAll
-public class UnitDetailsView extends VerticalLayout implements HasUrlParameter<Integer> {
+public class UnitDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final UnitService unitService;
     private final SecurityService securityService;
@@ -36,70 +37,78 @@ public class UnitDetailsView extends VerticalLayout implements HasUrlParameter<I
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Integer unitId) {
+    public void setParameter(BeforeEvent event, String unitId) {
 
         removeAll();
-        try{
-        Unit unit = unitService.getUnitById(unitId).orElse(null);
+        try {
+            Unit unit = unitService.getUnitById(Integer.parseInt(unitId)).orElse(null);
 
-        if (unit == null) {
-            add(new Span("Unit not found"));
-            return;
-        }
+            if (unit == null) {
+                add(new Span("Unit not found"));
+                return;
+            }
 
-        H2 title = new H2("Unit Details");
+            H2 title = new H2("Unit Details");
 
-        FormLayout formLayout = new FormLayout();
+            FormLayout formLayout = new FormLayout();
 
-        formLayout.addFormItem(new Span(String.valueOf(unit.getId())),"Unit ID");
-        formLayout.addFormItem(new Span(unit.getName() == null ? "" : unit.getName()),"Unit Name");
-        formLayout.addFormItem(new Span(unit.getCode() == null ? "" : unit.getCode()),"Unit Code");
+            formLayout.addFormItem(new Span(String.valueOf(unit.getId())), "Unit ID");
+            formLayout.addFormItem(new Span(unit.getName() == null ? "" : unit.getName()), "Unit Name");
+            formLayout.addFormItem(new Span(unit.getCode() == null ? "" : unit.getCode()), "Unit Code");
 
-        Button updateButton = new Button("Update");
+            Button updateButton = new Button("Update");
 
-        updateButton.addClickListener(e -> getUI().ifPresent(ui ->ui.navigate("unit-edit/" + unit.getId())));
+            updateButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("unit-edit/" + unit.getId())));
 
-        Button deleteButton = new Button("Delete");
+            Button deleteButton = new Button("Delete");
 
-        deleteButton.addClickListener(e -> {
+            deleteButton.addClickListener(e -> {
 
-            ConfirmDialog dialog = new ConfirmDialog();
+                ConfirmDialog dialog = new ConfirmDialog();
 
-            dialog.setHeader("Delete Unit");
-            dialog.setText("Are you sure you want to delete this unit?");
+                dialog.setHeader("Delete Unit");
+                dialog.setText("Are you sure you want to delete this unit?");
 
-            dialog.setCancelable(true);
-            dialog.setConfirmText("Delete");
-            dialog.setConfirmButtonTheme("error primary");
+                dialog.setCancelable(true);
+                dialog.setConfirmText("Delete");
+                dialog.setConfirmButtonTheme("error primary");
 
-            dialog.addConfirmListener(confirmEvent -> {
+                dialog.addConfirmListener(confirmEvent -> {
 
-                try {
+                    try {
 
-                    unitService.deleteUnitById( unit.getId(), securityService.getLoggedInUser().getEmployee());
+                        unitService.deleteUnitById(unit.getId(), securityService.getLoggedInUser().getEmployee());
 
-                    Notification.show( "Unit deleted successfully", 3000, Notification.Position.TOP_CENTER);
+                        Notification.show("Unit deleted successfully", 3000, Notification.Position.TOP_CENTER);
 
-                    getUI().ifPresent(ui -> ui.navigate("unit"));
+                        getUI().ifPresent(ui -> ui.navigate("unit"));
 
-                } catch (Exception ex) {
-                    Notification.show(ex.getMessage(),5000, Notification.Position.TOP_CENTER);
-                }
+                    } catch (Exception ex) {
+                        Notification.show(ex.getMessage(), 5000, Notification.Position.TOP_CENTER);
+                    }
+                });
+
+                dialog.open();
             });
 
-            dialog.open();
-        });
+            updateButton.setVisible(securityService.canAccessView("unit-edit"));
 
-        updateButton.setVisible( securityService.canAccessView("unit-edit"));
+            deleteButton.setVisible(securityService.canAccessView("unit-form"));
 
-        deleteButton.setVisible( securityService.canAccessView("unit-form"));
+            HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 
-        HorizontalLayout buttons =new HorizontalLayout(updateButton, deleteButton);
-
-        add(title, formLayout, buttons);
-        }catch (Exception ex) {
-            event.forwardTo("unit");
-            event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);});
+            add(title, formLayout, buttons);
+        } catch (NumberFormatException e) {
+            event.forwardTo(ViewName.UNIT.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
+            });
+            return;
+        } catch (Exception ex) {
+            event.forwardTo(ViewName.UNIT.getRoute());
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);
+            });
             return;
         }
     }

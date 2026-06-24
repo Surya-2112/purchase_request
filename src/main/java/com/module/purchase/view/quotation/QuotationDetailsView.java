@@ -9,6 +9,7 @@ import com.module.purchase.entity.QuotationLine;
 import com.module.purchase.entity.Vendor;
 import com.module.purchase.enums.RequestForQuotationStatus;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.QuotationService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -36,7 +37,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "quotation-details", layout = MainLayout.class)
 @PermitAll
-public class QuotationDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class QuotationDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final QuotationService quotationService;
     private final SecurityService securityService;
@@ -164,14 +165,14 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
     }
 
     @Override
-    public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
+    public void setParameter(BeforeEvent event, @OptionalParameter String id) {
         if (id == null) {
             backToDashboard();
             return;
         }
 
         try {
-            quotationService.getQuotationById(id).ifPresentOrElse(quote -> {
+            quotationService.getQuotationById(Long.parseLong(id)).ifPresentOrElse(quote -> {
                 this.currentQuotation = quote;
 
                 if (isVendorUser && !vendorContext.getVendorId().equals(quote.getVendor().getVendorId())) {
@@ -228,8 +229,15 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
                         Position.MIDDLE);
                 backToDashboard();
             });
+        }catch (NumberFormatException e) {
+                        event.forwardTo(ViewName.QUOTATION_LEDGER.getRoute());
+                        event.getUI().access(() -> {
+                                Notification.show("url is not valid ," + e.getMessage(), 3000,
+                                                Notification.Position.TOP_CENTER);
+                        });
+                        return;
         } catch (Exception ex) {
-            event.forwardTo("quotations");
+           event.forwardTo(ViewName.QUOTATION_LEDGER.getRoute());
             event.getUI().access(() -> {
                 Notification.show(ex.getMessage(), 4000, Position.MIDDLE);
             });

@@ -4,6 +4,7 @@ import java.util.stream.Collectors;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Vendor;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -22,7 +23,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "vendor-details", layout = MainLayout.class)
 @PermitAll
-public class VendorDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class VendorDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
         private final VendorService vendorService;
         private final SecurityService securityService;
@@ -39,26 +40,34 @@ public class VendorDetailsView extends VerticalLayout implements HasUrlParameter
         }
 
         @Override
-        public void setParameter(BeforeEvent event, Long vendorId) {
-
-                removeAll();
+        public void setParameter(BeforeEvent event, String id) {
+                 removeAll();
+                 try {
+                Long vendorId=Long.parseLong(id);
                 if (securityService.getLoggedInUser().getVendor() != null) {
                         if (!securityService.getLoggedInUser().getVendor().getVendorId().equals(vendorId)) {
                                 event.forwardTo("vendor");
                                 event.getUI().access(() -> {
                                         Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
                                 });
-                                return ;
+                                return;
                         }
                 }
-                try {
+               
                         vendor = vendorService.getVendorById(vendorId).get();
+                } catch (NumberFormatException e) {
+                        event.forwardTo(ViewName.VENDOR.getRoute());
+                        event.getUI().access(() -> {
+                                Notification.show("url is not valid ," + e.getMessage(), 3000,
+                                                Notification.Position.TOP_CENTER);
+                        });
+                        return;
                 } catch (Exception ex) {
-                        event.forwardTo("vendor");
+                        event.forwardTo(ViewName.VENDOR.getRoute());
                         event.getUI().access(() -> {
                                 Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
                         });
-                        return ;
+                        return;
                 }
 
                 if (vendor == null) {
@@ -93,7 +102,8 @@ public class VendorDetailsView extends VerticalLayout implements HasUrlParameter
 
                 formLayout.addFormItem(
                                 new Span(vendor.getCategories() == null ? ""
-                                : vendor.getCategories().stream().map(c -> c.getCategoryName()).collect(Collectors.joining(", "))),
+                                                : vendor.getCategories().stream().map(c -> c.getCategoryName())
+                                                                .collect(Collectors.joining(", "))),
                                 "Categories");
 
                 if (vendor.getVendorAddress() != null) {

@@ -73,12 +73,9 @@ public class AssigningConfigView extends VerticalLayout {
 
         addButton.addClickListener(event -> {
 
-            AssigningConfigForm form =
-                    new AssigningConfigForm(
-                            assigningConfigService,
-                            securityService);
-
+           AssigningConfigForm form = new AssigningConfigForm( assigningConfigService, securityService);
             form.open();
+               // getUI().ifPresent(ui -> ui.navigate("assigning-config-form"));
         });
 
         addButton.setVisible(

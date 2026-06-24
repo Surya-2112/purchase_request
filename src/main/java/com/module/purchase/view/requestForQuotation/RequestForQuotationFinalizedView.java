@@ -6,6 +6,7 @@ import java.util.List;
 import com.module.purchase.entity.Quotation;
 import com.module.purchase.entity.RequestForQuotationLine;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.QuotationService; 
 import com.module.purchase.service.RequestForQuotationService;
 import com.module.purchase.view.MainLayout;
@@ -34,7 +35,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "rfq-finalized-view", layout = MainLayout.class)
 @PermitAll
-public class RequestForQuotationFinalizedView extends VerticalLayout implements HasUrlParameter<Long> {
+public class RequestForQuotationFinalizedView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final RequestForQuotationService rfqService;
     private final QuotationService quotationService; 
@@ -144,13 +145,13 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
     }
 
     @Override
-    public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
+    public void setParameter(BeforeEvent event, @OptionalParameter String id) {
         if (id == null) {
             getUI().ifPresent(ui -> ui.navigate("quotation-comparison"));
             return;
         }
         try{
-        rfqService.getRequestForQuotationById(id).ifPresentOrElse(rfq -> {
+        rfqService.getRequestForQuotationById(Long.parseLong(id)).ifPresentOrElse(rfq -> {
             this.rfqIdField.setValue("RFQ-" + rfq.getId());
             this.requestedDate.setValue(rfq.getRequestedDate());
             this.requestEndDate.setValue(rfq.getRequestEndDate());
@@ -178,8 +179,13 @@ public class RequestForQuotationFinalizedView extends VerticalLayout implements 
             Notification.show("Requested profile data missing from database log.", 4000, Position.MIDDLE);
             getUI().ifPresent(ui -> ui.navigate("quotation-comparison"));
         });
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.QUOTATION_COMPARISON_DASHBOARD.getRoute());
+            event.getUI().access(() -> {
+            Notification.show("url is not valid ," + e.getMessage(), 3000,Notification.Position.TOP_CENTER);});
+            return;
         }catch (Exception ex) {
-            event.forwardTo("quotation-comparison");
+            event.forwardTo(ViewName.QUOTATION_COMPARISON_DASHBOARD.getRoute());
             event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Position.MIDDLE);});
             return;
         }

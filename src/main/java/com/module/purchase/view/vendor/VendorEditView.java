@@ -6,6 +6,7 @@ import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Address;
 import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Vendor;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
@@ -27,7 +28,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "vendor-edit", layout = MainLayout.class)
 @PermitAll
-public class VendorEditView extends VerticalLayout implements HasUrlParameter<Long> {
+public class VendorEditView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final VendorService vendorService;
     private final CategoryService categoryService;
@@ -102,23 +103,32 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Long vendorId) {
+    public void setParameter(BeforeEvent event,String id) {
 
         removeAll();
 
-        if (securityService.getLoggedInUser().getVendor() != null) {
-            if (!securityService.getLoggedInUser().getVendor().getVendorId().equals(vendorId)) {
-                event.forwardTo("vendor");
-                event.getUI().access(() -> {
-                    Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
-                });
-                return;
-            }
-        }
         try {
+            Long vendorId = Long.parseLong(id);
+            if (securityService.getLoggedInUser().getVendor() != null) {
+                if (!securityService.getLoggedInUser().getVendor().getVendorId().equals(vendorId)) {
+                    event.forwardTo("vendor");
+                    event.getUI().access(() -> {
+                        Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
+                    });
+                    return;
+                }
+            }
+
             vendor = vendorService.getVendorById(vendorId).get();
+        } catch (NumberFormatException e) {
+            event.forwardTo(ViewName.VENDOR.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000,
+                        Notification.Position.TOP_CENTER);
+            });
+            return;
         } catch (Exception ex) {
-            event.forwardTo("vendor");
+            event.forwardTo(ViewName.VENDOR.getRoute());
             event.getUI().access(() -> {
                 Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
             });
@@ -184,15 +194,16 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
                 }
 
                 if (vendorNameField.isInvalid() || vendorPhoneField.isInvalid() || postalCodeField.isInvalid()
-                    || cityField.isInvalid() || stateField.isInvalid() || countryField.isInvalid()) {
+                        || cityField.isInvalid() || stateField.isInvalid() || countryField.isInvalid()) {
 
                     Notification.show("Please correct validation errors", 3000, Notification.Position.MIDDLE);
                     return;
                 }
 
-               vendor.setVendorName(vendorNameField.getValue().trim());
+                vendor.setVendorName(vendorNameField.getValue().trim());
 
-                vendor.setVendorPhoneNumber(vendorPhoneField.getValue().trim().isEmpty() ? null: vendorPhoneField.getValue().trim());
+                vendor.setVendorPhoneNumber(
+                        vendorPhoneField.getValue().trim().isEmpty() ? null : vendorPhoneField.getValue().trim());
                 vendor.setActive("Active".equals(activeField.getValue()));
                 vendor.setCategories(List.copyOf(categoryField.getValue()));
 
@@ -201,8 +212,6 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<Lo
                 if (updatedAddress == null) {
                     updatedAddress = new Address();
                 }
-
-               
 
                 updatedAddress.setAddressLine(addressLineField.getValue().trim());
 

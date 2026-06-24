@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.enums.RepeatedPeriodReferType;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.RepeatedPeriodService;
 import com.module.purchase.view.MainLayout;
@@ -87,8 +88,9 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        Long recordId = Long.parseLong(event.getRouteParameters().get("id").get());
+      
         try{
+              Long recordId = Long.parseLong(event.getRouteParameters().get("id").get());
         RepeatedPeriod record = repeatedPeriodService.getRepeatedPeriodById(recordId)
                 .orElseThrow(() -> new RuntimeException("Sourcing rule profile was completely removed."));
 
@@ -130,8 +132,15 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
                 Notification.show("Notice: The original target line item row has been purged from active tracking tables.", 4000, Position.MIDDLE);
             }
         }
+        }catch (NumberFormatException e) {
+                event.forwardTo(ViewName.REPEATED_PERIOD.getRoute());
+                event.getUI().access(() -> {
+                    Notification.show("url is not valid ," + e.getMessage(), 3000,
+                            Notification.Position.TOP_CENTER);
+                });
+                return;
         }catch (Exception ex) {
-            event.forwardTo("repeated-periods");
+            event.forwardTo(ViewName.REPEATED_PERIOD.getRoute());
             event.getUI().access(() -> {
                 Notification.show(ex.getMessage(), 4000, Position.MIDDLE);
             });

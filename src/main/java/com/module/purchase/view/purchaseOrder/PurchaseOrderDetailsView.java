@@ -8,6 +8,7 @@ import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
 import com.module.purchase.enums.ApprovalType;
 import com.module.purchase.enums.Status;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.AssigningApprovalsService;
 import com.module.purchase.service.PurchaseOrderHeaderService;
 import com.module.purchase.service.PurchaseOrderLineService;
@@ -34,7 +35,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "purchase-order-details", layout = MainLayout.class)
 @PermitAll
-public class PurchaseOrderDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class PurchaseOrderDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final PurchaseOrderHeaderService poHeaderService;
     private final PurchaseOrderLineService poLineService;
@@ -111,7 +112,7 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements HasUrlPa
     }
 
     @Override
-    public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
+    public void setParameter(BeforeEvent event, @OptionalParameter String id) {
         try{
         if (id == null) {
             Notification.show("Invalid Request Context Key Passed.", 3000, Position.MIDDLE);
@@ -119,7 +120,7 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements HasUrlPa
             return;
         }
 
-        poHeaderService.getPurchaseOrderHeaderById(id).ifPresentOrElse(po -> {
+        poHeaderService.getPurchaseOrderHeaderById(Long.parseLong(id)).ifPresentOrElse(po -> {
             this.poHeader = po;
             bindProfileData();
             loadAssociatedLineDatasets();
@@ -127,9 +128,17 @@ public class PurchaseOrderDetailsView extends VerticalLayout implements HasUrlPa
             Notification.show("Target Purchase Order Document reference file missing.", 4000, Position.MIDDLE);
             getUI().ifPresent(ui -> ui.navigate("purchase-order"));
         });
+        } catch (NumberFormatException e) {
+            event.forwardTo(ViewName.PURCHASE_ORDER.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
+            });
+            return ;
         } catch (Exception ex) {
-            Notification.show( ex.getMessage(), 4000, Position.TOP_CENTER);
-            getUI().ifPresent(ui -> ui.navigate("purchase-order"));
+            event.forwardTo(ViewName.PURCHASE_ORDER.getRoute());
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);});
+            return;
         }
     }
 

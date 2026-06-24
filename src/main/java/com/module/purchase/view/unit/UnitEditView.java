@@ -2,6 +2,7 @@ package com.module.purchase.view.unit;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Unit;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.UnitService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -19,7 +20,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "unit-edit", layout = MainLayout.class)
 @PermitAll
-public class UnitEditView extends VerticalLayout implements HasUrlParameter<Integer> {
+public class UnitEditView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final UnitService unitService;
     private final SecurityService securityService;
@@ -48,11 +49,11 @@ public class UnitEditView extends VerticalLayout implements HasUrlParameter<Inte
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Integer unitId) {
+    public void setParameter(BeforeEvent event, String unitId) {
 
         removeAll();
         try{
-        unit = unitService.getUnitById(unitId).orElse(null);
+        unit = unitService.getUnitById(Integer.parseInt(unitId)).orElse(null);
 
         if (unit == null) {
             add(new H2("Unit Not Found"));
@@ -101,9 +102,17 @@ public class UnitEditView extends VerticalLayout implements HasUrlParameter<Inte
         HorizontalLayout buttons =new HorizontalLayout(saveButton, cancelButton);
         add(title, formLayout, buttons);
 
-        }catch (Exception ex) {
-            event.forwardTo("unit");
-            event.getUI().access(() -> {Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);});
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.UNIT.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
+            });
+            return;
+        } catch (Exception ex) {
+            event.forwardTo(ViewName.UNIT.getRoute());
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 4000, Notification.Position.MIDDLE);
+            });
             return;
         }
     }

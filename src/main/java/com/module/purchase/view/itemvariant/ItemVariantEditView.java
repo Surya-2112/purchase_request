@@ -3,6 +3,7 @@ package com.module.purchase.view.itemvariant;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Item;
 import com.module.purchase.entity.ItemVariant;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.service.ItemVariantService;
 import com.module.purchase.view.MainLayout;
@@ -23,7 +24,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "item-variant-edit", layout = MainLayout.class)
 @PermitAll
-public class ItemVariantEditView extends VerticalLayout implements HasUrlParameter<Long> {
+public class ItemVariantEditView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final ItemVariantService itemVariantService;
     private final SecurityService securityService;
@@ -49,12 +50,12 @@ public class ItemVariantEditView extends VerticalLayout implements HasUrlParamet
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Long variantId) {
+    public void setParameter(BeforeEvent event, String variantId) {
 
         removeAll();
 
         try{
-        itemVariant = itemVariantService.getItemVariantById(variantId).orElse(null);
+        itemVariant = itemVariantService.getItemVariantById(Long.parseLong(variantId)).orElse(null);
 
         if (itemVariant == null) {
 
@@ -113,10 +114,16 @@ public class ItemVariantEditView extends VerticalLayout implements HasUrlParamet
 
         HorizontalLayout buttons =new HorizontalLayout(saveButton,cancelButton);
         add(title, formLayout, buttons);
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.ITEM_VARIANT.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
+            });
+            return ;
         }catch(Exception ex){ 
                 event.forwardTo("item-variant");
                 event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
-                return;
+                return ;
         }
     }
 }

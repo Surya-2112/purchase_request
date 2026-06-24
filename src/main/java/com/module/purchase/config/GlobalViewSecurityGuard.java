@@ -18,8 +18,7 @@ public class GlobalViewSecurityGuard implements BeforeEnterListener {
 
     private final ViewPermissionService viewPermissionService;
 
-    public GlobalViewSecurityGuard( SecurityService securityService, ViewPermissionService viewPermissionService) {
-
+    public GlobalViewSecurityGuard(SecurityService securityService, ViewPermissionService viewPermissionService) {
         this.securityService = securityService;
         this.viewPermissionService = viewPermissionService;
     }
@@ -28,104 +27,71 @@ public class GlobalViewSecurityGuard implements BeforeEnterListener {
     public void beforeEnter(BeforeEnterEvent event) {
 
         try {
+            if (event.getNavigationTarget() == null) {
+                return;
+            }
 
             String viewName = event.getLocation().getFirstSegment();
-
-            System.out.println("Checking View Permission : "+ viewName);
-            
+            System.out.println("Checking View Permission : " + viewName);
 
             if (viewName.isEmpty() || viewName.equals("login")) {
-                return ;
+                return;
             }
 
             Users user = securityService.getLoggedInUser();
 
             List<EmployeeGroup> allowedGroups = viewPermissionService.getGroupsByView(viewName);
 
-            if(user.getVendor()!=null)
-            {
-                if(!allowedGroups.contains(EmployeeGroup.VENDOR))
-                { event.forwardTo("");
-
-                event.getUI().access(() -> {
-
-                    Notification.show(
-                            "Access Denied",
-                            3000,
-                            Notification.Position.MIDDLE);
-                });
+            if (user.getVendor() != null) {
+                if (!allowedGroups.contains(EmployeeGroup.VENDOR)) {
+                    event.forwardTo("");
+                    event.getUI().access(() -> {
+                        Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
+                    });
                 }
                 return;
             }
 
-            if (user == null|| user.getEmployee() == null || user.getEmployee().getRole() == null) {
-
+            if (user == null || user.getEmployee() == null || user.getEmployee().getRole() == null) {
                 event.forwardTo("login");
-
                 return;
             }
-            String roleName = user.getEmployee()
-                    .getRole()
-                    .getRoleName();
-
-            System.out.println( "Role : " + roleName);
+            String roleName = user.getEmployee().getRole().getRoleName();
+            System.out.println("Role : " + roleName);
 
             if ("SUPER_ADMIN".equals(roleName)) {
-
                 return;
             }
 
-            List<EmployeeGroup> userGroups = user.getEmployee()
-                    .getRole()
-                    .getEmployeeGroups();
-
-        
+            List<EmployeeGroup> userGroups = user.getEmployee().getRole().getEmployeeGroups();
 
             if (allowedGroups == null || allowedGroups.isEmpty()) {
 
                 event.forwardTo("");
-
                 event.getUI().access(() -> {
-
-                    Notification.show(
-                            "Access Denied",
-                            3000,
-                            Notification.Position.MIDDLE);
+                    Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
                 });
 
                 return;
             }
 
-            boolean allowed = userGroups.stream()
-                    .anyMatch(allowedGroups::contains);
+            boolean allowed = userGroups.stream().anyMatch(allowedGroups::contains);
 
             if (!allowed) {
 
                 event.forwardTo("");
-
                 event.getUI().access(() -> {
-
-                    Notification.show(
-                            "Access Denied",
-                            3000,
-                            Notification.Position.MIDDLE);
+                    Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
                 });
-
-                return ;
+                return;
             }
 
         } catch (Exception exception) {
-
             exception.printStackTrace();
-
             event.forwardTo("");
 
             event.getUI().access(() -> {
-
-                Notification.show(
-                        "Access Denied",
-                        3000,
-                        Notification.Position.MIDDLE);
+                Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
             });
         }
     }

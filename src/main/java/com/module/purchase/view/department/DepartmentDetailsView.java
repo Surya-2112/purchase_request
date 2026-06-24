@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -22,13 +23,13 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "department-details", layout = MainLayout.class)
 @PermitAll
-public class DepartmentDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class DepartmentDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final DepartmentService departmentService;
 
     private final SecurityService securityService;
 
-    public DepartmentDetailsView(DepartmentService departmentService,SecurityService securityService) {
+    public DepartmentDetailsView(DepartmentService departmentService, SecurityService securityService) {
 
         this.departmentService = departmentService;
         this.securityService = securityService;
@@ -39,81 +40,92 @@ public class DepartmentDetailsView extends VerticalLayout implements HasUrlParam
     }
 
     @Override
-    public void setParameter( BeforeEvent event, Long departmentId) {
+    public void setParameter(BeforeEvent event,String departmentId) {
 
         removeAll();
-        
-        try{
-        Optional<Department> optionalDepartment = departmentService.getDepartmentById(departmentId);
 
-        if (optionalDepartment.isEmpty()) {
+        try {
+            Optional<Department> optionalDepartment = departmentService.getDepartmentById(Long.parseLong(departmentId));
 
-            add(new Span("Department not found"));
+            if (optionalDepartment.isEmpty()) {
+                add(new Span("Department not found"));
+                return;
+            }
 
-            return;
-        }
+            Department department = optionalDepartment.get();
 
-        Department department = optionalDepartment.get();
+            H2 title = new H2("Department Details");
 
-        H2 title = new H2("Department Details");
+            FormLayout formLayout = new FormLayout();
 
-        FormLayout formLayout = new FormLayout();
+            formLayout.addFormItem(new Span(String.valueOf(department.getDepartmentId())), "Department ID");
+            formLayout.addFormItem(new Span(department.getDepartmentName()), "Department Name");
+            formLayout.addFormItem(new Span(department.getDepartmentCode()), "Department Code");
+            formLayout.addFormItem(
+                    new Span(
+                            department.getHeadEmployee() == null ? "" : department.getHeadEmployee().getEmployeeName()),
+                    "Department Head");
+            formLayout.addFormItem(new Span(department.getActive() ? "Active" : "Inactive"), "Status");
 
-        formLayout.addFormItem(new Span(String.valueOf( department.getDepartmentId())),"Department ID");
-        formLayout.addFormItem(new Span( department.getDepartmentName()), "Department Name");
-        formLayout.addFormItem(new Span(department.getDepartmentCode()), "Department Code");
-        formLayout.addFormItem(new Span(department.getHeadEmployee() == null? "" : department.getHeadEmployee().getEmployeeName()),"Department Head");
-        formLayout.addFormItem(new Span( department.getActive() ? "Active": "Inactive"),"Status");
+            Button updateButton = new Button("Update");
 
-        Button updateButton = new Button("Update");
-
-        updateButton.addClickListener(clickEvent -> {
-            getUI().ifPresent(ui ->ui.navigate("department-edit/"+ department.getDepartmentId()));
-        });
-
-        Button deleteButton = new Button("Delete");
-
-        deleteButton.addClickListener(clickEvent -> {
-
-            ConfirmDialog dialog = new ConfirmDialog();
-
-            dialog.setHeader("Delete Department");
-
-            dialog.setText("Are you sure you want to delete this department?");
-
-            dialog.setCancelable(true);
-
-            dialog.setConfirmText("Delete");
-
-            dialog.setConfirmButtonTheme("error primary");
-
-            dialog.addConfirmListener(confirmEvent -> {
-
-                try {
-                    departmentService.deleteDepartmentById(department.getDepartmentId(),securityService.getLoggedInUser().getEmployee());
-                    Notification.show( "Department Deleted Successfully");
-                    getUI().ifPresent(ui ->ui.navigate("department"));
-
-                } catch (Exception exception) {
-                    Notification.show(exception.getMessage(),5000,Notification.Position.TOP_CENTER);
-                }
-
+            updateButton.addClickListener(clickEvent -> {
+                getUI().ifPresent(ui -> ui.navigate("department-edit/" + department.getDepartmentId()));
             });
 
-            dialog.open();
-        });
+            Button deleteButton = new Button("Delete");
 
-        updateButton.setVisible(securityService.canAccessView("department-edit"));
+            deleteButton.addClickListener(clickEvent -> {
 
-        deleteButton.setVisible(securityService.canAccessView("department-form"));
+                ConfirmDialog dialog = new ConfirmDialog();
 
-        HorizontalLayout buttonLayout =new HorizontalLayout( updateButton, deleteButton);
+                dialog.setHeader("Delete Department");
 
-        add(title, formLayout, buttonLayout);
-        }catch(Exception ex)
-        {       event.forwardTo("department");
-                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
-                return;
+                dialog.setText("Are you sure you want to delete this department?");
+
+                dialog.setCancelable(true);
+
+                dialog.setConfirmText("Delete");
+
+                dialog.setConfirmButtonTheme("error primary");
+
+                dialog.addConfirmListener(confirmEvent -> {
+
+                    try {
+                        departmentService.deleteDepartmentById(department.getDepartmentId(),
+                                securityService.getLoggedInUser().getEmployee());
+                        Notification.show("Department Deleted Successfully");
+                        getUI().ifPresent(ui -> ui.navigate("department"));
+
+                    } catch (Exception exception) {
+                        Notification.show(exception.getMessage(), 5000, Notification.Position.TOP_CENTER);
+                    }
+
+                });
+
+                dialog.open();
+            });
+
+            updateButton.setVisible(securityService.canAccessView("department-edit"));
+
+            deleteButton.setVisible(securityService.canAccessView("department-form"));
+
+            HorizontalLayout buttonLayout = new HorizontalLayout(updateButton, deleteButton);
+
+            add(title, formLayout, buttonLayout);
+        } catch (NumberFormatException e) {
+            event.forwardTo(ViewName.DEPARTMENT.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000,
+                        Notification.Position.TOP_CENTER);
+            });
+            return;
+        } catch (Exception ex) {
+            event.forwardTo(ViewName.DEPARTMENT.getRoute());
+            event.getUI().access(() -> {
+                Notification.show(ex.getMessage(), 3000, Notification.Position.TOP_CENTER);
+            });
+            return;
         }
     }
 }

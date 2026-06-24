@@ -2,6 +2,7 @@ package com.module.purchase.view.item;
 
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Item;
+import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
@@ -20,7 +21,7 @@ import jakarta.annotation.security.PermitAll;
 
 @Route(value = "item-details", layout = MainLayout.class)
 @PermitAll
-public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<Long> {
+public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final ItemService itemService;
     private final SecurityService securityService;
@@ -36,11 +37,11 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
     }
 
     @Override
-    public void setParameter(BeforeEvent event, Long itemId) {
+    public void setParameter(BeforeEvent event, String itemId) {
 
         removeAll();
         try{
-        Item item = itemService.getItemById(itemId).orElse(null);
+        Item item = itemService.getItemById(Long.parseLong(itemId)).orElse(null);
 
         if (item == null) {
             add(new Span("Item Not Found"));
@@ -96,10 +97,17 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<L
         HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 
         add(title, formLayout, buttons);
+        }catch (NumberFormatException e) {
+            event.forwardTo(ViewName.ITEM.getRoute());
+            event.getUI().access(() -> {
+                Notification.show("url is not valid ," + e.getMessage(), 3000,
+                        Notification.Position.TOP_CENTER);
+            });
+            return;
         }catch(Exception ex){ 
-                event.forwardTo("item");
-                event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
-                return;
+            event.forwardTo(ViewName.ITEM.getRoute());
+            event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
+            return;
         }
     }
 }
