@@ -87,6 +87,10 @@ public class RequestForQuotationView extends VerticalLayout {
 
         rfqIdField.setPlaceholder("Search ID...");
         rfqIdField.setWidth("150px");
+        rfqIdField.setPattern("[0-9]{0,20}");
+        rfqIdField.setErrorMessage("Enter a valid nuumber");
+
+        requestedDateFilter.setErrorMessage("Enter a valid Date");
 
         Button search = new Button("Search", e -> {
             currentPage = 0;

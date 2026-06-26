@@ -151,8 +151,8 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 }
                 if (!(header.getCreatedBy().getEmployeeId().equals(securityService.getLoggedInUser().getEmployee().getEmployeeId())
                                 || securityService.canAccessView("management-group")
-                                || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups()
-                                                .contains(EmployeeGroup.PURCHASE))) {
+                                || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.PURCHASE)
+                                || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.AUDITOR))) {
                         event.forwardTo("");
                         event.getUI().access(() -> {
                                 Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
@@ -204,8 +204,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                 EmployeeGroup currentUserGroup = securityService.getLoggedInUser().getEmployee().getRole()
                                 .getEmployeeGroups().iterator().next();
 
-                if (header.getStatus() == Status.DRAFT
-                                && (securityService.getLoggedInUser().getEmployee().getEmployeeId()
+                if (header.getStatus() == Status.DRAFT && (securityService.getLoggedInUser().getEmployee().getEmployeeId()
                                                 .equals(header.getCreatedBy().getEmployeeId())
                                                 || currentUserGroup == EmployeeGroup.SUPER_ADMIN
                                                 || currentUserGroup == EmployeeGroup.MANAGER)) {

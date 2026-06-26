@@ -296,7 +296,7 @@ public class QuotationDetailsView extends VerticalLayout implements HasUrlParame
 
     private void backToDashboard() {
         if (isVendorUser) {
-            getUI().ifPresent(ui -> ui.navigate("vendor-sourcing"));
+            getUI().ifPresent(ui -> ui.navigate("quotations"));
         } else {
             getUI().ifPresent(ui -> ui.navigate("quotations"));
         }

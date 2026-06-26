@@ -52,7 +52,7 @@ public class AuditLogView extends VerticalLayout {
 
     private int pageSize = 25;
 
-    private int totalPage=0;
+    private int totalPage=1;
 
     private final Span pageInfo =new Span();
 
@@ -74,23 +74,30 @@ public class AuditLogView extends VerticalLayout {
         H2 title = new H2("Audit Logs Details");
 
         entityTypeFilter.setItems(EntityType.values());
+        entityTypeFilter.setItemLabelGenerator(EntityType::getDisplayName);
 
         actionFilter.setItems(Action.values());
+        actionFilter.setItemLabelGenerator(Action::getDisplayName);
 
         performedByFilter.setItems(employeeService.getEmployees());
         performedByFilter.setItemLabelGenerator(Employee::getEmployeeName);
 
         auditIdFilter.setWidth("80px");
+        auditIdFilter.setPattern("[0-9]{0,20}");
+        auditIdFilter.setErrorMessage("Enter a valid number");
 
         entityTypeFilter.setWidth("200px");
 
         entityIdFilter.setWidth("80px");
+        entityIdFilter.setPattern("[0-9]{0,22}");
+        entityIdFilter.setErrorMessage("Enter a valid number");
 
         actionFilter.setWidth("120px");
 
         performedByFilter.setWidth("180px");
 
         dateFilter.setWidth("150px");
+        dateFilter.setErrorMessage("Enter valid date");
 
         Button searchBtn =new Button("Search");
 
@@ -127,116 +134,52 @@ public class AuditLogView extends VerticalLayout {
         });
 
 
-        HorizontalLayout filterLayout =
-                new HorizontalLayout(
-                        auditIdFilter,
-                        entityTypeFilter,
-                        entityIdFilter,
-                        actionFilter,
-                        performedByFilter,
-                        dateFilter,
-                        searchBtn,
-                        clearBtn);
+        HorizontalLayout filterLayout =new HorizontalLayout(auditIdFilter,entityTypeFilter,entityIdFilter,actionFilter,
+                        performedByFilter, dateFilter, searchBtn, clearBtn);
 
         filterLayout.setWidthFull();
+        filterLayout.setAlignItems( Alignment.END);
 
-        filterLayout.setAlignItems(
-                Alignment.END);
-
-
-        grid.addColumn(AuditLogs::getAuditLogId)
-                .setHeader("Audit ID")
-                .setAutoWidth(true);
-
-        grid.addColumn(log ->
-                log.getEntityType() == null
-                        ? ""
-                        : log.getEntityType().name())
-                .setHeader("Entity Type")
-                .setAutoWidth(true);
-
-        grid.addColumn(AuditLogs::getEntityId)
-                .setHeader("Entity ID")
-                .setAutoWidth(true);
-
-        grid.addColumn(log ->
-                log.getAction() == null
-                        ? ""
-                        : log.getAction().name())
-                .setHeader("Action")
-                .setAutoWidth(true);
-
-        grid.addColumn(log ->
-                log.getPerformedBy() == null
-                        ? ""
-                        : log.getPerformedBy().getEmployeeName())
-                .setHeader("Performed By")
-                .setAutoWidth(true);
-
-        grid.addColumn(AuditLogs::getTimestamp)
-                .setHeader("Timestamp")
-                .setAutoWidth(true);
-
+        grid.addColumn(AuditLogs::getAuditLogId).setHeader("Audit ID").setAutoWidth(true);
+        grid.addColumn(log -> log.getEntityType() == null ? "" : log.getEntityType().name()).setHeader("Entity Type").setAutoWidth(true);
+        grid.addColumn(AuditLogs::getEntityId).setHeader("Entity ID").setAutoWidth(true);
+        grid.addColumn(log -> log.getAction() == null ? "" : log.getAction().name()).setHeader("Action").setAutoWidth(true);
+        grid.addColumn(log ->log.getPerformedBy() == null? "" : log.getPerformedBy().getEmployeeName()).setHeader("Performed By").setAutoWidth(true);
+        grid.addColumn(AuditLogs::getTimestamp).setHeader("Timestamp").setAutoWidth(true);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-
         grid.setSizeFull();
 
-
         Button previousButton =new Button("Previous");
-
         Button nextButton =new Button("Next");
 
         ComboBox<Integer> pageSizeField =new ComboBox<>();
 
-        pageSizeField.setItems(
-                10,
-                25,
-                50,
-                100);
-
+        pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);
-
         pageSizeField.addValueChangeListener(event -> {
-
-            pageSize =event.getValue();
-
+            pageSize = event.getValue();
             currentPage = 0;
-
             updateGrid();
         });
 
         previousButton.addClickListener(event -> {
-
             if (currentPage > 0) {
-
                 currentPage--;
-
                 updateGrid();
             }
         });
 
         nextButton.addClickListener(event -> {
-
-            if (currentPage <= totalPage) {
-
+            if (currentPage < totalPage-1) {
                 currentPage++;
-
                 updateGrid();
             }
         });
 
-        HorizontalLayout paginationLayout =
-                new HorizontalLayout(
-                        previousButton,
-                        pageInfo,
-                        nextButton,
-                        new Span("Page Size"),
-                        pageSizeField);
+        HorizontalLayout paginationLayout =new HorizontalLayout( previousButton, pageInfo,nextButton, new Span("Page Size"), pageSizeField);
 
         paginationLayout.setWidthFull();
-
         paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
-
         paginationLayout.setAlignItems(Alignment.CENTER);
 
         applyFilters();

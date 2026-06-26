@@ -30,29 +30,23 @@ public class AssigningConfigView extends VerticalLayout {
 
     private final Grid<AssigningConfigDTO> assigningConfigGrid = new Grid<>(AssigningConfigDTO.class, false);
 
-    private final TextField idField =
-            new TextField("Config ID");
+    private final TextField idField = new TextField("Config ID");
 
-    private final ComboBox<ApprovalType> approvalTypeField =
-            new ComboBox<>("Approval Type");
+    private final ComboBox<ApprovalType> approvalTypeField =new ComboBox<>("Approval Type");
 
-    private final IntegerField levelField =
-            new IntegerField("Level");
+    private final IntegerField levelField =new IntegerField("Level");
 
-    private final ComboBox<EmployeeGroup> employeeGroupField =
-            new ComboBox<>("Employee Group");
+    private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Employee Group");
 
     private int currentPage = 0;
     private int pageSize = 25;
+    private int totalPage = 1;
 
     private final Span pageInfo = new Span();
 
-    private AssigningConfigDTO currentFilter =
-            new AssigningConfigDTO();
+    private AssigningConfigDTO currentFilter = new AssigningConfigDTO();
 
-    public AssigningConfigView(
-            AssigningConfigService assigningConfigService,
-            SecurityService securityService) {
+    public AssigningConfigView( AssigningConfigService assigningConfigService, SecurityService securityService) {
 
         this.assigningConfigService = assigningConfigService;
 
@@ -60,32 +54,28 @@ public class AssigningConfigView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
+        idField.setPattern("[0-9]{0,20}");
+        idField.setErrorMessage("Enter vaild Id");
+
         approvalTypeField.setItems(ApprovalType.values());
 
         employeeGroupField.setItems(EmployeeGroup.getApprovalGroups());
         employeeGroupField.setItemLabelGenerator(EmployeeGroup::getDisplayName);
 
-        // HEADER
         H2 title = new H2("Assigning Config List");
 
-        Button addButton =
-                new Button("Add Assigning Config");
+        Button addButton =new Button("Add or Update Assigning Config");
 
         addButton.addClickListener(event -> {
 
-           AssigningConfigForm form = new AssigningConfigForm( assigningConfigService, securityService);
-            form.open();
-               // getUI().ifPresent(ui -> ui.navigate("assigning-config-form"));
+                 getUI().ifPresent(ui -> ui.navigate("assigning-config-form"));
         });
 
         addButton.setVisible(
                 securityService.canAccessView(
                         "assigning-config-form"));
 
-        HorizontalLayout headerLayout =
-                new HorizontalLayout(
-                        title,
-                        addButton);
+        HorizontalLayout headerLayout =  new HorizontalLayout( title, addButton);
 
         headerLayout.setWidthFull();
 
@@ -95,34 +85,16 @@ public class AssigningConfigView extends VerticalLayout {
         headerLayout.setAlignItems(
                 Alignment.CENTER);
 
-        // FILTER
-        Button searchButton =
-                new Button(
-                        "Search",
-                        event -> applyFilter());
+        Button searchButton = new Button("Search",  event -> applyFilter());
+        Button clearButton =new Button( "Clear",event -> clearFilter());
 
-        Button clearButton =
-                new Button(
-                        "Clear",
-                        event -> clearFilter());
-
-        HorizontalLayout filterLayout =
-                new HorizontalLayout(
-                        idField,
-                        approvalTypeField,
-                        levelField,
-                        employeeGroupField,
-                        searchButton,
-                        clearButton);
+        HorizontalLayout filterLayout = new HorizontalLayout(idField, approvalTypeField,
+                        levelField,  employeeGroupField, searchButton,clearButton);
 
         filterLayout.setWidthFull();
-        filterLayout.setAlignItems(
-                Alignment.END);
+        filterLayout.setAlignItems( Alignment.END);
 
-        // GRID
-        assigningConfigGrid.addColumn(
-                AssigningConfigDTO::getId)
-                .setHeader("Config ID")
+        assigningConfigGrid.addColumn( AssigningConfigDTO::getId) .setHeader("Config ID")
                 .setAutoWidth(true);
 
         assigningConfigGrid.addColumn(config ->
@@ -144,8 +116,7 @@ public class AssigningConfigView extends VerticalLayout {
                 .setHeader("Employee Group")
                 .setAutoWidth(true);
                 
-        assigningConfigGrid.addThemeVariants(
-                GridVariant.LUMO_ROW_STRIPES);
+        assigningConfigGrid.addThemeVariants( GridVariant.LUMO_ROW_STRIPES);
 
         assigningConfigGrid.setSizeFull();
 
@@ -161,15 +132,9 @@ public class AssigningConfigView extends VerticalLayout {
                                             + config.getId()));
                 });
 
-        // PAGE SIZE
-        ComboBox<Integer> pageSizeField =
-                new ComboBox<>();
+        ComboBox<Integer> pageSizeField = new ComboBox<>();
 
-        pageSizeField.setItems(
-                10,
-                25,
-                50,
-                100);
+        pageSizeField.setItems(10, 25, 50, 100);
 
         pageSizeField.setValue(25);
 
@@ -182,103 +147,58 @@ public class AssigningConfigView extends VerticalLayout {
             loadAssigningConfigs();
         });
 
-        // PAGINATION
         Button previousButton =
-                new Button(
-                        "Previous",
+                new Button("Previous",
                         event -> {
 
                             if (currentPage > 0) {
-
                                 currentPage--;
-
                                 loadAssigningConfigs();
                             }
                         });
 
-        Button nextButton =
-                new Button(
-                        "Next",
+        Button nextButton = new Button("Next",
                         event -> {
-
+                           if(currentPage< totalPage-1){
                             currentPage++;
-
                             loadAssigningConfigs();
+                           }
                         });
 
-        HorizontalLayout paginationLayout =
-                new HorizontalLayout(
-                        previousButton,
-                        pageInfo,
-                        nextButton,
-                        new Span("Page Size"),
-                        pageSizeField);
+        HorizontalLayout paginationLayout = new HorizontalLayout( previousButton,  pageInfo, nextButton,  new Span("Page Size"), pageSizeField);
 
         paginationLayout.setWidthFull();
 
-        paginationLayout.setJustifyContentMode(
-                JustifyContentMode.CENTER);
+        paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
 
-        paginationLayout.setAlignItems(
-                Alignment.CENTER);
+        paginationLayout.setAlignItems(Alignment.CENTER);
 
-        // LOAD DATA
         loadAssigningConfigs();
-
-        add(
-                headerLayout,
-                filterLayout,
-                assigningConfigGrid,
-                paginationLayout);
-
+        add(headerLayout, filterLayout, assigningConfigGrid, paginationLayout);
         expand(assigningConfigGrid);
     }
 
     private void loadAssigningConfigs() {
-
-        Page<AssigningConfigDTO> page =
-                assigningConfigService
-                        .getAllAssigningConfigs(
-                                currentFilter,
-                                currentPage,
-                                pageSize);
-
-        assigningConfigGrid.setItems(
-                page.getContent());
-
-        pageInfo.setText(
-                "Page "
-                        + (currentPage + 1)
-                        + " of "
-                        + page.getTotalPages());
+        Page<AssigningConfigDTO> page = assigningConfigService.getAllAssigningConfigs( currentFilter, currentPage, pageSize);
+        assigningConfigGrid.setItems(page.getContent());
+        pageInfo.setText("Page "+ (currentPage + 1) + " of " + page.getTotalPages());
+        totalPage=page.getTotalPages();
     }
 
     private void applyFilter() {
 
         Long id = null;
-
         if (!idField.getValue().isBlank()) {
-
-            id = Long.valueOf(
-                    idField.getValue().trim());
+            id = Long.valueOf(idField.getValue().trim());
         }
 
-        currentFilter =
-                new AssigningConfigDTO();
-
+        currentFilter = new AssigningConfigDTO();
         currentFilter.setId(id);
-
-        currentFilter.setApprovalType(
-                approvalTypeField.getValue());
-
-        currentFilter.setLevel(
-                levelField.getValue());
-
-        currentFilter.setEmployeeGroup(
-                employeeGroupField.getValue());
+        currentFilter.setApprovalType(approvalTypeField.getValue());
+        currentFilter.setLevel(levelField.getValue());
+        currentFilter.setEmployeeGroup( employeeGroupField.getValue());
 
         currentPage = 0;
-
         loadAssigningConfigs();
     }
 
@@ -289,11 +209,8 @@ public class AssigningConfigView extends VerticalLayout {
         levelField.clear();
         employeeGroupField.clear();
 
-        currentFilter =
-                new AssigningConfigDTO();
-
+        currentFilter =new AssigningConfigDTO();
         currentPage = 0;
-
         loadAssigningConfigs();
     }
 }

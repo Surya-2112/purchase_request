@@ -34,7 +34,7 @@ public class RoleForm extends Dialog {
         setWidth("700px");
 
         roleNameField.setRequiredIndicatorVisible(true);
-        roleNameField.setPattern("[a-zA-Z]{2-50}");
+        roleNameField.setPattern("[a-zA-Z]{2,50}");
         roleNameField.setErrorMessage("Enter a valid role name");
         roleNameField.setMaxLength(50);
 

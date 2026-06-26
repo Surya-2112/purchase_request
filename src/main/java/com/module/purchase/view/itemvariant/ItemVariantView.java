@@ -39,12 +39,11 @@ public class ItemVariantView extends VerticalLayout {
 
     private int currentPage = 0;
     private int pageSize = 25;
+    private int totalPage=1;
 
     private final Span pageInfo = new Span();
-
     private ItemVariant currentFilter = new ItemVariant();
     
-   
     public ItemVariantView(
             ItemVariantService itemVariantService,
             ItemService itemService,
@@ -77,6 +76,9 @@ public class ItemVariantView extends VerticalLayout {
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
+        variantIdField.setPattern("[0-9]{0,20}");
+        variantIdField.setErrorMessage("Enter a valid numbers");
+
         itemField.setItems(itemService.getItems());
         itemField.setItemLabelGenerator(Item::getItemName);
         itemField.setClearButtonVisible(true);
@@ -103,7 +105,6 @@ public class ItemVariantView extends VerticalLayout {
         filterLayout.setAlignItems(Alignment.END);
         filterLayout.setWidthFull();
 
-        // GRID
         itemVariantGrid.addColumn(ItemVariant::getId)
                 .setHeader("ID")
                 .setAutoWidth(true);
@@ -130,8 +131,7 @@ public class ItemVariantView extends VerticalLayout {
                 .setHeader("Active")
                 .setAutoWidth(true);
 
-        itemVariantGrid.addThemeVariants(
-                GridVariant.LUMO_ROW_STRIPES);
+        itemVariantGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         itemVariantGrid.setSizeFull();
 
@@ -139,9 +139,7 @@ public class ItemVariantView extends VerticalLayout {
 
             ItemVariant variant = event.getItem();
 
-            getUI().ifPresent(ui ->
-                    ui.navigate(
-                            "item-variant-details/"
+            getUI().ifPresent(ui -> ui.navigate("item-variant-details/"
                                     + variant.getId()));
         });
 
@@ -151,10 +149,8 @@ public class ItemVariantView extends VerticalLayout {
         pageSizeField.setValue(25);
 
         pageSizeField.addValueChangeListener(e -> {
-
             pageSize = e.getValue();
             currentPage = 0;
-
             loadVariants();
         });
 
@@ -162,19 +158,17 @@ public class ItemVariantView extends VerticalLayout {
                 new Button("Previous", e -> {
 
                     if (currentPage > 0) {
-
                         currentPage--;
-
                         loadVariants();
                     }
                 });
 
         Button nextButton =
                 new Button("Next", e -> {
-
+                  if(currentPage<totalPage-1){
                     currentPage++;
-
                     loadVariants();
+                  }
                 });
 
         HorizontalLayout paginationLayout =
@@ -208,12 +202,8 @@ public class ItemVariantView extends VerticalLayout {
                         pageSize);
 
         itemVariantGrid.setItems(page.getContent());
-
-        pageInfo.setText(
-                "Page "
-                        + (currentPage + 1)
-                        + " of "
-                        + page.getTotalPages());
+        totalPage=page.getTotalPages();
+        pageInfo.setText("Page "+ (currentPage + 1)+ " of "+ page.getTotalPages());
     }
 
     private void applyFilter() {

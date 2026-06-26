@@ -34,6 +34,7 @@ public class DepartmentView extends VerticalLayout {
     private final ComboBox<String> activeField = new ComboBox<>("Active");
     private int currentPage = 0;
     private int pageSize = 25;
+    private int totalPage = 1;
 
     Span pageInfo = new Span();
 
@@ -41,11 +42,13 @@ public class DepartmentView extends VerticalLayout {
 
     public DepartmentView(DepartmentService departmentService, EmployeeService employeeService,SecurityService securityService) {
         this.departmentService = departmentService;
-       // this.employeeService = employeeService;
 
         setSizeFull();
         setPadding(true);
         setSpacing(true);
+
+        departmentIdField.setErrorMessage("Enter a valid number");
+        departmentIdField.setPattern("[0-9]{0,9}");
 
         activeField.setItems("Yes", "No");
 
@@ -71,18 +74,17 @@ public class DepartmentView extends VerticalLayout {
         previousButton.addClickListener(event -> {
 
             if (currentPage > 0) {
-
                 currentPage--;
-
                 loadDepartments();
             }
         });
 
         nextButton.addClickListener(event -> {
-
+            
+        if(currentPage<totalPage-1){
             currentPage++;
-
             loadDepartments();
+        }
         });
 
         HorizontalLayout paginationLayout = new HorizontalLayout(
@@ -93,11 +95,9 @@ public class DepartmentView extends VerticalLayout {
                 pageSizeField);
         paginationLayout.setWidthFull();
 
-        paginationLayout.setJustifyContentMode(
-                JustifyContentMode.CENTER);
+        paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
 
-        paginationLayout.setAlignItems(
-                Alignment.CENTER);
+        paginationLayout.setAlignItems(Alignment.CENTER);
 
         HorizontalLayout headerLayout = new HorizontalLayout();
 
@@ -129,8 +129,7 @@ public class DepartmentView extends VerticalLayout {
                 "Clear",
                 event -> clearFilter());
 
-        filterLayout.setAlignItems(
-                Alignment.END);
+        filterLayout.setAlignItems(Alignment.END);
 
         filterLayout.add(
                 departmentIdField,
@@ -142,56 +141,27 @@ public class DepartmentView extends VerticalLayout {
 
         filterLayout.setWidthFull();
 
-        // GRID COLUMNS
-        departmentGrid.addColumn(DepartmentDTO::getDepartmentId)
-                .setHeader("Department ID")
-                .setAutoWidth(true);
+        departmentGrid.addColumn(DepartmentDTO::getDepartmentId).setHeader("Department ID").setAutoWidth(true);
 
-        // DEPARTMENT NAME
         departmentGrid.addColumn(department -> {
+            return department.getDepartmentName() == null? "" : department.getDepartmentName();
+        }).setHeader("Department Name").setAutoWidth(true);
 
-            return department.getDepartmentName() == null
-                    ? ""
-                    : department.getDepartmentName();
-
-        })
-                .setHeader("Department Name")
-                .setAutoWidth(true);
-
-        // DEPARTMENT CODE
         departmentGrid.addColumn(department -> {
+            return department.getDepartmentCode() == null  ? "": department.getDepartmentCode();
+        }).setHeader("Department Code").setAutoWidth(true);
 
-            return department.getDepartmentCode() == null
-                    ? ""
-                    : department.getDepartmentCode();
-
-        })
-                .setHeader("Department Code")
-                .setAutoWidth(true);
-
-        // ACTIVE
         departmentGrid.addColumn(department -> {
+            return Boolean.TRUE.equals( department.getActive()) ? "Yes": "No";
+        }).setHeader("Active").setAutoWidth(true);
 
-            return Boolean.TRUE.equals(
-                    department.getActive())
-                            ? "Yes"
-                            : "No";
-
-        })
-                .setHeader("Active")
-                .setAutoWidth(true);
-
-        departmentGrid.addThemeVariants(
-                GridVariant.LUMO_ROW_STRIPES);
+        departmentGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         departmentGrid.setSizeFull();
 
         departmentGrid.addItemDoubleClickListener(event -> {
-
                 DepartmentDTO department = event.getItem();
-                getUI().ifPresent(ui -> ui.navigate(
-                        "department-details/"
-                                + department.getDepartmentId()));
+                getUI().ifPresent(ui -> ui.navigate( "department-details/"+ department.getDepartmentId()));
         });
 
         loadDepartments();
@@ -205,11 +175,9 @@ public class DepartmentView extends VerticalLayout {
     private void loadDepartments() {
         Page<DepartmentDTO> departmentPage = departmentService.getAllDepartments(currentFilter, currentPage, pageSize);
 
-        departmentGrid.setItems(
-                departmentPage.getContent());
-
-        pageInfo.setText("Page " + (currentPage + 1)
-                + " of " + departmentPage.getTotalPages());
+        departmentGrid.setItems(departmentPage.getContent());
+        totalPage=departmentPage.getTotalPages ();
+        pageInfo.setText("Page " + (currentPage + 1)+ " of " + departmentPage.getTotalPages());
     }
 
     private void applyFilter() {

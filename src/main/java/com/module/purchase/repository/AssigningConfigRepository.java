@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import com.module.purchase.entity.AssigningApprovals;
 import com.module.purchase.entity.AssigningConfig;
 import com.module.purchase.enums.ApprovalType;
 
@@ -18,5 +19,7 @@ public interface AssigningConfigRepository
         Optional<AssigningConfig> findByApprovalTypeAndLevel(ApprovalType approvalType,Integer level);
 
         List<AssigningConfig> findByApprovalTypeOrderByLevelAsc(ApprovalType approvalType);
+
+        List<AssigningConfig> findByApprovalType(ApprovalType approvalType);
 
 }

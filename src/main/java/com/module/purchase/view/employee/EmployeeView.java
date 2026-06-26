@@ -45,6 +45,7 @@ public class EmployeeView extends VerticalLayout {
         private final ComboBox<String> activeField = new ComboBox<>("Active");
         private int currentPage = 0;
         private int pageSize = 25;
+        private int totalPage = 1;
 
         private final Span pageInfo = new Span();
         private final HorizontalLayout paginationLayout = new HorizontalLayout();
@@ -61,6 +62,8 @@ public class EmployeeView extends VerticalLayout {
                 setSpacing(true);
 
                 employeeIdField.setWidth("100px");
+                employeeIdField.setPattern("[0-9]{0,20}");
+                employeeIdField.setErrorMessage("Enter a valid number");
 
                 departmentField.setItems(departmentService.getDepartments());
 
@@ -93,8 +96,10 @@ public class EmployeeView extends VerticalLayout {
                 });
 
                 nextButton.addClickListener(event -> {
+                        if(currentPage<totalPage-1) {
                         currentPage++;
                         loadEmployees();
+                        }
                 });
 
                 paginationLayout.add(previousButton, pageInfo, nextButton, new Span("Page Size"), pageSizeField);
@@ -205,6 +210,7 @@ public class EmployeeView extends VerticalLayout {
                         employeeGrid.setItems(employeePage.getContent());
                         pageInfo.setText("Page " + (currentPage + 1) + " of " + employeePage.getTotalPages());
                         paginationLayout.setVisible(true);
+                        totalPage=employeePage.getTotalPages();
                 } else {
                         Users user = securityService.getLoggedInUser();
                         if (user != null && user.getEmployee() != null) {
@@ -216,6 +222,7 @@ public class EmployeeView extends VerticalLayout {
                                 }
                         }
                         pageInfo.setText("Page 1 of 1");
+                        totalPage=1;
                         paginationLayout.setVisible(false);
                 }
         }

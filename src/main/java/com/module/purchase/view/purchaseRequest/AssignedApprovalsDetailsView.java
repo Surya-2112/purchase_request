@@ -248,10 +248,10 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
 
                         if (!isBudgetConfigured) {
                                 approveBtn.setEnabled(false);
-                                comments.setPlaceholder(
-                                                "CRITICAL: Approval blocked because the department budget ledger is not configured.");
+                                comments.setPlaceholder("CRITICAL: Approval blocked because the department budget ledger is not configured.");
                         } else {
                                 approveBtn.setEnabled(true);
+                                comments.setPlaceholder("Enter any comments");
                         }
                 } else {
                         approveBtn.setVisible(false);

@@ -60,68 +60,21 @@ public class AssigningConfigDetailsView extends VerticalLayout implements HasUrl
             formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
             formLayout.addFormItem(new Span(String.valueOf(assigningConfig.getId())), "Config ID");
-            formLayout.addFormItem(
-                    new Span(assigningConfig.getApprovalType() == null ? "" : assigningConfig.getApprovalType().name()),
+            formLayout.addFormItem(new Span(assigningConfig.getApprovalType() == null ? "" : assigningConfig.getApprovalType().name()),
                     "Approval Type");
-            formLayout.addFormItem(
-                    new Span(assigningConfig.getLevel() == null ? "" : assigningConfig.getLevel().toString()), "Level");
-            formLayout.addFormItem(new Span(
-                    assigningConfig.getEmployeeGroup() == null ? "" : assigningConfig.getEmployeeGroup().name()),
+            formLayout.addFormItem( new Span(assigningConfig.getLevel() == null ? "" : assigningConfig.getLevel().toString()), "Level");
+            formLayout.addFormItem(new Span( assigningConfig.getEmployeeGroup() == null ? "" : assigningConfig.getEmployeeGroup().name()),
                     "Employee Group");
-            formLayout.addFormItem(
-                    new Span(assigningConfig.getMinAmount() == null ? "" : assigningConfig.getMinAmount().toString()),
+            formLayout.addFormItem(new Span(assigningConfig.getMinAmount() == null ? "" : assigningConfig.getMinAmount().toString()),
                     "Min Amount");
-            formLayout.addFormItem(
-                    new Span(assigningConfig.getMaxAmount() == null ? "" : assigningConfig.getMaxAmount().toString()),
+            formLayout.addFormItem(new Span(assigningConfig.getMaxAmount() == null ? "" : assigningConfig.getMaxAmount().toString()),
                     "Max Amount");
-            formLayout
-                    .addFormItem(
+            formLayout.addFormItem(
                             new Span(assigningConfig.getMarginDifferencePercentage() == null ? ""
                                     : (assigningConfig.getMarginDifferencePercentage().toString()) + "%"),
                             "Margin Difference");
 
-            Button updateButton = new Button("Update");
-
-            updateButton.addClickListener(clickEvent -> getUI().ifPresent(
-                    ui -> ui.navigate(ViewName.ASSIGNING_CONFIG_EDIT.getRoute() + "/" + assigningConfig.getId())));
-
-            Button deleteButton = new Button("Delete");
-
-            deleteButton.addClickListener(clickEvent -> {
-
-                ConfirmDialog dialog = new ConfirmDialog();
-
-                dialog.setHeader("Delete Assigning Config");
-                dialog.setText("Are you sure you want to delete this assigning config?");
-                dialog.setCancelable(true);
-                dialog.setConfirmText("Delete");
-                dialog.setConfirmButtonTheme("error primary");
-                dialog.addConfirmListener(confirmEvent -> {
-
-                    try {
-                        assigningConfigService.deleteAssigningConfigById(assigningConfig.getId(),
-                                securityService.getLoggedInUser().getEmployee());
-
-                        Notification.show("Assigning Config Deleted Successfully", 3000,
-                                Notification.Position.TOP_CENTER);
-
-                        getUI().ifPresent(ui -> ui.navigate(ViewName.ASSIGNING_CONFIG.getRoute()));
-
-                    } catch (Exception exception) {
-                        Notification.show(exception.getMessage(), 5000, Notification.Position.TOP_CENTER);
-                    }
-                });
-
-                dialog.open();
-            });
-
-            updateButton.setVisible(securityService.canAccessView("assigning-config-edit"));
-
-            deleteButton.setVisible(securityService.canAccessView("assigning-config-form"));
-
-            HorizontalLayout buttonLayout = new HorizontalLayout(updateButton, deleteButton);
-
-            add(title, formLayout, buttonLayout);
+            add(title, formLayout);
 
         } catch (NumberFormatException e) {
             event.forwardTo( ViewName.ASSIGNING_CONFIG.getRoute());

@@ -80,6 +80,12 @@ public class QuotationView extends VerticalLayout {
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
         headerLayout.setAlignItems(Alignment.CENTER);
 
+        quoteIdField.setPattern("[0-9]{0,20}");
+        quoteIdField.setErrorMessage("Enter a valid nuumber");
+
+        rfqIdField.setPattern("[0-9]{0,20}");
+        rfqIdField.setErrorMessage("Enter a valid nuumber");
+
         statusField.setItems(Status.DRAFT,Status.APPROVED, Status.WAITING_APPROVAL, Status.REJECTED, Status.CANCELLED);
         statusField.setItemLabelGenerator(Status::getDisplayName);
 

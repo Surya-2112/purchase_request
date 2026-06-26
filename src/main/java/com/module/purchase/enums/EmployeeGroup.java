@@ -28,7 +28,6 @@ public enum EmployeeGroup {
         return displayName;
     }
 
-    // Returns only the groups allowed to approve documents
     public static List<EmployeeGroup> getApprovalGroups() {
         return Arrays.asList(
             SUPER_ADMIN,

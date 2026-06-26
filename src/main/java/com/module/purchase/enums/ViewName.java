@@ -6,7 +6,6 @@ public enum ViewName {
 
     ASSIGNING_CONFIG("assigning-config"),
     ASSIGNING_CONFIG_DETAILS("assigning-config-details"),
-    ASSIGNING_CONFIG_EDIT("assigning-config-edit"),
     ASSIGNING_CONFIG_FORM("assigning-config-form"),
 
     CATEGORY("category"),

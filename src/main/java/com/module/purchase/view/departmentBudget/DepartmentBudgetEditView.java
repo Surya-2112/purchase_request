@@ -40,6 +40,12 @@ public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlPa
 
         private final ComboBox<Year> yearField = new ComboBox<>("Year");
 
+        private final NumberField budgetAdjust = new NumberField("Budget Adjustment"); 
+
+        private final Button addButton = new  Button("Upward Adjustments");
+
+        private final Button reduceButton = new Button("Downward Adjustments");
+
         private DepartmentBudget departmentBudget;
 
         public DepartmentBudgetEditView(SecurityService securityService, DepartmentBudgetService departmentBudgetService,  DepartmentService departmentService) {
@@ -55,9 +61,15 @@ public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlPa
 
                 departmentField.setItems(departments);
 
+                budgetAdjust.setValue(0.0);
+
                 departmentField.setItemLabelGenerator( Department::getDepartmentName);
 
                 departmentField.setReadOnly(true);
+
+                totalBudgetAmountField.setReadOnly(true);
+
+                remainingBudgetAmountField.setReadOnly(true);
 
                 List<Year> years = new ArrayList<>();
                 for (int year = 2000; year <= 2100; year++) {
@@ -73,7 +85,7 @@ public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlPa
 
                 removeAll();
                 try{
-                departmentBudget = departmentBudgetService.getDepartmentBudgetById(Long.parseLong(departmentBudgetId)).orElse(null);
+                departmentBudget = departmentBudgetService.getDepartmentBudgetById(Long.valueOf(departmentBudgetId)).orElse(null);
 
                 if (departmentBudget == null) {
                         add(new H2("Department Budget Not Found"));
@@ -92,7 +104,10 @@ public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlPa
 
                 FormLayout formLayout = new FormLayout();
 
-                formLayout.add(departmentField, totalBudgetAmountField, remainingBudgetAmountField, yearField);
+                addButton.addClickListener(clickEvent -> addAmount());
+                reduceButton.addClickListener(clickEvent-> reduceAmount());
+
+                formLayout.add(departmentField, totalBudgetAmountField, remainingBudgetAmountField, yearField, budgetAdjust,new HorizontalLayout(addButton,reduceButton));
 
                 formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
@@ -155,5 +170,17 @@ public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlPa
                 event.getUI().access(() -> {Notification.show(ex.getMessage(),3000,Notification.Position.TOP_CENTER);});
                 return;
         }
+}
+        public void addAmount()
+        {
+                totalBudgetAmountField.setValue(totalBudgetAmountField.getValue()+(budgetAdjust.getValue()==null?0:budgetAdjust.getValue()));
+                remainingBudgetAmountField.setValue(remainingBudgetAmountField.getValue()+(budgetAdjust.getValue()==null?0:budgetAdjust.getValue()));
         }
+
+        public void reduceAmount()
+        {
+                totalBudgetAmountField.setValue(totalBudgetAmountField.getValue()-(budgetAdjust.getValue()==null?0:budgetAdjust.getValue()));
+                remainingBudgetAmountField.setValue(remainingBudgetAmountField.getValue()-(budgetAdjust.getValue()==null?0:budgetAdjust.getValue()));
+        }
+
 }

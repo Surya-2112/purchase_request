@@ -41,8 +41,7 @@ public class RepeatedPeriodView extends VerticalLayout {
     private final ComboBox<FrequencyType> frequencyTypeFilter = new ComboBox<>("Frequency Basis");
     private final DatePicker nextDateFilter = new DatePicker("Next Run Date");
 
-    public RepeatedPeriodView(RepeatedPeriodService repeatedPeriodService,
-                              PurchaseRequestLineService lineService) {
+    public RepeatedPeriodView(RepeatedPeriodService repeatedPeriodService, PurchaseRequestLineService lineService) {
         this.repeatedPeriodService = repeatedPeriodService;
         this.lineService = lineService;
 
@@ -64,6 +63,8 @@ public class RepeatedPeriodView extends VerticalLayout {
         frequencyTypeFilter.setItems(FrequencyType.values());
         frequencyTypeFilter.setWidth("200px");
         frequencyTypeFilter.setClearButtonVisible(true);
+
+        nextDateFilter.setErrorMessage("Enter a valid date");
 
         Button searchBtn = new Button("Apply Filters", e -> {
             currentPage = 0;
@@ -102,14 +103,12 @@ public class RepeatedPeriodView extends VerticalLayout {
                 .setHeader("Recurrence Pattern").setAutoWidth(true);
 
         grid.addColumn(p -> p.getFromDate() != null ? p.getFromDate().toString() : "-").setHeader("Start Date").setWidth("130px");
-        grid.addColumn(p -> p.getToDate() != null ? p.getToDate().toString() : "Indefinite").setHeader("End Date").setWidth("130px");
         grid.addColumn(p -> p.getNextDate() != null ? p.getNextDate().toString() : "Pending...").setHeader("Next Run Target").setWidth("150px");
 
         grid.setWidthFull();
         grid.setHeightFull();
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
-        // ROUTE TRIGGER: Double click navigates smoothly to the granular details profile screen
         grid.addItemDoubleClickListener(event -> {
             RepeatedPeriod selected = event.getItem();
             getUI().ifPresent(ui -> ui.navigate("repeated-period-details/" + selected.getId()));

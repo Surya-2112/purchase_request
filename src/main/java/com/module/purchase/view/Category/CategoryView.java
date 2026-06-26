@@ -48,6 +48,8 @@ public class CategoryView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
+        categoryIdField.setPattern("[0-9]{0,20}");
+        categoryIdField.setErrorMessage("Enter a valid Numbers");
         repeatableField.setItems("Yes", "No");
         repeatableField.setClearButtonVisible(true);
         repeatableField.setWidth("140px");

@@ -76,6 +76,7 @@ public class ItemView extends VerticalLayout {
     private final Span pageInfo = new Span();
     private int currentPage = 0;
     private int pageSize = 25;
+    private int totalPage=1;
     private Item currentFilter = new Item();
 
     private final Grid<Needs> adHocNeedsGrid = new Grid<>(Needs.class, false);
@@ -134,6 +135,7 @@ public class ItemView extends VerticalLayout {
         catalogTabContent.setPadding(false);
 
         H2 title = new H2("Item List");
+       
         Button addButton = new Button("Add Item");
         addButton.addClickListener(e -> {
             ItemForm form = new ItemForm(itemService, itemVariantService, categoryService, unitService, securityService);
@@ -146,6 +148,8 @@ public class ItemView extends VerticalLayout {
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
         itemIdField.setWidth("75px");
+        itemIdField.setPattern("[0-9]{0,20}");
+        itemIdField.setErrorMessage("Enter a valid number");
 
         categoryField.setItems(categoryService.getCategories());
         categoryField.setItemLabelGenerator(Category::getCategoryName);

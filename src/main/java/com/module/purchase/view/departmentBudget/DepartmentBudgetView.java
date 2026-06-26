@@ -33,8 +33,6 @@ public class DepartmentBudgetView extends VerticalLayout {
 
         private final DepartmentService departmentService;
 
-      //  private final SecurityService securityService;
-
         private final Grid<DepartmentBudgetDTO> departmentBudgetGrid = new Grid<>(DepartmentBudgetDTO.class, false);
 
         private final TextField departmentBudgetIdField = new TextField("Department Budget ID");
@@ -43,10 +41,9 @@ public class DepartmentBudgetView extends VerticalLayout {
 
         private final ComboBox<Year> yearField = new ComboBox<>("Year");
 
-        // PAGINATION
         private int currentPage = 0;
-
         private int pageSize = 25;
+        private int totalPage = 1 ;
 
         private final Span pageInfo = new Span();
 
@@ -60,35 +57,28 @@ public class DepartmentBudgetView extends VerticalLayout {
 
                 this.departmentService = departmentServices;
 
-             //   this.securityService=securityService;
-
                 setSizeFull();
 
                 setPadding(true);
 
                 setSpacing(true);
 
-                // LOAD DEPARTMENTS
-                departmentField.setItems(
-                                departmentService.getDepartments());
+                departmentBudgetIdField.setPattern("[0-9]{0,20}");
+                departmentBudgetIdField.setErrorMessage("Enter a valid number");
 
-                departmentField.setItemLabelGenerator(
-                                department -> department.getDepartmentName());
+                departmentField.setItems(departmentService.getDepartments());
+                departmentField.setItemLabelGenerator(department -> department.getDepartmentName());
 
-                // LOAD YEARS
                 List<Year> years = new ArrayList<>();
 
                 for (int year = 2000; year <= 2100; year++) {
-
                         years.add(Year.of(year));
                 }
 
                 yearField.setItems(years);
 
-                yearField.setItemLabelGenerator(
-                                year -> String.valueOf(year.getValue()));
+                yearField.setItemLabelGenerator( year -> String.valueOf(year.getValue()));
 
-                // HEADER
                 HorizontalLayout headerLayout = new HorizontalLayout();
 
                 H2 title = new H2("Department Budget List");
@@ -97,8 +87,7 @@ public class DepartmentBudgetView extends VerticalLayout {
 
                 addButton.addClickListener(event -> {
 
-                        DepartmentBudgetForm form = new DepartmentBudgetForm(
-                                        departmentBudgetService,
+                        DepartmentBudgetForm form = new DepartmentBudgetForm(departmentBudgetService,
                                         departmentService, securityService);
 
                         form.open();
@@ -110,36 +99,26 @@ public class DepartmentBudgetView extends VerticalLayout {
 
                 headerLayout.setWidthFull();
 
-                headerLayout.setJustifyContentMode(
-                                JustifyContentMode.BETWEEN);
+                headerLayout.setJustifyContentMode( JustifyContentMode.BETWEEN);
 
-                headerLayout.setAlignItems(
-                                Alignment.CENTER);
+                headerLayout.setAlignItems( Alignment.CENTER);
 
-                // FILTER
                 HorizontalLayout filterLayout = new HorizontalLayout();
 
-                Button searchButton = new Button(
-                                "Search",
-                                event -> applyFilter());
+                Button searchButton = new Button( "Search",  event -> applyFilter());
 
-                Button clearButton = new Button(
-                                "Clear",
-                                event -> clearFilter());
+                Button clearButton = new Button("Clear", event -> clearFilter());
 
-                filterLayout.add(
-                                departmentBudgetIdField,
+                filterLayout.add( departmentBudgetIdField,
                                 departmentField,
                                 yearField,
                                 searchButton,
                                 clearButton);
 
-                filterLayout.setAlignItems(
-                                Alignment.END);
+                filterLayout.setAlignItems(Alignment.END);
 
                 filterLayout.setWidthFull();
 
-                // GRID
                 departmentBudgetGrid.addColumn(DepartmentBudgetDTO :: getDepartmentBudgetId )
                                 .setHeader("Budget ID")
                                 .setAutoWidth(true);
@@ -156,17 +135,12 @@ public class DepartmentBudgetView extends VerticalLayout {
                 departmentBudgetGrid.addColumn(
                                 departmentBudget ->
 
-                                departmentBudget.getYear() == null
-                                                ? ""
-                                                : departmentBudget
-                                                                .getYear()
-                                                                .toString())
+                                departmentBudget.getYear() == null? "": departmentBudget.getYear().toString())
 
                                 .setHeader("Year")
                                 .setAutoWidth(true);
 
-                departmentBudgetGrid.addThemeVariants(
-                                GridVariant.LUMO_ROW_STRIPES);
+                departmentBudgetGrid.addThemeVariants( GridVariant.LUMO_ROW_STRIPES);
 
                 departmentBudgetGrid.setSizeFull();
 
@@ -179,7 +153,6 @@ public class DepartmentBudgetView extends VerticalLayout {
 
                 });
 
-                // PAGINATION
                 Button previousButton = new Button("Previous");
 
                 Button nextButton = new Button("Next");
@@ -205,9 +178,10 @@ public class DepartmentBudgetView extends VerticalLayout {
 
                 nextButton.addClickListener(event -> {
 
+                        if(currentPage<totalPage-1){
                         currentPage++;
-
                         loadDepartmentBudgets();
+                        }
                 });
 
                 HorizontalLayout paginationLayout =
@@ -219,7 +193,6 @@ public class DepartmentBudgetView extends VerticalLayout {
 
                 paginationLayout.setAlignItems(Alignment.CENTER);
 
-                // LOAD DATA
                 loadDepartmentBudgets();
 
                 add(headerLayout, filterLayout, departmentBudgetGrid, paginationLayout);
@@ -233,7 +206,7 @@ public class DepartmentBudgetView extends VerticalLayout {
                                 currentFilter, currentPage, pageSize);
 
                 departmentBudgetGrid.setItems(departmentBudgetPage.getContent());
-
+                totalPage=departmentBudgetPage.getTotalPages();
                 pageInfo.setText("Page " + (currentPage + 1) + " of " + departmentBudgetPage.getTotalPages());
         }
 

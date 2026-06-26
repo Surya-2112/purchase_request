@@ -16,6 +16,5 @@ public interface AssigningApprovalsRepository extends JpaRepository<AssigningApp
     List<AssigningApprovals> findByApprovalTypeAndReferenceId(ApprovalType approvalType,Long referenceId);
 
     Optional<AssigningApprovals> findByApprovalTypeAndReferenceIdAndLevel(ApprovalType approvalType,Long referenceId,Integer level);
-
-    
+                                   
 }

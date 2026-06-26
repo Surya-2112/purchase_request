@@ -62,6 +62,11 @@ public class DashboardView extends VerticalLayout {
         setSpacing(true);
 
         H2 title = new H2("Dashboard");
+        title.getStyle()
+                .set("color", "var(--lumo-primary-text-color)")
+                .set("font-weight", "800")
+                .set("font-size", "2.2rem")
+                .set("margin-top", "0");
         add(title);
 
         try {
@@ -126,12 +131,22 @@ public class DashboardView extends VerticalLayout {
     private Component createGlobalRecentPurchaseRequests() {
         VerticalLayout layout = new VerticalLayout();
         H3 title = new H3("Recent Global Purchase Requests");
+        title.getStyle()
+                .set("color", "var(--lumo-primary-color)")
+                .set("font-weight", "bold")
+                .set("margin-bottom", "10px");
+                
         Grid<PurchaseRequestDTO> grid = new Grid<>();
+        grid.getStyle()
+                .set("border-radius", "12px")
+                .set("box-shadow", "0 4px 12px rgba(0,0,0,0.08)")
+                .set("border", "2px solid rgb(7, 44, 250)")
+                .set("overflow", "hidden");
 
-        grid.addColumn(PurchaseRequestDTO::getPurchaseRequestId).setHeader("PR No");
-        grid.addColumn(pr -> pr.getCreatedBy().getEmployeeName()).setHeader("Created By");
-        grid.addColumn(pr -> pr.getForDepartment().getDepartmentName()).setHeader("Department");
-        grid.addColumn(PurchaseRequestDTO::getStatus).setHeader("Status");
+        grid.addColumn(PurchaseRequestDTO::getPurchaseRequestId).setHeader("PR No").setAutoWidth(true);
+        grid.addColumn(pr -> pr.getCreatedBy().getEmployeeName()).setHeader("Created By").setAutoWidth(true);
+        grid.addColumn(pr -> pr.getForDepartment().getDepartmentName()).setHeader("Department").setAutoWidth(true);
+        grid.addColumn(PurchaseRequestDTO::getStatus).setHeader("Status").setAutoWidth(true);
 
         grid.setItems(purchaseRequestService.getRecentPurchaseRequests(PageRequest.of(0, 3)));
         grid.addItemDoubleClickListener(event -> {
@@ -160,11 +175,21 @@ public class DashboardView extends VerticalLayout {
     private Component createEmployeeRecentPurchaseRequests(Employee employee) {
         VerticalLayout layout = new VerticalLayout();
         H3 title = new H3("My Recent Requests");
+        title.getStyle()
+                .set("color", "var(---primary-color)")
+                .set("font-weight", "bold")
+                .set("margin-bottom", "10px");
+                
         Grid<PurchaseRequestDTO> grid = new Grid<>();
+        grid.getStyle()
+                .set("border-radius", "12px")
+                .set("box-shadow", "0 4px 12px rgba(0,0,0,0.08)")
+                .set("border", "2px solid rgb(7, 44, 250)")
+                .set("overflow", "hidden");
 
-        grid.addColumn(PurchaseRequestDTO::getPurchaseRequestId).setHeader("PR No");
-        grid.addColumn(pr -> pr.getForDepartment().getDepartmentName()).setHeader("Department");
-        grid.addColumn(PurchaseRequestDTO::getStatus).setHeader("Status");
+        grid.addColumn(PurchaseRequestDTO::getPurchaseRequestId).setHeader("PR No").setAutoWidth(true);
+        grid.addColumn(pr -> pr.getForDepartment().getDepartmentName()).setHeader("Department").setAutoWidth(true);
+        grid.addColumn(PurchaseRequestDTO::getStatus).setHeader("Status").setAutoWidth(true);
 
         grid.setItems(purchaseRequestService.getRecentPurchaseRequestsByEmployee(employee, PageRequest.of(0, 3)));
         
@@ -196,11 +221,21 @@ public class DashboardView extends VerticalLayout {
     private Component createVendorRecentQuotationsGrid(Vendor vendor) {
         VerticalLayout layout = new VerticalLayout();
         H3 title = new H3("Your Recent Quotations");
+        title.getStyle()
+                .set("color", "var(--lumo-primary-color)")
+                .set("font-weight", "bold")
+                .set("margin-bottom", "10px");
+                
         Grid<QuotationDTO> grid = new Grid<>();
+        grid.getStyle()
+                .set("border-radius", "12px")
+                .set("box-shadow", "0 4px 12px rgba(0,0,0,0.08)")
+                .set("border", "2px solid rgb(7, 44, 250)")
+                .set("overflow", "hidden");
 
-        grid.addColumn(QuotationDTO::getId).setHeader("Quotation No");
-        grid.addColumn(q -> "₹ " + q.getTotalAmount()).setHeader("Total Price");
-        grid.addColumn(QuotationDTO::getStatus).setHeader("Status");
+        grid.addColumn(QuotationDTO::getId).setHeader("Quotation No").setAutoWidth(true);
+        grid.addColumn(q -> "₹ " + q.getTotalAmount()).setHeader("Total Price").setAutoWidth(true);
+        grid.addColumn(QuotationDTO::getStatus).setHeader("Status").setAutoWidth(true);
 
         grid.setItems(quotationService.getRecentQuotationsForVendor(vendor, PageRequest.of(0, 3)));
         
@@ -216,21 +251,44 @@ public class DashboardView extends VerticalLayout {
 
     private Div createCard(String title, String value, Icon icon, String navigationUrl) {
         H3 valueText = new H3(value);
-        Span titleText = new Span(title);
-        HorizontalLayout header = new HorizontalLayout(icon, titleText);
-        VerticalLayout content = new VerticalLayout(header, valueText);
+        valueText.getStyle()
+                .set("margin", "10px 0 0 0")
+                .set("color", "var(--lumo-primary-text-color)")
+                .set("font-size", "2.2rem")
+                .set("font-weight", "800");
 
+        Span titleText = new Span(title);
+        titleText.getStyle()
+                .set("font-weight", "700")
+                .set("color", "var(--lumo-secondary-text-color)")
+                .set("font-size", "0.9rem")
+                .set("text-transform", "uppercase")
+                .set("letter-spacing", "0.5px");
+
+        icon.getStyle()
+                .set("color", "var(--lumo-primary-color)")
+                .set("width", "22px")
+                .set("height", "22px")
+                .set("margin-right", "8px");
+
+        HorizontalLayout header = new HorizontalLayout(icon, titleText);
+        header.getStyle().set("align-items", "center");
+        header.setSpacing(false);
+        
+        VerticalLayout content = new VerticalLayout(header, valueText);
         content.setPadding(false);
         content.setSpacing(false);
 
         Div card = new Div(content);
         card.getStyle()
-                .set("padding", "20px")
-                .set("border-radius", "14px")
-                .set("background", "white")
-                .set("box-shadow", "0 2px 8px rgba(0,0,0,0.1)")
+                .set("padding", "20px 24px")
+                .set("border-radius", "12px")
+                .set("background", "linear-gradient(145deg, #ffffff, #f9fafb)")
+                .set("box-shadow", "0 4px 14px rgba(0,0,0,0.06)")
+                .set("border", "1px solid var(--lumo-contrast-10pct)")
                 .set("cursor", "pointer")
-                .set("min-width", "200px");
+                .set("min-width", "200px")
+                .set("transition", "transform 0.2s ease, box-shadow 0.2s ease");
 
         card.addClickListener(event -> UI.getCurrent().navigate(navigationUrl));
         return card;
@@ -239,12 +297,22 @@ public class DashboardView extends VerticalLayout {
     private Component createDepartmentWiseSpending() {
         VerticalLayout layout = new VerticalLayout();
         H3 title = new H3("Department Wise Spending");
+        title.getStyle()
+                .set("color", "var(--lumo-primary-color)")
+                .set("font-weight", "bold")
+                .set("margin-bottom", "10px");
+                
         Grid<DepartmentBudget> grid = new Grid<>();
+        grid.getStyle()
+                .set("border-radius", "12px")
+                .set("box-shadow", "0 4px 12px rgba(0,0,0,0.08)")
+                .set("border", "2px solid rgb(7, 44, 250)")
+                .set("overflow", "hidden");
 
-        grid.addColumn(db -> db.getDepartment().getDepartmentName()).setHeader("Department");
-        grid.addColumn(db -> "₹ " + db.getTotalBudgetAmount()).setHeader("Total Budget");
-        grid.addColumn(db -> "₹ " + db.getRemainingBudgetAmount()).setHeader("Remaining Amount");
-        grid.addColumn(db -> "₹ " + (db.getTotalBudgetAmount() - db.getRemainingBudgetAmount())).setHeader("Spent Amount");
+        grid.addColumn(db -> db.getDepartment().getDepartmentName()).setHeader("Department").setAutoWidth(true);
+        grid.addColumn(db -> "₹ " + db.getTotalBudgetAmount()).setHeader("Total Budget").setAutoWidth(true);
+        grid.addColumn(db -> "₹ " + db.getRemainingBudgetAmount()).setHeader("Remaining Amount").setAutoWidth(true);
+        grid.addColumn(db -> "₹ " + (db.getTotalBudgetAmount() - db.getRemainingBudgetAmount())).setHeader("Spent Amount").setAutoWidth(true);
 
         grid.setItems(departmentBudgetService.getDepartmentSpendingData(Year.now()));
         grid.addItemDoubleClickListener(event -> {

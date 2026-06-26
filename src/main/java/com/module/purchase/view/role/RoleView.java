@@ -41,6 +41,8 @@ public class RoleView extends VerticalLayout {
 
     private int pageSize = 25;
 
+    private int totalPage=1;
+
     private final Span pageInfo = new Span();
 
     private Role currentFilter = new Role();
@@ -48,7 +50,6 @@ public class RoleView extends VerticalLayout {
     public RoleView(RoleService roleService,SecurityService securityService) {
 
         this.roleService = roleService;
-  //      this.securityService = securityService;
 
         setSizeFull();
 
@@ -56,12 +57,11 @@ public class RoleView extends VerticalLayout {
 
         setSpacing(true);
 
-        // EMPLOYEE GROUPS
+        roleIdField.setPattern("[0-9]{0,20}");
+        roleIdField.setErrorMessage("Enter a valid numbers");
         employeeGroupField.setItems(EmployeeGroup.values());
 
-        // PAGINATION
         Button previousButton = new Button("Previous");
-
         Button nextButton =new Button("Next");
 
         ComboBox<Integer> pageSizeField =new ComboBox<>();
@@ -91,6 +91,7 @@ public class RoleView extends VerticalLayout {
 
         nextButton.addClickListener(event -> {
 
+            if(currentPage<totalPage-1)
             currentPage++;
 
             loadRoles();
@@ -110,7 +111,6 @@ public class RoleView extends VerticalLayout {
 
         paginationLayout.setAlignItems(Alignment.CENTER);
 
-        // HEADER
         HorizontalLayout headerLayout = new HorizontalLayout();
 
         H2 title = new H2("Role List");
@@ -134,14 +134,11 @@ public class RoleView extends VerticalLayout {
 
         headerLayout.setAlignItems(Alignment.CENTER);
 
-        // FILTER
         HorizontalLayout filterLayout =new HorizontalLayout();
 
-        Button searchButton =
-                new Button("Search",event -> applyFilter());
+        Button searchButton = new Button("Search",event -> applyFilter());
 
-        Button clearButton =
-                new Button( "Clear", event -> clearFilter());
+        Button clearButton = new Button( "Clear", event -> clearFilter());
 
         filterLayout.setAlignItems( Alignment.END);
 
@@ -154,14 +151,10 @@ public class RoleView extends VerticalLayout {
 
         filterLayout.setWidthFull();
 
-        // GRID COLUMNS
-
-        // ROLE ID
         roleGrid.addColumn(Role::getRoleId)
         .setHeader("Role ID")
         .setAutoWidth(true);
 
-        // ROLE NAME
         roleGrid.addColumn(role -> {
 
             return role.getRoleName() == null
@@ -171,7 +164,6 @@ public class RoleView extends VerticalLayout {
         .setHeader("Role Name")
         .setAutoWidth(true);
 
-        // EMPLOYEE GROUPS
         roleGrid.addColumn(role -> {
 
             if (role.getEmployeeGroups() == null || role.getEmployeeGroups().isEmpty()) {
@@ -190,45 +182,27 @@ public class RoleView extends VerticalLayout {
 
         roleGrid.setSizeFull();
 
-        // GRID ROW CLICK
         roleGrid.addItemClickListener(event -> {
 
             Role role = event.getItem();
 
-            getUI().ifPresent(ui ->
-                        ui.navigate(
-                                "role-details/"
-                                        + role.getRoleId()));
+            getUI().ifPresent(ui -> ui.navigate( "role-details/" + role.getRoleId()));
 
         });
 
-        // LOAD DATA
         loadRoles();
 
-        add(    headerLayout,
-                filterLayout,
-                roleGrid,
-                paginationLayout);
-
+        add( headerLayout,filterLayout, roleGrid, paginationLayout);
         expand(roleGrid);
     }
 
     private void loadRoles() {
 
-        Page<Role> rolePage =
-                roleService.getAllRoles(
-                        currentFilter,
-                        currentPage,
-                        pageSize);
+        Page<Role> rolePage = roleService.getAllRoles( currentFilter, currentPage, pageSize);
 
-        roleGrid.setItems(
-                rolePage.getContent());
-
-        pageInfo.setText(
-                "Page "
-                        + (currentPage + 1)
-                        + " of "
-                        + rolePage.getTotalPages());
+        roleGrid.setItems( rolePage.getContent());
+        totalPage=rolePage.getTotalPages();
+        pageInfo.setText(  "Page " + (currentPage + 1) + " of "+ rolePage.getTotalPages());
     }
 
     private void applyFilter() {

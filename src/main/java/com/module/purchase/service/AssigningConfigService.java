@@ -65,6 +65,10 @@ public class AssigningConfigService {
         return assigningConfig;
     }
 
+    public List<AssigningConfig> getByApprovalType(ApprovalType approvalType) {
+        return assigningConfigRepository.findByApprovalType(approvalType);
+    }
+
     public List<AssigningConfig> getConfigs(ApprovalType approvalType, Double totalAmount) {
         return assigningConfigRepository.findByApprovalTypeAndMinAmountLessThanEqual(approvalType,totalAmount);
     }

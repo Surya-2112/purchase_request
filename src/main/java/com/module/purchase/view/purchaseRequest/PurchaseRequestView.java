@@ -132,6 +132,15 @@ public class PurchaseRequestView extends VerticalLayout {
         tabsContainer.add(allBtn, assignedBtn, createdBtn);
         tabsContainer.setSpacing(true);
 
+        prIdField.setPattern("[0-9]{0,20}");
+        prIdField.setErrorMessage("Enter a valid nuumber");
+
+        assignIdField.setPattern("[0-9]{0,20}");
+        assignIdField.setErrorMessage("Enter a valid nuumber");
+
+        referenceIdField.setPattern("[0-9]{0,20}");
+        referenceIdField.setErrorMessage("Enter a valid nuumber");
+
         createdByField.setItems(employeeService.getEmployees());
         createdByField.setItemLabelGenerator(Employee::getEmployeeName);
 
@@ -253,8 +262,14 @@ public class PurchaseRequestView extends VerticalLayout {
             } 
             assignFilter.setStatus(Status.WAITING_APPROVAL);
     
-
-        if (isManagementGroup) {
+        if(userGroups.contains(EmployeeGroup.AUDITOR))
+        {
+            allBtn.setVisible(true);
+            assignedBtn.setVisible(false); 
+            createdBtn.setVisible(false);
+            viewMode = "ALL";
+        }  
+        else if (isManagementGroup) {
             allBtn.setVisible(true);
             assignedBtn.setVisible(hasAssignedTasks); 
             createdBtn.setVisible(hasCreatedRequests);
@@ -340,6 +355,7 @@ public class PurchaseRequestView extends VerticalLayout {
         } else if ("CREATED".equals(viewMode)) {
             prGrid.setVisible(true);
             prFilters.setVisible(true);
+            createdByField.setVisible(false);
 
             Page<PurchaseRequestDTO> page = prService.getCreatedByUser(
                     prFilter, user.getUserId(), currentPage, pageSize);
@@ -352,9 +368,8 @@ public class PurchaseRequestView extends VerticalLayout {
         else {
             prGrid.setVisible(true);
             prFilters.setVisible(true);
-
-            Page<PurchaseRequestDTO> page = prService.getAllPurchaseRequest(
-                    prFilter, currentPage, pageSize);
+            createdByField.setVisible(true);
+            Page<PurchaseRequestDTO> page = prService.getAllPurchaseRequest( prFilter, currentPage, pageSize);
 
             List<PurchaseRequestDTO> filteredContent = page.getContent().stream()
                     .filter(pr -> pr.getStatus() != Status.DRAFT || 

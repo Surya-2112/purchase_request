@@ -120,6 +120,15 @@ public class PurchaseOrderView extends VerticalLayout {
         tabsContainer.add(allBtn, assignedBtn, createdBtn);
         tabsContainer.setSpacing(true);
 
+        poIdField.setPattern("[0-9]{0,20}");
+        poIdField.setErrorMessage("Enter a valid nuumber");
+
+        assignIdField.setPattern("[0-9]{0,20}");
+        assignIdField.setErrorMessage("Enter a valid nuumber");
+
+        referenceIdField.setPattern("[0-9]{0,20}");
+        referenceIdField.setErrorMessage("Enter a valid nuumber");
+
         createdByField.setItems(employeeService.getEmployees());
         createdByField.setItemLabelGenerator(Employee::getEmployeeName);
 
@@ -241,11 +250,17 @@ public class PurchaseOrderView extends VerticalLayout {
                 hasAssignedTasks = true;
                 break;
                 }
-
             } 
             assignFilter.setStatus(Status.WAITING_APPROVAL);
 
-        if (isManagementGroup) {
+        if(userGroups.contains(EmployeeGroup.AUDITOR))
+        {
+            allBtn.setVisible(true);
+            assignedBtn.setVisible(false); 
+            createdBtn.setVisible(false);
+            viewMode = "ALL";
+        }   
+        else if (isManagementGroup) {
             allBtn.setVisible(true);
             assignedBtn.setVisible(hasAssignedTasks); 
             createdBtn.setVisible(hasCreatedRequests);

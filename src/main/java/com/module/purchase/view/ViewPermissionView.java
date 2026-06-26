@@ -34,8 +34,8 @@ public class ViewPermissionView extends VerticalLayout {
     private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Role Group");
 
     private int currentPage = 0;
-
     private int pageSize = 25;
+    private int totalPage=1;
 
     private final Span pageInfo =new Span();
 
@@ -44,17 +44,14 @@ public class ViewPermissionView extends VerticalLayout {
         this.viewPermissionService = viewPermissionService;
 
         setSizeFull();
-
         setPadding(true);
-
         setSpacing(true);
 
         viewField.setItems(ViewName.values());
-
         viewField.setWidth("300px");
 
         employeeGroupField.setItems(EmployeeGroup.values());
-
+        employeeGroupField.setItemLabelGenerator(EmployeeGroup::getDisplayName);
         HorizontalLayout headerLayout = new HorizontalLayout();
 
         H2 title = new H2("View Permission Management");
@@ -140,7 +137,7 @@ public class ViewPermissionView extends VerticalLayout {
 
         grid.addColumn(permission -> permission.getViewName() == null? "" : permission.getViewName().name()).setHeader("View").setAutoWidth(true);
 
-        grid.addColumn(permission ->  permission.getEmployeeGroup() == null ? "": permission.getEmployeeGroup().name()).setHeader("Role Group").setAutoWidth(true);
+        grid.addColumn(permission ->  permission.getEmployeeGroup() == null ? "": permission.getEmployeeGroup().getDisplayName()).setHeader("Role Group").setAutoWidth(true);
 
         grid.addComponentColumn(permission -> {
 
@@ -194,7 +191,7 @@ public class ViewPermissionView extends VerticalLayout {
 
         pageSizeField.addValueChangeListener(event -> {
 
-            pageSize =event.getValue();
+            pageSize = event.getValue();
             currentPage = 0;
             loadPermissions();
         });
@@ -208,8 +205,10 @@ public class ViewPermissionView extends VerticalLayout {
         });
 
         nextButton.addClickListener(event -> {
-            currentPage++;
+            if(currentPage<totalPage-1){
+                currentPage++;
             loadPermissions();
+            }
         });
 
         HorizontalLayout paginationLayout = new HorizontalLayout( previousButton, pageInfo, nextButton, new Span("Page Size"), pageSizeField);
@@ -227,9 +226,10 @@ public class ViewPermissionView extends VerticalLayout {
     }
 
     private void loadPermissions() {
-        Page<ViewPermission> permissionPage =viewPermissionService.getAllPermissions( viewField.getValue(), employeeGroupField.getValue(), currentPage, pageSize);
+        Page<ViewPermission> permissionPage = viewPermissionService.getAllPermissions( viewField.getValue(), employeeGroupField.getValue(), currentPage, pageSize);
         grid.setItems(permissionPage.getContent());
         pageInfo.setText("Page " + (currentPage + 1) + " of " + permissionPage.getTotalPages());
+        this.totalPage = permissionPage.getTotalPages() > 0 ? permissionPage.getTotalPages() : 1;
     }
 
     public ComboBox<ViewName> getViewField() {

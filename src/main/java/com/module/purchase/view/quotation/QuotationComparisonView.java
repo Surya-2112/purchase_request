@@ -69,13 +69,11 @@ public class QuotationComparisonView extends VerticalLayout {
         navigationTabs.setWidthFull();
 
         VerticalLayout unassignedTabContent = new VerticalLayout(
-                createFilterHeaderRow(filterUnassignedRfqId, filterUnassignedDate, filterUnassignedQuoteCount),
-                unassignedGrid);
+        createFilterHeaderRow(filterUnassignedRfqId, filterUnassignedDate, filterUnassignedQuoteCount), unassignedGrid);
         unassignedTabContent.setSizeFull();
         unassignedTabContent.setPadding(false);
 
-        VerticalLayout assignedTabContent = new VerticalLayout(
-                createFilterHeaderRow(filterAssignedRfqId, filterAssignedDate, filterAssignedQuoteCount), assignedGrid);
+        VerticalLayout assignedTabContent = new VerticalLayout(createFilterHeaderRow(filterAssignedRfqId, filterAssignedDate, filterAssignedQuoteCount), assignedGrid);
         assignedTabContent.setSizeFull();
         assignedTabContent.setPadding(false);
         assignedTabContent.setVisible(false);
@@ -125,7 +123,11 @@ public class QuotationComparisonView extends VerticalLayout {
         grid.addColumn(rfq -> {
             QuotationDTO quotationDTO = new QuotationDTO();
             quotationDTO.setRequestForQuotation(rfq);
-            quotationDTO.setStatus(Status.WAITING_APPROVAL);
+            if(rfq.getStatus().equals(RequestForQuotationStatus.OPEN))
+                quotationDTO.setStatus(Status.WAITING_APPROVAL);
+            else{
+                quotationDTO.setStatus(null);
+            }
             return String.valueOf(quotationService.getCountQuotations(quotationDTO));
         }).setHeader("Quotations Received").setAutoWidth(true).setSortable(true);
     }

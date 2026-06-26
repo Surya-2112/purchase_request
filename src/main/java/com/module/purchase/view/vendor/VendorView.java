@@ -32,7 +32,7 @@ import jakarta.annotation.security.PermitAll;
 public class VendorView extends VerticalLayout {
 
     private final VendorService vendorService;
-private final SecurityService securityService;
+    private final SecurityService securityService;
 
     private final Grid<VendorDTO> vendorGrid = new Grid<>(VendorDTO.class, false);
      
@@ -91,7 +91,7 @@ private final SecurityService securityService;
         HorizontalLayout filterLayout = new HorizontalLayout(
                 vendorIdField,
                 vendorNameField,
-                categoryField,
+             //   categoryField,
                 activeField,
                 searchButton,
                 clearButton
@@ -184,11 +184,7 @@ private final SecurityService securityService;
 
     private void loadVendors() {
 
-        Page<VendorDTO> page = vendorService.getAllVendors(
-                currentFilter,
-                currentPage,
-                pageSize
-        );
+        Page<VendorDTO> page = vendorService.getAllVendors( currentFilter, currentPage, pageSize );
 
         vendorGrid.setItems(page.getContent());
 

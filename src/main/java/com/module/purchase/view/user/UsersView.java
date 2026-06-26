@@ -44,13 +44,13 @@ public class UsersView extends VerticalLayout {
 
     private int currentPage = 0;
     private int pageSize = 25;
+    private int totalPage = 25;
 
     private final Span pageInfo = new Span();
 
     private UsersDTO currentFilter = new UsersDTO();
 
-    public UsersView(
-            UsersService usersService,
+    public UsersView( UsersService usersService,
             EmployeeService employeeService,
             SecurityService securityService,
             VendorService vendorService) {
@@ -62,6 +62,8 @@ public class UsersView extends VerticalLayout {
         setSpacing(true);
 
         userIdField.setWidth("100px");
+        userIdField.setPattern("[0-9]{0,20}");
+        userIdField.setErrorMessage("Enter a vaild number");
 
         employeeField.setItems(employeeService.getEmployees());
         employeeField.setItemLabelGenerator(Employee::getEmployeeName);
@@ -116,6 +118,7 @@ public class UsersView extends VerticalLayout {
         });
 
         Button nextButton = new Button("Next", e -> {
+            if(currentPage<totalPage-1)
             currentPage++;
             loadUsers();
         });
@@ -171,19 +174,9 @@ public class UsersView extends VerticalLayout {
         filterLayout.setAlignItems(Alignment.END);
         filterLayout.setWidthFull();
 
-        // Grid Columns
-
-        userGrid.addColumn(UsersDTO::getUserId)
-                .setHeader("User ID")
-                .setAutoWidth(true);
-
-        userGrid.addColumn(UsersDTO::getUserName)
-                .setHeader("User Name")
-                .setAutoWidth(true);
-
-        userGrid.addColumn(UsersDTO::getUserEmail)
-                .setHeader("User Email")
-                .setAutoWidth(true);
+        userGrid.addColumn(UsersDTO::getUserId).setHeader("User ID").setAutoWidth(true);
+        userGrid.addColumn(UsersDTO::getUserName).setHeader("User Name").setAutoWidth(true);
+        userGrid.addColumn(UsersDTO::getUserEmail).setHeader("User Email").setAutoWidth(true);
 
         userGrid.addColumn(user -> {
 
@@ -197,8 +190,7 @@ public class UsersView extends VerticalLayout {
 
             return "";
 
-        }).setHeader("User Type")
-          .setAutoWidth(true);
+        }).setHeader("User Type").setAutoWidth(true);
 
         userGrid.addColumn(user -> {
 
@@ -215,12 +207,7 @@ public class UsersView extends VerticalLayout {
         }).setHeader("Linked To")
           .setAutoWidth(true);
 
-        userGrid.addColumn(user ->
-                Boolean.TRUE.equals(user.getActive())
-                        ? "Yes"
-                        : "No")
-                .setHeader("Active")
-                .setAutoWidth(true);
+        userGrid.addColumn(user -> Boolean.TRUE.equals(user.getActive())? "Yes": "No").setHeader("Active") .setAutoWidth(true);
 
         userGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         userGrid.setSizeFull();
@@ -228,38 +215,22 @@ public class UsersView extends VerticalLayout {
         userGrid.addItemDoubleClickListener(event -> {
 
             UsersDTO user = event.getItem();
-
-            getUI().ifPresent(ui ->
-                    ui.navigate(
-                            "user-details/" + user.getUserId()));
+            getUI().ifPresent(ui ->ui.navigate( "user-details/" + user.getUserId()));
         });
 
         loadUsers();
 
-        add(
-                headerLayout,
-                filterLayout,
-                userGrid,
-                paginationLayout);
+        add(headerLayout, filterLayout, userGrid, paginationLayout);
 
         expand(userGrid);
     }
 
     private void loadUsers() {
 
-        Page<UsersDTO> page =
-                usersService.getAllUsers(
-                        currentFilter,
-                        currentPage,
-                        pageSize);
-
+        Page<UsersDTO> page = usersService.getAllUsers( currentFilter, currentPage, pageSize);
         userGrid.setItems(page.getContent());
-
-        pageInfo.setText(
-                "Page "
-                        + (currentPage + 1)
-                        + " of "
-                        + Math.max(page.getTotalPages(), 1));
+        totalPage=page.getTotalPages();
+        pageInfo.setText("Page " + (currentPage + 1) + " of "+ Math.max(page.getTotalPages(), 1));
     }
 
     private void applyFilter() {
@@ -290,10 +261,7 @@ public class UsersView extends VerticalLayout {
             currentFilter.setVendor(vendorField.getValue());
         }
 
-        currentFilter.setActive(
-                activeField.getValue() == null
-                        ? null
-                        : activeField.getValue().equals("Yes"));
+        currentFilter.setActive( activeField.getValue() == null ? null : activeField.getValue().equals("Yes"));
 
         currentPage = 0;
 

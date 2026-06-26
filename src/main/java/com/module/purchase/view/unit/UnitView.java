@@ -51,6 +51,9 @@ public class UnitView extends VerticalLayout {
 
         H2 title = new H2("Unit Master");
 
+        unitIdField.setPattern("[0-9]{0,20}");
+        unitIdField.setErrorMessage("Enter a valid number");
+
         Button addButton = new Button("Add Unit", event -> {
             UnitForm form = new UnitForm(unitService, securityService);
             form.addDetachListener(detachEvent -> loadUnits());
