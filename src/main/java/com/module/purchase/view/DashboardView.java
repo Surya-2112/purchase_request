@@ -63,9 +63,9 @@ public class DashboardView extends VerticalLayout {
 
         H2 title = new H2("Dashboard");
         title.getStyle()
-                .set("color", "var(--lumo-primary-text-color)")
+                .set("color", "rgb(0, 0, 0)")
                 .set("font-weight", "800")
-                .set("font-size", "2.2rem")
+                .set("font-size", "2.0rem")
                 .set("margin-top", "0");
         add(title);
 
@@ -100,7 +100,6 @@ public class DashboardView extends VerticalLayout {
                             if (securityService.canAccessView("department-budget")) { 
                                 add(createDepartmentWiseSpending());
                             }
-                            
                             add(createGlobalRecentPurchaseRequests());
                         }    
                             add(createEmployeeRecentPurchaseRequests(currentEmployee));
@@ -116,7 +115,7 @@ public class DashboardView extends VerticalLayout {
         long totalPR = purchaseRequestService.countAll();
         long pendingPR = purchaseRequestService.countByStatus(Status.WAITING_APPROVAL);
         long totalPO = purchaseOrderService.countAll();
-        long approvedPO = purchaseOrderService.countByStatus(Status.APPROVED);
+        long approvedPO = purchaseOrderService.countByStatus(Status.ORDERED);
 
         HorizontalLayout row = new HorizontalLayout(
                 createCard("Total PR (All)", String.valueOf(totalPR), VaadinIcon.CLIPBOARD_TEXT.create(), ViewName.PURCHASE_REQUEST.getRoute()),
@@ -132,15 +131,14 @@ public class DashboardView extends VerticalLayout {
         VerticalLayout layout = new VerticalLayout();
         H3 title = new H3("Recent Global Purchase Requests");
         title.getStyle()
-                .set("color", "var(--lumo-primary-color)")
-                .set("font-weight", "bold")
+                .set("color", "rgb(0,0,0)")
+                .set("font-weight", "800")
                 .set("margin-bottom", "10px");
                 
         Grid<PurchaseRequestDTO> grid = new Grid<>();
         grid.getStyle()
                 .set("border-radius", "12px")
                 .set("box-shadow", "0 4px 12px rgba(0,0,0,0.08)")
-                .set("border", "2px solid rgb(7, 44, 250)")
                 .set("overflow", "hidden");
 
         grid.addColumn(PurchaseRequestDTO::getPurchaseRequestId).setHeader("PR No").setAutoWidth(true);
@@ -176,15 +174,14 @@ public class DashboardView extends VerticalLayout {
         VerticalLayout layout = new VerticalLayout();
         H3 title = new H3("My Recent Requests");
         title.getStyle()
-                .set("color", "var(---primary-color)")
-                .set("font-weight", "bold")
+                .set("color", "rgb(0,0,0)")
+                .set("font-weight", "800")
                 .set("margin-bottom", "10px");
                 
         Grid<PurchaseRequestDTO> grid = new Grid<>();
         grid.getStyle()
                 .set("border-radius", "12px")
                 .set("box-shadow", "0 4px 12px rgba(0,0,0,0.08)")
-                .set("border", "2px solid rgb(7, 44, 250)")
                 .set("overflow", "hidden");
 
         grid.addColumn(PurchaseRequestDTO::getPurchaseRequestId).setHeader("PR No").setAutoWidth(true);
@@ -210,9 +207,9 @@ public class DashboardView extends VerticalLayout {
         long approvedQuotations = quotationService.countByStatusForVendor(Status.APPROVED, vendor);
 
         HorizontalLayout row = new HorizontalLayout(
-                createCard("Request for Quotations", String.valueOf(requestForQuotations), VaadinIcon.QUESTION_CIRCLE.create(), "rfq-view"),
-                createCard("Pending Quotations", String.valueOf(pendingQuotations), VaadinIcon.CLOCK.create(), "quotation-view"),
-                createCard("Approved Quotations", String.valueOf(approvedQuotations), VaadinIcon.CHECK.create(), "quotation-view")
+                createCard("Request for Quotations", String.valueOf(requestForQuotations), VaadinIcon.QUESTION_CIRCLE.create(), ViewName.REQUEST_FOR_QUOTATION.getRoute()),
+                createCard("Pending Quotations", String.valueOf(pendingQuotations), VaadinIcon.CLOCK.create(), ViewName.QUOTATION_LEDGER.getRoute()),
+                createCard("Approved Quotations", String.valueOf(approvedQuotations), VaadinIcon.CHECK.create(),  ViewName.QUOTATION_LEDGER.getRoute())
         );
         row.setWidthFull();
         return new VerticalLayout(row);
@@ -222,15 +219,14 @@ public class DashboardView extends VerticalLayout {
         VerticalLayout layout = new VerticalLayout();
         H3 title = new H3("Your Recent Quotations");
         title.getStyle()
-                .set("color", "var(--lumo-primary-color)")
-                .set("font-weight", "bold")
+                .set("color", "rgb(0,0,0)")
+                .set("font-weight", "800")
                 .set("margin-bottom", "10px");
                 
         Grid<QuotationDTO> grid = new Grid<>();
         grid.getStyle()
                 .set("border-radius", "12px")
                 .set("box-shadow", "0 4px 12px rgba(0,0,0,0.08)")
-                .set("border", "2px solid rgb(7, 44, 250)")
                 .set("overflow", "hidden");
 
         grid.addColumn(QuotationDTO::getId).setHeader("Quotation No").setAutoWidth(true);
@@ -253,7 +249,7 @@ public class DashboardView extends VerticalLayout {
         H3 valueText = new H3(value);
         valueText.getStyle()
                 .set("margin", "10px 0 0 0")
-                .set("color", "var(--lumo-primary-text-color)")
+                .set("color", "rgb(0,0,0)")
                 .set("font-size", "2.2rem")
                 .set("font-weight", "800");
 
@@ -298,15 +294,14 @@ public class DashboardView extends VerticalLayout {
         VerticalLayout layout = new VerticalLayout();
         H3 title = new H3("Department Wise Spending");
         title.getStyle()
-                .set("color", "var(--lumo-primary-color)")
-                .set("font-weight", "bold")
+                .set("color", "rgb(0,0,0)")
+                .set("font-weight", "800")
                 .set("margin-bottom", "10px");
                 
         Grid<DepartmentBudget> grid = new Grid<>();
         grid.getStyle()
                 .set("border-radius", "12px")
                 .set("box-shadow", "0 4px 12px rgba(0,0,0,0.08)")
-                .set("border", "2px solid rgb(7, 44, 250)")
                 .set("overflow", "hidden");
 
         grid.addColumn(db -> db.getDepartment().getDepartmentName()).setHeader("Department").setAutoWidth(true);

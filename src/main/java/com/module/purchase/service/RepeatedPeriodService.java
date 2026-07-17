@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.AssigningApprovals;
-import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
@@ -70,16 +69,7 @@ public class RepeatedPeriodService {
         }
 
         repeatedPeriod = save(repeatedPeriod);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.REPEATED_PERIOD); 
-        log.setEntityId(repeatedPeriod.getId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.REPEATED_PERIOD,repeatedPeriod.getId(),Action.CREATE,employee);
         return repeatedPeriod;
     }
 
@@ -113,13 +103,7 @@ public class RepeatedPeriodService {
         getRepeatedPeriodById(repeatedPeriod.getId());
 
         repeatedPeriod = save(repeatedPeriod);
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.REPEATED_PERIOD);
-        log.setEntityId(repeatedPeriod.getId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.REPEATED_PERIOD,repeatedPeriod.getId(),Action.UPDATE,employee);
         return repeatedPeriod;
     }
 
@@ -127,15 +111,7 @@ public class RepeatedPeriodService {
         getRepeatedPeriodById(id); 
 
         repeatedPeriodRepository.deleteById(id);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.REPEATED_PERIOD);
-        log.setEntityId(id);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.REPEATED_PERIOD,id,Action.DELETE,employee);
     }
 
     public void deleteByReferTypeAndReferId(RepeatedPeriodReferType referType, Long referId) {

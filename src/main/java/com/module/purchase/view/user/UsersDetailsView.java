@@ -6,6 +6,7 @@ import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.UsersService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -89,11 +90,12 @@ public class UsersDetailsView extends VerticalLayout implements HasUrlParameter<
         formLayout.addFormItem( new Span(Boolean.TRUE.equals(user.getActive()) ? "Active": "Inactive"),"Status");
 
         Button updateButton = new Button("Update");
+        updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         updateButton.addClickListener(e ->getUI().ifPresent(ui ->ui.navigate( "user-edit/" + user.getUserId())));
 
         Button deleteButton = new Button("Delete");
-
+        deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
         deleteButton.addClickListener(e -> {
 
             ConfirmDialog dialog = new ConfirmDialog();

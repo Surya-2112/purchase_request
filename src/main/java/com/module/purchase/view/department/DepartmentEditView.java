@@ -8,12 +8,14 @@ import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -34,7 +36,7 @@ public class DepartmentEditView extends VerticalLayout implements HasUrlParamete
 
     private final ComboBox<Employee> departmentHeadField = new ComboBox<>("Department Head");
 
-    private final ComboBox<String> activeField = new ComboBox<>("Status");
+    private final RadioButtonGroup<String> activeField = new RadioButtonGroup<String>("Status");
 
     private Department department;
 
@@ -127,6 +129,8 @@ public class DepartmentEditView extends VerticalLayout implements HasUrlParamete
             getUI().ifPresent(ui -> ui.navigate("department-details/"+ department.getDepartmentId()));
 
         });
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout buttonLayout =new HorizontalLayout(saveButton,cancelButton);
 

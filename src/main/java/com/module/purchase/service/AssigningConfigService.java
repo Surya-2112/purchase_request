@@ -1,9 +1,7 @@
 package com.module.purchase.service;
 
-import com.module.purchase.repository.AssigningConfigRepository;
-import com.module.purchase.specification.AssigningConfigSpecification;
-
-import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,22 +9,19 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import com.module.purchase.entity.AssigningConfig;
-import com.module.purchase.entity.AuditLogs;
-import com.module.purchase.entity.Employee;
-import com.module.purchase.entityDTO.AssigningConfigDTO;
-import com.module.purchase.enums.ApprovalType;
-import com.module.purchase.enums.EntityType;
-import com.module.purchase.enums.Action;
-import com.module.purchase.mapper.AssigningConfigMapper;
-
-import java.util.Optional;
-import java.time.LocalDate;
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
+import com.module.purchase.entity.AssigningConfig;
+import com.module.purchase.entity.Employee;
+import com.module.purchase.entityDTO.AssigningConfigDTO;
+import com.module.purchase.enums.Action;
+import com.module.purchase.enums.ApprovalType;
+import com.module.purchase.enums.EntityType;
+import com.module.purchase.mapper.AssigningConfigMapper;
+import com.module.purchase.repository.AssigningConfigRepository;
+import com.module.purchase.specification.AssigningConfigSpecification;
 
 @Service
 @Transactional
@@ -54,13 +49,8 @@ public class AssigningConfigService {
         }
         
         assigningConfig=saveAssigningConfig(assigningConfig);
-        AuditLogs log= new AuditLogs();
-        log.setEntityType(EntityType.ASSIGNING_CONFIG);
-        log.setEntityId(assigningConfig.getId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+
+        auditLogsService.addAuditLog(EntityType.ASSIGNING_CONFIG,assigningConfig.getId(),Action.CREATE,employee);
         
         return assigningConfig;
     }
@@ -97,29 +87,17 @@ public class AssigningConfigService {
         return assignConfigPage.map(assigningConfigMapper::toAssigningConfig);
     }
 
-    public void deleteAssigningConfigById(Long Id,Employee employee) {
+    public void deleteAssigningConfigById(Long id,Employee employee) {
 
-        AuditLogs log= new AuditLogs();
-        log.setEntityType(EntityType.ASSIGNING_CONFIG);
-        log.setEntityId(Id);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-        
-        assigningConfigRepository.deleteById(Id);
+        auditLogsService.addAuditLog(EntityType.ASSIGNING_CONFIG,id,Action.DELETE,employee);
+
+        assigningConfigRepository.deleteById(id);
     }
 
     public AssigningConfig updateAssigningConfig(AssigningConfig assigningConfig, Employee employee) {
         
         assigningConfig=saveAssigningConfig(assigningConfig);
-        AuditLogs log= new AuditLogs();
-        log.setEntityType(EntityType.ASSIGNING_CONFIG);
-        log.setEntityId(assigningConfig.getId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.ASSIGNING_CONFIG,assigningConfig.getId(),Action.UPDATE,employee);
         
         return assigningConfig;
     }

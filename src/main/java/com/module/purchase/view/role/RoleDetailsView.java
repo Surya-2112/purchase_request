@@ -8,6 +8,7 @@ import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.RoleService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -62,12 +63,13 @@ public class RoleDetailsView extends VerticalLayout implements HasUrlParameter<S
                 formLayout.addFormItem( new Span(employeeGroups),"Role Groups");
 
                 Button updateButton = new Button("Update");
-
+                updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
                 updateButton.addClickListener(clickEvent -> {
                         getUI().ifPresent(ui -> ui.navigate("role-edit/"+ role.getRoleId()));
                 });
 
                 Button deleteButton = new Button("Delete");
+                deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
                 deleteButton.addClickListener(clickEvent -> {
 

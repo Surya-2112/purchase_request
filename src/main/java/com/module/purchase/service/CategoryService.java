@@ -1,10 +1,7 @@
 package com.module.purchase.service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import com.module.purchase.enums.EntityType;
-import com.module.purchase.enums.Action;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -12,16 +9,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
-import com.module.purchase.entity.AuditLogs;
-import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Category;
+import com.module.purchase.entity.Employee;
+import com.module.purchase.enums.Action;
+import com.module.purchase.enums.EntityType;
 import com.module.purchase.repository.CategoryRepository;
 import com.module.purchase.specification.CategorySpecification;
-
-import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -46,14 +43,8 @@ public class CategoryService {
             throw new ResourceAlreadyUsedException("Category already exists with name: " + category.getCategoryName());
         }
         category = saveCategory(category);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.CATEGORY);
-        log.setEntityId(category.getCategoryId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        
+        auditLogsService.addAuditLog(EntityType.CATEGORY,category.getCategoryId(),Action.CREATE,employee);
 
         return category;
     }
@@ -87,14 +78,7 @@ public class CategoryService {
     {    
         getCategoryById(category.getCategoryId()).get();
         category=saveCategory(category);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.CATEGORY);
-        log.setEntityId(category.getCategoryId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.CATEGORY,category.getCategoryId(),Action.UPDATE,employee);
 
         return category;
     }
@@ -107,13 +91,6 @@ public class CategoryService {
         // }
         
         categoryRepository.deleteById(categoryId);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.CATEGORY);
-        log.setEntityId(categoryId);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.CATEGORY,categoryId,Action.DELETE,employee);
     }
 }

@@ -1,6 +1,6 @@
 package com.module.purchase.entity;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EntityType;
@@ -46,7 +46,7 @@ public class AuditLogs {
 
     @NotNull
     @Column(name = "log_timestamp", nullable = false)
-    private LocalDate timestamp;
+    private OffsetDateTime  timestamp;
 
     public Long getAuditLogId() {
         return auditLogId;
@@ -88,11 +88,11 @@ public class AuditLogs {
         this.performedBy = performedBy;
     }
 
-    public LocalDate getTimestamp() {
+    public OffsetDateTime  getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDate timestamp) {
+    public void setTimestamp(OffsetDateTime  timestamp) {
         this.timestamp = timestamp;
     }
 }

@@ -9,6 +9,7 @@ import com.module.purchase.entity.Vendor;
 import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.VendorService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -20,7 +21,6 @@ import com.vaadin.flow.component.textfield.TextField;
 public class VendorForm extends Dialog {
 
     private final VendorService vendorService;
-    private final CategoryService categoryService;
     private final SecurityService securityService;
 
     private final TextField vendorNameField = new TextField("Vendor Name");
@@ -39,7 +39,6 @@ public class VendorForm extends Dialog {
     public VendorForm(VendorService vendorService, CategoryService categoryService, SecurityService securityService) {
 
         this.vendorService = vendorService;
-        this.categoryService = categoryService;
         this.securityService = securityService;
 
         setHeaderTitle("Add Vendor");
@@ -98,7 +97,9 @@ public class VendorForm extends Dialog {
         Button saveButton = new Button("Save");
         Button cancelButton = new Button("Cancel");
         saveButton.addClickListener(e -> saveVendor());
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         cancelButton.addClickListener(e -> close());
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
         add(formLayout, buttons);
     }

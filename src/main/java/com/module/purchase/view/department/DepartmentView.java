@@ -8,6 +8,7 @@ import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -78,14 +79,15 @@ public class DepartmentView extends VerticalLayout {
                 loadDepartments();
             }
         });
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         nextButton.addClickListener(event -> {
-            
         if(currentPage<totalPage-1){
             currentPage++;
             loadDepartments();
         }
         });
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         HorizontalLayout paginationLayout = new HorizontalLayout(
                 previousButton,
@@ -104,7 +106,7 @@ public class DepartmentView extends VerticalLayout {
         H2 title = new H2("Deparment List");
 
         Button addButton = new Button("Add Department");
-
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         addButton.addClickListener(event -> {
             DepartmentForm form = new DepartmentForm(departmentService, employeeService,securityService);
             form.open();
@@ -112,27 +114,20 @@ public class DepartmentView extends VerticalLayout {
 
         addButton.setVisible(securityService.canAccessView("department-form"));
 
-        headerLayout.add(
-                title,
-                addButton);
+        headerLayout.add( title, addButton);
         headerLayout.setWidthFull();
         headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
         headerLayout.setAlignItems(Alignment.CENTER);
 
         HorizontalLayout filterLayout = new HorizontalLayout();
 
-        Button searchButton = new Button(
-                "Search",
-                event -> applyFilter());
-
-        Button clearButton = new Button(
-                "Clear",
-                event -> clearFilter());
-
+        Button searchButton = new Button("Search", event -> applyFilter());
+        searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button clearButton = new Button("Clear", event -> clearFilter());
+        clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
         filterLayout.setAlignItems(Alignment.END);
 
-        filterLayout.add(
-                departmentIdField,
+        filterLayout.add(departmentIdField,
                 departmentNameField,
                 departmentCodeField,
                 activeField,
@@ -151,9 +146,20 @@ public class DepartmentView extends VerticalLayout {
             return department.getDepartmentCode() == null  ? "": department.getDepartmentCode();
         }).setHeader("Department Code").setAutoWidth(true);
 
-        departmentGrid.addColumn(department -> {
-            return Boolean.TRUE.equals( department.getActive()) ? "Yes": "No";
-        }).setHeader("Active").setAutoWidth(true);
+        departmentGrid.addComponentColumn(department -> {
+                        Span badge = new Span(Boolean.TRUE.equals(department.getActive()) ? "Yes" : "No");
+                        badge.getStyle()
+                                        .set("padding", "2px 8px")
+                                        .set("border-radius", "4px")
+                                        .set("font-weight", "bold")
+                                        .set("font-size", "12px");
+                        if (Boolean.TRUE.equals(department.getActive())) {
+                                badge.getStyle().set("background-color", "#dcfce7").set("color", "#15803d");
+                        } else {
+                                badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
+                        }
+                        return badge;
+                }).setHeader("Active").setAutoWidth(true);
 
         departmentGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
@@ -163,6 +169,7 @@ public class DepartmentView extends VerticalLayout {
                 DepartmentDTO department = event.getItem();
                 getUI().ifPresent(ui -> ui.navigate( "department-details/"+ department.getDepartmentId()));
         });
+        departmentGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
 
         loadDepartments();
 

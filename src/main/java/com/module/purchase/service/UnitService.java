@@ -1,6 +1,5 @@
 package com.module.purchase.service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
-import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Item;
 import com.module.purchase.entity.Unit;
@@ -50,14 +48,7 @@ public class UnitService {
 
         unit = saveUnit(unit);
 
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.UNIT);
-        log.setEntityId(Long.valueOf(unit.getId()));
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.UNIT, Long.valueOf(unit.getId()), Action.CREATE, employee);
 
         return unit;
     }
@@ -93,14 +84,7 @@ public class UnitService {
 
         unit = saveUnit(unit);
 
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.UNIT);
-        log.setEntityId(Long.valueOf(unit.getId()));
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-
-       auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.UNIT, Long.valueOf(unit.getId()), Action.UPDATE, employee);
 
         return unit;
     }
@@ -116,13 +100,6 @@ public class UnitService {
 
         unitRepository.deleteById(id);
 
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.UNIT);
-        log.setEntityId(Long.valueOf(id));
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-
-       auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.UNIT, Long.valueOf(id), Action.DELETE, employee);
     }
 }

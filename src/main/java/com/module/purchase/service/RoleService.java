@@ -1,31 +1,27 @@
 package com.module.purchase.service;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import com.module.purchase.repository.RoleRepository;
-import com.module.purchase.entity.AuditLogs;
-import com.module.purchase.entity.Role;
-import com.module.purchase.entityDTO.EmployeeDTO;
-import com.module.purchase.entity.Employee;
-import com.module.purchase.enums.EntityType;
-import com.module.purchase.enums.Action;
-import java.util.Optional;
-import java.time.LocalDate;
-import java.util.List;
-
-import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
+import com.module.purchase.entity.Employee;
+import com.module.purchase.entity.Role;
+import com.module.purchase.entityDTO.EmployeeDTO;
+import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EmployeeGroup;
+import com.module.purchase.enums.EntityType;
+import com.module.purchase.repository.RoleRepository;
 import com.module.purchase.specification.RoleSpecification;
-
-import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -51,13 +47,7 @@ public class RoleService {
             throw new ResourceAlreadyUsedException("Role already exists with name: " + role.getRoleName());
         }  
         role=saveRole(role);
-        AuditLogs log= new AuditLogs();
-        log.setEntityType(EntityType.ROLE);
-        log.setEntityId(role.getRoleId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.ROLE,role.getRoleId(),Action.CREATE,employee);
 
         return role;
     }
@@ -98,14 +88,7 @@ public class RoleService {
             throw new ModificationNotAllowedException("Role name not allowed to modified");
         }
         role=saveRole(role);
-
-        AuditLogs log= new AuditLogs();
-        log.setEntityType(EntityType.ROLE);
-        log.setEntityId(role.getRoleId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.ROLE,role.getRoleId(),Action.UPDATE,employee);
 
         return role;
     }
@@ -120,13 +103,6 @@ public class RoleService {
             throw new ResourceAlreadyUsedException("Cannot delete Role with associated employee");
         }
         roleRepository.deleteById(roleId);
-
-        AuditLogs log= new AuditLogs();
-        log.setEntityType(EntityType.ROLE);
-        log.setEntityId(roleId);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.ROLE,roleId,Action.DELETE,employee);
     }
 }

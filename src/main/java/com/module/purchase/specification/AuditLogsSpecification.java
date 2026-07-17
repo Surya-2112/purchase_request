@@ -1,6 +1,8 @@
 package com.module.purchase.specification;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import org.springframework.data.jpa.domain.Specification;
 
@@ -46,10 +48,23 @@ public class AuditLogsSpecification {
             : cb.equal(root.get("performedBy"),performedBy);
     }
 
-    public static Specification<AuditLogs> hasTimestamp(LocalDate timestamp)
-    {
-        return (root,query,cb)->
-            timestamp == null? null
-            : cb.equal(root.get("timestamp"),timestamp);
-    }
+    public static Specification<AuditLogs> hasTimestamp(LocalDate date) {
+    return (root, query, cb) -> {
+        if (date == null) {
+            return cb.conjunction();
+        }
+
+        OffsetDateTime start = date.atStartOfDay()
+                .atOffset(ZoneOffset.UTC);
+
+        OffsetDateTime end = date.plusDays(1)
+                .atStartOfDay()
+                .atOffset(ZoneOffset.UTC);
+
+        return cb.and(
+                cb.greaterThanOrEqualTo(root.get("timestamp"), start),
+                cb.lessThan(root.get("timestamp"), end)
+        );
+    };
+}
 }

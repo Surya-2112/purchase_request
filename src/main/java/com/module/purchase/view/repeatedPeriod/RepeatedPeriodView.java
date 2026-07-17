@@ -7,10 +7,11 @@ import org.springframework.data.domain.Pageable;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.enums.FrequencyType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
-import com.module.purchase.service.RepeatedPeriodService;
 import com.module.purchase.service.PurchaseRequestLineService;
+import com.module.purchase.service.RepeatedPeriodService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
@@ -80,6 +81,8 @@ public class RepeatedPeriodView extends VerticalLayout {
             loadData();
         });
 
+        clearBtn.addThemeVariants(ButtonVariant.LUMO_ERROR);
+
         HorizontalLayout filtersLayout = new HorizontalLayout(referTypeFilter, frequencyTypeFilter, nextDateFilter, searchBtn, clearBtn);
         filtersLayout.setAlignItems(Alignment.END);
 
@@ -107,6 +110,7 @@ public class RepeatedPeriodView extends VerticalLayout {
 
         grid.setWidthFull();
         grid.setHeightFull();
+        grid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         grid.addItemDoubleClickListener(event -> {
@@ -114,12 +118,14 @@ public class RepeatedPeriodView extends VerticalLayout {
             getUI().ifPresent(ui -> ui.navigate("repeated-period-details/" + selected.getId()));
         });
 
-        Button prev = new Button("Prev", event -> {
+        Button prev = new Button("Previous");
+        prev.addClickListener(event -> {
             if (currentPage > 0) {
                 currentPage--;
                 loadData();
             }
         });
+        prev.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         Button next = new Button("Next", event -> {
             if (currentPage < totalPages - 1) {
@@ -127,6 +133,7 @@ public class RepeatedPeriodView extends VerticalLayout {
                 loadData();
             }
         });
+        next.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);

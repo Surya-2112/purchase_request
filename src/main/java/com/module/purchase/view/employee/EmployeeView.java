@@ -16,6 +16,7 @@ import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.RoleService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -56,7 +57,7 @@ public class EmployeeView extends VerticalLayout {
                         DepartmentService departmentService, SecurityService securityService) {
                 this.employeeService = employeeService;
                 this.securityService = securityService;
-                
+
                 setSizeFull();
                 setPadding(true);
                 setSpacing(true);
@@ -76,7 +77,9 @@ public class EmployeeView extends VerticalLayout {
                 activeField.setWidth("100px");
 
                 Button previousButton = new Button("Previous");
+                previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
                 Button nextButton = new Button("Next");
+                nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
                 ComboBox<Integer> pageSizeField = new ComboBox<>();
                 pageSizeField.setItems(10, 25, 50, 100);
@@ -96,9 +99,9 @@ public class EmployeeView extends VerticalLayout {
                 });
 
                 nextButton.addClickListener(event -> {
-                        if(currentPage<totalPage-1) {
-                        currentPage++;
-                        loadEmployees();
+                        if (currentPage < totalPage - 1) {
+                                currentPage++;
+                                loadEmployees();
                         }
                 });
 
@@ -108,7 +111,7 @@ public class EmployeeView extends VerticalLayout {
                 paginationLayout.setAlignItems(Alignment.CENTER);
 
                 HorizontalLayout headerLayout = new HorizontalLayout();
-                H2 title = new H2("Employees List");  
+                H2 title = new H2("Employees List");
 
                 Button addButton = new Button("Add Employee");
                 addButton.addClickListener(event -> {
@@ -117,6 +120,7 @@ public class EmployeeView extends VerticalLayout {
 
                 boolean hasFormAccess = securityService.canAccessView("employee-form");
                 addButton.setVisible(hasFormAccess);
+                addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
 
                 headerLayout.add(title, addButton);
                 headerLayout.setWidthFull();
@@ -125,29 +129,51 @@ public class EmployeeView extends VerticalLayout {
 
                 HorizontalLayout filterLayout = new HorizontalLayout();
                 Button searchButton = new Button("Search", event -> applyFilter());
+                searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
                 Button clearButton = new Button("Clear", event -> clearFilter());
+                clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
                 filterLayout.setAlignItems(Alignment.END);
-                filterLayout.add(employeeIdField, employeeNameField, departmentField, roleField, activeField, searchButton, clearButton);
+                filterLayout.add(employeeIdField, employeeNameField, departmentField, roleField, activeField,
+                                searchButton, clearButton);
                 filterLayout.setWidthFull();
-                
+
                 if (!hasFormAccess) {
                         filterLayout.setVisible(false);
                 }
 
                 employeeGrid.addColumn(EmployeeDTO::getEmployeeId).setHeader("Employee ID").setAutoWidth(true);
                 employeeGrid.addColumn(EmployeeDTO::getEmployeeName).setHeader("Employee Name").setAutoWidth(true);
-                employeeGrid.addColumn(employee -> employee.getDepartment() == null ? "" : employee.getDepartment().getDepartmentName()).setHeader("Department").setAutoWidth(true);
-                employeeGrid.addColumn(employee -> employee.getRole() == null ? "" : employee.getRole().getRoleName()).setHeader("Role").setAutoWidth(true);
-                employeeGrid.addColumn(employee -> employee.getActive() ? "Yes" : "No").setHeader("Active").setAutoWidth(true);
+                employeeGrid.addColumn(employee -> employee.getDepartment() == null ? ""
+                                : employee.getDepartment().getDepartmentName()).setHeader("Department")
+                                .setAutoWidth(true);
+                employeeGrid.addColumn(employee -> employee.getRole() == null ? "" : employee.getRole().getRoleName())
+                                .setHeader("Role").setAutoWidth(true);
+                employeeGrid.addComponentColumn(employee -> {
+                        Span badge = new Span(Boolean.TRUE.equals(employee.getActive()) ? "Yes" : "No");
+                        badge.getStyle()
+                                        .set("padding", "2px 8px")
+                                        .set("border-radius", "4px")
+                                        .set("font-weight", "bold")
+                                        .set("font-size", "12px");
+                        if (Boolean.TRUE.equals(employee.getActive())) {
+                                badge.getStyle().set("background-color", "#dcfce7").set("color", "#15803d");
+                        } else {
+                                badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
+                        }
+                        return badge;
+                }).setHeader("Active").setAutoWidth(true);
 
                 employeeGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
                 employeeGrid.setSizeFull();
+                employeeGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
 
                 employeeGrid.addItemDoubleClickListener(event -> {
                         EmployeeDTO employee = event.getItem();
-                        if (securityService.getLoggedInUser().getEmployee().getEmployeeId().equals(employee.getEmployeeId()) 
-                        || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups().contains(EmployeeGroup.MANAGER)) {
+                        if (securityService.getLoggedInUser().getEmployee().getEmployeeId()
+                                        .equals(employee.getEmployeeId())
+                                        || securityService.getLoggedInUser().getEmployee().getRole().getEmployeeGroups()
+                                                        .contains(EmployeeGroup.MANAGER)) {
                                 getUI().ifPresent(ui -> ui.navigate("employee-details/" + employee.getEmployeeId()));
                         } else {
                                 Notification.show("Access Denied", 3000, Notification.Position.MIDDLE);
@@ -206,15 +232,17 @@ public class EmployeeView extends VerticalLayout {
                 boolean hasFormAccess = securityService.canAccessView("management-group");
 
                 if (hasFormAccess) {
-                        Page<EmployeeDTO> employeePage = employeeService.getAllEmployees(currentFilter, currentPage, pageSize);
+                        Page<EmployeeDTO> employeePage = employeeService.getAllEmployees(currentFilter, currentPage,
+                                        pageSize);
                         employeeGrid.setItems(employeePage.getContent());
                         pageInfo.setText("Page " + (currentPage + 1) + " of " + employeePage.getTotalPages());
                         paginationLayout.setVisible(true);
-                        totalPage=employeePage.getTotalPages();
+                        totalPage = employeePage.getTotalPages();
                 } else {
                         Users user = securityService.getLoggedInUser();
                         if (user != null && user.getEmployee() != null) {
-                                Employee selfDto = employeeService.getEmployeeById(user.getEmployee().getEmployeeId()).orElse(null);
+                                Employee selfDto = employeeService.getEmployeeById(user.getEmployee().getEmployeeId())
+                                                .orElse(null);
                                 if (selfDto != null) {
                                         employeeGrid.setItems(List.of(convertToDto(selfDto)));
                                 } else {
@@ -222,7 +250,7 @@ public class EmployeeView extends VerticalLayout {
                                 }
                         }
                         pageInfo.setText("Page 1 of 1");
-                        totalPage=1;
+                        totalPage = 1;
                         paginationLayout.setVisible(false);
                 }
         }

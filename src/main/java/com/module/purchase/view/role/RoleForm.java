@@ -7,6 +7,7 @@ import com.module.purchase.entity.Role;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.RoleService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -48,12 +49,13 @@ public class RoleForm extends Dialog {
 
         formLayout.add(roleNameField,employeeGroupField);
 
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2));
+        formLayout.setResponsiveSteps( new FormLayout.ResponsiveStep("0", 2));
 
         Button saveButton =new Button("Save");
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         Button cancelButton = new Button("Cancel");
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
         saveButton.addClickListener(event -> saveRole());
 

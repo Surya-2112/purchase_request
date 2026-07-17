@@ -78,8 +78,11 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
         private final Span budgetYear = new Span();
         private final Span totalBudgetAmount = new Span();
         private final Span remainingBudgetAmount = new Span();
+        private double totalQty=0;
         private Double remainingBudget = 0.0;
         private boolean isBudgetConfigured = false;
+
+        private Map<Long,Double> remaingQty=new HashMap<Long,Double>();
 
         private final Button approveBtn = new Button("Approve");
         private final Button rejectBtn = new Button("Reject");
@@ -322,21 +325,27 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                         approvedQtyField.setWidth("120px");
 
                         if (line.getApprovedQuantity() == null) {
-                                line.setApprovedQuantity(line.getRequestedQuantity());
+                                line.setApprovedQuantity(line.getRequestedQuantity());   
+                                if(!remaingQty.containsKey(line.getId())) {      
+                                remaingQty.put(line.getId(), line.getRequestedQuantity());
+                                }
+                        }else{
+                                if(!remaingQty.containsKey(line.getId()))   
+                                {
+                              remaingQty.put(line.getId(), line.getApprovedQuantity());
+                                }
                         }
-
+                        
                         approvedQtyField.setValue(line.getApprovedQuantity());
                         approvedQtyField.setMin(0.0);
-                        approvedQtyField.setMax(line.getRequestedQuantity());
                         approvedQtyField.setStepButtonsVisible(true);
+                        approvedQtyField.setMax(remaingQty.get(line.getId()));
                         approvedQtyField.setReadOnly(!canUserModifyData || !isBudgetConfigured);
 
                         approvedQtyField.addValueChangeListener(e -> {
                                 if (e.getValue() != null) {
-                                        if (e.getValue() > line.getRequestedQuantity()) {
-                                                Notification.show(
-                                                                "Approved quantity cannot exceed original requested levels.",
-                                                                3000, Position.MIDDLE);
+                                        if (e.getValue() > remaingQty.get(line.getId())) {
+                                                Notification.show("Approved quantity cannot exceed original requested levels.",3000, Position.MIDDLE);
                                                 approvedQtyField.setValue(line.getRequestedQuantity());
                                                 line.setApprovedQuantity(line.getRequestedQuantity());
                                         } else {
@@ -537,7 +546,17 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                 try {
                         Employee actingEmployeeGroupMember = securityService.getLoggedInUser().getEmployee();
 
+                         for (PurchaseRequestLine approvedLine : workingLinesList) {
+                                 totalQty+=approvedLine.getApprovedQuantity();
+                         }
+                         if(totalQty==0)
+                         {
+                                Notification.show("Cannot approve the request there is no approved Quantity", 3000,
+                                        Position.TOP_CENTER);
+                                        return ;
+                         }
                         for (PurchaseRequestLine approvedLine : workingLinesList) {
+                               
                                 if (approvedLine.getApprovedQuantity() == 0) {
                                         approvedLine.setStatus(Status.REJECTED);
                                 }
@@ -545,8 +564,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                                         RepeatedPeriod activeSchedule = workingSchedulesMap.get(approvedLine);
                                         activeSchedule.setReferType(RepeatedPeriodReferType.PURCHASE_REQUEST_LINE);
                                         activeSchedule.setReferId(approvedLine.getId());
-                                        RepeatedPeriod savedPeriod = repeatedPeriodService
-                                                        .addRepeatedPeriod(activeSchedule, actingEmployeeGroupMember);
+                                        RepeatedPeriod savedPeriod = repeatedPeriodService.addRepeatedPeriod(activeSchedule, actingEmployeeGroupMember);
                                         approvedLine.setRepeatableId(savedPeriod.getId());
                                 }
                                 lineService.updatePurchaseRequestLine(approvedLine, actingEmployeeGroupMember);
@@ -561,8 +579,7 @@ public class AssignedApprovalsDetailsView extends VerticalLayout implements Befo
                                                                 .getRepeatedPeriodById(approvedLine.getRepeatableId())
                                                                 .get();
                                                 period.setStatus(RequestForQuotationStatus.CANCELLED);
-                                                repeatedPeriodService.updateRepeatedPeriod(period,
-                                                                actingEmployeeGroupMember);
+                                                repeatedPeriodService.updateRepeatedPeriod(period, actingEmployeeGroupMember);
                                         }
                                 }
                         }

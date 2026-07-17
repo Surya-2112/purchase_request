@@ -64,13 +64,12 @@ public class AssigningConfigDetailsView extends VerticalLayout implements HasUrl
                     "Approval Type");
             formLayout.addFormItem( new Span(assigningConfig.getLevel() == null ? "" : assigningConfig.getLevel().toString()), "Level");
             formLayout.addFormItem(new Span( assigningConfig.getEmployeeGroup() == null ? "" : assigningConfig.getEmployeeGroup().name()),
-                    "Employee Group");
+                    "Role Group");
             formLayout.addFormItem(new Span(assigningConfig.getMinAmount() == null ? "" : assigningConfig.getMinAmount().toString()),
                     "Min Amount");
             formLayout.addFormItem(new Span(assigningConfig.getMaxAmount() == null ? "" : assigningConfig.getMaxAmount().toString()),
                     "Max Amount");
-            formLayout.addFormItem(
-                            new Span(assigningConfig.getMarginDifferencePercentage() == null ? ""
+            formLayout.addFormItem( new Span(assigningConfig.getMarginDifferencePercentage() == null ? ""
                                     : (assigningConfig.getMarginDifferencePercentage().toString()) + "%"),
                             "Margin Difference");
 

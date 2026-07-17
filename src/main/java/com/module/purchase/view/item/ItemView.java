@@ -28,6 +28,7 @@ import com.module.purchase.service.PurchaseRequestHeaderService;
 import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -142,6 +143,7 @@ public class ItemView extends VerticalLayout {
             form.open();
         });
         addButton.setVisible(securityService.canAccessView("item-form"));
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
         headerLayout.setWidthFull();
@@ -151,13 +153,18 @@ public class ItemView extends VerticalLayout {
         itemIdField.setPattern("[0-9]{0,20}");
         itemIdField.setErrorMessage("Enter a valid number");
 
+        itemCodeField.setWidth("100px");
+
         categoryField.setItems(categoryService.getCategories());
         categoryField.setItemLabelGenerator(Category::getCategoryName);
         unitField.setItems(unitService.getAllUnits());
         unitField.setItemLabelGenerator(Unit::getName);
-        unitField.setWidth("75px");
+        unitField.setWidth("120px");
+
         Button searchButton = new Button("Search", e -> applyFilter());
+        searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button clearButton = new Button("Clear", e -> clearFilter());
+        clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout filterLayout = new HorizontalLayout(
                 itemIdField, itemNameField, itemCodeField, categoryField, unitField, searchButton, clearButton);
@@ -171,6 +178,7 @@ public class ItemView extends VerticalLayout {
         itemGrid.addColumn(item -> item.getUnit() == null ? "" : item.getUnit().getName()).setHeader("Unit").setAutoWidth(true);
         itemGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         itemGrid.setSizeFull();
+        itemGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
 
         itemGrid.addItemDoubleClickListener(event -> {
             Item item = event.getItem();
@@ -192,10 +200,12 @@ public class ItemView extends VerticalLayout {
                 loadItems();
             }
         });
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button nextButton = new Button("Next", e -> {
             currentPage++;
             loadItems();
         });
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         HorizontalLayout paginationLayout = new HorizontalLayout(previousButton, pageInfo, nextButton, new Span("Page Size"), pageSizeField);
         paginationLayout.setWidthFull();
@@ -269,7 +279,9 @@ public class ItemView extends VerticalLayout {
 
         existingItemBox.addValueChangeListener(ev -> {
             if (ev.getValue() != null) {
-                existingVariantBox.setItems(itemVariantService.getItemVariantsByItem(ev.getValue()));
+                  ItemVariant variant= new ItemVariant();
+                    variant.setItem(ev.getValue());
+                existingVariantBox.setItems(itemVariantService.getItemVariantsList(variant));
             } else {
                 existingVariantBox.clear();
             }

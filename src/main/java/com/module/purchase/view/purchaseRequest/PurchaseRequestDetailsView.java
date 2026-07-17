@@ -274,6 +274,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
                 lineGrid.setWidthFull();
                 lineGrid.setAllRowsVisible(true);
+                lineGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
                 lineGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
                 approvalGrid.removeAllColumns();
@@ -284,14 +285,17 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
                                 : "")
                                 .setHeader("Approver Group").setAutoWidth(true);
 
-                approvalGrid.addColumn(AssigningApprovals::getAssignedDate).setHeader("Assigned Date")
+                approvalGrid.addColumn(AssigningApprovals::getApprovedDate).setHeader("Approved Date")
                                 .setWidth("160px");
 
                 approvalGrid.addColumn(a -> a.getStatus() != null ? a.getStatus().getDisplayName() : "")
                                 .setHeader("Status").setWidth("150px");
 
+                approvalGrid.addColumn(AssigningApprovals::getComments).setHeader("Comment");
+
                 approvalGrid.setWidthFull();
                 approvalGrid.setAllRowsVisible(true);
+                approvalGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
                 approvalGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
                 documentGrid.removeAllColumns();
@@ -364,6 +368,7 @@ public class PurchaseRequestDetailsView extends VerticalLayout implements Before
 
                 documentGrid.setWidthFull();
                 documentGrid.setAllRowsVisible(true);
+                documentGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
                 documentGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         }
 

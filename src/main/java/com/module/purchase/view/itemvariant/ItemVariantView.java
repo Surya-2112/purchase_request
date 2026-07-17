@@ -9,6 +9,7 @@ import com.module.purchase.service.ItemService;
 import com.module.purchase.service.ItemVariantService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -44,10 +45,7 @@ public class ItemVariantView extends VerticalLayout {
     private final Span pageInfo = new Span();
     private ItemVariant currentFilter = new ItemVariant();
     
-    public ItemVariantView(
-            ItemVariantService itemVariantService,
-            ItemService itemService,
-            SecurityService securityService) {
+    public ItemVariantView( ItemVariantService itemVariantService, ItemService itemService, SecurityService securityService) {
 
         this.itemVariantService = itemVariantService;
 
@@ -58,6 +56,8 @@ public class ItemVariantView extends VerticalLayout {
         H2 title = new H2("Item Variant List");
 
         Button addButton = new Button("Add Variant");
+
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         addButton.addClickListener(e -> {
             ItemVariantForm form =
@@ -87,20 +87,15 @@ public class ItemVariantView extends VerticalLayout {
         currentFilter.setActive(null);
 
 
-        Button searchButton =
-                new Button("Search", e -> applyFilter());
+        Button searchButton = new Button("Search", e -> applyFilter());
 
-        Button clearButton =
-                new Button("Clear", e -> clearFilter());
+        Button clearButton = new Button("Clear", e -> clearFilter());
+
+        searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout filterLayout =
-                new HorizontalLayout(
-                        variantIdField,
-                        itemField,
-                        specificationField,
-                        activeField,
-                        searchButton,
-                        clearButton);
+                new HorizontalLayout( variantIdField, itemField, specificationField, activeField, searchButton, clearButton);
 
         filterLayout.setAlignItems(Alignment.END);
         filterLayout.setWidthFull();
@@ -124,16 +119,26 @@ public class ItemVariantView extends VerticalLayout {
                 .setHeader("Estimated Price")
                 .setAutoWidth(true);
 
-        itemVariantGrid.addColumn(variant ->
-                Boolean.TRUE.equals(variant.getActive())
-                        ? "Yes"
-                        : "No")
-                .setHeader("Active")
-                .setAutoWidth(true);
+        itemVariantGrid.addComponentColumn(variant -> {
+            Span badge = new Span(Boolean.TRUE.equals(variant.getActive()) ? "Yes" : "No");
+             badge.getStyle()
+                 .set("padding", "2px 8px")
+                 .set("border-radius", "4px")
+                 .set("font-weight", "bold")
+                 .set("font-size", "12px");
+            if (Boolean.TRUE.equals(variant.getActive())) {
+                badge.getStyle().set("background-color", "#dcfce7").set("color", "#15803d");
+            } else {
+                badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
+            }
+            return badge;
+        }).setHeader("Active").setAutoWidth(true);
 
         itemVariantGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         itemVariantGrid.setSizeFull();
+
+        itemVariantGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
 
         itemVariantGrid.addItemDoubleClickListener(event -> {
 
@@ -163,21 +168,16 @@ public class ItemVariantView extends VerticalLayout {
                     }
                 });
 
-        Button nextButton =
-                new Button("Next", e -> {
+        Button nextButton =new Button("Next", e -> {
                   if(currentPage<totalPage-1){
                     currentPage++;
                     loadVariants();
                   }
                 });
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        HorizontalLayout paginationLayout =
-                new HorizontalLayout(
-                        previousButton,
-                        pageInfo,
-                        nextButton,
-                        new Span("Page Size"),
-                        pageSizeField);
+        HorizontalLayout paginationLayout = new HorizontalLayout( previousButton, pageInfo, nextButton,new Span("Page Size"), pageSizeField);
 
         paginationLayout.setWidthFull();
         paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
@@ -185,22 +185,14 @@ public class ItemVariantView extends VerticalLayout {
 
         loadVariants();
 
-        add(
-                headerLayout,
-                filterLayout,
-                itemVariantGrid,
-                paginationLayout);
+        add(headerLayout, filterLayout, itemVariantGrid, paginationLayout);
 
         expand(itemVariantGrid);
     }
 
     private void loadVariants() {
 
-        Page<ItemVariant> page = itemVariantService.getAllItemVariants(
-                        currentFilter,
-                        currentPage,
-                        pageSize);
-
+        Page<ItemVariant> page = itemVariantService.getAllItemVariants( currentFilter, currentPage, pageSize);
         itemVariantGrid.setItems(page.getContent());
         totalPage=page.getTotalPages();
         pageInfo.setText("Page "+ (currentPage + 1)+ " of "+ page.getTotalPages());

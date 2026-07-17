@@ -1,22 +1,26 @@
 package com.module.purchase.view.employee;
 
+import java.util.List;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Address;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Role;
+import com.module.purchase.entityDTO.DepartmentDTO;
 import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.RoleService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEvent;
@@ -43,7 +47,7 @@ public class EmployeeEditView extends VerticalLayout implements HasUrlParameter<
 
         private final ComboBox<Role> roleField = new ComboBox<>("Role");
 
-        private final ComboBox<String> activeField = new ComboBox<>("Status");
+        private final RadioButtonGroup<String> activeField = new RadioButtonGroup<String> ("Status");
 
         private final TextField addressLineField = new TextField("Address Line");
 
@@ -71,8 +75,7 @@ public class EmployeeEditView extends VerticalLayout implements HasUrlParameter<
                 employeeNameField.setRequired(true);
                 employeeNameField.setPattern("^(?=.{3,72}$)[A-Za-z]+(?:[ '.][A-Za-z]+)*$");
                 employeeNameField.setMaxLength(72);
-                employeeNameField.setErrorMessage(
-                                "Enter a valid name. Only letters, spaces, apostrophe and dot are allowed.");
+                employeeNameField.setErrorMessage("Enter a valid name. Only letters, spaces, apostrophe and dot are allowed.");
 
                 employeeEmailField.setRequired(true);
                 employeeEmailField.setMaxLength(100);
@@ -80,13 +83,11 @@ public class EmployeeEditView extends VerticalLayout implements HasUrlParameter<
 
                 phoneField.setPattern("^\\+?[0-9]{4,15}$");
                 phoneField.setMaxLength(16);
-                phoneField.setErrorMessage(
-                                "Enter a valid phone number with 4 to 15 digits");
+                phoneField.setErrorMessage("Enter a valid phone number with 4 to 15 digits");
 
                 postalCodeField.setPattern("[0-9a-zA-Z]{3,10}");
                 postalCodeField.setMaxLength(10);
-                postalCodeField.setErrorMessage(
-                                "Enter a valid postal code (3-10 characters)");
+                postalCodeField.setErrorMessage("Enter a valid postal code (3-10 characters)");
 
                 countryField.setPattern("^(?=.{2,50}$)[A-Za-z]+(?:\\s[A-Za-z]+)*$");
                 countryField.setMaxLength(50);
@@ -104,7 +105,10 @@ public class EmployeeEditView extends VerticalLayout implements HasUrlParameter<
                 roleField.setRequired(true);
                 activeField.setRequired(true);
 
-                departmentField.setItems(departmentService.getDepartments());
+                DepartmentDTO departmentDTO = new DepartmentDTO();
+                departmentDTO.setActive(true);
+                List<Department> departments = departmentService.getAllDepartmentsList(departmentDTO);
+                departmentField.setItems(departments);
 
                 departmentField.setItemLabelGenerator(Department::getDepartmentName);
 
@@ -198,19 +202,13 @@ public class EmployeeEditView extends VerticalLayout implements HasUrlParameter<
                                         return;
                                 }
                                 employee.setEmployeeName(employeeNameField.getValue());
-
                                 employee.setEmployeeEmail(employeeEmailField.getValue());
 
-                                String str = phoneField.getValue().trim().equals("") ? null
-                                                : phoneField.getValue().trim();
+                                String str = phoneField.getValue().trim().equals("") ? null: phoneField.getValue().trim();
                                 employee.setEmployeePhoneNumber(str);
-
                                 employee.setDepartment(departmentField.getValue());
-
                                 employee.setRole(roleField.getValue());
-
-                                employee.setActive(
-                                                activeField.getValue().equals("Active"));
+                                employee.setActive(activeField.getValue().equals("Active"));
 
                                 Address updatedAddress = employee.getAddress();
 
@@ -240,6 +238,9 @@ public class EmployeeEditView extends VerticalLayout implements HasUrlParameter<
                 cancelButton.addClickListener(clickEvent -> {
                         getUI().ifPresent(ui -> ui.navigate("employee-details/" + employee.getEmployeeId()));
                 });
+                saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+                cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
+                
                 HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
                 add(title, formLayout, buttonLayout);
         }catch (NumberFormatException e) {

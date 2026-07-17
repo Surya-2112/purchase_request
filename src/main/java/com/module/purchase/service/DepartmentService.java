@@ -1,37 +1,32 @@
 package com.module.purchase.service;
 
-import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+
 import org.hibernate.validator.internal.util.stereotypes.Lazy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.module.purchase.repository.DepartmentRepository;
-import com.module.purchase.specification.DepartmentSpecification;
-import com.module.purchase.entity.AuditLogs;
+import com.module.purchase.customException.ModificationNotAllowedException;
+import com.module.purchase.customException.ResourceAlreadyUsedException;
+import com.module.purchase.customException.ResourceMissingFieldException;
+import com.module.purchase.customException.ResourceNotFoundException;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entityDTO.DepartmentDTO;
 import com.module.purchase.entityDTO.EmployeeDTO;
 import com.module.purchase.entityDTO.PurchaseRequestDTO;
-import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.Action;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
-import com.module.purchase.customException.ModificationNotAllowedException;
-import com.module.purchase.customException.ResourceAlreadyUsedException;
-import com.module.purchase.customException.ResourceMissingFieldException;
-import com.module.purchase.customException.ResourceNotFoundException;
+import com.module.purchase.enums.EntityType;
 import com.module.purchase.mapper.DepartmentMapper;
-
-import org.springframework.transaction.annotation.Transactional;
+import com.module.purchase.repository.DepartmentRepository;
+import com.module.purchase.specification.DepartmentSpecification;
 
 @Service
 @Transactional
@@ -71,14 +66,7 @@ public class DepartmentService {
             throw new ResourceAlreadyUsedException("Department with Name " + department.getDepartmentName() + " already exists.");
         }
         saveDepartment(department);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.DEPARTMENT);
-        log.setEntityId(department.getDepartmentId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.DEPARTMENT,department.getDepartmentId(),Action.CREATE,employee);
 
         return department;
     }
@@ -128,16 +116,15 @@ public class DepartmentService {
             }
         }
 
-        saveDepartment(department);
+        EmployeeDTO emp=new EmployeeDTO();
+        emp.setDepartment(existingDepartment);
 
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.DEPARTMENT);
-        log.setEntityId(department.getDepartmentId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-        
+        if(!department.getActive() && employeeSerivce.getCountEmployees(emp)>0)
+        {
+            throw new RuntimeException("Cannot inActive department because it associated with Employee");
+        }
+        saveDepartment(department);
+        auditLogsService.addAuditLog(EntityType.DEPARTMENT,department.getDepartmentId(),Action.UPDATE,employee);
         return department;
     }
 
@@ -167,15 +154,18 @@ public class DepartmentService {
         {
             throw new ResourceAlreadyUsedException("Cannot delete department with associated purchase request headers");
         }
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.DEPARTMENT);
-        log.setEntityId(departmentId);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.DEPARTMENT,departmentId,Action.DELETE,employee);
         departmentRepository.deleteById(departmentId);
+    }
+
+    public List<Department> getAllDepartmentsList(DepartmentDTO departmentDTO)
+    {
+         Specification<Department> spec= Specification
+        .where(DepartmentSpecification.hasDepartmentId(departmentDTO.getDepartmentId()))
+        .and(DepartmentSpecification.hasDepartmentName(departmentDTO.getDepartmentName()))
+        .and(DepartmentSpecification.hasDepartmentCode(departmentDTO.getDepartmentCode()))
+        .and(DepartmentSpecification.hasActive(departmentDTO.getActive()));
+
+        return departmentRepository.findAll(spec);
     }
 }

@@ -63,7 +63,7 @@ public class AssigningConfigForm extends VerticalLayout {
         approvalTypeSelector.addValueChangeListener(event -> loadHierarchyForApprovalType(event.getValue()));
 
         addLevelButton.setIcon(VaadinIcon.PLUS.create());
-        addLevelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        addLevelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         addLevelButton.setEnabled(false);
         addLevelButton.addClickListener(e -> openInlineRowForNewLevel());
 
@@ -96,7 +96,7 @@ public class AssigningConfigForm extends VerticalLayout {
                 .setSortable(true);
 
         configGrid.addColumn(item -> item.getEmployeeGroup() != null ? item.getEmployeeGroup().getDisplayName() : "")
-                .setHeader("Employee Group")
+                .setHeader("Role Group")
                 .setEditorComponent(groupEditField);
 
         configGrid.addColumn(AssigningConfig::getMinAmount)

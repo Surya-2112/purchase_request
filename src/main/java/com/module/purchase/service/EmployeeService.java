@@ -1,6 +1,5 @@
 package com.module.purchase.service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,8 +20,8 @@ import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entityDTO.AssigningApprovalsDTO;
 import com.module.purchase.entityDTO.EmployeeDTO;
-import com.module.purchase.entityDTO.PurchaseRequestDTO;
 import com.module.purchase.entityDTO.PurchaseOrderDTO;
+import com.module.purchase.entityDTO.PurchaseRequestDTO;
 import com.module.purchase.enums.Action;
 import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.EntityType;
@@ -57,6 +56,10 @@ public class EmployeeService {
     @Autowired
     private AssigningApprovalsService assigningApprovalService;
 
+    @Autowired
+    @Lazy
+    private UsersService userService;
+
     public Employee saveEmployee(Employee employee) {
         return employeeRepository.save(employee);
     }
@@ -71,13 +74,7 @@ public class EmployeeService {
         employee.setActive(true);
         employee = saveEmployee(employee);
 
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.EMPLOYEE);
-        log.setEntityId(employee.getEmployeeId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(created);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.EMPLOYEE,employee.getEmployeeId(),Action.CREATE,employee);
 
         return employee;
     }
@@ -130,20 +127,14 @@ public class EmployeeService {
                 throw new RuntimeException("This employee is  head of department");
             }
         }
+        auditLogsService.addAuditLog(EntityType.EMPLOYEE,employee.getEmployeeId(),Action.UPDATE,employee);
 
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.EMPLOYEE);
-        log.setEntityId(employee.getEmployeeId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(updated);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-        try {
-            employee = saveEmployee(employee);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+        if(employee.getActive()==false && employee.getUsers()!=null)
+        {   
+            employee.getUsers().setActive(false);
+            userService.updateUser(employee.getUsers(),updated);
         }
-        System.out.println("phone number:" + employee.getEmployeePhoneNumber() + " " + employee.getAddress());
+        employee = saveEmployee(employee);        
         return employee;
     }
 
@@ -152,7 +143,7 @@ public class EmployeeService {
 
         AuditLogs auditLogs = new AuditLogs();
         auditLogs.setPerformedBy(existingEmployee);
-        Long auditLogsCount = auditLogsService.getAuditLogsCount(auditLogs);
+        Long auditLogsCount = auditLogsService.getAuditLogsCount(auditLogs, null);
 
         AssigningApprovalsDTO approvals = new AssigningApprovalsDTO();
         approvals.setAssignedBy(existingEmployee);
@@ -180,14 +171,7 @@ public class EmployeeService {
             throw new ResourceAlreadyUsedException("Cannot delete Employee with associated purchase order header");
         }
 
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.EMPLOYEE);
-        log.setEntityId(employeeId);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(deleted);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.EMPLOYEE,employeeId,Action.DELETE,deleted);
         employeeRepository.deleteById(employeeId);
     }
 

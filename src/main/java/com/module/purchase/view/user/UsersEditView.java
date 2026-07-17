@@ -10,12 +10,14 @@ import com.module.purchase.service.UsersService;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -36,16 +38,11 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Str
 
     private final TextField userNameField = new TextField("User Name");
     private final EmailField userEmailField = new EmailField("User Email");
-
     private final PasswordField passwordField = new PasswordField("New Password (optional)");
-
     private final ComboBox<String> userTypeField = new ComboBox<>("User Type");
-
     private final ComboBox<Employee> employeeField = new ComboBox<>("Employee");
-
     private final ComboBox<Vendor> vendorField = new ComboBox<>("Vendor");
-
-    private final ComboBox<String> activeField = new ComboBox<>("Status");
+    private final RadioButtonGroup<String> activeField = new RadioButtonGroup<String>("Status");
 
     public UsersEditView(UsersService usersService, EmployeeService employeeService,
             VendorService vendorService, SecurityService securityService) {
@@ -93,16 +90,13 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Str
         H2 title = new H2("Update User");
 
         userNameField.setValue(user.getUserName() == null ? "" : user.getUserName());
-
         userEmailField.setValue(user.getUserEmail() == null ? "" : user.getUserEmail());
-
         userEmailField.setReadOnly(true);
 
         if (user.getEmployee() != null) {
 
             userTypeField.setValue("Employee");
             employeeField.setValue(user.getEmployee());
-
             employeeField.setVisible(true);
             vendorField.setVisible(false);
 
@@ -110,7 +104,6 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Str
 
             userTypeField.setValue("Vendor");
             vendorField.setValue(user.getVendor());
-
             employeeField.setVisible(false);
             vendorField.setVisible(true);
         }
@@ -118,36 +111,20 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Str
         userTypeField.setReadOnly(true);
         employeeField.setReadOnly(true);
         vendorField.setReadOnly(true);
-
-        activeField.setValue(
-                Boolean.TRUE.equals(user.getActive())
-                        ? "Active"
-                        : "Inactive");
-
+        activeField.setValue( Boolean.TRUE.equals(user.getActive()) ? "Active" : "Inactive");
         activeField.setReadOnly(!securityService.canAccessView("user-form"));
 
         FormLayout formLayout = new FormLayout();
-
-        formLayout.add(
-                userNameField,
-                userEmailField,
-                passwordField,
-                userTypeField,
-                employeeField,
-                vendorField,
-                activeField);
-
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2));
+        formLayout.add(userNameField, userEmailField, passwordField, userTypeField, employeeField, vendorField, activeField);
+        formLayout.setResponsiveSteps( new FormLayout.ResponsiveStep("0", 2));
 
         Button saveButton = new Button("Update");
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         saveButton.addClickListener(e -> {
 
             try {
-                if (userNameField.isEmpty() || userEmailField.isEmpty() || passwordField.isEmpty()
-                        || userTypeField.isEmpty()) {
-
+                if (userNameField.isEmpty() || userEmailField.isEmpty() || userTypeField.isEmpty()) {
                     Notification.show("Please fill all required fields", 3000, Notification.Position.TOP_CENTER);
                     return;
                 }
@@ -156,7 +133,6 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Str
                     Notification.show("Please correct validation errors", 3000, Notification.Position.TOP_CENTER);
                 }
                 user.setUserName(userNameField.getValue());
-
                 user.setActive("Active".equals(activeField.getValue()));
 
                 if (!passwordField.isEmpty()) {
@@ -180,7 +156,7 @@ public class UsersEditView extends VerticalLayout implements HasUrlParameter<Str
         Button cancelButton = new Button("Cancel");
 
         cancelButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("user-details/" + user.getUserId())));
-
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
 
         add(title, formLayout, buttons);

@@ -8,12 +8,14 @@ import com.module.purchase.service.ItemService;
 import com.module.purchase.service.ItemVariantService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.router.BeforeEvent;
@@ -31,7 +33,7 @@ public class ItemVariantEditView extends VerticalLayout implements HasUrlParamet
     private final ComboBox<Item> itemField = new ComboBox<>("Item");
     private final TextArea specificationField = new TextArea("Specification");
     private final NumberField estimatedPriceField = new NumberField("Estimated Unit Price");
-    private final ComboBox<String> activeField = new ComboBox<>("Status");
+    private final RadioButtonGroup<String> activeField = new RadioButtonGroup<String>("Status");
 
     private ItemVariant itemVariant;
 
@@ -75,7 +77,10 @@ public class ItemVariantEditView extends VerticalLayout implements HasUrlParamet
             estimatedPriceField.setValue( itemVariant.getEstimatedUnitPrice());
         }
         activeField.setValue(Boolean.TRUE.equals(itemVariant.getActive())? "Active": "Inactive");
-        if(itemVariantService.getItemVariantsByItem(itemVariant.getItem()).size()<2 && itemVariant.getActive())
+
+        ItemVariant variant= new ItemVariant();
+        variant.setItem(itemVariant.getItem());
+        if(itemVariantService.getCountItemVariants(variant)<2 && itemVariant.getActive())
         {  activeField.setReadOnly(true);}
 
         FormLayout formLayout = new FormLayout();
@@ -111,6 +116,9 @@ public class ItemVariantEditView extends VerticalLayout implements HasUrlParamet
         Button cancelButton = new Button("Cancel");
 
         cancelButton.addClickListener(e ->getUI().ifPresent(ui ->ui.navigate( "item-variant-details/"+ itemVariant.getId())));
+
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout buttons =new HorizontalLayout(saveButton,cancelButton);
         add(title, formLayout, buttons);

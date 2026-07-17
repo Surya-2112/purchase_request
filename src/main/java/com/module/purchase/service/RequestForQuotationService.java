@@ -55,16 +55,7 @@ public class RequestForQuotationService {
         }
 
         rfq = saveRequestForQuotation(rfq);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.REQUEST_FOR_QUOTATION);
-        log.setEntityId(rfq.getId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-
-         auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.REQUEST_FOR_QUOTATION,rfq.getId(),Action.CREATE,employee);
         return rfq;
     }
 
@@ -104,16 +95,7 @@ public class RequestForQuotationService {
         getRequestForQuotationById(rfq.getId());
 
         rfq = saveRequestForQuotation(rfq);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.REQUEST_FOR_QUOTATION);
-        log.setEntityId(rfq.getId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-
-         auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.REQUEST_FOR_QUOTATION,rfq.getId(),Action.UPDATE,employee);
         return rfq;
     }
 
@@ -142,16 +124,8 @@ public class RequestForQuotationService {
         if ( rfqLines!= null && !rfqLines.isEmpty()) {
             rfqLineRepository.deleteAll(rfqLines);
         }
-
         rfqRepository.deleteById(id);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.REQUEST_FOR_QUOTATION);
-        log.setEntityId(id);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.REQUEST_FOR_QUOTATION,id,Action.DELETE,employee);
     }
 
     public RequestForQuotationLine addRfqLine(RequestForQuotationLine line) {

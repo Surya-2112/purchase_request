@@ -7,9 +7,11 @@ import java.util.List;
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
+import com.module.purchase.entityDTO.DepartmentDTO;
 import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.service.DepartmentService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -25,7 +27,6 @@ public class DepartmentBudgetForm extends Dialog {
 
     private final SecurityService securityService;
 
-    // FIELDS
     private final ComboBox<Department> departmentField = new ComboBox<>("Department");
 
     private final NumberField totalBudgetAmountField = new NumberField("Total Budget Amount");
@@ -46,7 +47,6 @@ public class DepartmentBudgetForm extends Dialog {
 
         setWidth("700px");
 
-        // REQUIRED
         departmentField.setRequired(true);
 
         totalBudgetAmountField.setRequiredIndicatorVisible(true);
@@ -55,16 +55,13 @@ public class DepartmentBudgetForm extends Dialog {
 
         yearField.setRequired(true);
 
-        // LOAD DEPARTMENTS
-        List<Department> departments =
-                departmentService.getDepartments();
+        DepartmentDTO departmentDTO= new DepartmentDTO();
+        departmentDTO.setActive(true);
+        List<Department> departments = departmentService.getAllDepartmentsList(departmentDTO);
 
         departmentField.setItems(departments);
+        departmentField.setItemLabelGenerator(Department::getDepartmentName);
 
-        departmentField.setItemLabelGenerator(
-                Department::getDepartmentName);
-
-        // AUTO GENERATE YEARS
         List<Year> years = new ArrayList<>();
 
         for (int year = 2000; year <= 2100; year++) {
@@ -73,37 +70,22 @@ public class DepartmentBudgetForm extends Dialog {
         }
 
         yearField.setItems(years);
+        yearField.setItemLabelGenerator(year -> String.valueOf(year.getValue()));
 
-        yearField.setItemLabelGenerator(
-                year -> String.valueOf(year.getValue()));
-
-        // FORM
         FormLayout formLayout = new FormLayout();
+        formLayout.add(departmentField, totalBudgetAmountField, remainingBudgetAmountField, yearField);
+        formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
-        formLayout.add(
-                departmentField,
-                totalBudgetAmountField,
-                remainingBudgetAmountField,
-                yearField);
-
-        formLayout.setResponsiveSteps(
-                new FormLayout.ResponsiveStep("0", 2));
-
-        // BUTTONS
         Button saveButton = new Button("Save");
-
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         Button cancelButton = new Button("Cancel");
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
+        
+        saveButton.addClickListener( event -> saveDepartmentBudget());
 
-        saveButton.addClickListener(
-                event -> saveDepartmentBudget());
+        cancelButton.addClickListener( event -> close());
 
-        cancelButton.addClickListener(
-                event -> close());
-
-        HorizontalLayout buttonLayout =
-                new HorizontalLayout(
-                        saveButton,
-                        cancelButton);
+        HorizontalLayout buttonLayout = new HorizontalLayout( saveButton, cancelButton);
 
         add(formLayout, buttonLayout);
     }

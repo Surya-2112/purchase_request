@@ -1,6 +1,5 @@
 package com.module.purchase.service;
 
-import java.time.LocalDate;
 import java.time.Year;
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
-import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.DepartmentBudget;
 import com.module.purchase.entity.Employee;
@@ -54,15 +52,7 @@ public class DepartmentBudgetService {
             throw new RuntimeException("Department Budget not valid");
         }
         departmentBudget=saveDepartmentBudget(departmentBudget);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.DEPARTMENT_BUDGET);
-        log.setEntityId(departmentBudget.getDepartmentBudgetId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.DEPARTMENT_BUDGET,departmentBudget.getDepartmentBudgetId(),Action.CREATE,employee);
         return departmentBudget;
     }
 
@@ -99,14 +89,7 @@ public class DepartmentBudgetService {
             throw new ModificationNotAllowedException("This department budget spended amount is"+(exist.getTotalBudgetAmount()-(exist.getRemainingBudgetAmount())));
          }
         departmentBudget=saveDepartmentBudget(departmentBudget);
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.DEPARTMENT_BUDGET);
-        log.setEntityId(departmentBudget.getDepartmentBudgetId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.DEPARTMENT_BUDGET,departmentBudget.getDepartmentBudgetId(),Action.UPDATE,employee);
         return departmentBudget;
     }
 
@@ -119,13 +102,8 @@ public class DepartmentBudgetService {
         }
         getDepartmentBudgetById(departmentBudgetId);
 
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.DEPARTMENT_BUDGET);
-        log.setEntityId(departmentBudgetId);
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.DEPARTMENT_BUDGET,departmentBudgetId,Action.DELETE,employee);
+
         departmentBudgetRepository.deleteById(departmentBudgetId);
     }
 

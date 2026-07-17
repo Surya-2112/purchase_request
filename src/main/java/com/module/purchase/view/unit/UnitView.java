@@ -8,6 +8,7 @@ import com.module.purchase.entity.Unit;
 import com.module.purchase.service.UnitService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -37,9 +38,6 @@ public class UnitView extends VerticalLayout {
     private int totalPages = 1;
 
     private final Span pageInfo = new Span();
-
-    private final Button previousButton = new Button("Previous");
-    private final Button nextButton = new Button("Next");
     private Unit currentFilter = new Unit();
 
     public UnitView(UnitService unitService, SecurityService securityService) {
@@ -61,6 +59,7 @@ public class UnitView extends VerticalLayout {
         });
 
         addButton.setVisible(securityService.canAccessView("unit-form"));
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
         headerLayout.setWidthFull();
@@ -68,6 +67,9 @@ public class UnitView extends VerticalLayout {
 
         Button searchButton = new Button("Search", e -> applyFilter());
         Button clearButton = new Button("Clear", e -> clearFilter());
+        
+        searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout filterLayout = new HorizontalLayout(
                 unitIdField,
@@ -84,7 +86,7 @@ public class UnitView extends VerticalLayout {
 
         unitGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         unitGrid.setSizeFull();
-
+        unitGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         unitGrid.addItemDoubleClickListener(event -> {
             Unit unit = event.getItem();
             getUI().ifPresent(ui -> ui.navigate("unit-details/" + unit.getId()));
@@ -109,12 +111,16 @@ public class UnitView extends VerticalLayout {
             }
         });
 
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
         Button nextButton = new Button("Next", e -> {
             if (currentPage < totalPages - 1) {
                 currentPage++;
                 loadUnits();
             }
         });
+
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         HorizontalLayout paginationLayout = new HorizontalLayout(
                 previousButton,

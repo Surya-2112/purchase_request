@@ -12,6 +12,7 @@ import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.RepeatedPeriodService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -88,7 +89,10 @@ public class CategoryForm extends Dialog {
         Button saveButton = new Button("Save");
         Button cancelButton = new Button("Cancel");
 
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         saveButton.addClickListener(e -> saveCategory());
+
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
         cancelButton.addClickListener(e -> close());
 
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);

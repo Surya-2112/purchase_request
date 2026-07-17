@@ -1,6 +1,7 @@
 package com.module.purchase.view.department;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.textfield.TextField;
 
@@ -23,10 +24,7 @@ public class DepartmentForm extends Dialog {
 
     public DepartmentForm(DepartmentService departmentService, EmployeeService employeeServices, SecurityService securityService) {
         this.departmentService = departmentService;
-      //  this.employeeService = employeeServices;
         this.securityService = securityService;
-
-     //   List<Employee> employees = employeeService.getEmployees();
 
         setHeaderTitle("Add Department");
 
@@ -46,10 +44,12 @@ public class DepartmentForm extends Dialog {
         formLayout.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 2));
 
-        // BUTTONS
         Button saveButton = new Button("Save");
 
         Button cancelButton = new Button("Cancel");
+
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
         saveButton.addClickListener(event -> saveDepartment());
 

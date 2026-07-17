@@ -10,6 +10,7 @@ import com.module.purchase.service.ItemService;
 import com.module.purchase.service.ItemVariantService;
 import com.module.purchase.service.UnitService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -72,6 +73,8 @@ public class ItemForm extends Dialog {
 
         saveButton.addClickListener(e -> saveItem());
         cancelButton.addClickListener(e -> close());
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
         add(formLayout, buttons);

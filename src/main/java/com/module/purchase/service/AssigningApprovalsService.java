@@ -1,6 +1,5 @@
 package com.module.purchase.service;
 
-import java.time.LocalDate;
 import java.time.Year;
 import java.util.List;
 import java.util.Optional;
@@ -117,14 +116,7 @@ public class AssigningApprovalsService {
             assigningApproval.setStatus(Status.WAITING_APPROVAL);
         }
         assigningApproval = assigningApprovalsRepository.save(assigningApproval);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.ASSIGNING_APPROVAL);
-        log.setEntityId(assigningApproval.getAssigningApprovalsId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.ASSIGNING_APPROVAL,assigningApproval.getAssigningApprovalsId(),Action.CREATE,employee);
         return assigningApproval;
     }
 
@@ -185,11 +177,7 @@ public class AssigningApprovalsService {
                 default -> log.setAction(Action.UPDATE);
             }
         }
-        log.setEntityType(EntityType.ASSIGNING_APPROVAL);
-        log.setEntityId(assigningApprovals.getAssigningApprovalsId());
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.ASSIGNING_APPROVAL,assigningApprovals.getAssigningApprovalsId(),log.getAction(),employee);
         return saveAssigningApproval(assigningApprovals);
     }
 

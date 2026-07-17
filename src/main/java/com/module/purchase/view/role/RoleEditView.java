@@ -10,6 +10,7 @@ import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.RoleService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -77,6 +78,7 @@ public class RoleEditView extends VerticalLayout implements HasUrlParameter<Stri
                 formLayout.setResponsiveSteps( new FormLayout.ResponsiveStep("0", 2));
 
                 Button saveButton = new Button("Save");
+                saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
                 saveButton.addClickListener(clickEvent -> {
                 try {
@@ -98,6 +100,7 @@ public class RoleEditView extends VerticalLayout implements HasUrlParameter<Stri
                         }
                 });
                 Button cancelButton = new Button("Cancel");
+                cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
                 cancelButton.addClickListener(clickEvent -> {
                         getUI().ifPresent(ui -> ui.navigate("role-details/"+ role.getRoleId()));
                 });

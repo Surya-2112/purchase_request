@@ -1,6 +1,5 @@
 package com.module.purchase.service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +15,7 @@ import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceIsNotActiveException;
 import com.module.purchase.customException.ResourceNotFoundException;
-import com.module.purchase.entity.AuditLogs;
+import org.springframework.context.annotation.Lazy;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Users;
 import com.module.purchase.entity.Vendor;
@@ -35,9 +34,11 @@ public class UsersService {
     private UsersRepository userRepository;
 
     @Autowired
+    @Lazy
     private EmployeeService employeeService;
 
     @Autowired
+    @Lazy
     private  VendorService vendorService;
 
     @Autowired
@@ -86,15 +87,7 @@ public class UsersService {
         employee.setUsers(user);
 
         }
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.USER);
-        log.setEntityId(user.getUserId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(created);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.USER, user.getUserId(), Action.CREATE, created);
         return user;
     }
 
@@ -145,15 +138,7 @@ public class UsersService {
                     existingUser.getPassword());
         }
         user=saveUsers(user);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.USER);
-        log.setEntityId(user.getUserId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+       auditLogsService.addAuditLog(EntityType.USER, user.getUserId(), Action.UPDATE, employee);
         return user;
     }
 
@@ -162,14 +147,7 @@ public class UsersService {
         if (existingUser.getEmployee().getActive()) {
             throw new RuntimeException("cannot delete user because employee is active");
         }
-        userRepository.deleteById(usersId);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.USER);
-        log.setEntityId(usersId);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+       userRepository.deleteById(usersId);
+       auditLogsService.addAuditLog(EntityType.USER, usersId, Action.DELETE, employee);
     }
 }

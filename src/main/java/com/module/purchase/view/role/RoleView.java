@@ -9,6 +9,7 @@ import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.RoleService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -88,7 +89,7 @@ public class RoleView extends VerticalLayout {
                 loadRoles();
             }
         });
-
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         nextButton.addClickListener(event -> {
 
             if(currentPage<totalPage-1)
@@ -96,7 +97,7 @@ public class RoleView extends VerticalLayout {
 
             loadRoles();
         });
-
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         HorizontalLayout paginationLayout =
                 new HorizontalLayout(
                         previousButton,
@@ -123,7 +124,8 @@ public class RoleView extends VerticalLayout {
 
             form.open();
         });
-
+        
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         addButton.setVisible(securityService.canAccessView("role-form"));
 
         headerLayout.add( title, addButton);
@@ -137,17 +139,13 @@ public class RoleView extends VerticalLayout {
         HorizontalLayout filterLayout =new HorizontalLayout();
 
         Button searchButton = new Button("Search",event -> applyFilter());
-
+        searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button clearButton = new Button( "Clear", event -> clearFilter());
+        clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         filterLayout.setAlignItems( Alignment.END);
 
-        filterLayout.add(
-                roleIdField,
-                roleNameField,
-                employeeGroupField,
-                searchButton,
-                clearButton);
+        filterLayout.add(roleIdField, roleNameField ,employeeGroupField, searchButton, clearButton);
 
         filterLayout.setWidthFull();
 
@@ -156,10 +154,7 @@ public class RoleView extends VerticalLayout {
         .setAutoWidth(true);
 
         roleGrid.addColumn(role -> {
-
-            return role.getRoleName() == null
-                    ? "" : role.getRoleName();
-
+            return role.getRoleName() == null ? "" : role.getRoleName();
         })
         .setHeader("Role Name")
         .setAutoWidth(true);
@@ -177,11 +172,10 @@ public class RoleView extends VerticalLayout {
         .setHeader("Role Groups")
         .setAutoWidth(true);
 
-        roleGrid.addThemeVariants(
-                GridVariant.LUMO_ROW_STRIPES);
+        roleGrid.addThemeVariants( GridVariant.LUMO_ROW_STRIPES);
 
         roleGrid.setSizeFull();
-
+        roleGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         roleGrid.addItemClickListener(event -> {
 
             Role role = event.getItem();

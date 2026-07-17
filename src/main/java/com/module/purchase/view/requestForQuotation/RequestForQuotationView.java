@@ -141,6 +141,7 @@ public class RequestForQuotationView extends VerticalLayout {
 
         rfqGrid.setWidthFull();
         rfqGrid.setHeightFull();
+        rfqGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         rfqGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         rfqGrid.addItemDoubleClickListener(event -> {

@@ -8,6 +8,7 @@ import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.ViewPermissionService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
@@ -65,11 +66,11 @@ public class ViewPermissionView extends VerticalLayout {
         headerLayout.setAlignItems( Alignment.CENTER);
 
         Button searchButton = new Button("Search");
-
+        searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button clearButton = new Button("Clear");
-
+        clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
         Button addButton = new Button("Add Permission");
-
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         searchButton.addClickListener(event -> {
 
             currentPage = 0;
@@ -142,6 +143,7 @@ public class ViewPermissionView extends VerticalLayout {
         grid.addComponentColumn(permission -> {
 
             Button deleteButton = new Button("Delete");
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
             deleteButton.addClickListener(event -> {
 
@@ -176,13 +178,13 @@ public class ViewPermissionView extends VerticalLayout {
         }).setHeader("Delete");
 
         grid.addThemeVariants( GridVariant.LUMO_ROW_STRIPES);
-
+        grid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         grid.setSizeFull();
 
         Button previousButton =new Button("Previous");
-
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button nextButton = new Button("Next");
-
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         ComboBox<Integer> pageSizeField = new ComboBox<>();
 
         pageSizeField.setItems( 10, 25, 50, 100);

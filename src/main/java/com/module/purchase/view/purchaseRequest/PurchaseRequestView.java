@@ -103,6 +103,7 @@ public class PurchaseRequestView extends VerticalLayout {
         H2 title = new H2("Purchase Requests");
 
         Button addButton = new Button("Add Purchase Request");
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         addButton.addClickListener(event -> getUI().ifPresent(ui -> ui.navigate("purchase-request-form")));
         addButton.setVisible(securityService.canAccessView("purchase-request-form"));
 
@@ -128,6 +129,9 @@ public class PurchaseRequestView extends VerticalLayout {
             currentPage = 0;
             loadData();
         });
+        allBtn.getStyle().setFontWeight(900);
+        assignedBtn.getStyle().setFontWeight(900);
+        createdBtn.getStyle().setFontWeight(900);
 
         tabsContainer.add(allBtn, assignedBtn, createdBtn);
         tabsContainer.setSpacing(true);
@@ -152,7 +156,9 @@ public class PurchaseRequestView extends VerticalLayout {
         statusField.setItemLabelGenerator(Status::getDisplayName);
 
         Button search = new Button("Search", e -> applyFilter());
+        search.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button clear = new Button("Clear", e -> clearFilter());
+        clear.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         prFilters = new HorizontalLayout(prIdField, departmentField, createdByField, statusField, search, clear);
         prFilters.setAlignItems(Alignment.END);
@@ -162,7 +168,9 @@ public class PurchaseRequestView extends VerticalLayout {
         assignStatusField.setValue(Status.WAITING_APPROVAL);
 
         Button assignSearch = new Button("Search", e -> applyAssignFilter());
+        assignSearch.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button assignClear = new Button("Clear", e -> clearAssignFilter());
+        assignClear.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         assignFilters = new HorizontalLayout(assignIdField, referenceIdField, assignStatusField, assignSearch, assignClear);
         assignFilters.setAlignItems(Alignment.END);
@@ -171,10 +179,29 @@ public class PurchaseRequestView extends VerticalLayout {
         prGrid.addColumn(PurchaseRequestDTO::getPurchaseRequestId).setHeader("PR ID");
         prGrid.addColumn(pr -> pr.getForDepartment() == null ? "" : pr.getForDepartment().getDepartmentName()).setHeader("Department");
         prGrid.addColumn(pr -> pr.getCreatedBy() == null ? "" : pr.getCreatedBy().getEmployeeName()).setHeader("Created By");
-        prGrid.addColumn(pr -> pr.getStatus() != null ? pr.getStatus().name() : "").setHeader("Status");
+        prGrid.addComponentColumn(pr -> {Span badge = new Span(pr.getStatus() != null ? pr.getStatus().name() : "UNKNOWN");
+            badge.getStyle()
+                 .set("padding", "2px 8px")
+                 .set("border-radius", "4px")
+                 .set("font-weight", "bold")
+                 .set("font-size", "12px");
+
+            if (pr.getStatus() == Status.DRAFT) {
+                badge.getStyle().set("background-color", "#f1f5f9").set("color", "#475569");
+            } else if (pr.getStatus() == Status.APPROVED) {
+                badge.getStyle().set("background-color", "#dcfce7").set("color", "#15803d");
+            } else if (pr.getStatus() == Status.REJECTED) {
+                badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
+            }else if (pr.getStatus() == Status.CANCELLED) {
+                badge.getStyle().set("background-color", "#f8e2fe").set("color", "#871cb9");
+            } else {
+                badge.getStyle().set("background-color", "#fef9c3").set("color", "#a16207");
+            }
+            return badge;}).setHeader("Status");
 
         prGrid.setWidthFull();
         prGrid.setHeightFull();
+        prGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         prGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         prGrid.addItemDoubleClickListener(event -> {
             PurchaseRequestDTO pr = event.getItem();
@@ -191,17 +218,19 @@ public class PurchaseRequestView extends VerticalLayout {
 
         assignGrid.setWidthFull();
         assignGrid.setHeightFull();
+        assignGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         assignGrid.addItemDoubleClickListener(event -> {
             AssigningApprovalsDTO a = event.getItem();
             getUI().ifPresent(ui -> ui.navigate("assigned-approvals-details/" + a.getAssigningApprovalsId()));
         });
 
-        Button prev = new Button("Prev", event -> {
+        Button prev = new Button("Previous", event -> {
             if (currentPage > 0) {
                 currentPage--;
                 loadData();
             }
         });
+        prev.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         Button next = new Button("Next", event -> {
             if (currentPage < totalPages - 1) {
@@ -209,6 +238,7 @@ public class PurchaseRequestView extends VerticalLayout {
                 loadData();
             }
         });
+        next.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         ComboBox<Integer> pageSizeField = new ComboBox<>();
         pageSizeField.setItems(10, 25, 50, 100);

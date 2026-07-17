@@ -13,6 +13,7 @@ import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.RepeatedPeriodService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -113,8 +114,7 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
                         autoRfqField.setValue(category.isAutoRfq());
 
                         if (category.isAutoRfq()) {
-                                Optional<RepeatedPeriod> periodOpt = repeatedPeriodService.findByReferTypeAndReferId(RepeatedPeriodReferType.CATEGORY,
-                                                                category.getCategoryId());
+                                Optional<RepeatedPeriod> periodOpt = repeatedPeriodService.findByReferTypeAndReferId(RepeatedPeriodReferType.CATEGORY, category.getCategoryId());
 
                                 if (periodOpt.isPresent()) {
                                         RepeatedPeriod period = periodOpt.get();
@@ -140,19 +140,17 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
                         baseFormLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
 
                         Button saveButton = new Button("Save");
+                        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
                         saveButton.addClickListener(e -> {
                                 try {
                                         if (categoryNameField.isEmpty()) {
-                                                Notification.show("Category Name is required", 3000,
-                                                                Notification.Position.TOP_CENTER);
+                                                Notification.show("Category Name is required", 3000,Notification.Position.TOP_CENTER);
                                                 return;
                                         }
 
                                         if (autoRfqField.getValue()) {
                                                 if (frequencyTypeField.isEmpty() || fromDateField.isEmpty()) {
-                                                        Notification.show(
-                                                                        "Please populate all required RFQ repetition schedule parameters",
-                                                                        3000, Notification.Position.TOP_CENTER);
+                                                        Notification.show( "Please populate all required RFQ repetition schedule parameters",3000, Notification.Position.TOP_CENTER);
                                                         return;
                                                 }
 
@@ -189,16 +187,12 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
 
                                                 repeatedPeriodService.save(period);
                                         } else {
-                                                repeatedPeriodService.deleteByReferTypeAndReferId(
-                                                                RepeatedPeriodReferType.CATEGORY,
-                                                                category.getCategoryId());
+                                                repeatedPeriodService.deleteByReferTypeAndReferId(RepeatedPeriodReferType.CATEGORY,category.getCategoryId());
                                         }
 
-                                        Notification.show("Category Updated Successfully", 3000,
-                                                        Notification.Position.TOP_CENTER);
+                                        Notification.show("Category Updated Successfully", 3000, Notification.Position.TOP_CENTER);
 
-                                        getUI().ifPresent(ui -> ui
-                                                        .navigate("category-details/" + category.getCategoryId()));
+                                        getUI().ifPresent(ui -> ui.navigate("category-details/" + category.getCategoryId()));
 
                                 } catch (Exception exception) {
                                         Notification.show(exception.getMessage(), 5000,Notification.Position.TOP_CENTER);
@@ -206,6 +200,7 @@ public class CategoryEditView extends VerticalLayout implements HasUrlParameter<
                         });
 
                         Button cancelButton = new Button("Cancel");
+                        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
                         cancelButton.addClickListener(e -> getUI()
                                         .ifPresent(ui -> ui.navigate("category-details/" + category.getCategoryId())));
 

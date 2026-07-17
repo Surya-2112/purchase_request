@@ -1,15 +1,19 @@
 package com.module.purchase.view.employee;
 
+import java.util.List;
+
 import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Address;
 import com.module.purchase.entity.Department;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Role;
+import com.module.purchase.entityDTO.DepartmentDTO;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.RoleService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -30,25 +34,15 @@ public class EmployeeForm extends VerticalLayout {
         private final SecurityService securityService;
 
         private final TextField employeeNameField = new TextField("Employee Name");
-
         private final EmailField employeeEmailField = new EmailField("Employee Email");
-
         private final TextField phoneNumberField = new TextField("Phone Number");
-
         private final ComboBox<Department> departmentField = new ComboBox<>("Department");
-
         private final ComboBox<Role> roleField = new ComboBox<>("Role");
-
         private final TextField addressLineField = new TextField("Address Line");
-
         private final TextField streetField = new TextField("Street");
-
         private final TextField cityField = new TextField("City");
-
         private final TextField stateField = new TextField("State");
-
         private final TextField countryField = new TextField("Country");
-
         private final TextField postalCodeField = new TextField("Pincode");
 
         public EmployeeForm(EmployeeService employeeService, DepartmentService departmentService,
@@ -62,8 +56,11 @@ public class EmployeeForm extends VerticalLayout {
                 setSpacing(true);
 
                 H2 title = new H2("Add Employee");
-
-                departmentField.setItems(departmentService.getDepartments());
+                
+                DepartmentDTO departmentDTO = new DepartmentDTO();
+                departmentDTO.setActive(true);
+                List<Department> departments = departmentService.getAllDepartmentsList(departmentDTO);
+                departmentField.setItems(departments);
 
                 departmentField.setItemLabelGenerator(Department::getDepartmentName);
 
@@ -103,27 +100,15 @@ public class EmployeeForm extends VerticalLayout {
                 roleField.setRequired(true);
 
                 FormLayout formLayout = new FormLayout();
-
-                formLayout.add(
-                                employeeNameField,
-                                employeeEmailField,
-                                phoneNumberField,
-                                departmentField,
-                                roleField,
-                                addressLineField,
-                                streetField,
-                                cityField,
-                                stateField,
-                                countryField,
-                                postalCodeField);
-
+                formLayout.add(employeeNameField, employeeEmailField, phoneNumberField, departmentField, roleField, addressLineField, streetField, cityField, stateField, countryField, postalCodeField);
                 formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
                 Button saveButton = new Button("Save");
                 Button cancelButton = new Button("Cancel");
+                saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+                cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
                 saveButton.addClickListener(e -> saveEmployee());
-
                 cancelButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("employee")));
 
                 HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);

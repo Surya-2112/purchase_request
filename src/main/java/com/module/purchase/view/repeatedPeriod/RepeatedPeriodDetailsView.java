@@ -10,6 +10,7 @@ import com.module.purchase.service.PurchaseRequestLineService;
 import com.module.purchase.service.RepeatedPeriodService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Hr;
@@ -76,7 +77,7 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
         linkedItemContainer.setVisible(false);
 
         backButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("repeated-periods")));
-        
+        backButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
         parentPrButton.addThemeName("primary");
         parentPrButton.setVisible(false);
 
@@ -111,8 +112,7 @@ public class RepeatedPeriodDetailsView extends VerticalLayout implements BeforeE
                 PurchaseRequestLine targetLine = lineOpt.get();
                 linkedItemContainer.setVisible(true);
 
-                itemNameField.setText("Item Code : " + 
-                        (targetLine.getItemVariant() != null && targetLine.getItemVariant().getItem() != null 
+                itemNameField.setText("Item Code : " + (targetLine.getItemVariant() != null && targetLine.getItemVariant().getItem() != null 
                         ? targetLine.getItemVariant().getItem().getItemName() : "Unknown Generic Asset"));
                 
                 specField.setText("Specification Detail : " + 

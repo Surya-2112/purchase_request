@@ -12,6 +12,7 @@ import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -106,6 +107,8 @@ public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlPa
 
                 addButton.addClickListener(clickEvent -> addAmount());
                 reduceButton.addClickListener(clickEvent-> reduceAmount());
+                addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+                reduceButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
                 formLayout.add(departmentField, totalBudgetAmountField, remainingBudgetAmountField, yearField, budgetAdjust,new HorizontalLayout(addButton,reduceButton));
 
@@ -155,14 +158,16 @@ public class DepartmentBudgetEditView extends VerticalLayout implements HasUrlPa
                         getUI().ifPresent(ui -> ui.navigate("department-budget-details/"+ departmentBudget.getDepartmentBudgetId()));
                 });
 
+                saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+                cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
+
                 HorizontalLayout buttonLayout = new HorizontalLayout( saveButton, cancelButton);
                 add(title, formLayout, buttonLayout);
                 
          }catch (NumberFormatException e) {
             event.forwardTo(ViewName.DEPARTMENT_BUDGET.getRoute());
             event.getUI().access(() -> {
-                Notification.show("url is not valid ," + e.getMessage(), 3000,
-                        Notification.Position.TOP_CENTER);
+                Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
             });
             return;
         }catch(Exception ex){ 

@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -43,6 +44,10 @@ public class VendorService {
     @Autowired
     private PurchaseOrderHeaderService purchaseOrderService;
 
+    @Autowired 
+    @Lazy
+    private UsersService userService;
+
     public Vendor saveVendor(Vendor vendor) {
         return vendorRepository.save(vendor);
     }
@@ -52,16 +57,8 @@ public class VendorService {
         if (existingVendor.isPresent()) {
             throw new ResourceAlreadyUsedException("Vendor already exists with email: " + vendor.getVendorEmail());
         }
-
         vendor = saveVendor(vendor);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.VENDOR);
-        log.setEntityId(vendor.getVendorId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+       auditLogsService.addAuditLog(EntityType.VENDOR, vendor.getVendorId(), Action.CREATE, employee);
 
         return vendor;
     }
@@ -105,14 +102,11 @@ public class VendorService {
             throw new ModificationNotAllowedException("Cannot update vendor email ");
         }
         vendor = saveVendor(vendor);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.VENDOR);
-        log.setEntityId(vendor.getVendorId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        if(vendor.getActive()==false && vendor.getUsers()!=null)
+        {   vendor.getUsers().setActive(false);
+            userService.updateUser(vendor.getUsers(), employee);
+        }
+       auditLogsService.addAuditLog(EntityType.VENDOR, vendor.getVendorId(), Action.UPDATE, employee);
 
         return vendor;
     }
@@ -126,12 +120,6 @@ public class VendorService {
         }
         vendorRepository.deleteById(vendorId);
 
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.VENDOR);
-        log.setEntityId(vendorId);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+       auditLogsService.addAuditLog(EntityType.VENDOR, vendorId, Action.DELETE, employee);
     }
 }

@@ -8,6 +8,7 @@ import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -109,6 +110,8 @@ public class DepartmentDetailsView extends VerticalLayout implements HasUrlParam
             updateButton.setVisible(securityService.canAccessView("department-edit"));
 
             deleteButton.setVisible(securityService.canAccessView("department-form"));
+            updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
             HorizontalLayout buttonLayout = new HorizontalLayout(updateButton, deleteButton);
 

@@ -6,6 +6,7 @@ import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.UnitService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
@@ -95,8 +96,9 @@ public class UnitEditView extends VerticalLayout implements HasUrlParameter<Stri
             }
         });
 
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         Button cancelButton = new Button("Cancel");
-
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
         cancelButton.addClickListener(e -> getUI().ifPresent(ui -> ui.navigate("unit-details/" + unit.getId())));
 
         HorizontalLayout buttons =new HorizontalLayout(saveButton, cancelButton);

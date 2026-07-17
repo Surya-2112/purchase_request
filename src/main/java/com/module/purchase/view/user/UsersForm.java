@@ -8,6 +8,7 @@ import com.module.purchase.service.EmployeeService;
 import com.module.purchase.service.UsersService;
 import com.module.purchase.service.VendorService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -93,8 +94,10 @@ public class UsersForm extends Dialog {
         formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 2));
 
         Button saveButton = new Button("Save", e -> saveUser());
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         Button cancelButton = new Button("Cancel", e -> close());
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout buttonLayout = new HorizontalLayout(saveButton, cancelButton);
 

@@ -6,6 +6,7 @@ import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.UnitService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -78,9 +79,7 @@ public class UnitDetailsView extends VerticalLayout implements HasUrlParameter<S
                     try {
 
                         unitService.deleteUnitById(unit.getId(), securityService.getLoggedInUser().getEmployee());
-
                         Notification.show("Unit deleted successfully", 3000, Notification.Position.TOP_CENTER);
-
                         getUI().ifPresent(ui -> ui.navigate("unit"));
 
                     } catch (Exception ex) {
@@ -92,8 +91,9 @@ public class UnitDetailsView extends VerticalLayout implements HasUrlParameter<S
             });
 
             updateButton.setVisible(securityService.canAccessView("unit-edit"));
-
             deleteButton.setVisible(securityService.canAccessView("unit-form"));
+            updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
             HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 

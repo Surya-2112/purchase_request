@@ -9,6 +9,7 @@ import com.module.purchase.enums.EmployeeGroup;
 import com.module.purchase.service.AssigningConfigService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -36,7 +37,7 @@ public class AssigningConfigView extends VerticalLayout {
 
     private final IntegerField levelField =new IntegerField("Level");
 
-    private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Employee Group");
+    private final ComboBox<EmployeeGroup> employeeGroupField = new ComboBox<>("Role Group");
 
     private int currentPage = 0;
     private int pageSize = 25;
@@ -65,37 +66,34 @@ public class AssigningConfigView extends VerticalLayout {
         H2 title = new H2("Assigning Config List");
 
         Button addButton =new Button("Add or Update Assigning Config");
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         addButton.addClickListener(event -> {
 
                  getUI().ifPresent(ui -> ui.navigate("assigning-config-form"));
         });
 
-        addButton.setVisible(
-                securityService.canAccessView(
-                        "assigning-config-form"));
+        addButton.setVisible(securityService.canAccessView("assigning-config-form"));
 
         HorizontalLayout headerLayout =  new HorizontalLayout( title, addButton);
 
         headerLayout.setWidthFull();
 
-        headerLayout.setJustifyContentMode(
-                JustifyContentMode.BETWEEN);
+        headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
-        headerLayout.setAlignItems(
-                Alignment.CENTER);
+        headerLayout.setAlignItems(Alignment.CENTER);
 
         Button searchButton = new Button("Search",  event -> applyFilter());
+        searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button clearButton =new Button( "Clear",event -> clearFilter());
+        clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
-        HorizontalLayout filterLayout = new HorizontalLayout(idField, approvalTypeField,
-                        levelField,  employeeGroupField, searchButton,clearButton);
+        HorizontalLayout filterLayout = new HorizontalLayout(idField, approvalTypeField, levelField,  employeeGroupField, searchButton,clearButton);
 
         filterLayout.setWidthFull();
         filterLayout.setAlignItems( Alignment.END);
 
-        assigningConfigGrid.addColumn( AssigningConfigDTO::getId) .setHeader("Config ID")
-                .setAutoWidth(true);
+        assigningConfigGrid.addColumn( AssigningConfigDTO::getId) .setHeader("Config ID").setAutoWidth(true);
 
         assigningConfigGrid.addColumn(config ->
                 config.getApprovalType() == null
@@ -104,32 +102,25 @@ public class AssigningConfigView extends VerticalLayout {
                 .setHeader("Approval Type")
                 .setAutoWidth(true);
 
-        assigningConfigGrid.addColumn(
-                AssigningConfigDTO::getLevel)
-                .setHeader("Level")
+        assigningConfigGrid.addColumn( AssigningConfigDTO::getLevel).setHeader("Level")
                 .setAutoWidth(true);
 
         assigningConfigGrid.addColumn(config ->
                 config.getEmployeeGroup() == null
                         ? ""
                         : config.getEmployeeGroup().name())
-                .setHeader("Employee Group")
-                .setAutoWidth(true);
+                .setHeader("Role Group").setAutoWidth(true);
                 
-        assigningConfigGrid.addThemeVariants( GridVariant.LUMO_ROW_STRIPES);
-
+        assigningConfigGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        
         assigningConfigGrid.setSizeFull();
+        assigningConfigGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
 
         assigningConfigGrid.addItemDoubleClickListener(
                 event -> {
 
-                    AssigningConfigDTO config =
-                            event.getItem();
-
-                    getUI().ifPresent(ui ->
-                            ui.navigate(
-                                    "assigning-config-details/"
-                                            + config.getId()));
+                    AssigningConfigDTO config = event.getItem();
+                    getUI().ifPresent(ui -> ui.navigate("assigning-config-details/"+ config.getId()));
                 });
 
         ComboBox<Integer> pageSizeField = new ComboBox<>();
@@ -147,15 +138,14 @@ public class AssigningConfigView extends VerticalLayout {
             loadAssigningConfigs();
         });
 
-        Button previousButton =
-                new Button("Previous",
-                        event -> {
-
+        Button previousButton = new Button("Previous",event -> {
                             if (currentPage > 0) {
                                 currentPage--;
                                 loadAssigningConfigs();
                             }
                         });
+
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         Button nextButton = new Button("Next",
                         event -> {
@@ -164,6 +154,8 @@ public class AssigningConfigView extends VerticalLayout {
                             loadAssigningConfigs();
                            }
                         });
+
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         HorizontalLayout paginationLayout = new HorizontalLayout( previousButton,  pageInfo, nextButton,  new Span("Page Size"), pageSizeField);
 

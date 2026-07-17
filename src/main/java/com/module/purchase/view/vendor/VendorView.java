@@ -23,6 +23,7 @@ import com.vaadin.flow.router.Route;
 
 import java.util.List;
 
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 
 import jakarta.annotation.security.PermitAll;
@@ -78,20 +79,20 @@ public class VendorView extends VerticalLayout {
         });
 
         addButton.setVisible(securityService.canAccessView("vendor-form"));
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         HorizontalLayout headerLayout =new HorizontalLayout(title, addButton);
 
         headerLayout.setWidthFull();
-        headerLayout.setJustifyContentMode(
-                JustifyContentMode.BETWEEN);
+        headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
         Button searchButton = new Button("Search", e -> applyFilter());
+        searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Button clearButton = new Button("Clear", e -> clearFilter());
-
+        clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
         HorizontalLayout filterLayout = new HorizontalLayout(
                 vendorIdField,
                 vendorNameField,
-             //   categoryField,
                 activeField,
                 searchButton,
                 clearButton
@@ -122,14 +123,24 @@ public class VendorView extends VerticalLayout {
                         .collect(Collectors.joining(", "))
         ).setHeader("Categories");
 
-        vendorGrid.addColumn(vendor ->
-                Boolean.TRUE.equals(vendor.getActive())
-                        ? "Yes"
-                        : "No"
-        ).setHeader("Active");
+        vendorGrid.addComponentColumn(vendor -> {
+            Span badge = new Span(Boolean.TRUE.equals(vendor.getActive()) ? "Yes" : "No");
+             badge.getStyle()
+                 .set("padding", "2px 8px")
+                 .set("border-radius", "4px")
+                 .set("font-weight", "bold")
+                 .set("font-size", "12px");
+            if (Boolean.TRUE.equals(vendor.getActive())) {
+                badge.getStyle().set("background-color", "#dcfce7").set("color", "#15803d");
+            } else {
+                badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
+            }
+            return badge;
+        }).setHeader("Active");
 
         vendorGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         vendorGrid.setSizeFull();
+        vendorGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
 
         vendorGrid.addItemDoubleClickListener(event -> {
             VendorDTO vendor = event.getItem();
@@ -155,6 +166,8 @@ public class VendorView extends VerticalLayout {
             }
         });
 
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
         Button nextButton = new Button("Next", e -> {
             if (currentPage < totalPages - 1) {
                 currentPage++;
@@ -162,6 +175,7 @@ public class VendorView extends VerticalLayout {
             }
             
         });
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         HorizontalLayout paginationLayout = new HorizontalLayout(
                 previousButton,

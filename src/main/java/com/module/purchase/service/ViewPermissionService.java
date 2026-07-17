@@ -49,26 +49,12 @@ public class ViewPermissionService {
             throw new RuntimeException("Permission already exists");
         }
         permission=save(permission);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.VIEW_PERMISSION);
-        log.setEntityId(permission.getId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+       auditLogsService.addAuditLog(EntityType.VIEW_PERMISSION, permission.getId(), Action.CREATE, employee);
     }
 
     public void deleteById(Long id,Employee employee) {
-
-        viewPermissionRepository.deleteById(id);
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.VIEW_PERMISSION);
-        log.setEntityId(id);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+       viewPermissionRepository.deleteById(id);
+       auditLogsService.addAuditLog(EntityType.VIEW_PERMISSION, id, Action.DELETE, employee);
     }
 
     public List<EmployeeGroup> getGroupsByView(String routeName) {

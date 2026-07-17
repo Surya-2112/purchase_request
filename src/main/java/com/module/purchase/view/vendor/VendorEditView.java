@@ -11,13 +11,14 @@ import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEvent;
@@ -31,14 +32,13 @@ import jakarta.annotation.security.PermitAll;
 public class VendorEditView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final VendorService vendorService;
-    private final CategoryService categoryService;
     private final SecurityService securityService;
 
     private final TextField vendorNameField = new TextField("Vendor Name");
     private final EmailField vendorEmailField = new EmailField("Vendor Email");
     private final TextField vendorPhoneField = new TextField("Vendor Phone");
 
-    private final ComboBox<String> activeField = new ComboBox<>("Status");
+    private final RadioButtonGroup<String> activeField = new RadioButtonGroup<>("Status");
 
     private final MultiSelectComboBox<Category> categoryField = new MultiSelectComboBox<>("Categories");
 
@@ -51,13 +51,9 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<St
 
     private Vendor vendor;
 
-    public VendorEditView(
-            VendorService vendorService,
-            CategoryService categoryService,
-            SecurityService securityService) {
+    public VendorEditView( VendorService vendorService, CategoryService categoryService, SecurityService securityService) {
 
         this.vendorService = vendorService;
-        this.categoryService = categoryService;
         this.securityService = securityService;
 
         setSizeFull();
@@ -66,8 +62,7 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<St
         vendorNameField.setRequired(true);
         vendorNameField.setPattern("^(?=.{3,72}$)[A-Za-z]+(?:[ '.][A-Za-z]+)*$");
         vendorNameField.setMaxLength(72);
-        vendorNameField.setErrorMessage(
-                "Enter a valid vendor name. Only letters, spaces, apostrophe and dot are allowed.");
+        vendorNameField.setErrorMessage("Enter a valid vendor name. Only letters, spaces, apostrophe and dot are allowed.");
 
         vendorEmailField.setMaxLength(100);
 
@@ -167,8 +162,7 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<St
 
         FormLayout formLayout = new FormLayout();
 
-        formLayout.add(
-                vendorNameField,
+        formLayout.add( vendorNameField,
                 vendorEmailField,
                 vendorPhoneField,
                 activeField,
@@ -241,6 +235,8 @@ public class VendorEditView extends VerticalLayout implements HasUrlParameter<St
         Button cancelButton = new Button("Cancel",
                 e -> getUI().ifPresent(ui -> ui.navigate("vendor-details/" + vendor.getVendorId())));
 
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
 
         add(title, formLayout, buttons);

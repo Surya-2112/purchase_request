@@ -11,6 +11,7 @@ import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.RepeatedPeriodService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -33,8 +34,7 @@ public class CategoryDetailsView extends VerticalLayout implements HasUrlParamet
         private final RepeatedPeriodService repeatedPeriodService;
         private final SecurityService securityService;
 
-        public CategoryDetailsView(CategoryService categoryService, RepeatedPeriodService repeatedPeriodService,
-                        SecurityService securityService) {
+        public CategoryDetailsView(CategoryService categoryService, RepeatedPeriodService repeatedPeriodService, SecurityService securityService) {
                 this.categoryService = categoryService;
                 this.repeatedPeriodService = repeatedPeriodService;
                 this.securityService = securityService;
@@ -61,15 +61,11 @@ public class CategoryDetailsView extends VerticalLayout implements HasUrlParamet
 
                         baseFormLayout.addFormItem(new Span(String.valueOf(category.getCategoryId())), "Category ID");
 
-                        baseFormLayout.addFormItem(
-                                        new Span(category.getCategoryName() == null ? "" : category.getCategoryName()),
-                                        "Category Name");
+                        baseFormLayout.addFormItem(new Span(category.getCategoryName() == null ? "" : category.getCategoryName()),"Category Name");
 
-                        baseFormLayout.addFormItem(new Span(category.isRepeatable() ? "Yes" : "No"),
-                                        "Is Repeatable Category");
+                        baseFormLayout.addFormItem(new Span(category.isRepeatable() ? "Yes" : "No"),"Is Repeatable Category");
 
-                        baseFormLayout.addFormItem(new Span(category.isAutoRfq() ? "Yes" : "No"),
-                                        "Send RFQ Automatically");
+                        baseFormLayout.addFormItem(new Span(category.isAutoRfq() ? "Yes" : "No"),"Send RFQ Automatically");
 
                         VerticalLayout scheduleContainer = new VerticalLayout();
                         scheduleContainer.setPadding(false);
@@ -105,8 +101,10 @@ public class CategoryDetailsView extends VerticalLayout implements HasUrlParamet
                         Button updateButton = new Button("Update");
                         updateButton.addClickListener(e -> getUI()
                                         .ifPresent(ui -> ui.navigate("category-edit/" + category.getCategoryId())));
+                        updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
                         Button deleteButton = new Button("Delete");
+                        deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
                         deleteButton.addClickListener(e -> {
                                 ConfirmDialog dialog = new ConfirmDialog();
                                 dialog.setHeader("Delete Category");
@@ -117,13 +115,9 @@ public class CategoryDetailsView extends VerticalLayout implements HasUrlParamet
 
                                 dialog.addConfirmListener(confirmEvent -> {
                                         try {
-                                                categoryService.deleteCategoryById(category.getCategoryId(),
-                                                                securityService.getLoggedInUser().getEmployee());
+                                                categoryService.deleteCategoryById(category.getCategoryId(), securityService.getLoggedInUser().getEmployee());
 
-                                                // Clean up cascade orphans explicitly
-                                                repeatedPeriodService.deleteByReferTypeAndReferId(
-                                                                RepeatedPeriodReferType.CATEGORY,
-                                                                category.getCategoryId());
+                                                repeatedPeriodService.deleteByReferTypeAndReferId(RepeatedPeriodReferType.CATEGORY, category.getCategoryId());
 
                                                 Notification.show("Category and Schedules Purged", 3000,
                                                                 Notification.Position.TOP_CENTER);

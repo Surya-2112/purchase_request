@@ -13,6 +13,7 @@ import com.module.purchase.service.DepartmentBudgetService;
 import com.module.purchase.service.DepartmentService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -84,7 +85,7 @@ public class DepartmentBudgetView extends VerticalLayout {
                 H2 title = new H2("Department Budget List");
 
                 Button addButton = new Button("Add Department Budget");
-
+                addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
                 addButton.addClickListener(event -> {
 
                         DepartmentBudgetForm form = new DepartmentBudgetForm(departmentBudgetService,
@@ -106,9 +107,9 @@ public class DepartmentBudgetView extends VerticalLayout {
                 HorizontalLayout filterLayout = new HorizontalLayout();
 
                 Button searchButton = new Button( "Search",  event -> applyFilter());
-
+                searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
                 Button clearButton = new Button("Clear", event -> clearFilter());
-
+                clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
                 filterLayout.add( departmentBudgetIdField,
                                 departmentField,
                                 yearField,
@@ -152,6 +153,7 @@ public class DepartmentBudgetView extends VerticalLayout {
                                                 + departmentBudget.getDepartmentBudgetId()));
 
                 });
+                departmentBudgetGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
 
                 Button previousButton = new Button("Previous");
 
@@ -175,7 +177,7 @@ public class DepartmentBudgetView extends VerticalLayout {
                                 loadDepartmentBudgets();
                         }
                 });
-
+                previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
                 nextButton.addClickListener(event -> {
 
                         if(currentPage<totalPage-1){
@@ -183,6 +185,7 @@ public class DepartmentBudgetView extends VerticalLayout {
                         loadDepartmentBudgets();
                         }
                 });
+                nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
                 HorizontalLayout paginationLayout =
                  new HorizontalLayout(previousButton, pageInfo, nextButton,  new Span("Page Size"), pageSizeField);

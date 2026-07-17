@@ -22,6 +22,6 @@ public interface VendorRepository extends JpaRepository<Vendor, Long>,JpaSpecifi
        """)
     List<Vendor> findVendorsWithoutUser();
 
-    @Query("SELECT v FROM Vendor v JOIN v.categories c WHERE c = :category")
+    @Query("SELECT v FROM Vendor v JOIN v.categories c WHERE c = :category and v.active = true ")
     List<Vendor> findByCategoriesContaining(@Param("category") Category category);
 }

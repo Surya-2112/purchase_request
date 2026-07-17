@@ -6,6 +6,7 @@ import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.EmployeeService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -121,7 +122,9 @@ public class EmployeeDetailsView extends VerticalLayout implements HasUrlParamet
             });
 
             dialog.open();});
-        
+       
+        updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
         deleteButton.setVisible(securityService.canAccessView("employee-form"));
 
         updateButton.setVisible(securityService.canAccessView("employee-edit"));

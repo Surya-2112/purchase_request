@@ -6,6 +6,7 @@ import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -92,7 +93,9 @@ public class ItemDetailsView extends VerticalLayout implements HasUrlParameter<S
         });
 
         updateButton.setVisible(securityService.canAccessView("item-edit"));
+        updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         deleteButton.setVisible(securityService.canAccessView("item-form"));
+        deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout buttons = new HorizontalLayout(updateButton, deleteButton);
 

@@ -10,6 +10,7 @@ import com.module.purchase.service.ItemService;
 import com.module.purchase.service.UnitService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -125,6 +126,9 @@ public class ItemEditView extends VerticalLayout implements HasUrlParameter<Stri
                 getUI().ifPresent(ui -> ui.navigate("item-details/" + item.getItemId()))
         );
 
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
+        
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
         add(title, formLayout, buttons);
         }catch (NumberFormatException e) {

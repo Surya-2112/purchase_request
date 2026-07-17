@@ -11,6 +11,7 @@ import com.module.purchase.service.UsersService;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -116,12 +117,14 @@ public class UsersView extends VerticalLayout {
                 loadUsers();
             }
         });
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         Button nextButton = new Button("Next", e -> {
             if(currentPage<totalPage-1)
             currentPage++;
             loadUsers();
         });
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         HorizontalLayout paginationLayout = new HorizontalLayout(
                 previousButton,
@@ -138,38 +141,28 @@ public class UsersView extends VerticalLayout {
 
         Button addButton = new Button("Add User", e -> {
 
-            UsersForm form = new UsersForm(
-                    usersService,
-                    employeeService,
-                    vendorService,
-                    securityService);
-
+            UsersForm form = new UsersForm(usersService, employeeService,
+                    vendorService,  securityService);
             form.open();
         });
 
         addButton.setVisible(securityService.canAccessView("user-form"));
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
 
         headerLayout.setWidthFull();
-        headerLayout.setJustifyContentMode(
-                JustifyContentMode.BETWEEN);
+        headerLayout.setJustifyContentMode(JustifyContentMode.BETWEEN);
 
         Button searchButton =new Button("Search", e -> applyFilter());
+        searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         Button clearButton =new Button("Clear", e -> clearFilter());
+        clearButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout filterLayout =
-                new HorizontalLayout(
-                        userIdField,
-                        userNameField,
-                        userEmailField,
-                        userTypeField,
-                        employeeField,
-                        vendorField,
-                        activeField,
-                        searchButton,
-                        clearButton);
+                new HorizontalLayout(userIdField, userNameField, userEmailField, userTypeField, employeeField,
+                        vendorField, activeField, searchButton, clearButton);
 
         filterLayout.setAlignItems(Alignment.END);
         filterLayout.setWidthFull();
@@ -207,11 +200,23 @@ public class UsersView extends VerticalLayout {
         }).setHeader("Linked To")
           .setAutoWidth(true);
 
-        userGrid.addColumn(user -> Boolean.TRUE.equals(user.getActive())? "Yes": "No").setHeader("Active") .setAutoWidth(true);
+        userGrid.addComponentColumn(user ->{
+             Span badge = new Span(Boolean.TRUE.equals(user.getActive()) ? "Yes" : "No");
+             badge.getStyle()
+                 .set("padding", "2px 8px")
+                 .set("border-radius", "4px")
+                 .set("font-weight", "bold")
+                 .set("font-size", "12px");
+            if (Boolean.TRUE.equals(user.getActive())) {
+                badge.getStyle().set("background-color", "#dcfce7").set("color", "#15803d");
+            } else {
+                badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
+            }
+            return badge;}).setHeader("Active") .setAutoWidth(true);
 
         userGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         userGrid.setSizeFull();
-
+        userGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         userGrid.addItemDoubleClickListener(event -> {
 
             UsersDTO user = event.getItem();
@@ -240,8 +245,7 @@ public class UsersView extends VerticalLayout {
         if (!userIdField.getValue().isEmpty()) {
 
             try {
-                userId = Long.valueOf(
-                        userIdField.getValue().trim());
+                userId = Long.valueOf(userIdField.getValue().trim());
             } catch (Exception e) {
                 return;
             }

@@ -1,6 +1,5 @@
 package com.module.purchase.service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.module.purchase.customException.ModificationNotAllowedException;
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
-import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Category;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.Item;
@@ -44,15 +42,7 @@ public class ItemService {
             throw new ResourceAlreadyUsedException("Item with code " + item.getItemCode() + " already exists");
         }
         item=saveItem(item);
-
-        AuditLogs log= new AuditLogs();
-        log.setEntityType(EntityType.EMPLOYEE);
-        log.setEntityId(item.getItemId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.ITEM,item.getItemId(),Action.CREATE,employee);
         return item;
     }
 
@@ -70,14 +60,7 @@ public class ItemService {
         { throw new ModificationNotAllowedException("Cannot update item Code ");}
 
         item=saveItem(item);
-
-        AuditLogs log= new AuditLogs();
-        log.setEntityType(EntityType.EMPLOYEE);
-        log.setEntityId(item.getItemId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+         auditLogsService.addAuditLog(EntityType.ITEM,item.getItemId(),Action.UPDATE,employee);
 
         return item;
     }
@@ -108,13 +91,7 @@ public class ItemService {
         Item existingItem = getItemById(itemId).get();
         itemRepository.deleteById(itemId);
         
-        AuditLogs log= new AuditLogs();
-        log.setEntityType(EntityType.EMPLOYEE);
-        log.setEntityId(itemId);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+        auditLogsService.addAuditLog(EntityType.ITEM,itemId,Action.DELETE,employee);
     }
 
     public List<Item> getItemByCategory(Category category)

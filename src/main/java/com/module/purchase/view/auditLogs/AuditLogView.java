@@ -1,9 +1,8 @@
 package com.module.purchase.view.auditLogs;
-
 import java.util.List;
 
-import org.springframework.data.domain.Page;
 
+import org.springframework.data.domain.Page;
 import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.enums.Action;
@@ -32,8 +31,6 @@ public class AuditLogView extends VerticalLayout {
 
     private final AuditLogsService auditLogService;
 
-    private final EmployeeService employeeService;
-
     private final Grid<AuditLogs> grid = new Grid<>(AuditLogs.class, false);
 
     private final TextField auditIdFilter = new TextField("Audit ID");
@@ -52,18 +49,15 @@ public class AuditLogView extends VerticalLayout {
 
     private int pageSize = 25;
 
-    private int totalPage=1;
+    private int totalPage = 1;
 
-    private final Span pageInfo =new Span();
-
-    private List<AuditLogs> currentFilter;
+    private final Span pageInfo = new Span();
 
     private AuditLogs filteredLog;
 
-    public AuditLogView( AuditLogsService auditLogService,EmployeeService employeeService) {
+    public AuditLogView(AuditLogsService auditLogService, EmployeeService employeeService) {
 
         this.auditLogService = auditLogService;
-        this.employeeService = employeeService;
 
         setSizeFull();
 
@@ -99,13 +93,13 @@ public class AuditLogView extends VerticalLayout {
         dateFilter.setWidth("150px");
         dateFilter.setErrorMessage("Enter valid date");
 
-        Button searchBtn =new Button("Search");
+        Button searchBtn = new Button("Search");
 
-        searchBtn.addThemeVariants( ButtonVariant.LUMO_PRIMARY);
+        searchBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        Button clearBtn =new Button("Clear");
+        Button clearBtn = new Button("Clear");
 
-        clearBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        clearBtn.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         searchBtn.addClickListener(event -> {
 
@@ -133,26 +127,31 @@ public class AuditLogView extends VerticalLayout {
             applyFilters();
         });
 
-
-        HorizontalLayout filterLayout =new HorizontalLayout(auditIdFilter,entityTypeFilter,entityIdFilter,actionFilter,
-                        performedByFilter, dateFilter, searchBtn, clearBtn);
+        HorizontalLayout filterLayout = new HorizontalLayout(auditIdFilter, entityTypeFilter, entityIdFilter,
+                actionFilter,
+                performedByFilter, dateFilter, searchBtn, clearBtn);
 
         filterLayout.setWidthFull();
-        filterLayout.setAlignItems( Alignment.END);
+        filterLayout.setAlignItems(Alignment.END);
 
         grid.addColumn(AuditLogs::getAuditLogId).setHeader("Audit ID").setAutoWidth(true);
-        grid.addColumn(log -> log.getEntityType() == null ? "" : log.getEntityType().name()).setHeader("Entity Type").setAutoWidth(true);
+        grid.addColumn(log -> log.getEntityType() == null ? "" : log.getEntityType().name()).setHeader("Entity Type")
+                .setAutoWidth(true);
         grid.addColumn(AuditLogs::getEntityId).setHeader("Entity ID").setAutoWidth(true);
-        grid.addColumn(log -> log.getAction() == null ? "" : log.getAction().name()).setHeader("Action").setAutoWidth(true);
-        grid.addColumn(log ->log.getPerformedBy() == null? "" : log.getPerformedBy().getEmployeeName()).setHeader("Performed By").setAutoWidth(true);
+        grid.addColumn(log -> log.getAction() == null ? "" : log.getAction().name()).setHeader("Action")
+                .setAutoWidth(true);
+        grid.addColumn(log -> log.getPerformedBy() == null ? "" : log.getPerformedBy().getEmployeeName())
+                .setHeader("Performed By").setAutoWidth(true);
         grid.addColumn(AuditLogs::getTimestamp).setHeader("Timestamp").setAutoWidth(true);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.setSizeFull();
+        grid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
 
-        Button previousButton =new Button("Previous");
-        Button nextButton =new Button("Next");
-
-        ComboBox<Integer> pageSizeField =new ComboBox<>();
+        Button previousButton = new Button("Previous");
+        Button nextButton = new Button("Next");
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        ComboBox<Integer> pageSizeField = new ComboBox<>();
 
         pageSizeField.setItems(10, 25, 50, 100);
         pageSizeField.setValue(25);
@@ -170,13 +169,14 @@ public class AuditLogView extends VerticalLayout {
         });
 
         nextButton.addClickListener(event -> {
-            if (currentPage < totalPage-1) {
+            if (currentPage < totalPage - 1) {
                 currentPage++;
                 updateGrid();
             }
         });
 
-        HorizontalLayout paginationLayout =new HorizontalLayout( previousButton, pageInfo,nextButton, new Span("Page Size"), pageSizeField);
+        HorizontalLayout paginationLayout = new HorizontalLayout(previousButton, pageInfo, nextButton,
+                new Span("Page Size"), pageSizeField);
 
         paginationLayout.setWidthFull();
         paginationLayout.setJustifyContentMode(JustifyContentMode.CENTER);
@@ -184,44 +184,44 @@ public class AuditLogView extends VerticalLayout {
 
         applyFilters();
 
-        add(title, filterLayout,grid,paginationLayout);
+        add(title, filterLayout, grid, paginationLayout);
 
         expand(grid);
     }
 
     private void applyFilters() {
-        
-        filteredLog=new AuditLogs();
-          
-        Long id=null;
-         if (!auditIdFilter.getValue().isEmpty()) {
+
+        filteredLog = new AuditLogs();
+
+        Long id = null;
+        if (!auditIdFilter.getValue().isEmpty()) {
             try {
                 id = Long.valueOf(auditIdFilter.getValue().trim());
             } catch (NumberFormatException e) {
-                id = -1L; 
+                id = -1L;
             }
         }
         filteredLog.setAuditLogId(id);
         filteredLog.setEntityType(entityTypeFilter.getValue());
-        id=null;
-         if (!entityIdFilter.getValue().isEmpty()) {
+        id = null;
+        if (!entityIdFilter.getValue().isEmpty()) {
             try {
                 id = Long.valueOf(entityIdFilter.getValue().trim());
             } catch (NumberFormatException e) {
-                id = -1L; 
+                id = -1L;
             }
         }
         filteredLog.setEntityId(id);
         filteredLog.setAction(actionFilter.getValue());
         filteredLog.setPerformedBy(performedByFilter.getValue());
-        filteredLog.setTimestamp(dateFilter.getValue());
+
         updateGrid();
     }
 
     private void updateGrid() {
-        Page<AuditLogs> page=auditLogService.getAuditLogsHasPage(filteredLog,currentPage,pageSize);
+        Page<AuditLogs> page = auditLogService.getAuditLogsHasPage(filteredLog,(dateFilter.getValue()==null?null:dateFilter.getValue()) ,currentPage, pageSize);
         grid.setItems(page.getContent());
-        totalPage=page.getTotalPages();
-        pageInfo.setText("Page " + (currentPage + 1) + " of " + totalPage );
+        totalPage = page.getTotalPages();
+        pageInfo.setText("Page " + (currentPage + 1) + " of " + totalPage);
     }
 }

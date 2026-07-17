@@ -1,6 +1,5 @@
 package com.module.purchase.service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,9 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ResourceAlreadyUsedException;
 import com.module.purchase.customException.ResourceNotFoundException;
-import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
-import com.module.purchase.entity.Item;
 import com.module.purchase.entity.ItemVariant;
 import com.module.purchase.entity.PurchaseOrderLine;
 import com.module.purchase.entity.PurchaseRequestLine;
@@ -58,14 +55,7 @@ public class ItemVariantService {
 
         itemVariant = saveItemVariant(itemVariant);
 
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.ITEM_VARIANT);
-        log.setEntityId(itemVariant.getId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-
-        auditLogsService.addAuditLog(log);
+       auditLogsService.addAuditLog(EntityType.ITEM_VARIANT,itemVariant.getId(),Action.CREATE,employee);
 
         return itemVariant;
     }
@@ -87,11 +77,6 @@ public class ItemVariantService {
         return itemVariantRepository.findAll();
     }
 
-     public List<ItemVariant> getItemVariantsByItem(Item item) {
-
-        return itemVariantRepository.findByItemAndActive(item,true);
-    }
-
     public Page<ItemVariant> getAllItemVariants(ItemVariant itemVariant, int page, int size) {
 
         Specification<ItemVariant> spec = Specification
@@ -110,16 +95,7 @@ public class ItemVariantService {
         getItemVariantById(itemVariant.getId()).get();
 
         itemVariant = saveItemVariant(itemVariant);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.ITEM_VARIANT);
-        log.setEntityId(itemVariant.getId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.ITEM_VARIANT,itemVariant.getId(),Action.UPDATE,employee);
         return itemVariant;
     }
 
@@ -162,17 +138,8 @@ public class ItemVariantService {
 
             throw new ResourceAlreadyUsedException("Cannot delete Item Variant because it is used in Purchase Orders");
         }
-
         itemVariantRepository.deleteById(id);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.ITEM_VARIANT);
-        log.setEntityId(id);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-
-        auditLogsService.addAuditLog(log);
+       auditLogsService.addAuditLog(EntityType.ITEM_VARIANT,id,Action.DELETE,employee);
     }
 
     public List<ItemVariant> getItemVariantsList(ItemVariant itemVariant) {

@@ -4,6 +4,7 @@ import com.module.purchase.config.SecurityService;
 import com.module.purchase.entity.Unit;
 import com.module.purchase.service.UnitService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -46,6 +47,8 @@ public class UnitForm extends Dialog {
 
         Button saveButton = new Button("Save", e -> saveUnit());
         Button cancelButton = new Button("Cancel", e -> close());
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
 
@@ -84,35 +87,22 @@ public class UnitForm extends Dialog {
 
             if (unit.getId() == null) {
 
-                unitService.addUnit(
-                        unit,
-                        securityService.getLoggedInUser().getEmployee());
+                unitService.addUnit( unit, securityService.getLoggedInUser().getEmployee());
 
-                Notification.show(
-                        "Unit Created Successfully",
-                        3000,
-                        Notification.Position.TOP_CENTER);
+                Notification.show("Unit Created Successfully",3000, Notification.Position.TOP_CENTER);
 
             } else {
 
-                unitService.updateUnit(
-                        unit,
-                        securityService.getLoggedInUser().getEmployee());
+                unitService.updateUnit(  unit, securityService.getLoggedInUser().getEmployee());
 
-                Notification.show(
-                        "Unit Updated Successfully",
-                        3000,
-                        Notification.Position.TOP_CENTER);
+                Notification.show( "Unit Updated Successfully", 3000, Notification.Position.TOP_CENTER);
             }
 
             close();
 
         } catch (Exception ex) {
 
-            Notification.show(
-                    ex.getMessage(),
-                    5000,
-                    Notification.Position.TOP_CENTER);
+            Notification.show(ex.getMessage(), 5000, Notification.Position.TOP_CENTER);
         }
     }
 }

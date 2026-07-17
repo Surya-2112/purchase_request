@@ -8,6 +8,7 @@ import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.VendorService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -133,6 +134,10 @@ public class VendorDetailsView extends VerticalLayout implements HasUrlParameter
                                         "Pincode");
                 }
 
+                formLayout.getStyle().set("background","rgb(255, 255, 255)")
+                                     .set("padding","10px")
+                                     .set("border-radius","12px");
+
                 Button updateButton = new Button("Update",
                                 e -> getUI().ifPresent(ui -> ui.navigate("vendor-edit/" + vendor.getVendorId())));
 
@@ -176,6 +181,8 @@ public class VendorDetailsView extends VerticalLayout implements HasUrlParameter
                         dialog.open();
                 });
 
+                updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+                deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
                 updateButton.setVisible(securityService.canAccessView("vendor-edit"));
                 deleteButton.setVisible(securityService.canAccessView("vendor-form"));
 

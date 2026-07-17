@@ -2,6 +2,7 @@ package com.module.purchase.view.purchaseOrder;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.data.domain.Page;
 
 import com.module.purchase.config.SecurityService;
@@ -158,6 +159,7 @@ public class PurchaseOrderView extends VerticalLayout {
 
         poGrid.setWidthFull();
         poGrid.setHeightFull();
+        poGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         poGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         
         poGrid.addItemDoubleClickListener(event -> {
@@ -172,12 +174,11 @@ public class PurchaseOrderView extends VerticalLayout {
         assignGrid.removeAllColumns();
         assignGrid.addColumn(AssigningApprovalsDTO::getAssigningApprovalsId).setHeader("Assign ID");
         assignGrid.addColumn(AssigningApprovalsDTO::getReferenceId).setHeader("PO Reference ID");
-        assignGrid.addColumn(a -> a.getApprover() == null ? "" : a.getApprover().getEmployeeName()).setHeader("Approver");
         assignGrid.addColumn(AssigningApprovalsDTO::getLevel).setHeader("Approval Level");
         assignGrid.addColumn(AssigningApprovalsDTO::getStatus).setHeader("Status");
 
         assignGrid.setWidthFull();
-        assignGrid.setHeightFull();
+        assignGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         assignGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         
         assignGrid.addItemDoubleClickListener(event -> {

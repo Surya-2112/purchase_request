@@ -6,6 +6,7 @@ import com.module.purchase.entity.ItemVariant;
 import com.module.purchase.service.ItemService;
 import com.module.purchase.service.ItemVariantService;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -51,15 +52,14 @@ public class ItemVariantForm extends Dialog {
                 new FormLayout.ResponsiveStep("0", 2)
         );
 
-        Button saveButton =
-                new Button("Save");
+        Button saveButton = new Button("Save");
+        Button cancelButton = new Button("Cancel");
 
-        Button cancelButton =
-                new Button("Cancel");
-
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         saveButton.addClickListener(e -> saveVariant());
 
         cancelButton.addClickListener(e -> close());
+        cancelButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout buttons =
                 new HorizontalLayout(

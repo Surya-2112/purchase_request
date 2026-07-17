@@ -12,9 +12,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.module.purchase.customException.ResourceNotFoundException;
-import com.module.purchase.entity.AuditLogs;
 import com.module.purchase.entity.Employee;
 import com.module.purchase.entity.PurchaseOrderHeader;
 import com.module.purchase.entity.PurchaseOrderLine;
@@ -28,8 +28,6 @@ import com.module.purchase.enums.Status;
 import com.module.purchase.mapper.PurchaseOrderMapper;
 import com.module.purchase.repository.PurchaseOrderHeaderRepository;
 import com.module.purchase.specification.PurchaseOrderSpecification;
-
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -61,30 +59,14 @@ public class PurchaseOrderHeaderService {
     public PurchaseOrderHeader addPurchaseOrderHeader(PurchaseOrderHeader purchaseOrderHeader, Employee employee) {
 
         purchaseOrderHeader = savePurchaseOrderHeader(purchaseOrderHeader);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.PURCHASE_ORDER);
-        log.setEntityId(purchaseOrderHeader.getPurchaseOrderId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.PURCHASE_ORDER,purchaseOrderHeader.getPurchaseOrderId(),Action.CREATE,employee);
         return purchaseOrderHeader;
     }
 
     public PurchaseOrderHeader updatePurchaseOrderHeader(PurchaseOrderHeader purchaseOrderHeader, Employee employee) {
 
         purchaseOrderHeader = savePurchaseOrderHeader(purchaseOrderHeader);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.PURCHASE_ORDER);
-        log.setEntityId(purchaseOrderHeader.getPurchaseOrderId());
-        log.setAction(Action.UPDATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.PURCHASE_ORDER,purchaseOrderHeader.getPurchaseOrderId(),Action.UPDATE,employee);
         return purchaseOrderHeader;
     }
 

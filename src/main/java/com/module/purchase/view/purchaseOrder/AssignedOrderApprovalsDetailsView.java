@@ -69,6 +69,8 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
     private final Span poTotalAmountText = new Span();
     private final Span workflowLevelText = new Span();
 
+    private Map<Long, Double> remaingQty = new HashMap<Long, Double>();
+
     private final Grid<Department> budgetGrid = new Grid<>();
     private final Grid<PurchaseOrderLine> poLinesGrid = new Grid<>(PurchaseOrderLine.class, false);
     private final Grid<PurchaseRequestLine> prLinesGrid = new Grid<>(PurchaseRequestLine.class, false);
@@ -163,16 +165,17 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
             evaluateAccessPrivileges();
             bindHeaderMetadata();
             loadMasterDataPipelines();
-        }catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             event.forwardTo(ViewName.PURCHASE_ORDER.getRoute());
             event.getUI().access(() -> {
                 Notification.show("url is not valid ," + e.getMessage(), 3000, Notification.Position.TOP_CENTER);
             });
-            return ;
+            return;
         } catch (Exception ex) {
             event.forwardTo(ViewName.PURCHASE_ORDER.getRoute());
             event.getUI().access(() -> {
-                Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);});
+                Notification.show(ex.getMessage(), 3000, Notification.Position.MIDDLE);
+            });
             return;
         }
     }
@@ -294,22 +297,28 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
             orderQtyField.setWidth("130px");
 
             if (prLine.getOrderedQuantity() == null) {
+                if (!remaingQty.containsKey(prLine.getId())) {
+                    remaingQty.put(prLine.getId(), prLine.getApprovedQuantity());
+                }
                 prLine.setOrderedQuantity(prLine.getApprovedQuantity());
+            } else {
+                if (!remaingQty.containsKey(prLine.getId())) {
+                    remaingQty.put(prLine.getId(), prLine.getOrderedQuantity());
+                }
             }
 
             orderQtyField.setValue(prLine.getOrderedQuantity());
             orderQtyField.setMin(0.0);
-            double maxAllowed = prLine.getApprovedQuantity() != null ? prLine.getApprovedQuantity() : 0.0;
-            orderQtyField.setMax(maxAllowed);
+            orderQtyField.setMax(remaingQty.get(prLine.getId()));
             orderQtyField.setStepButtonsVisible(true);
             orderQtyField.setReadOnly(!canUserActionApproval);
 
             orderQtyField.addValueChangeListener(event -> {
                 if (event.getValue() != null) {
-                    if (event.getValue() > maxAllowed) {
+                    if (event.getValue() > remaingQty.get(prLine.getId())) {
                         Notification.show("Ordered quantity cannot exceed approved limits.", 3000, Position.MIDDLE);
-                        orderQtyField.setValue(maxAllowed);
-                        prLine.setOrderedQuantity(maxAllowed);
+                        orderQtyField.setValue(remaingQty.get(prLine.getId()));
+                        prLine.setOrderedQuantity(remaingQty.get(prLine.getId()));
                     } else {
                         prLine.setOrderedQuantity(event.getValue());
                     }
@@ -498,6 +507,16 @@ public class AssignedOrderApprovalsDetailsView extends VerticalLayout implements
         try {
             Employee actionActor = securityService.getLoggedInUser().getEmployee();
 
+            Double totalQty=0.0;
+            for(PurchaseRequestLine prline : workingPrLinesList)
+            {
+                totalQty+=prline.getOrderedQuantity();
+            }
+            if(totalQty==0.0)
+            {
+                Notification.show("Cannot approve the request there is no Order Quantity", 4000, Position.TOP_CENTER);
+                return ;
+            }
             for (PurchaseRequestLine prline : workingPrLinesList) {
                 prLineService.updatePurchaseRequestLine(prline, actionActor);
             }

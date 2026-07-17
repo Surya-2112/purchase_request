@@ -57,7 +57,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
     private Vendor loggedInVendor;
 
     private final TextField rfqIdField = new TextField("RFQ Reference ID");
-    private final TextField requestedDateField = new TextField("Requested Date");
+    private final DatePicker requestedDateField = new DatePicker("Requested Date");
 
     private final DatePicker requestEndDateField = new DatePicker("Quotation Closing / End Date");
     private final Button updateDateBtn = new Button("Extend / Adjust Closing Date");
@@ -108,7 +108,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
         rfqIdField.setReadOnly(true);
         requestedDateField.setReadOnly(true);
         requestEndDateField.setReadOnly(true);
-        requestEndDateField.setMin(LocalDate.now().plusDays(1));
+        //requestEndDateField.setMin(LocalDate.now().plusDays(1));
 
         FormLayout headerLayout = new FormLayout(rfqIdField, requestedDateField, requestEndDateField);
         headerLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 3));
@@ -183,7 +183,7 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
                 this.currentRfq = rfq;
 
                 rfqIdField.setValue("RFQ-" + rfq.getId());
-                requestedDateField.setValue(rfq.getRequestedDate() != null ? rfq.getRequestedDate().toString() : "-");
+                requestedDateField.setValue(rfq.getRequestedDate() != null ? rfq.getRequestedDate(): LocalDate.now());
                 requestEndDateField.setValue(rfq.getRequestEndDate());
 
                 renderStatusBadge(rfq.getStatus());
@@ -365,8 +365,8 @@ public class RequestForQuotationDetailsView extends VerticalLayout implements Ha
                 .set("font-weight", "bold").set("font-size", "13px");
 
         switch (status) {
-            case DRAFT -> badge.getStyle().set("background-color", "#f1f5f9").set("color", "#475569");
-            case OPEN -> badge.getStyle().set("background-color", "#e0f2fe").set("color", "#0369a1");
+            case DRAFT -> badge.getStyle().set("background-color", "#bed5ec").set("color", "#003074");
+            case OPEN -> badge.getStyle().set("background-color", "#dcfce7").set("color", "#15803d");
             case CLOSED -> badge.getStyle().set("background-color", "#fee2e2").set("color", "#b91c1c");
             case CANCELLED -> badge.getStyle().set("background-color", "#fef3c7").set("color", "#d97706");
             case null -> badge.getStyle().set("background-color", "#f8fafc").set("color", "#334155");

@@ -6,6 +6,7 @@ import com.module.purchase.enums.ViewName;
 import com.module.purchase.service.ItemVariantService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H2;
@@ -99,8 +100,10 @@ public class ItemVariantDetailsView extends VerticalLayout implements HasUrlPara
         });
 
         updateButton.setVisible(securityService.canAccessView( "item-variant-edit"));
+        updateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
 
         deleteButton.setVisible(securityService.canAccessView("item-variant-form"));
+        deleteButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
 
         HorizontalLayout buttons =new HorizontalLayout(updateButton, deleteButton);
 

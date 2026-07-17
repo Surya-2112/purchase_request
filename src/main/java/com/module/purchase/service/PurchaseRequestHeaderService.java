@@ -58,15 +58,7 @@ public class PurchaseRequestHeaderService {
     public PurchaseRequestHeader addPurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader, Employee employee) {
 
         purchaseRequestHeader = savePurchaseRequestHeader(purchaseRequestHeader);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.PURCHASE_REQUEST);
-        log.setEntityId(purchaseRequestHeader.getPurchaseRequestId());
-        log.setAction(Action.CREATE);
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.PURCHASE_REQUEST,purchaseRequestHeader.getPurchaseRequestId(),Action.CREATE,employee);
         return purchaseRequestHeader;
     }
 
@@ -123,14 +115,7 @@ public class PurchaseRequestHeaderService {
 
         purchaseRequestLineSerivce.deleteAllLine(getPurchaseRequestHeaderById(id).get());
         purchaseRequestHeaderRepository.deleteById(id);
-
-        AuditLogs log = new AuditLogs();
-        log.setEntityType(EntityType.PURCHASE_REQUEST);
-        log.setEntityId(id);
-        log.setAction(Action.DELETE);
-        log.setPerformedBy(employee);  
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
+       auditLogsService.addAuditLog(EntityType.PURCHASE_REQUEST,id,Action.UPDATE,employee);
     }
 
     public PurchaseRequestHeader updatePurchaseRequestHeader(PurchaseRequestHeader purchaseRequestHeader, Employee employee) {
@@ -184,12 +169,7 @@ public class PurchaseRequestHeaderService {
         }
         purchaseRequestHeader = savePurchaseRequestHeader(purchaseRequestHeader);
 
-        log.setEntityType(EntityType.PURCHASE_REQUEST);
-        log.setEntityId(purchaseRequestHeader.getPurchaseRequestId());
-        log.setPerformedBy(employee);
-        log.setTimestamp(LocalDate.now());
-        auditLogsService.addAuditLog(log);
-
+        auditLogsService.addAuditLog(EntityType.PURCHASE_REQUEST,purchaseRequestHeader.getPurchaseRequestId(),log.getAction(),employee);
         return purchaseRequestHeader;
     }
 

@@ -19,6 +19,7 @@ import com.module.purchase.entity.PurchaseRequestHeader;
 import com.module.purchase.entity.PurchaseRequestLine;
 import com.module.purchase.entity.RepeatedPeriod;
 import com.module.purchase.entity.Users;
+import com.module.purchase.entityDTO.DepartmentDTO;
 import com.module.purchase.enums.EntityType;
 import com.module.purchase.enums.RepeatedPeriodReferType;
 import com.module.purchase.enums.RequestForQuotationStatus;
@@ -94,8 +95,7 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
         private final Map<PurchaseRequestLine, RepeatedPeriod> pendingLineSchedulesMap = new HashMap<>();
         private RepeatedPeriod runtimeCachedSchedule = null;
 
-        public PurchaseRequestFormView(
-                        PurchaseRequestHeaderService headerService,
+        public PurchaseRequestFormView( PurchaseRequestHeaderService headerService,
                         DepartmentService departmentService,
                         ItemService itemService,
                         ItemVariantService itemVariantService,
@@ -117,7 +117,10 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                 setSpacing(true);
                 getStyle().set("overflow", "auto");
 
-                departmentField.setItems(departmentService.getDepartments());
+                DepartmentDTO departmentDTO = new DepartmentDTO();
+                departmentDTO.setActive(true);
+                List<Department> departments = departmentService.getAllDepartmentsList(departmentDTO);
+                departmentField.setItems(departments);
                 departmentField.setItemLabelGenerator(Department::getDepartmentName);
                 departmentField.setWidth("300px");
 
@@ -135,7 +138,10 @@ public class PurchaseRequestFormView extends VerticalLayout implements BeforeEnt
                 itemField.addValueChangeListener(event -> {
                         Item selectedItem = event.getValue();
                         if (selectedItem != null) {
-                                variantField.setItems(itemVariantService.getItemVariantsByItem(selectedItem));
+                                ItemVariant variant = new ItemVariant();
+                                variant.setItem(selectedItem);
+                                variant.setActive(true);
+                                variantField.setItems(itemVariantService.getItemVariantsList(variant));
                         } else {
                                 variantField.clear();
                                 variantField.setItems(new ArrayList<>());

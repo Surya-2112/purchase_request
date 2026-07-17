@@ -8,6 +8,7 @@ import com.module.purchase.service.CategoryService;
 import com.module.purchase.service.RepeatedPeriodService;
 import com.module.purchase.view.MainLayout;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -50,6 +51,7 @@ public class CategoryView extends VerticalLayout {
 
         categoryIdField.setPattern("[0-9]{0,20}");
         categoryIdField.setErrorMessage("Enter a valid Numbers");
+        categoryIdField.getStyle().set("color","rgb(0, 0, 0)");
         repeatableField.setItems("Yes", "No");
         repeatableField.setClearButtonVisible(true);
         repeatableField.setWidth("140px");
@@ -65,7 +67,7 @@ public class CategoryView extends VerticalLayout {
             form.addDetachListener(detachEvent -> loadCategories());
             form.open();
         });
-
+        addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         addButton.setVisible(securityService.canAccessView("category-form"));
 
         HorizontalLayout headerLayout = new HorizontalLayout(title, addButton);
@@ -75,28 +77,31 @@ public class CategoryView extends VerticalLayout {
         Button searchButton = new Button("Search", e -> applyFilter());
         Button clearButton = new Button("Clear", e -> clearFilter());
 
+        searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        clearButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_ERROR);
+        clearButton.getStyle().setFontWeight(600);
+
         HorizontalLayout filterLayout = new HorizontalLayout(
-                categoryIdField,
-                categoryNameField,
-                repeatableField,
-                autoRfqField,
-                searchButton,
-                clearButton
+                categoryIdField, categoryNameField, repeatableField, autoRfqField, searchButton,  clearButton
         );
         filterLayout.setWidthFull();
         filterLayout.setAlignItems(Alignment.END);
 
-        categoryGrid.addColumn(Category::getCategoryId).setHeader("Category ID").setWidth("120px").setFlexGrow(0);
-        categoryGrid.addColumn(Category::getCategoryName).setHeader("Category Name").setAutoWidth(true);
+        categoryGrid.addColumn(category -> category != null ? category.getCategoryId() : "")
+                .setHeader("Category ID").setWidth("120px").setFlexGrow(0);
+        categoryGrid.addColumn(category -> category != null ? category.getCategoryName() : "")
+                .setHeader("Category Name").setAutoWidth(true);
         
-        categoryGrid.addColumn(category -> category.isRepeatable() ? "Yes" : "No")
+        categoryGrid.addColumn(category -> category != null && category.isRepeatable() ? "Yes" : "No")
                 .setHeader("Is Repeatable").setWidth("140px").setFlexGrow(0);
                 
-        categoryGrid.addColumn(category -> category.isAutoRfq() ? "Yes" : "No")
+        categoryGrid.addColumn(category -> category != null && category.isAutoRfq() ? "Yes" : "No")
                 .setHeader("Auto RFQ").setWidth("140px").setFlexGrow(0);
 
         categoryGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         categoryGrid.setSizeFull();
+        categoryGrid.getStyle().set("border-radius", "12px")
+                               .set("overflow", "hidden");
 
         categoryGrid.addItemDoubleClickListener(event -> {
             Category category = event.getItem();
@@ -121,6 +126,7 @@ public class CategoryView extends VerticalLayout {
                 loadCategories();
             }
         });
+        previousButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         Button nextButton = new Button("Next", e -> {
             if (currentPage < totalPages - 1) {
@@ -128,6 +134,7 @@ public class CategoryView extends VerticalLayout {
                 loadCategories();
             }
         });
+        nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         HorizontalLayout paginationLayout = new HorizontalLayout(
                 previousButton,
@@ -149,7 +156,7 @@ public class CategoryView extends VerticalLayout {
     }
 
     private void loadCategories() {
-        System.out.println(currentFilter.toString());
+
         Page<Category> page = categoryService.getAllCategories(
                 currentFilter,
                 currentPage,

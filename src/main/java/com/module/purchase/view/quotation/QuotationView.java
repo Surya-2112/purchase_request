@@ -120,6 +120,7 @@ public class QuotationView extends VerticalLayout {
 
         quotationGrid.setWidthFull();
         quotationGrid.setHeightFull();
+        quotationGrid.getStyle().set("border-radius", "12px").set("overflow", "hidden");
         quotationGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_COMPACT);
         
         quotationGrid.addItemDoubleClickListener(event -> {
@@ -163,6 +164,7 @@ public class QuotationView extends VerticalLayout {
     }
 
     private void mapStatusBadgeColumn() {
+        
         quotationGrid.addComponentColumn(q -> {
             Span badge = new Span(q.getStatus() != null ? q.getStatus().name() : "UNKNOWN");
             badge.getStyle()
